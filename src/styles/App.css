@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*:hover {
+  transition: 0.3s all ease-in-out !important;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+}
+
+option {
+  color: black;
+}
