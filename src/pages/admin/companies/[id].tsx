@@ -29,18 +29,16 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faGear, faUserLock, faFileInvoiceDollar } from "@fortawesome/pro-solid-svg-icons";
-
-
+import { faFileInvoiceDollar,faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
 // Font awesome icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
+import InvoiceTab from "components/companies/InvoiceTab";
 import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import InvoiceTab from "components/companies/InvoiceTab";
 import {
   defaultCompany,
   DELETE_COMPANY_MUTATION,
