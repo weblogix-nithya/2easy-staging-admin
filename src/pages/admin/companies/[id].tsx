@@ -29,8 +29,9 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faGear } from "@fortawesome/pro-solid-svg-icons";
-import { faUserLock } from "@fortawesome/pro-solid-svg-icons";
+import { faGear, faUserLock, faFileInvoiceDollar } from "@fortawesome/pro-solid-svg-icons";
+
+
 // Font awesome icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
@@ -39,6 +40,7 @@ import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
+import InvoiceTab from "components/companies/InvoiceTab";
 import {
   defaultCompany,
   DELETE_COMPANY_MUTATION,
@@ -60,7 +62,7 @@ function CompanyEdit() {
   const textColor = useColorModeValue("navy.700", "white");
   const textColorSecondary = "gray.400";
   const [company, setCompany] = useState(defaultCompany);
-  const [isCompanySetting, setIsCompanySetting] = useState(true);
+  const [isCompanySetting, setIsCompanySetting] = useState(0);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
   const { id } = router.query;
@@ -320,13 +322,13 @@ function CompanyEdit() {
                   {/* Left side buttons */}
                   <Flex mt={8} flexDirection="column" className="border-b">
                     <Button
-                      disabled={isCompanySetting}
-                      onClick={() => setIsCompanySetting(true)}
+                      disabled={isCompanySetting  == 0}
+                      onClick={() => setIsCompanySetting(0)}
                       alignItems="start"
                       h={45}
                       fontSize="14px"
                       className={
-                        isCompanySetting
+                        isCompanySetting == 0
                           ? "!items-center !justify-start !font-medium text-white !bg-[var(--chakra-colors-primary-400)] !rounded-none"
                           : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
                       }
@@ -336,13 +338,13 @@ function CompanyEdit() {
                     </Button>
 
                     <Button
-                      disabled={!isCompanySetting}
-                      onClick={() => setIsCompanySetting(false)}
+                      disabled={isCompanySetting == 1 }
+                      onClick={() => setIsCompanySetting(1)}
                       alignItems="start"
                       h={45}
                       fontSize="14px"
                       className={
-                        !isCompanySetting
+                        isCompanySetting == 1
                           ? "!items-center !justify-start !font-medium !text-left text-white !bg-[var(--chakra-colors-primary-400)] !rounded-none"
                           : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
                       }
@@ -350,13 +352,29 @@ function CompanyEdit() {
                       <FontAwesomeIcon icon={faUserLock} className="mr-1" />
                       Company Users
                     </Button>
+
+                    <Button
+                      disabled={isCompanySetting == 2}
+                      onClick={() => setIsCompanySetting(2)}
+                      alignItems="start"
+                      h={45}
+                      fontSize="14px"
+                      className={
+                        isCompanySetting == 2
+                          ? "!items-center !justify-start !font-medium !text-left text-white !bg-[var(--chakra-colors-primary-400)] !rounded-none"
+                          : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
+                      }
+                    >
+                      <FontAwesomeIcon icon={faFileInvoiceDollar} className="mr-1" />
+                      Invoices
+                    </Button>
                   </Flex>
                 </GridItem>
 
                 {/* Right side */}
                 <GridItem pl="2" area={"main"}>
                   {/* Company Settings */}
-                  {isCompanySetting && (
+                  {isCompanySetting == 0 && (
                     <FormControl className="pb-10">
                       <Flex
                         justifyContent="space-between"
@@ -1047,7 +1065,7 @@ function CompanyEdit() {
                   )}
 
                   {/* Company Users */}
-                  {!isCompanySetting && (
+                  {isCompanySetting == 1 && (
                     <>
                       <Flex
                         justifyContent="space-between"
@@ -1182,6 +1200,13 @@ function CompanyEdit() {
                             )}
                         </SimpleGrid>
                       </Box>
+ </>
+                  )}
+                   {/* Invoice */}
+                     {isCompanySetting == 2 && (
+                    <>
+                       {company.id !== null && <InvoiceTab company_id={company.id} />}
+    
                     </>
                   )}
                 </GridItem>
