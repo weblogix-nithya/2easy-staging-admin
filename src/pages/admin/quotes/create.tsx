@@ -175,10 +175,11 @@ export default function QuoteCreate() {
 
   useEffect(() => {
     if (quote.company_id) {
-      setCustomerOptions([]);
+       setCustomerOptions([]); 
+       getCustomers({ company_id: quote.company_id });
       setCustomerOptions(
         formatToSelect(
-          customers.filter(
+           customers.filter(
             (customer) => customer.company_id === quote.company_id,
           ),
           "id",
@@ -186,6 +187,7 @@ export default function QuoteCreate() {
         ),
       );
     }
+   
   }, [quote.company_id]);
 
   useQuery(GET_COMPANYS_QUERY, {
@@ -215,7 +217,7 @@ export default function QuoteCreate() {
       setRateCardUrl(
         customers.find((customer) => customer.id === quote.customer_id)
           .rate_card_url,
-      );
+      );` `
     }
   }, [quote.customer_id]);
 

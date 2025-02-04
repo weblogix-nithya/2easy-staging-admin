@@ -76,6 +76,20 @@ function InvoiceEdit() {
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const paymentTerms = [
+  { label: 'EOD', value: 'eod' },
+  { label: '7 Days', value: '7_days' },
+  { label: '14 Days', value: '14_days' },
+  { label: '30 Days', value: '30_days' },
+  { label: '7 Days EOM', value: '7_days_eom' },
+  { label: '14 Days EOM', value: '14_days_eom' },
+  { label: '21 Days EOM', value: '21_days_eom' },
+  { label: '30 Days EOM', value: '30_days_eom' },
+];
+
+const [paymentTerm, setPaymentTerm] = useState(null);
+
+
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
       setSearchQuery(e);
@@ -189,6 +203,7 @@ function InvoiceEdit() {
         input: {
           id: id,
           invoice_status_id: 6,
+          payment_terms: '7_days',
         },
       },
       onCompleted: (data) => {
@@ -215,6 +230,7 @@ function InvoiceEdit() {
         input: {
           id: id,
           invoice_status_id: invoice.invoice_status_id,
+          payment_terms: invoice.payment_terms,
           name: invoice.name,
           sub_total: invoice.sub_total,
           total_tax: invoice.total_tax,
@@ -537,6 +553,43 @@ function InvoiceEdit() {
                 </Skeleton>
               </Flex>
 
+               <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                <Skeleton isLoaded={!invoiceLoading} w="75%">
+                  Payment Terms
+                </Skeleton>
+              </FormLabel>
+              {!isCustomer ? (
+                <Box className="!max-w-md w-full">
+                  <Select
+                    placeholder="Select Payment Terms"
+                    value={paymentTerms.find(
+                      (term) => term.value === invoice.payment_terms
+                    )}
+                    options={paymentTerms}
+                    onChange={(e) => {
+                      setInvoice({ ...invoice, payment_terms: e.value });
+                    }}
+                    size="lg"
+                    className="select mb-0"
+                    classNamePrefix="two-easy-select"
+                    isDisabled={isCustomer}
+                  />
+                </Box>
+              ) : (
+                <Skeleton isLoaded={!invoiceLoading} w="75%">
+                  {invoice.payment_terms}
+                </Skeleton>
+              )}
+            </Flex>
+
               <Flex alignItems="center" mb="16px">
                 <FormLabel
                   display="flex"
@@ -577,7 +630,7 @@ function InvoiceEdit() {
                   </Skeleton>
                 )}
               </Flex>
-
+              
               {invoice.is_rcti && (
                 <>
                   <Flex alignItems="center" mb="16px">
