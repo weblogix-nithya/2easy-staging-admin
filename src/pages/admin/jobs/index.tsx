@@ -82,6 +82,7 @@ export default function JobIndex() {
   const [isPending, setIsPending] = useState(true); // First access is Pending
   const [selectedJobs, setSelectedJobs] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
   const [dynamicTableUsers, setDynamicTableUsers] = useState<
     DynamicTableUser[]
@@ -376,7 +377,7 @@ export default function JobIndex() {
     variables: {
       query: "",
       page: 1,
-      first: 100,
+      first: 200,
       orderByColumn: "id",
       orderByOrder: "ASC",
       available: true,
