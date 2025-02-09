@@ -112,7 +112,7 @@ export default function JobAllocationIndex() {
     variables: {
       query: "",
       page: 1,
-      first: 100,
+      first: 300,
       orderByColumn: "id",
       orderByOrder: "ASC",
       available: true,
@@ -199,7 +199,7 @@ export default function JobAllocationIndex() {
     [],
   );
 
-  const [getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
+  const [getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -211,7 +211,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getJob, {}] = useLazyQuery(GET_JOB_QUERY, {
+  const [getJob, { }] = useLazyQuery(GET_JOB_QUERY, {
     variables: {
       id: selectedJobId,
     },
@@ -224,7 +224,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getDriverCurrentRoute, {}] = useLazyQuery(
+  const [getDriverCurrentRoute, { }] = useLazyQuery(
     GET_DRIVER_CURRENT_ROUTE_QUERY,
     {
       variables: {
@@ -555,9 +555,9 @@ export default function JobAllocationIndex() {
                 />
               </Flex>
               {customerName ||
-              pickupAddress ||
-              pickupAddress ||
-              australianState ? (
+                pickupAddress ||
+                pickupAddress ||
+                australianState ? (
                 <Flex className="pt-4 flex-wrap align-center">
                   <p className="text-sm mr-1">Filters: </p>
 

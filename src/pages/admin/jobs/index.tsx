@@ -377,7 +377,7 @@ export default function JobIndex() {
     variables: {
       query: "",
       page: 1,
-      first: 200,
+      first: 300,
       orderByColumn: "id",
       orderByOrder: "ASC",
       available: true,
