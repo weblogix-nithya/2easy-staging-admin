@@ -70,17 +70,6 @@ function CompanyEdit() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [rateCardUrl, setRateCardUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
-  const paymentTerms = [
-    { label: 'EOD', value: 'eod' },
-    { label: '7 Days', value: '7_days' },
-    { label: '14 Days', value: '14_days' },
-    { label: '30 Days', value: '30_days' },
-    { label: '7 Days EOM', value: '7_days_eom' },
-    { label: '14 Days EOM', value: '14_days_eom' },
-    { label: '21 Days EOM', value: '21_days_eom' },
-    { label: '30 Days EOM', value: '30_days_eom' },
-
-  ];
   const {
     loading: companyLoading,
     data: companyData,
