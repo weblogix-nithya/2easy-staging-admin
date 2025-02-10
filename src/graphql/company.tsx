@@ -213,6 +213,7 @@ export const defaultCompany: Company = {
 };
 
 export const paymentTerms = [
+  { label: "EOD", value: "EOD" },
   { label: "7 Days", value: "7_days" },
   { label: "14 Days", value: "14_days" },
   { label: "30 Days", value: "30_days" },
