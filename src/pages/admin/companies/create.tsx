@@ -17,7 +17,7 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { CREATE_COMPANY_MUTATION, defaultCompany, paymentTerms } from "graphql/company";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import {useState } from "react";
 import Select from "react-select";
 
 function CompanyCreate() {
