@@ -192,7 +192,6 @@ function InvoiceEdit() {
         input: {
           id: id,
           invoice_status_id: 6,
-          payment_terms: '7_days',
         },
       },
       onCompleted: (data) => {
