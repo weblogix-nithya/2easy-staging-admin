@@ -10,14 +10,15 @@ import {
   Grid,
   Input,
   useColorModeValue,
-  useToast,
+  useToast
 } from "@chakra-ui/react";
 import AddressesModal from "components/addresses/AddressesModal";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { CREATE_COMPANY_MUTATION, defaultCompany } from "graphql/company";
+import { CREATE_COMPANY_MUTATION, defaultCompany, paymentTerms } from "graphql/company";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Select from "react-select";
 
 function CompanyCreate() {
   const toast = useToast();
@@ -27,7 +28,7 @@ function CompanyCreate() {
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
-  const [handleCreateCompany, {}] = useMutation(CREATE_COMPANY_MUTATION, {
+  const [handleCreateCompany, { }] = useMutation(CREATE_COMPANY_MUTATION, {
     variables: {
       input: {
         name: company.name,
@@ -48,6 +49,7 @@ function CompanyCreate() {
         lcl_rate: company.lcl_rate,
         rate_card_url: undefined,
         logo_url: undefined,
+        payment_term: company.payment_term ?? '7_days',
       },
     },
     onCompleted: (data) => {
@@ -63,7 +65,6 @@ function CompanyCreate() {
       showGraphQLErrorToast(error);
     },
   });
-
   return (
     <AdminLayout>
       <Box
@@ -207,6 +208,35 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Payment Terms
+              </FormLabel>
+
+              <Box className="!max-w-md w-full">
+                <Select
+                  placeholder="Select Payment Terms"
+                  value={paymentTerms.find((term) => term.value === company.payment_term)}
+                  options={paymentTerms}
+                  onChange={(selectedOption) => {
+                    setCompany({ ...company, payment_term: selectedOption?.value });
+                    console.log("Selected:", selectedOption);
+                  }}
+                  size="lg"
+                  className="select mb-0"
+                  classNamePrefix="two-easy-select"
+                />
+              </Box>
+            </Flex>
+
 
             <Divider />
             <h3 className="mt-6 mb-4">Billing</h3>

@@ -204,3 +204,13 @@ export const defaultCompany: Company = {
   rate_card_url: null,
   logo_url: null,
 };
+
+export const paymentTerms = [
+  { label: "7 Days", value: "7_days" },
+  { label: "14 Days", value: "14_days" },
+  { label: "30 Days", value: "30_days" },
+  { label: "7 Days EOM", value: "7_days_eom" },
+  { label: "14 Days EOM", value: "14_days_eom" },
+  { label: "21 Days EOM", value: "21_days_eom" },
+  { label: "30 Days EOM", value: "30_days_eom" },
+];
