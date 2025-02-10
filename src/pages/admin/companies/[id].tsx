@@ -1,4 +1,4 @@
-// Chakra imports
+
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
@@ -30,7 +30,6 @@ import {
 } from "@chakra-ui/react";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
 import { faFileInvoiceDollar,faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
-// Font awesome icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
@@ -39,10 +38,12 @@ import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
+// GraphQL imports
 import {
   defaultCompany,
   DELETE_COMPANY_MUTATION,
   GET_COMPANY_QUERY,
+  paymentTerms,
   UPDATE_COMPANY_MUTATION,
 } from "graphql/company";
 import {
@@ -51,8 +52,10 @@ import {
 } from "graphql/customer";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+// Next.js and React imports
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
+
 
 function CompanyEdit() {
   const toast = useToast();
@@ -67,7 +70,6 @@ function CompanyEdit() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [rateCardUrl, setRateCardUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
-
   const {
     loading: companyLoading,
     data: companyData,
@@ -90,7 +92,7 @@ function CompanyEdit() {
     },
   });
 
-  const [handleUpdateCompany, {}] = useMutation(UPDATE_COMPANY_MUTATION, {
+  const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
@@ -107,7 +109,7 @@ function CompanyEdit() {
     },
   });
 
-  const [handleDeleteCompany, {}] = useMutation(DELETE_COMPANY_MUTATION, {
+  const [handleDeleteCompany, { }] = useMutation(DELETE_COMPANY_MUTATION, {
     variables: {
       id: id,
     },
@@ -241,7 +243,7 @@ function CompanyEdit() {
     },
   });
 
-  const [addCustomerToCompany, {}] = useMutation(UPDATE_CUSTOMER_MUTATION, {
+  const [addCustomerToCompany, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
     variables: {
       input: {
         id: selectCustomerId,
@@ -264,7 +266,7 @@ function CompanyEdit() {
     },
   });
 
-  const [removeCustomerFromCompany, {}] = useMutation(
+  const [removeCustomerFromCompany, { }] = useMutation(
     UPDATE_CUSTOMER_MUTATION,
     {
       variables: {
@@ -320,7 +322,7 @@ function CompanyEdit() {
                   {/* Left side buttons */}
                   <Flex mt={8} flexDirection="column" className="border-b">
                     <Button
-                      disabled={isCompanySetting  == 0}
+                      disabled={isCompanySetting == 0}
                       onClick={() => setIsCompanySetting(0)}
                       alignItems="start"
                       h={45}
@@ -336,7 +338,7 @@ function CompanyEdit() {
                     </Button>
 
                     <Button
-                      disabled={isCompanySetting == 1 }
+                      disabled={isCompanySetting == 1}
                       onClick={() => setIsCompanySetting(1)}
                       alignItems="start"
                       h={45}
@@ -528,6 +530,34 @@ function CompanyEdit() {
                           fontWeight="500"
                           size="lg"
                         />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Payment Terms
+                        </FormLabel>
+
+                        <Box className="!max-w-md w-full">
+                          <Select
+                            placeholder="Select Payment Terms"
+                            value={paymentTerms.find((term) => term.value === company.payment_term)}
+                            options={paymentTerms}
+                            onChange={(selectedOption) => {
+                              setCompany({ ...company, payment_term: selectedOption?.value });
+                              console.log("Selected:", selectedOption);
+                            }}
+                            size="lg"
+                            className="select mb-0"
+                            classNamePrefix="two-easy-select"
+                          />
+                        </Box>
                       </Flex>
 
                       <Flex alignItems="center" mb="16px">
@@ -1198,13 +1228,13 @@ function CompanyEdit() {
                             )}
                         </SimpleGrid>
                       </Box>
- </>
+                    </>
                   )}
-                   {/* Invoice */}
-                     {isCompanySetting == 2 && (
+                  {/* Invoice */}
+                  {isCompanySetting == 2 && (
                     <>
-                       {company.id !== null && <InvoiceTab company_id={company.id} />}
-    
+                      {company.id !== null && <InvoiceTab company_id={company.id} />}
+
                     </>
                   )}
                 </GridItem>
