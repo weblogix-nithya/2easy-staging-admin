@@ -1,4 +1,4 @@
-// Chakra imports
+// Third-party libraries
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
@@ -30,30 +30,33 @@ import {
 } from "@chakra-ui/react";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
 import { faGear, faUserLock, faFileInvoiceDollar } from "@fortawesome/pro-solid-svg-icons";
-
-
-// Font awesome icons
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
+import debounce from "lodash.debounce";
+
+// Absolute imports
 import AddressesModal from "components/addresses/AddressesModal";
 import FileInputLink from "components/fileInput/FileInputLink";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import InvoiceTab from "components/companies/InvoiceTab";
+import AdminLayout from "layouts/admin";
+
+// GraphQL imports
 import {
   defaultCompany,
   DELETE_COMPANY_MUTATION,
   GET_COMPANY_QUERY,
   UPDATE_COMPANY_MUTATION,
-  paymentTerms
+  paymentTerms,
 } from "graphql/company";
 import {
   GET_CUSTOMERS_QUERY,
   UPDATE_CUSTOMER_MUTATION,
 } from "graphql/customer";
-import AdminLayout from "layouts/admin";
-import debounce from "lodash.debounce";
+
+// Next.js and React imports
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
