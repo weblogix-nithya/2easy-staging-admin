@@ -175,11 +175,11 @@ export default function QuoteCreate() {
 
   useEffect(() => {
     if (quote.company_id) {
-       setCustomerOptions([]); 
-       getCustomers({ company_id: quote.company_id });
+      setCustomerOptions([]);
+      getCustomers({ company_id: quote.company_id });
       setCustomerOptions(
         formatToSelect(
-           customers.filter(
+          customers.filter(
             (customer) => customer.company_id === quote.company_id,
           ),
           "id",
@@ -187,7 +187,7 @@ export default function QuoteCreate() {
         ),
       );
     }
-   
+
   }, [quote.company_id]);
 
   useQuery(GET_COMPANYS_QUERY, {
@@ -531,6 +531,38 @@ export default function QuoteCreate() {
                     </RadioGroup>
                   </Box>
                 </Flex>
+
+                <Flex alignItems="center" mb="16px">
+                  <FormLabel
+                    display="flex"
+                    mb="0"
+                    width="200px"
+                    fontSize="sm"
+                    fontWeight="500"
+                    _hover={{ cursor: "pointer" }}
+                  >
+                    Hand Unloading?
+                  </FormLabel>
+                  <Box width="100%">
+                    <RadioGroup
+                      defaultValue={"0"}
+                      onChange={(e) => {
+                        setQuote({
+                          ...quote,
+                          is_hand_unloading: e === "1" ? true : false,
+                        });
+                      }}
+                    >
+                      <Stack direction="row">
+                        <Radio value="0">No</Radio>
+                        <Radio value="1" pl={6}>
+                          Yes
+                        </Radio>
+                      </Stack>
+                    </RadioGroup>
+                  </Box>
+                </Flex>
+
                 <Flex alignItems="center" mb="16px">
                   <FormLabel
                     display="flex"

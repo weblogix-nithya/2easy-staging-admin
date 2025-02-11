@@ -159,6 +159,7 @@ export const GET_QUOTE_QUERY = gql`
       }
       is_tailgate_required
       is_stackable_freight
+      is_hand_unloading
       is_dangerous_goods
       is_timeslot_required
       is_approved
@@ -274,6 +275,7 @@ type Quote = {
   media: any[] | null;
   is_tailgate_required: boolean;
   is_stackable_freight: boolean;
+  is_hand_unloading: boolean;
   is_dangerous_goods: boolean;
   is_timeslot_required: boolean;
   sub_total: number;
@@ -304,6 +306,7 @@ export const defaultQuote: Quote = {
   media: [],
   is_tailgate_required: false,
   is_stackable_freight: false,
+  is_hand_unloading: false,
   is_dangerous_goods: false,
   is_timeslot_required: false,
   sub_total: null,

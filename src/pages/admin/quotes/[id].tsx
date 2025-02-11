@@ -1185,6 +1185,38 @@ export default function QuoteEdit() {
                       fontWeight="500"
                       _hover={{ cursor: "pointer" }}
                     >
+                      Hand Unloading?
+                    </FormLabel>
+                    <Box width="100%">
+                      <RadioGroup
+                        value={quote.is_hand_unloading ? "1" : "0"}
+                        onChange={(e) => {
+                          setQuote({
+                            ...quote,
+                            is_hand_unloading: e === "1" ? true : false,
+                          });
+                        }}
+                        isDisabled={!isEnableEdit}
+                      >
+                        <Stack direction="row">
+                          <Radio value="0">No</Radio>
+                          <Radio value="1" pl={6}>
+                            Yes
+                          </Radio>
+                        </Stack>
+                      </RadioGroup>
+                    </Box>
+                  </Flex>
+
+                  <Flex alignItems="center" mb="16px">
+                    <FormLabel
+                      display="flex"
+                      mb="0"
+                      width="200px"
+                      fontSize="sm"
+                      fontWeight="500"
+                      _hover={{ cursor: "pointer" }}
+                    >
                       Dangerous Goods?
                     </FormLabel>
                     <Box width="100%">
