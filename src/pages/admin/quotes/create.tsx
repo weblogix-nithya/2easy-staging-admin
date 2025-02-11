@@ -175,20 +175,23 @@ export default function QuoteCreate() {
 
   useEffect(() => {
     if (quote.company_id) {
-      setCustomerOptions([]);
-      getCustomers({ company_id: quote.company_id });
-      setCustomerOptions(
-        formatToSelect(
-          customers.filter(
-            (customer) => customer.company_id === quote.company_id,
-          ),
-          "id",
-          "full_name",
-        ),
-      );
+      setCustomerOptions([]); // Clear previous options
+      getCustomers({ query: "", company_id: quote.company_id }).then(({ data }) => {
+        if (data?.customers?.data) {
+          setCustomerOptions(
+            formatToSelect(
+              data.customers.data.filter((customer: { company_id: number }) => 
+                customer.company_id === quote.company_id
+              ),
+              "id",
+              "full_name"
+            )
+          );
+        }
+      });
+      
     }
-
-  }, [quote.company_id]);
+  }, [quote.company_id, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
     variables: {
