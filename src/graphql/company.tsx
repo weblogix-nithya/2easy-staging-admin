@@ -57,6 +57,7 @@ export const GET_COMPANY_QUERY = gql`
       address_country
       rate_card_url
       logo_url
+      payment_term
     }
   }
 `;
@@ -73,6 +74,7 @@ export const CREATE_COMPANY_MUTATION = gql`
       account_email
       admin_notes
       base_notes
+      payment_term
     }
   }
 `;
@@ -91,6 +93,7 @@ export const UPDATE_COMPANY_MUTATION = gql`
       base_notes
       is_pod_sendable
       is_invoice_sendable
+      payment_term
     }
   }
 `;
@@ -125,6 +128,7 @@ export interface UpdateCompanyInput {
   address_country: String;
   lng: Number;
   lat: Number;
+  payment_term: String;
 }
 
 export interface CreateCompanyInput {
@@ -149,6 +153,7 @@ export interface CreateCompanyInput {
   address_country: String;
   lng: Number;
   lat: Number;
+  payment_term: String;
 }
 
 type Company = {
@@ -176,6 +181,7 @@ type Company = {
   lat: number | null;
   rate_card_url: string | null;
   logo_url: string | null;
+  payment_term: String | null;
 };
 
 export const defaultCompany: Company = {
@@ -203,4 +209,16 @@ export const defaultCompany: Company = {
   lat: null,
   rate_card_url: null,
   logo_url: null,
+  payment_term: '7_days',
 };
+
+export const paymentTerms = [
+  { label: "EOD", value: "EOD" },
+  { label: "7 Days", value: "7_days" },
+  { label: "14 Days", value: "14_days" },
+  { label: "30 Days", value: "30_days" },
+  { label: "7 Days EOM", value: "7_days_eom" },
+  { label: "14 Days EOM", value: "14_days_eom" },
+  { label: "21 Days EOM", value: "21_days_eom" },
+  { label: "30 Days EOM", value: "30_days_eom" },
+];

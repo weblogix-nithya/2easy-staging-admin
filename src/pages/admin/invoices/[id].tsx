@@ -76,18 +76,7 @@ function InvoiceEdit() {
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const paymentTerms = [
-  { label: 'EOD', value: 'eod' },
-  { label: '7 Days', value: '7_days' },
-  { label: '14 Days', value: '14_days' },
-  { label: '30 Days', value: '30_days' },
-  { label: '7 Days EOM', value: '7_days_eom' },
-  { label: '14 Days EOM', value: '14_days_eom' },
-  { label: '21 Days EOM', value: '21_days_eom' },
-  { label: '30 Days EOM', value: '30_days_eom' },
-];
-
-const [paymentTerm, setPaymentTerm] = useState(null);
+  const [paymentTerm, setPaymentTerm] = useState(null);
 
 
   const onChangeSearchQuery = useMemo(() => {
@@ -196,14 +185,13 @@ const [paymentTerm, setPaymentTerm] = useState(null);
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
+  const [handleUpdateApproveInvoice, { }] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
         input: {
           id: id,
           invoice_status_id: 6,
-          payment_terms: '7_days',
         },
       },
       onCompleted: (data) => {
@@ -230,7 +218,6 @@ const [paymentTerm, setPaymentTerm] = useState(null);
         input: {
           id: id,
           invoice_status_id: invoice.invoice_status_id,
-          payment_terms: invoice.payment_terms,
           name: invoice.name,
           sub_total: invoice.sub_total,
           total_tax: invoice.total_tax,
@@ -296,7 +283,7 @@ const [paymentTerm, setPaymentTerm] = useState(null);
       },
     });
 
-  const [handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -314,7 +301,7 @@ const [paymentTerm, setPaymentTerm] = useState(null);
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -331,7 +318,7 @@ const [paymentTerm, setPaymentTerm] = useState(null);
     },
   });
 
-  const [handleGenerateInvoicePdf, {}] = useMutation(
+  const [handleGenerateInvoicePdf, { }] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -365,7 +352,7 @@ const [paymentTerm, setPaymentTerm] = useState(null);
     },
   );
 
-  const [handleDeleteInvoiceLineItem, {}] = useMutation(
+  const [handleDeleteInvoiceLineItem, { }] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -552,44 +539,6 @@ const [paymentTerm, setPaymentTerm] = useState(null);
                   {invoice.name}
                 </Skeleton>
               </Flex>
-
-               <Flex alignItems="center" mb="16px">
-              <FormLabel
-                display="flex"
-                mb="0"
-                width="200px"
-                fontSize="sm"
-                fontWeight="500"
-                color={textColor}
-              >
-                <Skeleton isLoaded={!invoiceLoading} w="75%">
-                  Payment Terms
-                </Skeleton>
-              </FormLabel>
-              {!isCustomer ? (
-                <Box className="!max-w-md w-full">
-                  <Select
-                    placeholder="Select Payment Terms"
-                    value={paymentTerms.find(
-                      (term) => term.value === invoice.payment_terms
-                    )}
-                    options={paymentTerms}
-                    onChange={(e) => {
-                      setInvoice({ ...invoice, payment_terms: e.value });
-                    }}
-                    size="lg"
-                    className="select mb-0"
-                    classNamePrefix="two-easy-select"
-                    isDisabled={isCustomer}
-                  />
-                </Box>
-              ) : (
-                <Skeleton isLoaded={!invoiceLoading} w="75%">
-                  {invoice.payment_terms}
-                </Skeleton>
-              )}
-            </Flex>
-
               <Flex alignItems="center" mb="16px">
                 <FormLabel
                   display="flex"
@@ -630,7 +579,7 @@ const [paymentTerm, setPaymentTerm] = useState(null);
                   </Skeleton>
                 )}
               </Flex>
-              
+
               {invoice.is_rcti && (
                 <>
                   <Flex alignItems="center" mb="16px">

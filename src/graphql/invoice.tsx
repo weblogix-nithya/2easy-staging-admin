@@ -320,6 +320,7 @@ type Invoice = {
   job_id: number;
   vehicle_hire: any;
   invoice_status: any;
+  payment_terms: string;
 };
 
 export const defaultInvoice: Invoice = {
@@ -349,6 +350,7 @@ export const defaultInvoice: Invoice = {
   job_id: null,
   vehicle_hire: null,
   invoice_status: null,
+  payment_terms: "",
 };
 export interface InvoiceBetweenInput {
   from_at: string;
