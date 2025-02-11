@@ -1,7 +1,6 @@
 import { useQuery } from "@apollo/client";
 import {
   Box,
-  Button,
   Divider,
   Flex,
   SimpleGrid,
@@ -15,13 +14,9 @@ import StatementGenerateModal from "components/invoices/StatementGenerateModal";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
 import { TabsComponent } from "components/tabs/TabsComponet";
-import { GET_COMPANYS_QUERY } from "graphql/company";
 import { GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_INVOICE_TOTALS_QUERY, GET_INVOICES_QUERY } from "graphql/invoice";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
-import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
-import { formatCurrency } from "helpers/helper";
-
 import debounce from "lodash.debounce";
 import moment from "moment";
 import { useRouter } from "next/router";
@@ -49,6 +44,7 @@ export default function InvoiceTab(props: any) {
   const [customerOptions, setCustomerOptions] = useState([]);
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [customerFilter, setCustomerFilter] = useState([]);
+
   const onChangeSearchCompany = useMemo(() => {
     return debounce((e) => {
       setDebouncedCompanySearch(e);
