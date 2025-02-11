@@ -454,6 +454,24 @@ export default function QuoteEdit() {
                       fontWeight="500"
                       _hover={{ cursor: "pointer" }}
                     >
+                      Hand Unloading?
+                    </FormLabel>
+                    <Box width="100%">
+                      <Text fontSize="md">
+                        {quote.is_hand_unloading ? "Yes" : "No"}
+                      </Text>
+                    </Box>
+                  </Flex>
+
+                  <Flex alignItems="center" mb="16px">
+                    <FormLabel
+                      display="flex"
+                      mb="0"
+                      width="200px"
+                      fontSize="md"
+                      fontWeight="500"
+                      _hover={{ cursor: "pointer" }}
+                    >
                       Dangerous Goods?
                     </FormLabel>
                     <Box width="100%">
