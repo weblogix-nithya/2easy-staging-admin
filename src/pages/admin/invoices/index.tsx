@@ -212,6 +212,11 @@ export default function InvoiceIndex() {
         showCompany: true,
       },
       {
+        Header: "due date",
+        accessor: "due_at" as const,
+        type: "date",
+      },
+      {
         Header: "date",
         accessor: "issued_at" as const,
         type: "date",
@@ -258,15 +263,15 @@ export default function InvoiceIndex() {
       between_at:
         rangeDate && rangeDate[0]
           ? {
-              from_at:
-                rangeDate && rangeDate[0]
-                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-              to_at:
-                rangeDate && rangeDate[1]
-                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-            }
+            from_at:
+              rangeDate && rangeDate[0]
+                ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+            to_at:
+              rangeDate && rangeDate[1]
+                ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+          }
           : undefined,
     },
     skip: !isAdmin,
@@ -290,15 +295,15 @@ export default function InvoiceIndex() {
         between_at:
           rangeDate && rangeDate[0]
             ? {
-                from_at:
-                  rangeDate && rangeDate[0]
-                    ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                    : undefined,
-                to_at:
-                  rangeDate && rangeDate[1]
-                    ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                    : undefined,
-              }
+              from_at:
+                rangeDate && rangeDate[0]
+                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                  : undefined,
+              to_at:
+                rangeDate && rangeDate[1]
+                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                  : undefined,
+            }
             : undefined,
       },
       skip: !isAdmin,
@@ -325,15 +330,15 @@ export default function InvoiceIndex() {
       between_at:
         rangeDate && rangeDate[0]
           ? {
-              from_at:
-                rangeDate && rangeDate[0]
-                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-              to_at:
-                rangeDate && rangeDate[1]
-                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-            }
+            from_at:
+              rangeDate && rangeDate[0]
+                ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+            to_at:
+              rangeDate && rangeDate[1]
+                ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+          }
           : undefined,
     },
     skip: !isCompanyAdmin,
@@ -361,15 +366,15 @@ export default function InvoiceIndex() {
       between_at:
         rangeDate && rangeDate[0]
           ? {
-              from_at:
-                rangeDate && rangeDate[0]
-                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-              to_at:
-                rangeDate && rangeDate[1]
-                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-            }
+            from_at:
+              rangeDate && rangeDate[0]
+                ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+            to_at:
+              rangeDate && rangeDate[1]
+                ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+          }
           : undefined,
     },
     skip: !isCustomer || isCompanyAdmin,
@@ -534,11 +539,11 @@ export default function InvoiceIndex() {
               Invoice Total:{" "}
               {invoiceTotals
                 ? formatCurrency(
-                    invoiceTotals?.invoices.data.reduce(
-                      (a: any, b: any) => a + b.total,
-                      0,
-                    ),
-                  )
+                  invoiceTotals?.invoices.data.reduce(
+                    (a: any, b: any) => a + b.total,
+                    0,
+                  ),
+                )
                 : "-"}
             </Box>
 
