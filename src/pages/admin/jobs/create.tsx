@@ -686,6 +686,38 @@ function JobEdit() {
     });
   };
 
+  const validateAddresses = () => {
+    if (!pickUpDestination?.address) {
+      toast({
+        title: "Pickup address is required.",
+        description: "Please enter the address in the correct format.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+  
+    if (jobDestinations.some((destination) => !destination.address)) {
+      toast({
+        title: "Delivery address is required.",
+        description: "Please ensure all delivery addresses are properly entered.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+  
+    return true;
+  };
+  
+  const handleJobCreation = () => {
+    if (!validateAddresses()) return;
+  
+    setIsSaving(true);
+    handleCreateJob();
+  };
   return (
     <AdminLayout>
       <Box
@@ -1354,16 +1386,19 @@ function JobEdit() {
 
                 {/* Create Job Button */}
                 <Flex alignItems="center" className="mb-6">
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      setIsSaving(true);
-                      handleCreateJob();
-                    }}
-                    isDisabled={isSaving}
-                  >
-                    Create Job
-                  </Button>
+                {/* <Button
+                  variant="primary"
+                  onClick={() => {
+                    setIsSaving(true);
+                    handleCreateJob();
+                  }}
+                  isDisabled={isSaving}
+                >
+                  Create Job
+                </Button> */}
+                <Button variant="primary" onClick={handleJobCreation} isDisabled={isSaving}>
+                  Create Job
+                </Button>
                 </Flex>
               </FormControl>
             </Grid>
