@@ -691,7 +691,7 @@ function JobEdit() {
       toast({
         title: "Pickup address is required.",
         description: "Please enter the address in the correct format.",
-        status: "error",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
@@ -702,7 +702,7 @@ function JobEdit() {
       toast({
         title: "Delivery address is required.",
         description: "Please ensure all delivery addresses are properly entered.",
-        status: "error",
+        status: "warning",
         duration: 3000,
         isClosable: true,
       });
