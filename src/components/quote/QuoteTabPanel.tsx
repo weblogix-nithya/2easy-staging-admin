@@ -35,6 +35,10 @@ export default function QuoteTabPanel(props: {
         accessor: "customer_name" as const,
       },
       {
+        Header: "Customer Reference",
+        accessor: "customer_reference" as const,
+      },
+      {
         Header: "Service Type",
         accessor: "quote_service.name" as const,
       },
