@@ -26,6 +26,7 @@ export const GET_QUOTES_QUERY = gql`
         id
         name
         customer_name
+        customer_reference
         date_required
         submitted_at
         created_at
