@@ -656,7 +656,7 @@ function InvoiceEdit() {
                     <Box pl={6}>
                       Delivery:{" "}
                       {jobDestinations
-                        .filter((destination) => destination.is_pickup === 0) 
+                        .filter((destination) => destination.is_pickup === false) 
                         .map((destination) => destination.address_city)
                         .join(", ")} 
                     </Box>
