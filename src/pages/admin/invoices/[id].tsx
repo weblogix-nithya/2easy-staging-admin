@@ -654,10 +654,11 @@ function InvoiceEdit() {
                       {invoice.company?.name}
                     </Skeleton>
                     <Box pl={6}>
-                      Delivery :{" "}
+                      Delivery:{" "}
                       {jobDestinations
+                        .filter((destination) => destination.is_pickup === 0) 
                         .map((destination) => destination.address_city)
-                        .join(", ")}
+                        .join(", ")} 
                     </Box>
                   </Flex>
                   <Flex alignItems="center" mb="16px">
