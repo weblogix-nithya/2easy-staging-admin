@@ -216,7 +216,7 @@ function JobEdit() {
     variables: {
       query: debouncedSearch,
       page: 1,
-      first: 100,
+      first: 10000,
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
