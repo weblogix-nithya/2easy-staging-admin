@@ -210,8 +210,8 @@ function CompanyEdit() {
   } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
       query: searchQuery,
-      page: queryPageIndex + 1,
-      first: queryPageSize,
+      page: 1,
+      first: 10000,
       orderByColumn: "id",
       orderByOrder: "ASC",
       company_id: null,
