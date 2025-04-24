@@ -106,6 +106,8 @@ const PaginationTable = <T extends object>({
     { value: 30, label: "30 / page" },
     { value: 50, label: "50 / page" },
     { value: 100, label: "100 / page" },
+    { value: 150, label: "150 / page" },
+    { value: 200, label: "200 / page" },
   ];
 
   const {
