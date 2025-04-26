@@ -1,4 +1,5 @@
 import { ApolloError, useMutation } from "@apollo/client";
+import { ApolloError, useMutation } from "@apollo/client";
 // Chakra imports
 import {
   Box,
@@ -90,6 +91,9 @@ export default function PasswordReset() {
           showGraphQLErrorToast(error);
         }
       },
+      // onError: (error) => {
+      //   showGraphQLErrorToast(error);
+      // },
       // onError: (error) => {
       //   showGraphQLErrorToast(error);
       // },
