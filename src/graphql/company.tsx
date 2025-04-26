@@ -17,7 +17,7 @@ export const GET_COMPANYS_QUERY = gql`
       data {
         id
         name
-      }
+          }
       paginatorInfo {
         count
         currentPage
@@ -94,6 +94,15 @@ export const UPDATE_COMPANY_MUTATION = gql`
       is_pod_sendable
       is_invoice_sendable
       payment_term
+    }
+  }
+`;
+
+export const GET_LIST_OF_SEAFREIGHTS = gql`
+  query {
+    allSeafreights {
+      id
+      location_name
     }
   }
 `;
@@ -181,7 +190,7 @@ type Company = {
   lat: number | null;
   rate_card_url: string | null;
   logo_url: string | null;
-  payment_term: String | null;
+  payment_term: string | null;
 };
 
 export const defaultCompany: Company = {
@@ -209,7 +218,7 @@ export const defaultCompany: Company = {
   lat: null,
   rate_card_url: null,
   logo_url: null,
-  payment_term: '7_days',
+  payment_term: "7_days",
 };
 
 export const paymentTerms = [

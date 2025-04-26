@@ -112,7 +112,7 @@ export default function JobAllocationIndex() {
     variables: {
       query: "",
       page: 1,
-      first: 300,
+      first: 10000,
       orderByColumn: "id",
       orderByOrder: "ASC",
       available: true,

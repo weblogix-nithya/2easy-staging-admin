@@ -26,7 +26,7 @@ export default function Banner(props: {
       p="20px"
       {...rest}
     >
-      <Flex direction="column" color="white" h="100%" w="100%">
+      <Flex flexDirection="column" color="white" h="100%" w="100%">
         <Flex justify="space-between" align="center" mb="37px">
           <Text fontSize="2xl" fontWeight="bold">
             Glassy.
@@ -34,20 +34,20 @@ export default function Banner(props: {
           <Icon as={RiMastercardFill} w="48px" h="auto" color="gray.400" />
         </Flex>
         <Spacer />
-        <Flex direction="column">
+        <Flex flexDirection="column">
           <Box>
             <Text fontSize={{ sm: "xl", lg: "lg", xl: "xl" }} fontWeight="bold">
               {number}
             </Text>
           </Box>
           <Flex mt="14px">
-            <Flex direction="column" me="34px">
+            <Flex flexDirection="column" me="34px">
               <Text fontSize="xs">VALID THRU</Text>
               <Text fontSize="sm" fontWeight="500">
                 {exp}
               </Text>
             </Flex>
-            <Flex direction="column">
+            <Flex flexDirection="column">
               <Text fontSize="xs">CVV</Text>
               <Text fontSize="sm" fontWeight="500">
                 {cvv}

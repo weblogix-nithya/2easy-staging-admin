@@ -22,7 +22,7 @@ export default function Default(props: {
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
 
   return (
-    <Flex direction="column" mb={mb ? mb : "30px"}>
+    <Flex flexDirection="column" mb={mb ? mb : "30px"}>
       <FormLabel
         display="flex"
         ms="10px"

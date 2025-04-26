@@ -296,19 +296,19 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
         </FormLabel>
         <Box className="!max-w-md w-full">
           <Flex className="px-4 py-2 bg-[var(--chakra-colors-gray-400)]">
-            <Flex direction="column" flex="1">
+            <Flex flexDirection="column" flex="1">
               <p className="text-xs uppercase !font-bold text-[var(--chakra-colors-black-500)]">
                 Total Qty
               </p>
               <p className="!font-bold">{job.total_quantity}</p>
             </Flex>
-            <Flex direction="column" flex="1">
+            <Flex flexDirection="column" flex="1">
               <p className="text-xs uppercase !font-bold text-[var(--chakra-colors-black-500)]">
                 Total Weight
               </p>
               <p className="!font-bold">{job.total_weight} kg</p>
             </Flex>
-            <Flex direction="column" flex="1">
+            <Flex flexDirection="column" flex="1">
               <p className="text-xs uppercase !font-bold text-[var(--chakra-colors-black-500)]">
                 Total Cbm
               </p>
@@ -444,7 +444,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
                 destinationStatus={jobDestination.job_destination_status_id}
               />
               <Flex className="!max-w-md w-full">
-                <Flex direction="column" className="w-full">
+                <Flex flexDirection="column" className="w-full">
                   <Text className="text-sm">{`${jobDestination.address_line_1} ${jobDestination.address_city} ${jobDestination.address_postal_code}`}</Text>
                   {jobDestination.pick_up_name ||
                   jobDestination.pick_up_notes ? (

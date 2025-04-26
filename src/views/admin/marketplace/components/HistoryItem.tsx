@@ -44,7 +44,7 @@ export default function NFT(props: {
             />
           </Box>
           <Flex
-            direction="column"
+            flexDirection="column"
             w={{ base: "70%", md: "100%" }}
             me={{ base: "4px", md: "32px", xl: "10px", "3xl": "32px" }}
           >

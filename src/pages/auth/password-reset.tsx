@@ -73,7 +73,7 @@ export default function PasswordReset() {
         const tokenError =
           (error?.graphQLErrors?.[0]?.extensions as any)?.errors?.token ||
           error?.message?.toLowerCase().includes("token");
-  
+
         if (tokenError) {
           toast({
             title: "Reset link expired or invalid",
@@ -82,7 +82,7 @@ export default function PasswordReset() {
             duration: 5000,
             isClosable: true,
           });
-  
+
           setTimeout(() => {
             router.push("/auth/forgot-password");
           }, 3000);
@@ -90,6 +90,9 @@ export default function PasswordReset() {
           showGraphQLErrorToast(error);
         }
       },
+      // onError: (error) => {
+      //   showGraphQLErrorToast(error);
+      // },
       // onError: (error) => {
       //   showGraphQLErrorToast(error);
       // },

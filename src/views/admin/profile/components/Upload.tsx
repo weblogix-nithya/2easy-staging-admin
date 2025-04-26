@@ -45,7 +45,7 @@ export default function Upload(props: {
             </Box>
           }
         />
-        <Flex direction="column" pe="44px">
+        <Flex flexDirection="column" pe="44px">
           <Text
             color={textColorPrimary}
             fontWeight="bold"
