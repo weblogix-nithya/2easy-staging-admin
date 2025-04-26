@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
@@ -29,7 +28,11 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
-import { faFileInvoiceDollar,faGear, faUserLock } from "@fortawesome/pro-solid-svg-icons";
+import {
+  faFileInvoiceDollar,
+  faGear,
+  faUserLock,
+} from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
@@ -42,10 +45,16 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
   defaultCompany,
   DELETE_COMPANY_MUTATION,
-  GET_COMPANY_QUERY,
+  GET_COMPANY_QUERY, GET_LIST_OF_SEAFREIGHTS,
   paymentTerms,
   UPDATE_COMPANY_MUTATION,
 } from "graphql/company";
+import {
+  CompanyRate,
+  CREATE_COMPANY_RATE_MUTATION,
+  GET_COMPANY_RATE_QUERY,
+  UPDATE_COMPANY_RATE_MUTATION,
+} from "graphql/companyRate";
 import {
   GET_CUSTOMERS_QUERY,
   UPDATE_CUSTOMER_MUTATION,
@@ -54,15 +63,15 @@ import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 // Next.js and React imports
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
-
+import { useEffect, useMemo, useState } from "react";
 
 function CompanyEdit() {
   const toast = useToast();
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [company, setCompany] = useState(defaultCompany);
+  const [initialCompany, setInitialCompany] = useState(defaultCompany);
   const [isCompanySetting, setIsCompanySetting] = useState(0);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
@@ -70,6 +79,26 @@ function CompanyEdit() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [rateCardUrl, setRateCardUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  // const adjustSignOptions = [
+  //   { label: "+", value: "+" },
+  //   { label: "-", value: "-" }
+  // ];
+  // const adjustTypeOptions = [
+  //   { label: "%", value: "%" },
+  //   { label: "$", value: "$" }
+  // ];
+
+  const [companyRate, setCompanyRate] = useState<Partial<CompanyRate>>({
+    company_id: id as string,
+    seafreight_id: null,
+    area: "",
+    cbm_rate: 0,
+    minimum_charge: 0,
+  });
+  const [companyRates, setCompanyRates] = useState<CompanyRate[]>([]);
+  const [prevCompanyRates, setPrevCompanyRates] = useState<CompanyRate[]>([]);
+
   const {
     loading: companyLoading,
     data: companyData,
@@ -83,28 +112,217 @@ function CompanyEdit() {
         router.push("/admin/companies");
       }
       setCompany({ ...company, ...data?.company });
+      setInitialCompany({ ...data?.company }); // Store initial data
       setRateCardUrl(data?.company.rate_card_url);
       setLogoUrl(data?.company.logo_url);
     },
     onError(error) {
-      console.log("onError");
-      console.log(error);
+      // console.log("onError");
+      // console.log(error);
     },
   });
+  const hasCompanyChanges = () => {
+    // Skip comparison if company data hasn't been loaded yet
+    if (!initialCompany.id || !company.id) return false;
+
+    return Object.keys(company).some(key => {
+      // Skip these fields from comparison
+      if (key === 'rate_card_url' || key === 'logo_url') return false;
+
+      // Handle null/undefined cases
+      const companyValue = (company as any)[key] ?? '';
+      const initialValue = (initialCompany as any)[key] ?? '';
+
+      return companyValue !== initialValue;
+    });
+  };
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(GET_COMPANY_RATE_QUERY, {
+    variables: { company_id: company.id },
+    skip: !company.id,
+    fetchPolicy: 'network-only', // Add this to ensure fresh data
+    onCompleted: (data) => {
+      if (data?.getRatesByCompany) {
+        const rates = [...data.getRatesByCompany];
+        setCompanyRates(rates);
+        setPrevCompanyRates(rates);
+      }
+    },
+  });
+  const [regionOption, setRegionOption] = useState([]);
+
+  const {
+    data: seafreightData,
+    loading: seafreightLoading,
+    error: seafreightError,
+  } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
+    onCompleted(data) {
+      const options = data.allSeafreights.map((item: any) => ({
+        value: item.id,
+        label: item.location_name,
+      }));
+      setRegionOption(options);
+    },
+    onError(error) {
+      console.error("GraphQL Error:", error);
+      toast({
+        title: "Error fetching seafreights",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
+
+
+  useEffect(() => {
+    if (company.id) {
+      getCompanyRates();
+    }
+  }, [company.id, getCompanyRates]);
+
+  const handleRateChange = (index: number, field: string, value: any) => {
+    const updatedRates = [...companyRates];
+    updatedRates[index] = {
+      ...updatedRates[index],
+      [field]: value
+    };
+    setCompanyRates(updatedRates);
+  };
+
+  const addNewRate = () => {
+    setCompanyRates([
+      ...companyRates,
+      {
+        id: undefined,
+        company_id: String(company.id),
+        seafreight_id: null,
+        area: "",
+        cbm_rate: 0,
+        minimum_charge: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]);
+  };
+  const saveRates = async () => {
+    try {
+      setIsSaving(true);
+
+      for (const rate of companyRates) {
+        const prevRate = prevCompanyRates.find(pr => pr.id === rate.id);
+
+        if (!prevRate) {
+          // Create new rate
+          await createCompanyRate({
+            variables: {
+              company_id: String(company.id),
+              seafreight_id: rate.seafreight_id,
+              area: rate.area,
+              cbm_rate: parseFloat(rate.cbm_rate.toString()),
+              minimum_charge: parseFloat(rate.minimum_charge.toString())
+            }
+          });
+        } else if (
+          prevRate.area !== rate.area ||
+          prevRate.cbm_rate !== rate.cbm_rate ||
+          prevRate.minimum_charge !== rate.minimum_charge
+        ) {
+          // Update existing rate
+          await updateCompanyRate({
+            variables: {
+              id: rate.id,
+              company_id: String(company.id),
+              seafreight_id: rate.seafreight_id,
+              area: rate.area,
+              cbm_rate: parseFloat(rate.cbm_rate.toString()),
+              minimum_charge: parseFloat(rate.minimum_charge.toString())
+            }
+          });
+        }
+      }
+
+      const { data } = await getCompanyRates();
+      if (data?.getRatesByCompany) {
+        setCompanyRates(data.getRatesByCompany);
+        setPrevCompanyRates(data.getRatesByCompany);
+      }
+
+      toast({
+        title: "Rates updated successfully",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "Error updating rates",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
+  const [updateCompanyRate] = useMutation(UPDATE_COMPANY_RATE_MUTATION);
 
   const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
-    onCompleted: (data) => {
-      toast({
-        title: "Company updated",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+    onCompleted: async (data) => {
+      try {
+        // console.log(data, 'oncompletedata UPD CMP')
+        if (companyRatesData?.companyRate) {
+          // Update existing rate
+          await updateCompanyRate({
+            variables: {
+              id: companyRatesData.companyRate.id,
+              input: {
+                company_id: data.company.id,
+                seafreight_id: companyRate.seafreight_id || null,
+                area: companyRate.area || "",
+                cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
+                minimum_charge: parseFloat(
+                  companyRate.minimum_charge?.toString() || "0",
+                ),
+              },
+            },
+          });
+        } else {
+          // Create new rate
+          await createCompanyRate({
+            variables: {
+              input: {
+                company_id: data.company.id,
+                seafreight_id: companyRate.seafreight_id || null,
+                area: companyRate.area || "",
+                cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
+                minimum_charge: parseFloat(
+                  companyRate.minimum_charge?.toString() || "0",
+                ),
+              },
+            },
+          });
+        }
+
+        toast({
+          title: "Company and rates updated successfully",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+
+        router.push("/admin/companies");
+      } catch (error) {
+        showGraphQLErrorToast(error as any);
+      }
     },
-    onError: (error) => {
+    onError(error) {
       showGraphQLErrorToast(error);
     },
   });
@@ -151,6 +369,24 @@ function CompanyEdit() {
       setSearchAvailableCustomerQuery(e);
     }, 300);
   }, []);
+
+  const hasRateChanges = () => {
+    // Check if there are any new rates (rates without IDs)
+    const hasNewRates = companyRates.some(rate => !rate.id);
+
+    // Check if there are any modified existing rates
+    const hasModifiedRates = companyRates.some(rate => {
+      const prevRate = prevCompanyRates.find(pr => pr.id === rate.id);
+      return prevRate && (
+        prevRate.seafreight_id !== rate.seafreight_id ||
+        prevRate.area !== rate.area ||
+        prevRate.cbm_rate !== rate.cbm_rate ||
+        prevRate.minimum_charge !== rate.minimum_charge
+      );
+    });
+
+    return hasNewRates || hasModifiedRates;
+  };
 
   const columns = useMemo(
     () => [
@@ -365,7 +601,10 @@ function CompanyEdit() {
                           : "!items-center !justify-start !font-medium text-[var(--chakra-colors-black-400)] !bg-white !rounded-none"
                       }
                     >
-                      <FontAwesomeIcon icon={faFileInvoiceDollar} className="mr-1" />
+                      <FontAwesomeIcon
+                        icon={faFileInvoiceDollar}
+                        className="mr-1"
+                      />
                       Invoices
                     </Button>
                   </Flex>
@@ -396,6 +635,7 @@ function CompanyEdit() {
                             className="!h-[39px]"
                             onClick={() => handleUpdateCompany()}
                             isLoading={companyLoading}
+                            isDisabled={!hasCompanyChanges()}
                           >
                             Update
                           </Button>
@@ -547,11 +787,16 @@ function CompanyEdit() {
                         <Box className="!max-w-md w-full">
                           <Select
                             placeholder="Select Payment Terms"
-                            value={paymentTerms.find((term) => term.value === company.payment_term)}
+                            value={paymentTerms.find(
+                              (term) => term.value === company.payment_term,
+                            )}
                             options={paymentTerms}
                             onChange={(selectedOption) => {
-                              setCompany({ ...company, payment_term: selectedOption?.value });
-                              console.log("Selected:", selectedOption);
+                              setCompany({
+                                ...company,
+                                payment_term: selectedOption?.value,
+                              });
+                              // console.log("Selected:", selectedOption);
                             }}
                             size="lg"
                             className="select mb-0"
@@ -1030,6 +1275,122 @@ function CompanyEdit() {
                       </Flex>
                       <Divider />
 
+                      <h3 className="mt-6 mb-4">Custom rate</h3>
+                      <Box>
+                        <Flex justifyContent="end" mb={4}>
+                          {/* <Text fontSize="sm" fontWeight="500">Line Items</Text> */}
+                          <Button
+                            onClick={addNewRate}
+                            fontSize="sm"
+                            variant="brand"
+                            fontWeight="500"
+                          >
+                            + Add Rate
+                          </Button>
+                        </Flex>
+
+                        <Grid templateColumns="2fr 1fr 1fr 80px" gap={4} mb={2}>
+                          <Text fontSize="sm" fontWeight="500">REGION</Text>
+                          <Text fontSize="sm" fontWeight="500">CBM RATE</Text>
+                          <Text fontSize="sm" fontWeight="500">MIN CHARGE</Text>
+                          {/* <Text fontSize="sm" fontWeight="500">ACTION</Text> */}
+                        </Grid>
+
+                        {companyRates.map((rate, index) => (
+                          <Grid
+                            key={rate.id}
+                            templateColumns="2fr 1fr 1fr 80px"
+                            gap={4}
+                            alignItems="center"
+                            mb={4}
+                          >
+                            {/* <Select
+                              name="region"
+                              options={regionOption}
+                              value={regionOption.find(
+                                (option) => option.value === rate.area
+                              ) || null}
+                              onChange={(selectedOption) =>
+                                handleRateChange(index, "area", selectedOption?.value)
+                              }
+                              className="basic-single"
+                              classNamePrefix="select"
+                            /> */}
+                            <Select
+                              name="region"
+                              options={regionOption}
+                              value={
+                                regionOption.find(
+                                  (option) => option.value === String(rate.seafreight_id)
+                                ) || null
+                              }
+                              onChange={(selectedOption) => {
+                                const updatedRates = [...companyRates];
+                                updatedRates[index] = {
+                                  ...updatedRates[index],
+                                  seafreight_id: selectedOption?.value,
+                                  area: selectedOption?.label,
+                                };
+                                setCompanyRates(updatedRates);
+                              }}
+                              className="basic-single"
+                              classNamePrefix="select"
+                            />
+                            <Input
+                              type="number"
+                              value={rate.cbm_rate}
+                              onChange={(e) =>
+                                handleRateChange(
+                                  index,
+                                  "cbm_rate",
+                                  parseFloat(e.target.value)
+                                )
+                              }
+                              variant="main"
+                              fontSize="sm"
+                            />
+                            <Input
+                              type="number"
+                              value={rate.minimum_charge}
+                              onChange={(e) =>
+                                handleRateChange(
+                                  index,
+                                  "minimum_charge",
+                                  parseFloat(e.target.value)
+                                )
+                              }
+                              variant="main"
+                              fontSize="sm"
+                            />
+
+                            {/* <Button
+                              colorScheme="red"
+                              size="sm"
+                              onClick={() => {
+                                const newRates = [...companyRates];
+                                newRates.splice(index, 1);
+                                setCompanyRates(newRates);
+                              }}
+                            >
+                              Delete
+                            </Button> */}
+                          </Grid>
+                        ))}
+
+                        <Button
+                          onClick={saveRates}
+                          fontSize="sm"
+                          variant="brand"
+                          fontWeight="500"
+                          mt={4}
+                          mb={4}
+                          isDisabled={!hasRateChanges()}
+                        >
+                          Save Rates
+                        </Button>
+                      </Box>
+                     <Divider />
+
                       <h3 className="mt-6 mb-4">Notifications</h3>
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
@@ -1233,8 +1594,9 @@ function CompanyEdit() {
                   {/* Invoice */}
                   {isCompanySetting == 2 && (
                     <>
-                      {company.id !== null && <InvoiceTab company_id={company.id} />}
-
+                      {company.id !== null && (
+                        <InvoiceTab company_id={company.id} />
+                      )}
                     </>
                   )}
                 </GridItem>

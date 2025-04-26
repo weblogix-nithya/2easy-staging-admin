@@ -42,9 +42,9 @@ import { useMemo, useState } from "react";
 
 function CustomerEdit() {
   const toast = useToast();
-  let menuBg = useColorModeValue("white", "navy.800");
+  // let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // const textColorSecondary = "gray.400";
   const [customer, setCustomer] = useState(defaultCustomer);
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
