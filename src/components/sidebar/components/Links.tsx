@@ -88,7 +88,7 @@ export function SidebarLinks(props: SidebarLinksProps) {
                           : "normal"
                       }
                     >
-                      {route.name}
+                     {isAdmin ? (route.path === "/jobs" ? "Bulk Allocation" : route.name) : (isCompany ? (route.path === "/jobs" ? "My Bookings" : route.name) : route.name)}
                     </Text>
                   </Flex>
 

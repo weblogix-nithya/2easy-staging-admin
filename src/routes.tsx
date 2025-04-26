@@ -1,4 +1,4 @@
-// Icons
+// External Imports
 import {
   faBriefcase,
   faFileInvoiceDollar,
@@ -9,10 +9,10 @@ import {
   faUserLock,
 } from "@fortawesome/pro-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// Admin Page Imports
 import Clients from "pages/admin/clients/index";
 import Companies from "pages/admin/companies/index";
 import Customers from "pages/admin/customers/index";
-// Admin Imports
 import MainDashboard from "pages/admin/dashboard";
 import Drivers from "pages/admin/drivers/index";
 import Invoices from "pages/admin/invoices/index";
@@ -23,8 +23,10 @@ import Quote from "pages/admin/quotes/index";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
 import VehicleHire from "pages/admin/vehicle-hires";
-// Auth Imports
+// import Vendors from "pages/admin/vendors/index";
+// Types
 import { IRoute } from "types/navigation";
+
 
 const routes: IRoute[] = [
   {
@@ -40,8 +42,8 @@ const routes: IRoute[] = [
     isPrivate: false,
   },
   {
-    name: "Job Allocations",
-    title: "Delivery Allocation",
+    name: "Tracking",
+    title: "Tracking",
     layout: "/admin",
     path: "/job-allocations",
     icon: <FontAwesomeIcon icon={faTruckRampBox} className="mr-1" />,
@@ -165,6 +167,18 @@ const routes: IRoute[] = [
     isCompany: false,
     isPrivate: false,
   },
+  // {
+  //   name: "Vendors",
+  //   layout: "/admin",
+  //   icon: <FontAwesomeIcon icon={faBriefcase} className="mr-1" />,
+  //   // icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+  //   path: "/vendors",
+  //   component: Vendors,
+  //   sidebar: true,
+  //   isAdmin: true,
+  //   isCompany: false,
+  //   isPrivate: true,
+  // },
   {
     name: "Profile",
     layout: "/admin",
