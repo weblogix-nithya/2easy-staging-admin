@@ -25,7 +25,7 @@ import {
 import {
   CompanyRate,
   CREATE_COMPANY_RATE_MUTATION
-} from "graphql/CompanyRate";
+} from "graphql/companyRate";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useState } from "react";

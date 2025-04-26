@@ -1,4 +1,4 @@
-import { useMutation } from "@apollo/client";
+import { ApolloError, useMutation } from "@apollo/client";
 // Chakra imports
 import {
   Box,
@@ -69,9 +69,30 @@ export default function PasswordReset() {
         toast({ title: "Password reset successful", status: "success" });
         router.push("/auth/login");
       },
-      onError: (error) => {
-        showGraphQLErrorToast(error);
+      onError: (error: ApolloError) => {
+        const tokenError =
+          (error?.graphQLErrors?.[0]?.extensions as any)?.errors?.token ||
+          error?.message?.toLowerCase().includes("token");
+
+        if (tokenError) {
+          toast({
+            title: "Reset link expired or invalid",
+            description: "Please request a new password reset link.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+
+          setTimeout(() => {
+            router.push("/auth/forgot-password");
+          }, 3000);
+        } else {
+          showGraphQLErrorToast(error);
+        }
       },
+      // onError: (error) => {
+      //   showGraphQLErrorToast(error);
+      // },
     },
   );
 
