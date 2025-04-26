@@ -213,7 +213,7 @@ export default function TrackingJob() {
                           }
                         />
                         <Text className="ml-1">
-                          {jobData.job.driver.full_name}
+                          {jobData?.job.driver?.full_name}
                         </Text>
                       </Flex>
                     </Flex>

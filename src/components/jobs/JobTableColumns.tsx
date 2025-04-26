@@ -4,6 +4,7 @@ import {
   Flex,
   Icon,
   IconButton,
+  Link,
   Popover,
   PopoverArrow,
   PopoverBody,
@@ -149,7 +150,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           : "-"}
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
+      {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
@@ -166,7 +167,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
             </Link>
           ))}
         </Flex>
-      )} */}
+      )}
     </>
   );
 };
@@ -353,7 +354,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         {formatAddress(pickupDest)}
       </Text>
       <Text>{pickupDest?.address_business_name || "-"}</Text>
-      {/* {normalMedia.length > 0 && (
+      {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
@@ -370,7 +371,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
             </Link>
           ))}
         </Flex>
-      )} */}
+      )}
     </>
   );
 };

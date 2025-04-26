@@ -11,15 +11,19 @@ import {
   GridItem,
   Radio,
   RadioGroup,
+  // SelectField,
   SimpleGrid,
   Stack,
-  useColorModeValue,
+  Text,
   useToast,
 } from "@chakra-ui/react";
+// import { t } from "@chakra-ui/styled-system/dist/types/utils";
 import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
+// import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
@@ -27,6 +31,7 @@ import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANYS_QUERY } from "graphql/company";
+import { GET_COMPANY_RATE_QUERY } from "graphql/companyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
@@ -35,6 +40,7 @@ import {
   defaultJob,
   SEND_CONSIGNMENT_DOCKET,
 } from "graphql/job";
+import defaultJobQuoteData from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { CREATE_JOB_CC_EMAIL_MUTATION } from "graphql/jobCcEmails";
 import {
@@ -42,6 +48,12 @@ import {
   defaultJobDestination,
 } from "graphql/jobDestination";
 import { CREATE_JOB_ITEM_MUTATION, defaultJobItem } from "graphql/jobItem";
+import {
+  CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  CreateJobPriceCalculationDetailInput,
+  defaultJobPriceCalculationDetail,
+  JobPriceCalculationDetail,
+} from "graphql/JobPriceCalculationDetail";
 import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
 import {
@@ -69,10 +81,11 @@ function JobEdit() {
   const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
     (state: RootState) => state.user,
   );
-
-  const textColor = useColorModeValue("navy.700", "white");
+  // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
+  // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
+  // console.log(job, "job");
   const [customerSelected, setCustomerSelected] = useState(defaultCustomer);
   const [jobDestinations, setJobDestinations] = useState([
     { ...defaultJobDestination, ...{ id: 2, address_line_1: "" } },
@@ -81,12 +94,54 @@ function JobEdit() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
+  // const [refinedData, setRefinedData] = useState({
+  //   ...defaultJobQuoteData,
+  //   freight_type: "LCL",
+  // });
+
+  const [refinedData, setRefinedData] = useState({
+    ...defaultJobQuoteData,
+    freight_type: "LCL",
+    depotOptions: [
+      { value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane", label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane" },
+      { value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane", label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane" },
+      { value: "(Interport) 97 Freight Street Lytton", label: "(Interport) 97 Freight Street Lytton" },
+      { value: "(Buccini Transport) 28 Wyuna Court Hemmant", label: "(Buccini Transport) 28 Wyuna Court Hemmant" },
+      { value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane", label: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane" },
+    ],
+    timeslot_depots: "",
+  });
+
+  // const [companyRate, setCompanyRate] = useState({
+  //   company_id: "",
+  //   area: "",
+  //   cbm_rate: 0,
+  //   minimum_charge: 0
+  // });
+  const [companyRates, setCompanyRates] = useState([]);
+
+  const [selectedRegion, setSelectedRegion] = useState({
+    area: "",
+    cbm_rate: 0,
+    minimum_charge: 0,
+  });
+  // console.log(refinedData, "refined to wp");
+
+  const [quoteCalculationRes, setQuoteCalculationRes] = useState(
+    defaultJobPriceCalculationDetail,
+  );
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [tempcalculation, setTempcalculation] = useState({
+    cbm_auto: 0,
+    total_weight: 0,
+  });
+  const [isQuotePrice, setIsQuotePrice] = useState(false);
 
   // Temporary saved addresses
   const [isSaving, setIsSaving] = useState(false);
   const [jobItems, setJobItems] = useState([defaultJobItem]);
+  // console.log(jobItems, "jobitem");
   const [savedAddressesSelect, setSavedAddressesSelect] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [jobTypeOptions, setJobTypeOptions] = useState([]);
@@ -101,6 +156,7 @@ function JobEdit() {
   const [isSameDayJob, setIsSameDayJob] = useState(true);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
+
 
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -119,10 +175,10 @@ function JobEdit() {
     orderByColumn: "id",
     orderByOrder: "ASC",
   };
-  const defaultSelect = [
-    { value: 1, label: "option 1" },
-    { value: 2, label: "option 2" },
-  ];
+  // const defaultSelect = [
+  //   { value: 1, label: "option 1" },
+  //   { value: 2, label: "option 2" },
+  // ];
   const itemsTableColumns = useMemo(
     () => [
       {
@@ -170,6 +226,23 @@ function JobEdit() {
     ],
     [],
   );
+
+  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+    GET_COMPANY_RATE_QUERY,
+    {
+      variables: { company_id: job?.company_id || "" },
+      skip: !job?.company_id,
+      fetchPolicy: "network-only",
+      onCompleted: (data) => {
+        if (data?.getRatesByCompany) {
+          const rates = [...data.getRatesByCompany];
+          setCompanyRates(rates);
+        }
+      },
+    },
+  );
+
+
 
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
@@ -221,16 +294,38 @@ function JobEdit() {
       orderByOrder: "ASC",
     },
     onCompleted: (data) => {
-      setCompaniesOptions([]);
-      data.companys.data.map((_entity: any) => {
-        setCompaniesOptions((companys) => [
-          ...companys,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
+      const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
+        value: parseInt(_entity.id),
+        label: _entity.name,
+
+      }));
+
+      setCompaniesOptions(newCompaniesOptions);
+
+      // If a company is already selected, update refinedData with its properties
+      const selectedCompany = newCompaniesOptions.find(
+        (entity: { value: number }) => entity.value == job.company_id,
+        // (entity: { value: number }) => entity.value == job.company_id,
+      );
+
+      if (selectedCompany) {
+        setRefinedData({
+          ...refinedData,
+        });
+        // console.log(selectedCompany.min_rate, "selected company min rate")
+      }
+
+      if (!isAdmin) {
+        const companyWithId = newCompaniesOptions.find(
+          (entity: { value: number }) => entity.value == companyId,
+        );
+        if (companyWithId) {
+          setRefinedData({
+            ...refinedData,
+          });
+          // console.log(companyWithId,'companywithid min rate')
+        }
+      }
     },
   });
 
@@ -247,6 +342,10 @@ function JobEdit() {
         ...job,
         id: undefined,
         job_status_id: 1,
+        transport_type: job.transport_type,
+        transport_location: job.transport_location,
+        timeslot_depots: job.timeslot_depots,
+        // company_area: job.company_area,
         media: undefined,
       },
     },
@@ -280,6 +379,22 @@ function JobEdit() {
           },
         });
       }
+      // save job price calculation detail
+      await handleCreateJobPriceCalculationDetail({
+        job_id: Number(data.createJob.id),
+        customer_id: Number(job.customer_id),
+        cbm_auto: Number(quoteCalculationRes.cbm_auto), // Ensure type casting
+        total_weight: Number(quoteCalculationRes.total_weight),
+        freight: Number(quoteCalculationRes.freight),
+        fuel: Number(quoteCalculationRes.fuel),
+        hand_unload: Number(quoteCalculationRes.hand_unload),
+        dangerous_goods: Number(quoteCalculationRes.dangerous_goods),
+        time_slot: Number(quoteCalculationRes.time_slot),
+        tail_lift: Number(quoteCalculationRes.tail_lift),
+        stackable: Number(quoteCalculationRes.stackable),
+        total: Number(quoteCalculationRes.total),
+      });
+      // console.log("Job cre", job.customer_id);
       // save job destinations
       const resultPickup = await handleCreateJobDestination({
         input: {
@@ -351,7 +466,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -359,7 +474,7 @@ function JobEdit() {
         duration: 3000,
         isClosable: true,
       });*/
-      console.log("Media created");
+      // console.log("Media created");
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -379,6 +494,25 @@ function JobEdit() {
   };
 
   const [createJobItem] = useMutation(CREATE_JOB_ITEM_MUTATION);
+
+  const handleCreateJobPriceCalculationDetail = (
+    jobPriceDetail: CreateJobPriceCalculationDetailInput,
+  ) => {
+    return new Promise((resolve, reject) => {
+      createJobPriceCalculationDetail({ variables: { input: jobPriceDetail } })
+        .then(({ data }) => {
+          resolve(data);
+        })
+        .catch((error) => {
+          reject(error);
+          showGraphQLErrorToast(error);
+        });
+    });
+  };
+
+  const [createJobPriceCalculationDetail] = useMutation(
+    CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
+  );
 
   const handleCreateJobCcEmail = (jobCcEmail: any) => {
     return new Promise((resolve, reject) => {
@@ -524,7 +658,33 @@ function JobEdit() {
     }
     _jobItems[index] = value;
     setJobItems(_jobItems);
+    // recalculateTempCalculations(_jobItems);
   };
+
+  useEffect(() => {
+    // Recalculate cbm_auto and total_weight whenever jobItems change
+    const calculateTotals = () => {
+      const cbmAuto = jobItems.reduce(
+        (total, item) => total + item.volume || 0,
+        0,
+      );
+      // const totalWeight = jobItems.reduce(
+      //   (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+      //   0,
+      // );
+      const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.weight || 0),
+        0,
+      );
+      setTempcalculation({
+        cbm_auto: parseFloat(cbmAuto.toFixed(2)), // Rounded to 2 decimal points
+        total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
+      });
+    };
+
+    calculateTotals();
+  }, [jobItems]);
+
   const addToJobItems = () => {
     let nextId = jobItems[jobItems.length - 1].id + 1;
     setJobItems((jobItems) => [
@@ -573,10 +733,16 @@ function JobEdit() {
       );
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
+        // console.log(customerSelected, "customerSelected");
+
         setJob({ ...job, ...{ customer_id: customerId } });
-        setCustomerSelected({
-          ..._customerOptions.find((_e) => _e.value === customerId).entity,
-        });
+        const selectedCustomer = _customerOptions.find(
+          (_e) => _e.value === customerId,
+        )?.entity;
+        if (selectedCustomer) {
+          setCustomerSelected(selectedCustomer);
+          // Update refinedData with the new properties
+        }
         getCustomerAddresses();
       }
     },
@@ -697,27 +863,149 @@ function JobEdit() {
       });
       return false;
     }
-  
+
     if (jobDestinations.some((destination) => !destination.address)) {
       toast({
         title: "Delivery address is required.",
-        description: "Please ensure all delivery addresses are properly entered.",
+        description:
+          "Please ensure all delivery addresses are properly entered.",
         status: "warning",
         duration: 3000,
         isClosable: true,
       });
       return false;
     }
-  
+
     return true;
   };
-  
+
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
-  
+
+    if ((job.job_type_id = null)) {
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsSaving(true);
     handleCreateJob();
   };
+
+  const sendFreightData = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+
+    if (!validateAddresses()) return;
+    if ((job.job_type_id = null)) {
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    const today = new Date().toISOString(); // Gets current date and time in ISO format
+
+    const jobDestination1 =
+      jobDestinations.length > 0
+        ? {
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
+        : null;
+
+    const payload = {
+      freight_type: refinedData.freight_type,
+      transport_type: job.transport_type,
+      state: refinedData.state,
+      state_code: refinedData.state_code,
+      service_choice: refinedData.service_choice,
+      // cbm_rate: refinedData.cbm_rate,
+      // minimum_charge: refinedData.minimum_charge,
+      // area: refinedData.area,
+      company_rates: job.transport_location === "QLD"
+        ? companyRates.map((rate) => ({
+          company_id: rate.company_id,
+          seafreight_id: rate.seafreight_id,
+          area: rate.area,
+          cbm_rate: rate.cbm_rate,
+          minimum_charge: rate.minimum_charge,
+        }))
+        : [],
+      job_pickup_address: {
+        state: pickUpDestination?.address_state,
+        suburb: pickUpDestination?.address_city,
+        postcode: pickUpDestination?.address_postal_code,
+        address: pickUpDestination?.address,
+      },
+      job_destination_address:
+        jobDestinations.length > 0
+          ? {
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
+          : {},
+      pickup_time: {
+        ready_by: readyAt,
+      },
+      delivery_time: {
+        drop_by: dropAt,
+      },
+      surcharges: {
+        hand_unload: job.is_hand_unloading || false,
+        dangerous_goods: job.is_dangerous_goods || false,
+        time_slot: job.is_inbound_connect || null,
+        timeslot_depots: refinedData.timeslot_depots || null,
+        tail_lift: job.is_tailgate_required || null,
+        stackable: false, // If applicable, update this
+      },
+      job_items: jobItems.map((item) => ({
+        id: item.id,
+        name: item.name || "",
+        notes: item.notes || "",
+        quantity: item.quantity,
+        volume: item.volume,
+        weight: item.weight,
+        dimension_height: item.dimension_height,
+        dimension_width: item.dimension_width,
+        dimension_depth: item.dimension_depth,
+        job_destination: jobDestination1 || null,
+        item_type: {
+          id: item.item_type?.id || "",
+          name: item.item_type?.name || "",
+        },
+        created_at: refinedData.created_at || today,
+        updated_at: refinedData.updated_at || today,
+      })),
+    };
+
+    try {
+      const response = await axios.post(apiUrl, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // console.log("Response Data:", response.data);
+      setQuoteCalculationRes(response?.data as JobPriceCalculationDetail);
+      setIsQuotePrice(true);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   return (
     <AdminLayout>
       <Box
@@ -755,10 +1043,21 @@ function JobEdit() {
                     placeholder=""
                     onChange={(e) => {
                       const selectedCategory = e.value;
+                      const selectedCategoryName = jobCategories.find(
+                        (job_category) =>
+                          job_category.value === selectedCategory,
+                      )?.label;
+
                       setJob({
                         ...job,
                         job_category_id: selectedCategory || null,
                       });
+
+                      setRefinedData({
+                        ...refinedData,
+                        freight_type: selectedCategoryName || null,
+                      });
+                      // console.log(refinedData, "n");
                     }}
                   />
                   {!isCompany && (
@@ -784,9 +1083,98 @@ function JobEdit() {
                           company_id: e.value || null,
                           customer_id: null,
                         });
+                        setRefinedData({
+                          ...refinedData,
+                          area: null,
+                          cbm_rate: null,
+                          minimum_charge: null,
+                        });
+
+                        if (e.value) {
+                          // console.log(e.value, "firstCompany");
+                          getCompanyRates({
+                            variables: {
+                              company_id: String(e.value),
+                            },
+                          });
+                        }
                       }}
                     />
                   )}
+
+                  {/* {!isCompany && (
+                    <>
+                      <CustomInputField
+                        isSelect={true}
+                        optionsArray={companyRates.map((rate) => ({
+                          value: rate.area,
+                          label: rate.area,
+                        }))}
+                        label="Area :"
+                        value={
+                          selectedRegion.area
+                            ? {
+                              value: selectedRegion.area,
+                              label: selectedRegion.area,
+                            }
+                            : null
+                        }
+                        placeholder="Select area"
+                        onChange={(e) => {
+                          const selectedRate = companyRates.find(
+                            (rate) => rate.area === e.value,
+                          );
+                          if (selectedRate) {
+                            setJob({
+                              ...job,
+                              //company_area: selectedRate.area,
+                            });
+
+                            setSelectedRegion({
+                              area: selectedRate.area,
+                              cbm_rate: selectedRate.cbm_rate,
+                              minimum_charge: selectedRate.minimum_charge,
+                            });
+
+                            setRefinedData((prev) => ({
+                              ...prev,
+                              area: selectedRate.area,
+                              cbm_rate: selectedRate.cbm_rate,
+                              minimum_charge: selectedRate.minimum_charge,
+                            }));
+                            console.log(job, "job");
+                          }
+                        }}
+                      />
+
+                      <CustomInputFieldAdornment
+                        label="Minium Rate"
+                        placeholder=""
+                        isDisabled={true}
+                        name="minimum_charge"
+                        value={selectedRegion?.minimum_charge || ""}
+                        addonsEnd={
+                          <Text mr="2" fontSize="sm">
+                            $
+                          </Text>
+                        }
+                        onChange={(e) => { }}
+                      />
+                      <CustomInputFieldAdornment
+                        label="CBM Rate"
+                        placeholder=""
+                        isDisabled={true}
+                        name="cbm_rate"
+                        value={selectedRegion?.cbm_rate || ""}
+                        addonsEnd={
+                          <Text mr="2" fontSize="sm">
+                            $
+                          </Text>
+                        }
+                        onChange={(e) => { }}
+                      />
+                    </>
+                  )} */}
 
                   <CustomInputField
                     isSelect={true}
@@ -803,12 +1191,15 @@ function JobEdit() {
                         ...job,
                         customer_id: e.value || null,
                       });
-                      setCustomerSelected({
-                        ...customerOptions.find((_e) => _e.value === e.value)
-                          .entity,
-                      });
+                      const selectedCustomer = customerOptions.find(
+                        (_e) => _e.value === e.value,
+                      )?.entity;
+                      if (selectedCustomer) {
+                        setCustomerSelected(selectedCustomer);
+                      }
                     }}
                   />
+
                   <CustomInputField
                     label="Operator phone:"
                     placeholder=""
@@ -816,7 +1207,7 @@ function JobEdit() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -831,7 +1222,7 @@ function JobEdit() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -881,11 +1272,11 @@ function JobEdit() {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -966,10 +1357,27 @@ function JobEdit() {
                     )}
                     placeholder="Select type"
                     onChange={(e) => {
+                      // setJob({
+                      //   ...job,
+                      //   job_type_id: e.value || null,
+                      // });
+                      const selectedCategory = e.value;
+                      const selectedCategoryName = filteredJobTypeOptions.find(
+                        (job_category) =>
+                          job_category.value === selectedCategory,
+                      )?.label;
+
                       setJob({
                         ...job,
-                        job_type_id: e.value || null,
+                        job_type_id: selectedCategory || null,
                       });
+
+                      setRefinedData({
+                        ...refinedData,
+                        service_choice: selectedCategoryName || null,
+                      });
+                      // console.log(refinedData, "n");
+                      // console.log(job, "job");
                     }}
                   />
 
@@ -1028,6 +1436,104 @@ function JobEdit() {
                       />
                     </>
                   )}
+                  {/* Transport Type Select */}
+                  <CustomInputField
+                    key="transport_typeKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ]}
+                    label="Transport Type"
+                    name="transport_type"
+                    value={[
+                      { value: "import", label: "Import" },
+                      { value: "export", label: "Export" },
+                    ].find((_e) => _e.value === job.transport_type)}
+                    placeholder=""
+                    onChange={(e) => {
+                      setJob({ ...job, transport_type: e.value });
+                      setRefinedData({
+                        ...refinedData,
+                        transport_type: e.value,
+                      });
+                    }}
+                  />
+
+                  {/* Location Select */}
+                  <CustomInputField
+                    key="locationKey"
+                    isSelect={true}
+                    optionsArray={[
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ]}
+                    label="State"
+                    name="transport_location"
+                    value={[
+                      { value: "VIC", label: "Victoria" },
+                      { value: "QLD", label: "Queensland" },
+                    ].find((_e) => _e.value === job.transport_location)}
+                    placeholder=""
+                    onChange={(e) => {
+                      const newState = {
+                        ...refinedData,
+                        state_code: e.value,
+                        state: e.label,
+                      };
+                      setJob({ ...job, transport_location: e.value });
+                      setRefinedData(newState);
+                    }}
+                  />
+                  <Text
+                    style={{
+                      color: "red",
+                      paddingLeft: "11.4rem",
+                      paddingBottom: "1rem",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Note: For LCL and Airfreight Only
+                  </Text>
+
+                  {/* {!isAdmin && job.transport_location === "QLD" && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={companyRates.map((rate) => ({
+                        value: rate.area,
+                        label: rate.area,
+                      }))}
+                      label="Area :"
+                      value={
+                        selectedRegion.area
+                          ? {
+                            value: selectedRegion.area,
+                            label: selectedRegion.area,
+                          }
+                          : null
+                      }
+                      placeholder="Select area"
+                      onChange={(e) => {
+                        const selectedRate = companyRates.find(
+                          (rate) => rate.area === e.value,
+                        );
+                        if (selectedRate) {
+                          setSelectedRegion({
+                            area: selectedRate.area,
+                            cbm_rate: selectedRate.cbm_rate,
+                            minimum_charge: selectedRate.minimum_charge,
+                          });
+
+                          setRefinedData((prev) => ({
+                            ...prev,
+                            area: selectedRate.area,
+                            cbm_rate: selectedRate.cbm_rate,
+                            minimum_charge: selectedRate.minimum_charge,
+                          }));
+                        }
+                      }}
+                    />
+                  )} */}
                 </Box>
 
                 <Divider className="my-12" />
@@ -1167,6 +1673,60 @@ function JobEdit() {
                     }}
                     onValueChanged={handleJobItemChanged}
                   />
+                  <Box
+                    mt={4}
+                    p={3}
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="md"
+                    backgroundColor="gray.50"
+                  >
+                    {/* CBM Auto */}
+                    <Flex justify="flex-end" align="center" mb={2}>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="500"
+                        color="gray.700"
+                        pl={4}
+                      >
+                        CBM Auto&nbsp;:&nbsp;
+                      </Text>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="600"
+                        color="blue.600"
+                        textAlign="right"
+                        pr={4}
+                      >
+                        {isQuotePrice
+                          ? quoteCalculationRes.cbm_auto
+                          : tempcalculation?.cbm_auto || 0}
+                      </Text>
+                    </Flex>
+
+                    {/* Total Weight */}
+                    <Flex justify="flex-end" align="center">
+                      <Text
+                        fontSize="sm"
+                        fontWeight="500"
+                        color="gray.700"
+                        pl={4}
+                      >
+                        Total Weight&nbsp;:&nbsp;
+                      </Text>
+                      <Text
+                        fontSize="sm"
+                        fontWeight="600"
+                        color="blue.600"
+                        textAlign="right"
+                        pr={4}
+                      >
+                        {isQuotePrice
+                          ? quoteCalculationRes.total_weight
+                          : tempcalculation?.total_weight || 0}
+                      </Text>
+                    </Flex>
+                  </Box>
                 </Box>
 
                 <Divider className="my-12" />
@@ -1241,144 +1801,404 @@ function JobEdit() {
 
                   <Box mb="16px">
                     <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
+                      <SimpleGrid
+                        columns={{ sm: 2, md: 2 }}
+                        spacing={10}
+                        width="100%"
+                      >
                         <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
                           >
-                            Does this job require a timeslot booking through
-                            Inbound Connect?
-                          </FormLabel>
+                            <FormLabel
+                              display="flex"
+                              // mb={2}  // Added margin-bottom for spacing
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                              pr={3}
+                            >
+                              Does this job require a timeslot booking through
+                              Inbound Connect?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_inbound_connect: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row">
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
+
+                          {job.job_category_id === 1 && job.is_inbound_connect === true && (
+                            <Box>
+                              <CustomInputField
+                                isSelect={true}
+                                optionsArray={refinedData.depotOptions || []} // Dynamically updated options
+                                label="Timeslot depots:"
+                                value={
+                                  refinedData.timeslot_depots
+                                    ? {
+                                      value: refinedData.timeslot_depots,
+                                      label: refinedData.timeslot_depots, // Use the same value for label
+                                    }
+                                    : null
+                                }
+                                placeholder="Select a depot"
+                                onChange={(e) => {
+                                  setRefinedData({
+                                    ...refinedData,
+                                    timeslot_depots: e.value,
+                                  });
+                                  setJob({
+                                    ...job,
+                                    timeslot_depots: e.value, // Update job.timeslot_depots
+                                  });
+                                }}
+                              />
+
+                            </Box>
+                          )}
+
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
+                            <FormLabel
+                              display="flex"
+                              mb={2} // Added margin-bottom for spacing
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Does this job require hand unloading?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_hand_unloading: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row">
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
+
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
+                            <FormLabel
+                              display="flex"
+                              mb={2} // Added margin-bottom for spacing
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Are there dangerous goods being transported?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_dangerous_goods: e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row">
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
+
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
+                            <FormLabel
+                              display="flex"
+                              mb={2} // Added margin-bottom for spacing
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Is a Tail Lift vehicle required?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_tailgate_required:
+                                    e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row">
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
                         </GridItem>
 
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_inbound_connect: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
+                        <GridItem
+                          pr={4} // Add desired right padding here
+                        >
+                          {(job.job_category_id == 1 ||
+                            job.job_category_id == 2) &&
+                            (job.transport_location === "VIC" ||
+                              job.transport_location === "QLD") &&
+                            quoteCalculationRes && (
+                              <Flex
+                                height="100%"
+                                justifyContent="center"
+                                pt={7}
+                                flexDirection="column"
+                              >
+                                <Flex justify="center">
+                                  {" "}
+                                  {/* Center the button */}
+                                  <Button
+                                    bg="#3b82f6" /* Match the blue color */
+                                    color="white"
+                                    _hover={{
+                                      bg: "#2563eb", // Slightly darker blue for hover
+                                    }}
+                                    _active={{
+                                      bg: "#2563eb", // Active state
+                                      transform: "scale(0.95)", // Slightly shrink button when activated
+                                    }}
+                                    borderRadius="8px" /* Rounded corners */
+                                    px={6}
+                                    py={3}
+                                    fontWeight="500"
+                                    fontSize="sm"
+                                    onClick={() => {
+                                      // logAllFormElements();
+                                      sendFreightData();
+                                    }}
+                                  >
+                                    Get A Quote
+                                  </Button>
+                                </Flex>
+                                {quoteCalculationRes && (
+                                  <Box mt={4}>
+                                    <Stack spacing={3}>
+                                      {/* Freight */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Freight:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.freight}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Fuel */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Fuel:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.fuel}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Hand Unload */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Hand Unload:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.hand_unload}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Time Slot */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Time Slot:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.time_slot}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* tail_lift */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Tail Lift:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.tail_lift}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Dangerous Goods */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Dangerous Goods:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.dangerous_goods}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Stackable */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Stackable:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.stackable}
+                                        </Text>
+                                      </Flex>
+
+                                      {/* Total */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Total:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.total}
+                                        </Text>
+                                      </Flex>
+                                    </Stack>
+                                  </Box>
+                                )}
+                              </Flex>
+                            )}
                         </GridItem>
                       </SimpleGrid>
                     </Flex>
-
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
-                        <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Does this job require hand unloading?
-                          </FormLabel>
-                        </GridItem>
-
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_hand_unloading: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
-                        </GridItem>
-                      </SimpleGrid>
-                    </Flex>
-
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
-                        <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Are there dangerous goods being transported?
-                          </FormLabel>
-                        </GridItem>
-
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_dangerous_goods: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
-                        </GridItem>
-                      </SimpleGrid>
-                    </Flex>
-                    <Flex alignItems="center" width="100%" pt={7}>
-                      <SimpleGrid columns={{ sm: 1 }} width="100%">
-                        <GridItem>
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            Is a Tail Lift vehicle required?
-                          </FormLabel>
-                        </GridItem>
-
-                        <GridItem>
-                          <RadioGroup
-                            defaultValue={"0"}
-                            onChange={(e) => {
-                              setJob({
-                                ...job,
-                                is_tailgate_required: e === "1" ? true : false,
-                              });
-                            }}
-                          >
-                            <Stack direction="row" pt={3}>
-                              <Radio value="0">No</Radio>
-                              <Radio value="1" pl={6}>
-                                Yes
-                              </Radio>
-                            </Stack>
-                          </RadioGroup>
-                        </GridItem>
-                      </SimpleGrid>
-                    </Flex>
+                    {/* Display response of the button click */}
                   </Box>
                 </Box>
 
@@ -1386,7 +2206,7 @@ function JobEdit() {
 
                 {/* Create Job Button */}
                 <Flex alignItems="center" className="mb-6">
-                {/* <Button
+                  {/* <Button
                   variant="primary"
                   onClick={() => {
                     setIsSaving(true);
@@ -1396,9 +2216,28 @@ function JobEdit() {
                 >
                   Create Job
                 </Button> */}
-                <Button variant="primary" onClick={handleJobCreation} isDisabled={isSaving}>
-                  Create Job
-                </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleJobCreation}
+                    isDisabled={isSaving}
+                  >
+                    Create Job
+                  </Button>
+                  {/* <Button
+                    variant="primary"
+                    onClick={handleJobCreation}
+                    isDisabled={
+                      (job.job_category_id === 1 ||
+                        job.job_category_id === 2) &&
+                      (job.transport_location === "VIC" ||
+                        job.transport_location === "QLD") &&
+                      !isQuotePrice // Disable the button if setIsQuotePrice (isQuotePrice) is false
+                        ? true
+                        : isSaving // Otherwise, consider the existing `isSaving` condition
+                    }
+                  >
+                    Create Job
+                  </Button> */}
                 </Flex>
               </FormControl>
             </Grid>
