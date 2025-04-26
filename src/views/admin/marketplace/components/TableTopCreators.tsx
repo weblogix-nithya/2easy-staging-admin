@@ -47,7 +47,7 @@ function TopCreatorTable(props: TableProps) {
   return (
     <>
       <Flex
-        direction="column"
+        flexDirection="column"
         w="100%"
         overflowX={{ sm: "scroll", lg: "hidden" }}
       >

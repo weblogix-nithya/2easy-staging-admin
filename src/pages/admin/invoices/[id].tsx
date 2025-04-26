@@ -41,7 +41,7 @@ import {
   UPDATE_INVOICE_LINE_ITEM_MUTATION,
 } from "graphql/invoiceLineItem";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
-import { GET_JOB_QUERY } from "graphql/job";
+import { defaultJob, GET_JOB_QUERY } from "graphql/job";
 import { defaultJobDestination } from "graphql/jobDestination";
 import { formatCurrency, formatFloat } from "helpers/helper";
 import AdminLayout from "layouts/admin";
@@ -64,6 +64,7 @@ function InvoiceEdit() {
     isHandleUpdateInvoiceLineItemsLoading,
     setIsHandleUpdateInvoiceLineItemsLoading,
   ] = useState(false);
+  const [job, setJob] = useState(defaultJob);
   const [jobDestinations, setJobDestinations] = useState([]);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
@@ -148,8 +149,7 @@ function InvoiceEdit() {
       console.log("onError");
       console.log(error);
     },
-  });
-
+  });  
   const {
     loading: jobLoading,
     data: jobData, // Renamed 'data' to 'jobData'
@@ -158,21 +158,21 @@ function InvoiceEdit() {
     variables: {
       id: invoice.job_id,
     },
-    skip: !invoice?.job_id, 
+    skip: !invoice?.job_id,
     onCompleted: (data) => {
-      console.log(data,'d')
+      // console.log(data,'d')
            // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
 
       setJobDestinations(_jobDestinations);
-      console.log(jobDestinations,'jd')
+      // console.log(jobDestinations,'jd')
 
       setPickUpDestination(
         data.job.pick_up_destination
           ? data.job.pick_up_destination
-          : { ...defaultJobDestination},
+          : { ...defaultJobDestination },
       );
-      console.log(pickUpDestination, 'pjd')
+      // console.log(pickUpDestination, 'pjd')
     },
     onError(error) {
       // console.log("onError");
@@ -220,7 +220,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
+  const [handleUpdateApproveInvoice, { }] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -318,7 +318,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -336,7 +336,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -353,7 +353,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, {}] = useMutation(
+  const [handleGenerateInvoicePdf, { }] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -387,7 +387,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, {}] = useMutation(
+  const [handleDeleteInvoiceLineItem, { }] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -613,6 +613,7 @@ function InvoiceEdit() {
                     {invoice.invoice_status?.name}
                   </Skeleton>
                 )}
+                {/* <Box>collection: {invoice?.job?.job_destinations[0].address_city}</Box> */}
                 <Box pl={6}>Collection : {pickUpDestination.address_city}</Box>
               </Flex>
 
@@ -653,12 +654,11 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>
-                      Delivery:{" "}
+                    <Box pl={6}>Delivery :
                       {jobDestinations
-                        .filter((destination) => destination.is_pickup === false) 
+                        .filter((destination) => destination.is_pickup === false)
                         .map((destination) => destination.address_city)
-                        .join(", ")} 
+                        .join(", ")}
                     </Box>
                   </Flex>
                   <Flex alignItems="center" mb="16px">
@@ -804,13 +804,14 @@ function InvoiceEdit() {
                             <Td maxWidth="160px">
                               <Input
                                 variant="main"
-                                value={invoiceLineItem.unit_amount}
+                                value={invoiceLineItem.unit_amount ?? 0}
                                 onChange={(e) => {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value;
+                                  item[e.target.name] = e.target.value || 0;
+                                  item.unit_amount = parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
                                   item.line_amount = (
-                                    item.quantity * parseFloat(e.target.value)
+                                    (item.quantity || 0) * item.unit_amount
                                   ).toFixed(2);
                                   items[index] = item;
                                   setInvoiceLineItems(items);
@@ -832,7 +833,7 @@ function InvoiceEdit() {
                                 w="75%"
                               >
                                 {formatCurrency(
-                                  invoiceLineItem.unit_amount,
+                                  invoiceLineItem.unit_amount ?? 0,
                                   invoiceLineItem.currency,
                                 )}
                               </Skeleton>
@@ -877,7 +878,7 @@ function InvoiceEdit() {
                               <Input
                                 disabled={true}
                                 variant="main"
-                                value={invoiceLineItem.line_amount}
+                                value={invoiceLineItem.line_amount ?? 0}
                                 onChange={(e) => {
                                   let items = [...invoiceLineItems];
                                   let item = { ...invoiceLineItems[index] };
@@ -902,7 +903,7 @@ function InvoiceEdit() {
                                 w="75%"
                               >
                                 {formatCurrency(
-                                  invoiceLineItem.line_amount,
+                                  invoiceLineItem.line_amount ?? 0,
                                   invoiceLineItem.currency,
                                 )}
                               </Skeleton>

@@ -29,7 +29,7 @@ export default function Default(props: {
             src={avatar}
             me="20px"
           />
-          <Flex direction="column" align="start">
+          <Flex flexDirection="column" align="start">
             <Text
               color={textColor}
               fontSize={{ base: "md", xl: "sm", "3xl": "md" }}

@@ -19,7 +19,7 @@ function SidebarContent(props: SidebarContentProps) {
 
       {/* This is the nav sidebar */}
       <Box className="mk-leftside-nav" backgroundColor="secondary.400">
-        <Stack direction="column" mt="8px" mb="auto">
+        <Stack flexDirection="column" mt="8px" mb="auto">
           <Box>
             <Text
               fontSize="12px"

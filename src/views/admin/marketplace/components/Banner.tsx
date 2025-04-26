@@ -10,7 +10,7 @@ export default function Banner() {
   return (
     <Flex
       className={styles.bgImage}
-      direction="column"
+      flexDirection="column"
       // bgImage={banner}
       bgSize="cover"
       py={{ base: "30px", md: "56px" }}

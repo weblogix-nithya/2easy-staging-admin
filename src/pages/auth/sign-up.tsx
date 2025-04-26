@@ -167,7 +167,7 @@ export default function SignUp() {
 
             <Flex
               zIndex="2"
-              direction="column"
+              flexDirection="column"
               w={{ base: "100%", md: "420px" }}
               maxW="100%"
               background="transparent"

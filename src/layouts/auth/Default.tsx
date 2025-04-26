@@ -42,7 +42,7 @@ function AuthIllustration(props: {
         // px={{ lg: "30px", xl: "0px" }}
         // ps={{ xl: "70px" }}
         // justifyContent="start"
-        // direction="column"
+        // flexDirection="column"
       >
         {/* <Link
           href="/"

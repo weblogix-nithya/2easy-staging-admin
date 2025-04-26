@@ -84,6 +84,12 @@ export const GET_JOBS_QUERY = gql`
           full_name
           no_max_capacity
           media_url
+          is_tailgated
+          registration_no
+          no_max_capacity
+          no_max_pallets
+          no_max_volume
+          phone_no
         }
         job_category_id
         job_category {
@@ -145,6 +151,13 @@ export const GET_JOBS_QUERY = gql`
           job_id
           lat
           lng
+          updated_at
+          media {
+            id
+            name
+            downloadable_url
+            collection_name
+          }
           job_destination_status_id
           route_point {
             id
@@ -173,6 +186,13 @@ export const GET_JOBS_QUERY = gql`
           job_id
           lat
           lng
+          updated_at
+          media {
+            id
+            name
+            downloadable_url
+            collection_name
+          }
         }
         job_items {
           id
@@ -209,6 +229,7 @@ export const GET_JOB_QUERY = gql`
       id
       name
       driver_id
+      company_area
       driver {
         full_name
         no_max_capacity
@@ -235,6 +256,9 @@ export const GET_JOB_QUERY = gql`
         name
       }
       admin_notes
+      transport_location
+      transport_type
+      timeslot_depots
       # delivery_notes
       pick_up_notes
       base_notes
@@ -473,6 +497,7 @@ export const UPDATE_JOB_RIGHT_MUTATION = gql`
       job_category_id
       start_at
       admin_notes
+      company_area
     }
   }
 `;
@@ -482,6 +507,46 @@ export const UPDATE_JOB_MUTATION = gql`
     updateJob(input: $input) {
       id
       name
+      reference_no
+      booked_by
+      notes
+      job_category_id
+      job_status_id
+      job_type_id
+      decline_reason_id
+      driver_id
+      region_id
+      customer_id
+      company_id
+      start_at
+      ready_at
+      drop_at
+      completed_at
+      pick_up_lng
+      pick_up_lat
+      pick_up_address
+      pick_up_state
+      pick_up_notes
+      pick_up_name
+      pick_up_report
+      delivery_name
+      delivery_report
+      customer_notes
+      base_notes
+      admin_notes
+      decline_notes
+      minutes_waited
+      is_inbound_connect
+      is_hand_unloading
+      is_dangerous_goods
+      is_tailgate_required
+      timeslot
+      last_free_at
+      quoted_price
+      transport_type
+      transport_location
+      timeslot_depots
+      company_area
     }
   }
 `;
@@ -514,19 +579,64 @@ export const SEND_CONSIGNMENT_DOCKET = gql`
 `;
 
 export interface UpdateJobInput {
-  id: Number;
-  name: String;
-  driver_id: Number;
-  job_type_id: Number;
-  job_status_id: Number;
-  job_category_id: Number;
-  start_at: Date;
-  admin_notes: String;
-  booked_by: String;
+  id: number;
+  name?: string;
+  driver_id?: number;
+  job_type_id?: number;
+  job_status_id?: number;
+  job_category_id?: number;
+  start_at?: Date;
+  admin_notes?: string;
+  booked_by?: string;
+  company_area: string;
+  reference_no?: string;
+  customer_id?: string;
+  company_id?: number;
+  transport_type?: string;
+  transport_location?: string;
+  timeslot_depots?: string;
+  ready_at?: string;
+  drop_at?: string;
+  pick_up_lng?: number;
+  pick_up_lat?: number;
+  pick_up_address?: string;
+  pick_up_notes?: string;
+  pick_up_name?: string | null;
+  timeslot?: string;
+  last_free_at?: string;
+  quoted_price?: string;
+  customer_notes?: string;
+  base_notes?: string;
+  // job_price_quote: any;
 }
 
 export interface CreateJobInput {
-  name: String;
+  name?: string;
+  reference_no?: string;
+  booked_by?: string;
+  job_category_id?: number;
+  job_status_id?: number;
+  job_type_id?: number;
+  customer_id?: string;
+  company_id?: number;
+  company_area: string;
+  transport_type?: string; // Fixed from transportType
+  transport_location?: string;
+  timeslot_depots?: string;
+  ready_at?: string;
+  drop_at?: string;
+  pick_up_lng?: number;
+  pick_up_lat?: number;
+  pick_up_address?: string;
+  pick_up_notes?: string;
+  pick_up_name?: string | null;
+  timeslot?: string;
+  last_free_at?: string;
+  quoted_price?: string;
+  admin_notes?: string;
+  customer_notes?: string;
+  base_notes?: string;
+  // job_price_quote?: JobPriceCalculationDetail[];
 }
 
 type Job = {
@@ -536,8 +646,10 @@ type Job = {
   booked_by: string;
   //notes: string;
   job_category_id: number;
+  // job_category_name?: string;
   job_status_id: number;
   job_type_id: number;
+  company_area: string;
   //decline_reason_id: number;
   //driver_id: number;
   //region_id: number;
@@ -564,16 +676,20 @@ type Job = {
   //is_hand_unloading: boolean;
   //is_dangerous_goods: boolean;
   //is_tailgate_required: boolean;
+  transport_type: string;
+  transport_location: string;
+  timeslot_depots: string;
+  // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
   [key: string]:
-    | string
-    | number
-    | null
-    | boolean
-    | undefined
-    | Date
-    | any[]
-    | any;
+  | string
+  | number
+  | null
+  | boolean
+  | undefined
+  | Date
+  | any[]
+  | any;
 };
 
 export const defaultJob: Job = {
@@ -583,6 +699,8 @@ export const defaultJob: Job = {
   booked_by: "",
   //notes: "",
   job_category_id: 1,
+  company_area: "",
+  // job_category_name: undefined,
   job_status_id: null,
   job_type_id: 1,
   //decline_reason_id: 0,
@@ -611,4 +729,115 @@ export const defaultJob: Job = {
   //is_dangerous_goods: false,
   //is_tailgate_required: false,
   media: [],
+  transport_type: "",
+  transport_location: "",
+  timeslot_depots: "",
+  // job_price_quote: []
 };
+
+export type JobAddress = {
+  state: string;
+  suburb: string;
+  postcode: string;
+  address: string;
+};
+
+export type PickupTime = {
+  ready_by: string; // ISO date string
+};
+
+export type DeliveryTime = {
+  drop_by: string; // ISO date string
+};
+
+export type Surcharges = {
+  hand_unload: boolean;
+  dangerous_goods: boolean;
+  time_slot: string | null;
+  tail_lift: string | null;
+  stackable: string | null;
+  timeslot_depots?: string | null; // Add this line
+};
+
+export type ItemType = {
+  id: string;
+  name: string;
+};
+
+export type JobItem = {
+  id: string;
+  name: string;
+  notes: string;
+  quantity: number;
+  volume: number;
+  weight: number;
+  dimension_height: number;
+  dimension_width: number;
+  dimension_depth: number;
+  job_destination: string | null;
+  item_type: ItemType;
+};
+
+export type JobQuoteData = {
+  freight_type: string;
+  transport_type: any;
+  service_choice: string;
+  state: string;
+  state_code: string;
+  stackable: boolean;
+  created_at: string; // ISO date string
+  updated_at: string; // ISO date string
+  job_pickup_address: JobAddress;
+  job_destination_address: JobAddress;
+  pickup_time: PickupTime;
+  delivery_time: DeliveryTime;
+  surcharges: Surcharges;
+  job_items: JobItem[];
+  cbm_rate: number;
+  minimum_charge: number;
+  area: string;
+};
+
+const defaultJobQuoteData: JobQuoteData = {
+  freight_type: "",
+  transport_type: "",
+  service_choice: '',
+  state: "",
+  state_code: "",
+  created_at: "",
+  updated_at: "",
+  stackable: false,
+  cbm_rate: 0,
+  minimum_charge: 0,
+  area: "",
+  job_pickup_address: {
+    state: "",
+    suburb: "",
+    postcode: "",
+    address: "",
+  },
+  job_destination_address: {
+    state: "",
+    suburb: "",
+    postcode: "",
+    address: "",
+  },
+  pickup_time: {
+    ready_by: "",
+  },
+  delivery_time: {
+    drop_by: "",
+  },
+  surcharges: {
+    hand_unload: false,
+    dangerous_goods: false,
+    time_slot: null,
+    timeslot_depots: null,
+    tail_lift: null,
+    stackable: null,
+  },
+  job_items: [],
+
+};
+
+export default defaultJobQuoteData;
