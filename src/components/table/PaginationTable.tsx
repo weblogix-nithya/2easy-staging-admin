@@ -60,23 +60,23 @@ type PaginationTableProps<T extends object> = {
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-    | {
+  | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-  ) &
+) &
   (
     | {
-      showRowSelection?: false;
-      setSelectedRow?: never;
-      isFilterRowSelected?: never;
-    }
+        showRowSelection?: false;
+        setSelectedRow?: never;
+        isFilterRowSelected?: never;
+      }
     | {
-      showRowSelection: true;
-      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-      isFilterRowSelected: boolean;
-    }
+        showRowSelection: true;
+        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+        isFilterRowSelected: boolean;
+      }
   );
 
 const PaginationTable = <T extends object>({
@@ -208,13 +208,13 @@ const PaginationTable = <T extends object>({
   //               status: row.original.job_status,
   //               type: row.original.job_type
   //             };
-              
+
   //             dispatch(setRightSideBarJob(essentialData));
   //             dispatch(setIsShowRightSideBar(true));
-              
+
   //             setTimeout(() => {
   //               onMarkerClick?.({ job_id: row.original.id });
-  //               getJob({ 
+  //               getJob({
   //                 variables: { id: row.original.id },
   //                 onCompleted: () => setIsLoadingDetails(false)
   //               });
@@ -230,19 +230,8 @@ const PaginationTable = <T extends object>({
   // }, [isLoadingDetails, dispatch, getJob, onMarkerClick]);
 
   return (
-    <VStack
-      w="full"
-      align="start"
-      spacing={4}
-      position="relative"
-    >
-      <Table
-        colorScheme="white"
-        mb="0px"
-        {...getTableProps()}
-        variant="simple"
-        width="max-content"
-      >
+    <VStack w="full" align="start" spacing={4}>
+      <Table colorScheme="white" {...getTableProps()}>
         <Thead>
           {headerGroups.map((headerGroup, index) => (
             <Tr
@@ -344,7 +333,7 @@ const PaginationTable = <T extends object>({
                 >
                   <Td colSpan={columns.length} py={4}>
                     <VStack spacing={2} align="stretch">
-                    <HStack spacing={4} justify="space-between">
+                      <HStack spacing={4} justify="space-between">
                         <Text fontWeight="bold" fontSize="md" flex="1">
                           First Collection:{" "}
                           {firstCollection
@@ -610,8 +599,7 @@ const PaginationTable = <T extends object>({
                           </Text>
                         ) : (
                           cell.render("Cell")
-                        )
-                        }
+                        )}
                         {cell.column.showCompany == true && (
                           <Text className="text-gray-400">
                             {row.original.company?.name}
