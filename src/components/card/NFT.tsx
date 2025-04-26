@@ -74,7 +74,7 @@ export default function NFT(props: {
             }}
             mb="auto"
           >
-            <Flex direction="column">
+            <Flex flexDirection="column">
               <Text
                 color={textColor}
                 fontSize={{

@@ -9,7 +9,7 @@ export default function SidebarDocs() {
   return (
     <Flex
       justify="center"
-      direction="column"
+      flexDirection="column"
       align="center"
       bg={bgColor}
       borderRadius="30px"
@@ -34,7 +34,7 @@ export default function SidebarDocs() {
         <Image src={logoWhite} w="40px" h="40px" alt="logo-white" />
       </Flex>
       <Flex
-        direction="column"
+        flexDirection="column"
         mb="12px"
         align="center"
         justify="center"
