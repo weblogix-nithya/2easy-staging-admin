@@ -37,17 +37,17 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   } = props;
   const textColor = useColorModeValue("navy.700", "white");
   const [entityAddress, setEntityAddress] = useState({
-    id: defaultAddress.id,
-    address: defaultAddress.address,
-    address_line_1: defaultAddress.address_line_1,
-    address_line_2: defaultAddress.address_line_2,
-    address_postal_code: defaultAddress.address_postal_code,
-    address_city: defaultAddress.address_city,
-    address_state: defaultAddress.address_state,
-    address_country: defaultAddress.address_country,
-    address_business_name: defaultAddress.address_business_name,
-    lng: defaultAddress.lng,
-    lat: defaultAddress.lat,
+    id: defaultAddress?.id,
+    address: defaultAddress?.address,
+    address_line_1: defaultAddress?.address_line_1,
+    address_line_2: defaultAddress?.address_line_2,
+    address_postal_code: defaultAddress?.address_postal_code,
+    address_city: defaultAddress?.address_city,
+    address_state: defaultAddress?.address_state,
+    address_country: defaultAddress?.address_country,
+    address_business_name: defaultAddress?.address_business_name,
+    lng: defaultAddress?.lng,
+    lat: defaultAddress?.lat,
   });
   const [googleAddress, setGoogleAddress] = useState(null);
   const [isOpen, setIsOpen] = useState(isModalOpen || false);
@@ -62,19 +62,19 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   }, [isModalOpen]);
 
   useEffect(() => {
-    if (defaultAddress.address)
+    if (defaultAddress?.address)
       setEntityAddress({
-        id: defaultAddress.id,
-        address: defaultAddress.address,
-        address_line_1: defaultAddress.address_line_1,
-        address_line_2: defaultAddress.address_line_2,
-        address_postal_code: defaultAddress.address_postal_code,
-        address_city: defaultAddress.address_city,
-        address_state: defaultAddress.address_state,
-        address_country: defaultAddress.address_country,
-        address_business_name: defaultAddress.address_business_name,
-        lng: defaultAddress.lng,
-        lat: defaultAddress.lat,
+        id: defaultAddress?.id,
+        address: defaultAddress?.address,
+        address_line_1: defaultAddress?.address_line_1,
+        address_line_2: defaultAddress?.address_line_2,
+        address_postal_code: defaultAddress?.address_postal_code,
+        address_city: defaultAddress?.address_city,
+        address_state: defaultAddress?.address_state,
+        address_country: defaultAddress?.address_country,
+        address_business_name: defaultAddress?.address_business_name,
+        lng: defaultAddress?.lng,
+        lat: defaultAddress?.lat,
       });
   }, [defaultAddress]);
 
