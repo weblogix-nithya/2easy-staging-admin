@@ -155,7 +155,7 @@ export const GET_JOBS_QUERY = gql`
           media {
             id
             name
-            # downloadable_url
+            downloadable_url
             collection_name
           }
           job_destination_status_id
@@ -190,7 +190,7 @@ export const GET_JOBS_QUERY = gql`
           media {
             id
             name
-            # downloadable_url
+            downloadable_url
             collection_name
           }
         }

@@ -123,6 +123,7 @@ export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
   return filteredDestinations[0]?.address_business_name || "-";
 };
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
+  console.log('first',row.original.job_destinations[0])
   const destinations = row?.original?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
