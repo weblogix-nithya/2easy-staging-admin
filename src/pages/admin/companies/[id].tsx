@@ -98,6 +98,7 @@ function CompanyEdit() {
   });
   const [companyRates, setCompanyRates] = useState<CompanyRate[]>([]);
   const [prevCompanyRates, setPrevCompanyRates] = useState<CompanyRate[]>([]);
+  const [isAddingRate, setIsAddingRate] = useState(false);
 
   const {
     loading: companyLoading,
@@ -191,6 +192,24 @@ function CompanyEdit() {
   };
 
   const addNewRate = () => {
+        // Check if there are any empty rates
+        const hasEmptyRate = companyRates.some(rate => 
+          !rate.area || 
+          !rate.seafreight_id || 
+          rate.cbm_rate === 0 || 
+          rate.minimum_charge === 0
+        );
+    
+        if (hasEmptyRate) {
+          toast({
+            title: "Validation Error",
+            description: "Please fill in all fields (Area, CBM Rate, and Minimum Charge) before adding a new rate",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
     setCompanyRates([
       ...companyRates,
       {
@@ -207,6 +226,23 @@ function CompanyEdit() {
   };
   const saveRates = async () => {
     try {
+      const hasEmptyRate = companyRates.some(rate => 
+        !rate.area || 
+        !rate.seafreight_id || 
+        rate.cbm_rate === 0 || 
+        rate.minimum_charge === 0
+      );
+
+      if (hasEmptyRate) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all fields for all rates before saving",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       setIsSaving(true);
 
       for (const rate of companyRates) {
@@ -217,10 +253,10 @@ function CompanyEdit() {
           await createCompanyRate({
             variables: {
               company_id: String(company.id),
-              seafreight_id: rate.seafreight_id,
+              seafreight_id: String(rate.seafreight_id), // Ensure it's a string
               area: rate.area,
-              cbm_rate: parseFloat(rate.cbm_rate.toString()),
-              minimum_charge: parseFloat(rate.minimum_charge.toString())
+              cbm_rate: Number(rate.cbm_rate), // Ensure it's a number
+              minimum_charge: Number(rate.minimum_charge) // Ensure it's a number
             }
           });
         } else if (
@@ -1325,6 +1361,22 @@ function CompanyEdit() {
                                 ) || null
                               }
                               onChange={(selectedOption) => {
+                                const areaExists = companyRates.some(
+                                  (existingRate, i) =>
+                                    i !== index &&
+                                    existingRate.area === selectedOption?.label
+                                );
+                    
+                                if (areaExists) {
+                                  toast({
+                                    title: "Validation Error",
+                                    description: `Area "${selectedOption?.label}" already exists`,
+                                    status: "error",
+                                    duration: 3000,
+                                    isClosable: true,
+                                  });
+                                  return;
+                                }
                                 const updatedRates = [...companyRates];
                                 updatedRates[index] = {
                                   ...updatedRates[index],
