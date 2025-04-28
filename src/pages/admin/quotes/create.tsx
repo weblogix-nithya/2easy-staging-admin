@@ -217,10 +217,12 @@ export default function QuoteCreate() {
 
   useEffect(() => {
     if (quote.customer_id && isAdmin) {
-      setRateCardUrl(
-        customers.find((customer) => customer.id === quote.customer_id)
-          .rate_card_url,
-      );` `
+      const customer = customers.find((customer) => customer.id === quote.customer_id);
+      if (customer) {
+        setRateCardUrl(customer.rate_card_url || '');
+      } else {
+        setRateCardUrl('');
+      }
     }
   }, [quote.customer_id]);
 

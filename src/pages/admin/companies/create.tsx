@@ -20,17 +20,12 @@ import {
   CREATE_COMPANY_MUTATION,
   defaultCompany,
   GET_LIST_OF_SEAFREIGHTS,
-  paymentTerms
+  paymentTerms,
 } from "graphql/company";
-import {
-  CompanyRate,
-  CREATE_COMPANY_RATE_MUTATION
-} from "graphql/companyRate";
+import { CompanyRate, CREATE_COMPANY_RATE_MUTATION } from "graphql/companyRate";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import { useState } from "react";
-
-
 
 function CompanyCreate() {
   const toast = useToast();
@@ -53,7 +48,7 @@ function CompanyCreate() {
   ]);
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
 
-  const [handleCreateCompany, { }] = useMutation(CREATE_COMPANY_MUTATION, {
+  const [handleCreateCompany, {}] = useMutation(CREATE_COMPANY_MUTATION, {
     variables: {
       input: {
         name: company.name,
@@ -80,11 +75,12 @@ function CompanyCreate() {
     onCompleted: async (data) => {
       try {
         // Create rates for the new company
-        const validRates = companyRates.filter(rate =>
-          rate.seafreight_id &&
-          rate.area &&
-          rate.cbm_rate > 0 &&
-          rate.minimum_charge > 0
+        const validRates = companyRates.filter(
+          (rate) =>
+            rate.seafreight_id &&
+            rate.area &&
+            rate.cbm_rate > 0 &&
+            rate.minimum_charge > 0,
         );
 
         // console.log("validRates", validRates);
@@ -154,6 +150,17 @@ function CompanyCreate() {
   });
 
   const addNewRate = () => {
+    const lastRate = companyRates[companyRates.length - 1];
+    if (!lastRate.area || !lastRate.cbm_rate || !lastRate.minimum_charge) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all fields (Area, CBM Rate, and Minimum Charge) before adding a new rate",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     setCompanyRates([
       ...companyRates,
       {
@@ -598,17 +605,34 @@ function CompanyCreate() {
                   options={regionOption}
                   value={
                     regionOption.find(
-                      (option) => option.value === String(rate.seafreight_id)
+                      (option) => option.value === String(rate.seafreight_id),
                     ) || null
                   }
                   onChange={(selectedOption) => {
+                    // Only check for duplicate area names
+                    const areaExists = companyRates.some(
+                      (existingRate, i) =>
+                        i !== index &&
+                        existingRate.area === selectedOption?.label,
+                    );
+
+                    if (areaExists) {
+                      toast({
+                        title: "Validation Error",
+                        description: `Area "${selectedOption?.label}" already exists`,
+                        status: "error",
+                        duration: 3000,
+                        isClosable: true,
+                      });
+                      return;
+                    }
+
                     const updatedRates = [...companyRates];
                     updatedRates[index] = {
                       ...updatedRates[index],
                       seafreight_id: Number(selectedOption?.value),
                       area: selectedOption?.label,
                     };
-                    // console.log("Selected:", updatedRates);
                     setCompanyRates(updatedRates);
                   }}
                   className="basic-single"
