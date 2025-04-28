@@ -252,8 +252,8 @@ function CompanyEdit() {
           // Create new rate
           await createCompanyRate({
             variables: {
-              company_id: String(company.id),
-              seafreight_id: String(rate.seafreight_id), // Ensure it's a string
+              company_id: Number(company.id),
+              seafreight_id: Number(rate.seafreight_id), // Ensure it's a string
               area: rate.area,
               cbm_rate: Number(rate.cbm_rate), // Ensure it's a number
               minimum_charge: Number(rate.minimum_charge) // Ensure it's a number
