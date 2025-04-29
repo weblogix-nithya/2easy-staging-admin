@@ -1273,10 +1273,15 @@ function JobEdit() {
             }
           }
         }
-        if (job.job_type_id && !filteredOptions.some(opt => Number(opt.value) == Number(job.job_type_id))) {
+        if (
+          job.job_type_id &&
+          !filteredOptions.some(
+            (opt) => Number(opt.value) == Number(job.job_type_id),
+          )
+        ) {
           setJob({
             ...job,
-            job_type_id: null
+            job_type_id: null,
           });
         }
 
@@ -1552,8 +1557,19 @@ function JobEdit() {
           });
       } else {
         //console.log("Update mode");
-        const calculationData = response.data as { cbm_auto: number, total_weight: number, freight: number, fuel: number, hand_unload: number, dangerous_goods: number, time_slot: number, tail_lift: number, stackable: number, total: number };
-        
+        const calculationData = response.data as {
+          cbm_auto: number;
+          total_weight: number;
+          freight: number;
+          fuel: number;
+          hand_unload: number;
+          dangerous_goods: number;
+          time_slot: number;
+          tail_lift: number;
+          stackable: number;
+          total: number;
+        };
+
         await handleCreateJobPriceCalculationDetail({
           job_id: Number(job.id),
           customer_id: Number(job.customer_id),
@@ -1767,6 +1783,38 @@ function JobEdit() {
                           }}
                         />
 
+                        {!isCompany && (
+                          <CustomInputField
+                            isSelect={true}
+                            optionsArray={companiesOptions}
+                            label="Company:"
+                            onInputChange={(e) => {
+                              onChangeSearchQuery(e);
+                            }}
+                            value={companiesOptions.find(
+                              (entity) => entity.value == job.company_id,
+                            )}
+                            placeholder=""
+                            isDisabled={true}
+
+                            // onChange={(e) => {
+                            //   setJob({
+                            //     ...job,
+                            //     company_id: e.value || null,
+                            //     customer_id: null,
+                            //   });
+                            //   getCustomersByCompanyId({
+                            //     query: "",
+                            //     page: 1,
+                            //     first: 100,
+                            //     orderByColumn: "id",
+                            //     orderByOrder: "ASC",
+                            //     company_id: e.value,
+                            //   });
+                            // }}
+                          />
+                        )}
+
                         <Flex alignItems="center" mb="16px">
                           <FormLabel
                             display="flex"
@@ -1921,12 +1969,16 @@ function JobEdit() {
                           label="Type:"
                           optionsArray={filteredJobTypeOptions}
                           selectedJobId={job.job_type_id}
-                          value={job.job_type_id ? filteredJobTypeOptions.find(
-                            (jobType) => jobType.value === job.job_type_id,
-                          ) : null}
+                          value={
+                            job.job_type_id
+                              ? filteredJobTypeOptions.find(
+                                  (jobType) =>
+                                    jobType.value === job.job_type_id,
+                                )
+                              : null
+                          }
                           placeholder="Select type"
                           onChange={(e) => {
-
                             //console.log(e, "e");
                             // setJob({
                             //   ...job,
@@ -1935,9 +1987,10 @@ function JobEdit() {
                             const selectedCategory = e.value;
                             const selectedCategoryName = selectedCategory
                               ? filteredJobTypeOptions.find(
-                                (job_category) =>
-                                  job_category.value === selectedCategory,
-                              )?.label : null;
+                                  (job_category) =>
+                                    job_category.value === selectedCategory,
+                                )?.label
+                              : null;
 
                             setJob({
                               ...job,
@@ -2553,31 +2606,34 @@ function JobEdit() {
                               </SimpleGrid>
                             </Flex>
 
-                            {job.job_category_id == 1 && job.is_inbound_connect == 1 && (
-                              <Box>
-                                <CustomInputField
-                                  isSelect={true}
-                                  optionsArray={depotOptions} // Use the state directly
-                                  label="Timeslot depots:"
-                                  value={
-                                    depotOptions.find((option) => option.value === job.timeslot_depots) || null
-                                  }
-                                  placeholder="Select a depot"
-                                  onChange={(e) => {
-
-                                    setSelectedDepot(e.value);
-                                    setRefinedData(prevData => ({
-                                      ...prevData,
-                                      timeslot_depots: e.value
-                                    })); // Update the selected depot directly
-                                    setJob({
-                                      ...job,
-                                      timeslot_depots: e.value, // Update job.timeslot_depots
-                                    });
-                                  }}
-                                />
-                              </Box>
-                            )}
+                            {job.job_category_id == 1 &&
+                              job.is_inbound_connect == 1 && (
+                                <Box>
+                                  <CustomInputField
+                                    isSelect={true}
+                                    optionsArray={depotOptions} // Use the state directly
+                                    label="Timeslot depots:"
+                                    value={
+                                      depotOptions.find(
+                                        (option) =>
+                                          option.value === job.timeslot_depots,
+                                      ) || null
+                                    }
+                                    placeholder="Select a depot"
+                                    onChange={(e) => {
+                                      setSelectedDepot(e.value);
+                                      setRefinedData((prevData) => ({
+                                        ...prevData,
+                                        timeslot_depots: e.value,
+                                      })); // Update the selected depot directly
+                                      setJob({
+                                        ...job,
+                                        timeslot_depots: e.value, // Update job.timeslot_depots
+                                      });
+                                    }}
+                                  />
+                                </Box>
+                              )}
 
                             <Flex alignItems="center" width="100%" pt={7}>
                               <SimpleGrid columns={{ sm: 1 }} width="100%">
