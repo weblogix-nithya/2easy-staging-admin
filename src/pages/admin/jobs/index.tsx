@@ -64,7 +64,7 @@ export default function JobIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("secondaryGray.900", "white");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(150);
+  const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
 
