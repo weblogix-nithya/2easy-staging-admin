@@ -68,6 +68,7 @@ export const GET_JOBS_QUERY = gql`
       data {
         id
         name
+        pick_up_state
         total_quantity
         total_weight
         total_volume
@@ -229,6 +230,7 @@ export const GET_JOB_QUERY = gql`
       id
       name
       driver_id
+      pick_up_state
       company_area
       driver {
         full_name
