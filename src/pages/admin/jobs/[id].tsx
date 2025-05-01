@@ -85,8 +85,8 @@ import {
   formatDateTimeToDB,
   formatTime,
   formatTimeUTCtoInput,
-  getTimezone,
-  isAfterCutoff,
+  // getTimezone,
+  // isAfterCutoff,
   today,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
@@ -334,6 +334,8 @@ function JobEdit() {
           job_category_id: data?.job.job_category_id,
           transport_location: data?.job.transport_location,
           company_area: data?.job.company_area,
+          job_type_id: data?.job.job_type_id,
+          pick_up_state: data?.job.pick_up_state,
         });
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
@@ -354,12 +356,12 @@ function JobEdit() {
         )?.label;
         // console.log("sn", selectedCategoryName);
         const selectedLocation = locationOptions.find(
-          (location) => location.value == data.job.transport_location,
+          (location) => location.label == data.job.pick_up_state,
         );
-        setRefinedData({
+        setRefinedData({ 
           ...refinedData,
           freight_type: selectedCategoryName || null,
-          state_code: data.job.transport_location,
+          state_code: selectedLocation?.value || null,
           state: selectedLocation?.label || null,
         });
         // console.log("refine", refinedData);
@@ -471,6 +473,7 @@ function JobEdit() {
         ...job,
         job_category_id: jobData.job.job_category_id,
         transport_location: jobData.job.transport_location,
+        job_type_id: jobData.job.job_type_id,
       });
 
       // Find the selected category name based on job_category_id
@@ -482,14 +485,20 @@ function JobEdit() {
         (location) => location.value === jobData.job.transport_location,
       );
 
+      const matchedJobType = jobTypeOptions.find(
+        (type) => type.id === jobData.job.job_type_id
+      );
+
       setRefinedData({
         ...refinedData,
         freight_type: selectedCategoryName,
         state_code: jobData.job.transport_location,
         state: selectedLocation?.label || null,
+        // job_type: matchedJobType?.name || null,
+      // job_type_color: matchedJobType?.color || null
       });
     }
-  }, [jobData, jobCategories]); // Use 'jobData' instead of 'data'
+  }, [jobData, jobCategories,jobTypeOptions]); // Use 'jobData' instead of 'data'
 
   const formatToSelect = (
     _entityArray: any[],
@@ -1216,113 +1225,121 @@ function JobEdit() {
     }
   }, [job.customer_id, customerOptions]);
 
-  useEffect(() => {
-    // Function to calculate filtered job types based on cutoff logic
-    if (
-      new Date(job.created_at).setHours(0, 0, 0, 0) <
-      new Date(NEW_CUTOFF_RULES_START_DATE).setHours(0, 0, 0, 0)
-    ) {
-      return;
-    }
+  // useEffect(() => {
+  //   // Function to calculate filtered job types based on cutoff logic
+  //   if (
+  //     new Date(job.created_at).setHours(0, 0, 0, 0) <
+  //     new Date(NEW_CUTOFF_RULES_START_DATE).setHours(0, 0, 0, 0)
+  //   ) {
+  //     return;
+  //   }
 
-    const calculateFilteredOptions = async () => {
-      let filteredOptions = Array.isArray(jobTypeOptions)
-        ? [...jobTypeOptions]
-        : [];
+  //   const calculateFilteredOptions = async () => {
+  //     let filteredOptions = Array.isArray(jobTypeOptions)
+  //       ? [...jobTypeOptions]
+  //       : [];
 
-      if (
-        !job.job_category_id ||
-        pickUpDestination.lat === 0 ||
-        pickUpDestination.lng === 0
-      ) {
-        return setFilteredJobTypeOptions(filteredOptions);
-      }
+  //     if (
+  //       !job.job_category_id ||
+  //       pickUpDestination.lat === 0 ||
+  //       pickUpDestination.lng === 0
+  //     ) {
+  //       return setFilteredJobTypeOptions(filteredOptions);
+  //     }
 
-      try {
-        const timezone = await getTimezone(
-          pickUpDestination.lat,
-          pickUpDestination.lng,
-        );
-        if (job.job_category_id == 1) {
-          // LCL Bookings
-          if (isSameDayJob) {
-            filteredOptions = filteredOptions.filter(
-              (opt) => opt.label !== "Standard",
-            );
-            resetJobTypeAndShowToast();
-          } else if (isTomorrowJob) {
-            const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
+  //     try {
+  //       const timezone = await getTimezone(
+  //         pickUpDestination.lat,
+  //         pickUpDestination.lng,
+  //       );
+  //       if (job.job_category_id == 1) {
+  //         // LCL Bookings
+  //         if (isSameDayJob) {
+  //           filteredOptions = filteredOptions.filter(
+  //             (opt) => opt.label !== "Standard",
+  //           );
+  //           resetJobTypeAndShowToast();
+  //         } else if (isTomorrowJob) {
+  //           const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
 
-            if (isAfterLclCutoff) {
-              filteredOptions = filteredOptions.filter(
-                (opt) => opt.label !== "Standard",
-              );
-              resetJobTypeAndShowToast();
-            }
-          }
-        } else if (job.job_category_id == 2) {
-          // Airfreight Bookings
-          if (isSameDayJob) {
-            const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
+  //           if (isAfterLclCutoff) {
+  //             filteredOptions = filteredOptions.filter(
+  //               (opt) => opt.label !== "Standard",
+  //             );
+  //             resetJobTypeAndShowToast();
+  //           }
+  //         }
+  //       } else if (job.job_category_id == 2) {
+  //         // Airfreight Bookings
+  //         if (isSameDayJob) {
+  //           const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
 
-            if (isAfterAirfreightCutoff) {
-              filteredOptions = filteredOptions.filter(
-                (opt) => opt.label !== "Standard",
-              );
-              resetJobTypeAndShowToast();
-            }
-          }
-        }
-        if (
-          job.job_type_id &&
-          !filteredOptions.some(
-            (opt) => Number(opt.value) == Number(job.job_type_id),
-          )
-        ) {
-          setJob({
-            ...job,
-            job_type_id: null,
-          });
-        }
+  //           if (isAfterAirfreightCutoff) {
+  //             filteredOptions = filteredOptions.filter(
+  //               (opt) => opt.label !== "Standard",
+  //             );
+  //             resetJobTypeAndShowToast();
+  //           }
+  //         }
+  //       }
+  //       if (
+  //         job.job_type_id &&
+  //         !filteredOptions.some(
+  //           (opt) => Number(opt.value) == Number(job.job_type_id),
+  //         )
+  //       ) {
+  //         // Instead of nullifying, preserve the job type
+  //         const existingJobType = jobTypeOptions.find(
+  //           (type) => Number(type.id) === Number(job.job_type_id)
+  //         );
+          
+  //         if (existingJobType) {
+  //           // If the job type exists in all options, keep it
+  //           setJob({
+  //             ...job,
+  //             job_type_id: job.job_type_id
+  //           });
+  //         }
+  //       }
 
-        setFilteredJobTypeOptions(filteredOptions);
-      } catch (error) {
-        console.error(
-          "Error fetching timezone or applying cutoff logic",
-          error,
-        );
-      }
-    };
+  //       setFilteredJobTypeOptions(filteredOptions);
+  //     } catch (error) {
+  //       console.error(
+  //         "Error fetching timezone or applying cutoff logic",
+  //         error,
+  //       );
+  //     }
+  //   };
 
-    calculateFilteredOptions();
-  }, [
-    job.job_category_id,
-    jobDateAt,
-    pickUpDestination,
-    jobTypeOptions,
-    isSameDayJob,
-    isTomorrowJob,
-  ]);
+  //   calculateFilteredOptions();
+  // }, [
+  //   job.job_category_id,
+  //   jobDateAt,
+  //   pickUpDestination,
+  //   jobTypeOptions,
+  //   isSameDayJob,
+  //   isTomorrowJob,
+  // ]);
 
   // Define the reusable function
-  const resetJobTypeAndShowToast = () => {
-    if (job.job_type_id == 1) {
-      setJob({
-        ...job,
-        ready_at: formatDateTimeToDB(jobDateAt, readyAt),
-        drop_at: formatDateTimeToDB(jobDateAt, dropAt),
-        job_type_id: null,
-      });
-      toast({
-        title: "Job Type Required",
-        description:
-          "Standard service is no longer available for this time. Please select Express or Urgent.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+  // const resetJobTypeAndShowToast = () => {
+  //   if (job.job_type_id == 1) {
+  //     setJob({
+  //       ...job,
+  //       ready_at: formatDateTimeToDB(jobDateAt, readyAt),
+  //       drop_at: formatDateTimeToDB(jobDateAt, dropAt),
+  //       job_type_id: null,
+  //     });
+  //     toast({
+  //       title: "Job Type Required",
+  //       description:
+  //         "Standard service is no longer available for this time. Please select Express or Urgent.",
+  //       status: "warning",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   }
+  // };
 
   const handleCreateJobPriceCalculationDetail = (
     jobPriceDetail: CreateJobPriceCalculationDetailInput,
@@ -1403,17 +1420,6 @@ function JobEdit() {
       });
       return false;
     }
-
-    if (!job.transport_type || !job.transport_location) {
-      toast({
-        title: "Transport type or transport location is missing.",
-        description:
-          "Please ensure the Transport type or transport location is properly set.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
     return true;
   };
 
@@ -1438,10 +1444,13 @@ function JobEdit() {
     const selectedCategoryName = jobCategories.find(
       (job_category) => job_category.value == job?.job_category_id,
     )?.label;
-    const selectedstate = locationOptions.find(
-      (item) => item.value == job.transport_location,
-    )?.label;
+    // const selectedstate = locationOptions.find(
+    //   (item) => item.label == job.pick_up_state,
+    // )?.label;
 
+    const selectedstate = locationOptions.find(
+      (location) => location.label == data.job.pick_up_state,
+    );
     const selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
@@ -1458,10 +1467,10 @@ function JobEdit() {
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      state: refinedData.state || selectedstate,
-      state_code: refinedData.state_code || job.transport_location,
+      state: refinedData.state || selectedstate.label,
+      state_code: refinedData.state_code || selectedstate.value,
       company_rates:
-        job.transport_location === "QLD"
+      job.job_category_id == 1 && selectedstate.value === "QLD" 
           ? companyRates.map((rate) => ({
               company_id: rate.company_id,
               seafreight_id: rate.seafreight_id,
@@ -1967,44 +1976,44 @@ function JobEdit() {
 
                         <ColorSelect
                           label="Type:"
-                          optionsArray={filteredJobTypeOptions}
+                          optionsArray={jobTypeOptions}
                           selectedJobId={job.job_type_id}
                           value={
                             job.job_type_id
-                              ? filteredJobTypeOptions.find(
+                              ? jobTypeOptions.find(
                                   (jobType) =>
-                                    jobType.value === job.job_type_id,
+                                    jobType.value == job.job_type_id,
                                 )
                               : null
                           }
                           placeholder="Select type"
-                          onChange={(e) => {
-                            //console.log(e, "e");
-                            // setJob({
-                            //   ...job,
-                            //   job_type_id: e.value || null,
-                            // });
-                            const selectedCategory = e.value;
-                            const selectedCategoryName = selectedCategory
-                              ? filteredJobTypeOptions.find(
-                                  (job_category) =>
-                                    job_category.value === selectedCategory,
-                                )?.label
-                              : null;
+                          // onChange={(e) => {
+                          //   //console.log(e, "e");
+                          //   // setJob({
+                          //   //   ...job,
+                          //   //   job_type_id: e.value || null,
+                          //   // });
+                          //   const selectedCategory = e.value;
+                          //   const selectedCategoryName = selectedCategory
+                          //     ? jobTypeOptions.find(
+                          //         (job_category) =>
+                          //           job_category.value === selectedCategory,
+                          //       )?.label
+                          //     : null;
 
-                            setJob({
-                              ...job,
-                              job_type_id: selectedCategory || null,
-                            });
+                          //   setJob({
+                          //     ...job,
+                          //     job_type_id: selectedCategory || null,
+                          //   });
 
-                            setRefinedData({
-                              ...refinedData,
-                              service_choice: selectedCategoryName || null,
-                            });
+                          //   setRefinedData({
+                          //     ...refinedData,
+                          //     service_choice: selectedCategoryName || null,
+                          //   });
 
-                            // console.log(refinedData, "n");
-                            // console.log(job, "job");
-                          }}
+                          //   // console.log(refinedData, "n");
+                          //   // console.log(job, "job");
+                          // }}
                         />
 
                         <CustomInputField
@@ -2075,13 +2084,13 @@ function JobEdit() {
                             { value: "export", label: "Export" },
                           ].find((_e) => _e.value === job.transport_type)}
                           placeholder=""
-                          onChange={(e) => {
-                            setJob({ ...job, transport_type: e.value });
-                            setRefinedData({
-                              ...refinedData,
-                              transport_type: e.value,
-                            });
-                          }}
+                          // onChange={(e) => {
+                          //   setJob({ ...job, transport_type: e.value });
+                          //   setRefinedData({
+                          //     ...refinedData,
+                          //     transport_type: e.value,
+                          //   });
+                          // }}
                         />
 
                         {/* Location Select */}
@@ -2099,15 +2108,15 @@ function JobEdit() {
                             { value: "QLD", label: "Queensland" },
                           ].find((_e) => _e.value === job.transport_location)}
                           placeholder=""
-                          onChange={(e) => {
-                            const newState = {
-                              ...refinedData,
-                              state_code: e.value,
-                              state: e.label,
-                            };
-                            setJob({ ...job, transport_location: e.value });
-                            setRefinedData(newState);
-                          }}
+                          // onChange={(e) => {
+                          //   const newState = {
+                          //     ...refinedData,
+                          //     state_code: e.value,
+                          //     state: e.label,
+                          //   };
+                          //   setJob({ ...job, transport_location: e.value });
+                          //   setRefinedData(newState);
+                          // }}
                         />
                         <Text
                           style={{
@@ -2746,10 +2755,10 @@ function JobEdit() {
                           <Box>
                             {/* Right side content goes here */}
                             <GridItem pr={4}>
-                              {(job.job_category_id == 1 ||
+                              {/* {(job.job_category_id == 1 ||
                                 job.job_category_id == 2) &&
                                 (job.transport_location === "VIC" ||
-                                  job.transport_location === "QLD") && (
+                                  job.transport_location === "QLD") && ( */}
                                   <Flex
                                     height="100%"
                                     justifyContent="center"
@@ -2944,7 +2953,7 @@ function JobEdit() {
                                       </Box>
                                     )}
                                   </Flex>
-                                )}
+                                {/* )} */}
                             </GridItem>
                           </Box>
                         </SimpleGrid>
