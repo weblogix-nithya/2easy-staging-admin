@@ -168,7 +168,7 @@ function JobEdit() {
   );
   const [isSameDayJob, setIsSameDayJob] = useState(false);
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
-  const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
+  // const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
   const [locationOptions, setLocationOptions] = useState([
     { value: "VIC", label: "Victoria" },
     { value: "QLD", label: "Queensland" },
@@ -358,7 +358,7 @@ function JobEdit() {
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
-        setRefinedData({ 
+        setRefinedData({
           ...refinedData,
           freight_type: selectedCategoryName || null,
           state_code: selectedLocation?.value || null,
@@ -495,7 +495,7 @@ function JobEdit() {
         state_code: jobData.job.transport_location,
         state: selectedLocation?.label || null,
         // job_type: matchedJobType?.name || null,
-      // job_type_color: matchedJobType?.color || null
+        // job_type_color: matchedJobType?.color || null
       });
     }
   }, [jobData, jobCategories,jobTypeOptions]); // Use 'jobData' instead of 'data'
@@ -837,16 +837,16 @@ function JobEdit() {
           time_slot: data.jobPriceCalculationDetail?.time_slot,
           tailgate: data.jobPriceCalculationDetail?.tailgate,
         });
-        setButtonText("Quote");
+        setButtonText("Update Quote");
 
         // console.log(data.jobPriceCalculationDetail, "imp");
       },
       onError: (error) => {
         // Handle the error and set data to empty
         console.error("Error fetching job price calculation detail:", error);
+        setIsUpdateMode(false); // No data found, so we need to create a new entry
         setRefinedData(defaultJobQuoteData);
         setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-        setIsUpdateMode(false); // No data found, so we need to create a new entry
 
         setButtonText("Get A Quote");
       },
@@ -1292,7 +1292,7 @@ function JobEdit() {
   //         const existingJobType = jobTypeOptions.find(
   //           (type) => Number(type.id) === Number(job.job_type_id)
   //         );
-          
+
   //         if (existingJobType) {
   //           // If the job type exists in all options, keep it
   //           setJob({
@@ -1449,7 +1449,7 @@ function JobEdit() {
     // )?.label;
 
     const selectedstate = locationOptions.find(
-      (location) => location.label == data.job.pick_up_state,
+      (location) => location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
     );
     const selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
@@ -1467,10 +1467,10 @@ function JobEdit() {
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      state: refinedData.state || selectedstate.label,
-      state_code: refinedData.state_code || selectedstate.value,
+      state: refinedData.state || selectedstate?.label,
+      state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
-      job.job_category_id == 1 && selectedstate.value === "QLD" 
+        job.job_category_id == 1 && selectedstate?.value === "QLD"
           ? companyRates.map((rate) => ({
               company_id: rate.company_id,
               seafreight_id: rate.seafreight_id,
@@ -1545,12 +1545,25 @@ function JobEdit() {
       //   calculationData:response?.data
       //   // time_slot: calculationData?.time_slot || 0, // Ensure time_slot is set
       // });
+      setQuoteCalculationRes({
+        ...quoteCalculationRes,
+        time_slot: (calculationData as CalculationData)?.time_slot, // Ensure time_slot is set with type assertion
+        cbm_auto: (calculationData as CalculationData)?.cbm_auto,
+        total_weight: (calculationData as CalculationData)?.total_weight,
+        freight: (calculationData as CalculationData)?.freight,
+        fuel: (calculationData as CalculationData)?.fuel,
+        hand_unload: (calculationData as CalculationData)?.hand_unload,
+        dangerous_goods: (calculationData as CalculationData)?.dangerous_goods,
+        tail_lift: (calculationData as CalculationData)?.tail_lift,
+        stackable: (calculationData as CalculationData)?.stackable,
+        total: (calculationData as CalculationData)?.total,
+      });
+      console.log(calculationData, "Update mode");
       toast({ title: "Quote Calculation Success", status: "success" });
       // console.log(isUpdateMode);
       // console.log(quoteCalculationRes);
       // console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
-        //console.log("Update mode");
         await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
             //console.log("Updated successfully:", data);
@@ -2759,201 +2772,199 @@ function JobEdit() {
                                 job.job_category_id == 2) &&
                                 (job.transport_location === "VIC" ||
                                   job.transport_location === "QLD") && ( */}
-                                  <Flex
-                                    height="100%"
-                                    justifyContent="center"
-                                    pt={7}
-                                    flexDirection="column"
+                              <Flex
+                                height="100%"
+                                justifyContent="center"
+                                pt={7}
+                                flexDirection="column"
+                              >
+                                {/* First Row: Button */}
+                                <Flex justify="center">
+                                  <Button
+                                    bg="#3b82f6" /* Match the blue color */
+                                    color="white"
+                                    _hover={{
+                                      bg: "#2563eb", // Slightly darker blue for hover
+                                    }}
+                                    _active={{
+                                      bg: "#2563eb", // Active state
+                                      transform: "scale(0.95)", // Slightly shrink button when activated
+                                    }}
+                                    borderRadius="8px" /* Rounded corners */
+                                    px={6}
+                                    py={3}
+                                    fontWeight="500"
+                                    fontSize="sm"
+                                    onClick={() => {
+                                      handleSaveJobPriceCalculation();
+                                    }}
                                   >
-                                    {/* First Row: Button */}
-                                    <Flex justify="center">
-                                      <Button
-                                        bg="#3b82f6" /* Match the blue color */
-                                        color="white"
-                                        _hover={{
-                                          bg: "#2563eb", // Slightly darker blue for hover
-                                        }}
-                                        _active={{
-                                          bg: "#2563eb", // Active state
-                                          transform: "scale(0.95)", // Slightly shrink button when activated
-                                        }}
-                                        borderRadius="8px" /* Rounded corners */
-                                        px={6}
-                                        py={3}
-                                        fontWeight="500"
-                                        fontSize="sm"
-                                        onClick={() => {
-                                          handleSaveJobPriceCalculation();
-                                        }}
+                                    {buttonText}
+                                  </Button>
+                                </Flex>
+
+                                {/* Second Row: Other Elements */}
+                                {quoteCalculationRes && (
+                                  <Box mt={4}>
+                                    <Stack spacing={3}>
+                                      {/* Freight */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
                                       >
-                                        {buttonText}
-                                      </Button>
-                                    </Flex>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Freight:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.freight}
+                                        </Text>
+                                      </Flex>
 
-                                    {/* Second Row: Other Elements */}
-                                    {quoteCalculationRes && (
-                                      <Box mt={4}>
-                                        <Stack spacing={3}>
-                                          {/* Freight */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Freight:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.freight}
-                                            </Text>
-                                          </Flex>
+                                      {/* Fuel */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Fuel:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.fuel}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Fuel */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Fuel:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.fuel}
-                                            </Text>
-                                          </Flex>
+                                      {/* Hand Unload */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Hand Unload:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.hand_unload}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Hand Unload */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Hand Unload:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.hand_unload}
-                                            </Text>
-                                          </Flex>
+                                      {/* Time Slot */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Time Slot:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.time_slot}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Time Slot */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Time Slot:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.time_slot}
-                                            </Text>
-                                          </Flex>
+                                      {/* Dangerous Goods */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Dangerous Goods:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.dangerous_goods}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Dangerous Goods */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Dangerous Goods:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {
-                                                quoteCalculationRes.dangerous_goods
-                                              }
-                                            </Text>
-                                          </Flex>
+                                      {/* Stackable */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Stackable:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.stackable}
+                                        </Text>
+                                      </Flex>
 
-                                          {/* Stackable */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Stackable:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.stackable}
-                                            </Text>
-                                          </Flex>
-
-                                          {/* Total */}
-                                          <Flex
-                                            justify="space-between"
-                                            align="center"
-                                          >
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="500"
-                                              color="gray.700"
-                                              pr={2}
-                                            >
-                                              Total:
-                                            </Text>
-                                            <Text
-                                              fontSize="sm"
-                                              fontWeight="600"
-                                              color="blue.600"
-                                            >
-                                              {quoteCalculationRes.total}
-                                            </Text>
-                                          </Flex>
-                                        </Stack>
-                                      </Box>
-                                    )}
-                                  </Flex>
-                                {/* )} */}
+                                      {/* Total */}
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          Total:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.total}
+                                        </Text>
+                                      </Flex>
+                                    </Stack>
+                                  </Box>
+                                )}
+                              </Flex>
+                              {/* )} */}
                             </GridItem>
                           </Box>
                         </SimpleGrid>
