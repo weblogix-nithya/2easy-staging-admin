@@ -184,12 +184,12 @@ function JobEdit() {
       label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane",
     },
     {
-      value: "(Interport) 97 Freight Street Lytton",
-      label: "(Interport) 97 Freight Street Lytton",
+      value: "(Interport) 97 Freight Street, Lytton",
+      label: "(Interport) 97 Freight Street, Lytton",
     },
     {
-      value: "(Buccini Transport) 28 Wyuna Court Hemmant",
-      label: "(Buccini Transport) 28 Wyuna Court Hemmant",
+      value: "(Buccini Transport) 28 Wyuna Court, Hemmant",
+      label: "(Buccini Transport) 28 Wyuna Court, Hemmant",
     },
     {
       value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane",
