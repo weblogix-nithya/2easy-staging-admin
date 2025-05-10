@@ -580,6 +580,19 @@ export const SEND_CONSIGNMENT_DOCKET = gql`
   }
 `;
 
+export const GET_ALL_TIMESLOT_DEPOTS = gql`
+  query {
+    allTimeslotDepots {
+      id
+      depot_name
+      pincode
+      state_code
+      depot_price
+      is_active
+    }
+  }
+`;
+
 export interface UpdateJobInput {
   id: number;
   name?: string;
@@ -798,6 +811,7 @@ export type JobQuoteData = {
   cbm_rate: number;
   minimum_charge: number;
   area: string;
+  company_rates: any[];
 };
 
 const defaultJobQuoteData: JobQuoteData = {
@@ -812,6 +826,7 @@ const defaultJobQuoteData: JobQuoteData = {
   cbm_rate: 0,
   minimum_charge: 0,
   area: "",
+  company_rates:[],
   job_pickup_address: {
     state: "",
     suburb: "",

@@ -38,6 +38,7 @@ import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
 import {
   CREATE_JOB_MUTATION,
   defaultJob,
+  GET_ALL_TIMESLOT_DEPOTS,
   SEND_CONSIGNMENT_DOCKET,
 } from "graphql/job";
 import defaultJobQuoteData from "graphql/job";
@@ -99,18 +100,15 @@ function JobEdit() {
   //   freight_type: "LCL",
   // });
 
+  const [depotOptions, setDepotOptions] = useState([]);
+  const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
+
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
     freight_type: "LCL",
     pick_up_state: "",
     pick_up_stateCode: "",
-    depotOptions: [
-      { value: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane", label: "(QUBE LOGISTICS) 76 Port Drive Port of Brisbane" },
-      { value: "(MEDLOG) 10 Peregrine Drive Port of Brisbane", label: "(MEDLOG) 10 Peregrine Drive Port of Brisbane" },
-      { value: "(Interport) 97 Freight Street, Lytton", label: "(Interport) 97 Freight Street, Lytton" },
-      { value: "(Buccini Transport) 28 Wyuna Court, Hemmant", label: "(Buccini Transport) 28 Wyuna Court, Hemmant" },
-      { value: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane", label: "(ARROW TRANSPORT) 8 Bishop Drive Port of Brisbane" },
-    ],
+    depotOptions: [],
     timeslot_depots: "",
   });
 
@@ -159,22 +157,21 @@ function JobEdit() {
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
 
-
   let re =
     /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-    const getStateCode = (stateName:string) => {
-      const normalizedStateName = stateName.toLowerCase().trim();
-      switch (normalizedStateName) {
-        case 'victoria':
-          return 'VIC';
-        case 'queensland':
-          return 'QLD';
-        // You can add more cases here for other states if needed
-        default:
-          return normalizedStateName; // Return the state name as is if it doesn't match any known state
-      }
-    };
+  const getStateCode = (stateName: string) => {
+    const normalizedStateName = stateName.toLowerCase().trim();
+    switch (normalizedStateName) {
+      case "victoria":
+        return "VIC";
+      case "queensland":
+        return "QLD";
+      // You can add more cases here for other states if needed
+      default:
+        return normalizedStateName; // Return the state name as is if it doesn't match any known state
+    }
+  };
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -252,12 +249,43 @@ function JobEdit() {
         if (data?.getRatesByCompany) {
           const rates = [...data.getRatesByCompany];
           setCompanyRates(rates);
+          setRefinedData((prevData) => ({
+            ...prevData,
+            company_rates: rates,
+          }));
         }
       },
     },
   );
 
-
+  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+    onCompleted: (data) => {
+      if (data?.allTimeslotDepots) {
+        const depots = data.allTimeslotDepots
+          .filter((depot: any) => depot.is_active)
+          .map((depot: any) => ({
+            value: depot.depot_name,
+            label: depot.depot_name,
+            price: depot.depot_price,
+            state_code: depot.state_code,
+            pincode: depot.pincode,
+          }));
+        setDepotOptions(depots);
+        console.log("depots", data.allTimeslotDepots);
+        console.log("depots", depots);
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching depots:", error);
+      toast({
+        title: "Error fetching depots",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
 
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
@@ -312,7 +340,6 @@ function JobEdit() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
-
       }));
 
       setCompaniesOptions(newCompaniesOptions);
@@ -479,7 +506,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -589,6 +616,21 @@ function JobEdit() {
     let _jobDestinations = [...jobDestinations];
     _jobDestinations[index] = value;
     setJobDestinations(_jobDestinations);
+    let currentstate=
+      _jobDestinations[0]?.address_state == "Victoria"
+        ? "VIC"
+        : jobDestinations[0]?.address_state == "Queensland"
+        ? "QLD"
+        : "";
+        const filtereddepotOption =
+        depotOptions.filter(
+          (option) => option.state_code == currentstate
+        );
+      console.log(
+        filtereddepotOption,
+        "filtereddepotOption",
+      );
+      setFilteredDepotOptions(filtereddepotOption);     
   };
   useQuery(GET_JOB_CATEGORIES_QUERY, {
     variables: defaultVariables,
@@ -932,31 +974,39 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-          state: jobDestinations[0]?.address_state,
-          suburb: jobDestinations[0]?.address_city,
-          postcode: jobDestinations[0]?.address_postal_code,
-          address: jobDestinations[0]?.address,
-        }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
         : null;
 
+    const filteredCompanyRates = companyRates?.filter(
+      (rate) => rate.state === jobDestination1?.state,
+    );
     const payload = {
       freight_type: refinedData.freight_type,
       transport_type: job.transport_type,
-      state: refinedData.state || job.pick_up_state|| pickUpDestination.address_state,
+      state:
+        refinedData.state ||
+        job.pick_up_state ||
+        pickUpDestination.address_state,
       state_code: refinedData.state_code || refinedData.pick_up_stateCode,
       service_choice: refinedData.service_choice,
       // cbm_rate: refinedData.cbm_rate,
       // minimum_charge: refinedData.minimum_charge,
       // area: refinedData.area,
-      company_rates: refinedData.pick_up_stateCode === "QLD"
-        ? companyRates.map((rate) => ({
-          company_id: rate.company_id,
-          seafreight_id: rate.seafreight_id,
-          area: rate.area,
-          cbm_rate: rate.cbm_rate,
-          minimum_charge: rate.minimum_charge,
-        }))
-        : [],
+      company_rates:
+        (job.job_category_id == 1 && refinedData.pick_up_stateCode === "QLD") ||
+        refinedData.pick_up_stateCode === "VIC"
+          ? filteredCompanyRates.map((rate) => ({
+              company_id: rate.company_id,
+              seafreight_id: rate.seafreight_id,
+              area: rate.area,
+              cbm_rate: rate.cbm_rate,
+              minimum_charge: rate.minimum_charge,
+            }))
+          : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
         suburb: pickUpDestination?.address_city,
@@ -966,11 +1016,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+              state: jobDestinations[0]?.address_state,
+              suburb: jobDestinations[0]?.address_city,
+              postcode: jobDestinations[0]?.address_postal_code,
+              address: jobDestinations[0]?.address,
+            }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -982,7 +1032,9 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: refinedData.timeslot_depots || null,
+        timeslot_depots: job.is_inbound_connect
+          ? refinedData.timeslot_depots
+          : null,
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1005,7 +1057,7 @@ function JobEdit() {
         updated_at: refinedData.updated_at || today,
       })),
     };
-console.log(payload,'p')
+    console.log(payload, "p");
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
@@ -1220,7 +1272,7 @@ console.log(payload,'p')
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => { }
+                      (e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1235,7 +1287,7 @@ console.log(payload,'p')
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => { }
+                      (e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1285,11 +1337,11 @@ console.log(payload,'p')
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                        new Date(
-                          new Date(today).setDate(
-                            new Date(today).getDate() + 1,
-                          ),
-                        ).toDateString(),
+                          new Date(
+                            new Date(today).setDate(
+                              new Date(today).getDate() + 1,
+                            ),
+                          ).toDateString(),
                       );
                     }}
                   />
@@ -1571,13 +1623,29 @@ console.log(payload,'p')
                           getCustomerAddresses();
                         }}
                         jobDestinationChanged={(jobDestination) => {
-                          const stateCode = getStateCode(jobDestination.address_state);
-                         
+                          const stateCode = getStateCode(
+                            jobDestination.address_state,
+                          );
+
                           setPickUpDestination({
                             ...pickUpDestination,
                             ...jobDestination,
                             ...{ is_pickup: true },
                           });
+                          let currentPickupstate =
+                            pickUpDestination.address_state == "Victoria"
+                              ? "VIC"
+                              : pickUpDestination.address_state == "Queensland"
+                              ? "QLD"
+                              : "";
+                          const filtereddepotOption = depotOptions.filter(
+                            (option) => option.state_code == currentPickupstate,
+                          );
+                          setFilteredDepotOptions(filtereddepotOption);
+                          console.log(
+                            filtereddepotOption,
+                            "filtereddepotOptions",
+                          );
                           setJob({
                             ...job,
                             ...{
@@ -1592,12 +1660,12 @@ console.log(payload,'p')
                           });
 
                           setRefinedData({
-                           ...refinedData,
-                           ...{
-                            pick_up_state: jobDestination.state,
-                             pick_up_stateCode: stateCode,
-                           }
-                          })
+                            ...refinedData,
+                            ...{
+                              pick_up_state: jobDestination.state,
+                              pick_up_stateCode: stateCode,
+                            },
+                          });
                         }}
                       />
                     </Grid>
@@ -1854,6 +1922,18 @@ console.log(payload,'p')
                                   ...job,
                                   is_inbound_connect: e === "1" ? true : false,
                                 });
+                                let curretstatecode =
+                                  jobDestinations[0].address_state == "Victoria"
+                                    ? "VIC"
+                                    : jobDestinations[0].address_state ==
+                                      "Queensland"
+                                    ? "QLD"
+                                    : "";
+                                const filtereddepotOp = depotOptions.filter(
+                                  (option) =>
+                                    option.state_code == curretstatecode,
+                                );
+                                setFilteredDepotOptions(filtereddepotOp);
                               }}
                             >
                               <Stack direction="row">
@@ -1865,35 +1945,33 @@ console.log(payload,'p')
                             </RadioGroup>
                           </Flex>
 
-                          {job.job_category_id === 1 && job.is_inbound_connect === true && (
-                            <Box>
-                              <CustomInputField
-                                isSelect={true}
-                                optionsArray={refinedData.depotOptions || []} // Dynamically updated options
-                                label="Timeslot depots:"
-                                value={
-                                  refinedData.timeslot_depots
-                                    ? {
-                                      value: refinedData.timeslot_depots,
-                                      label: refinedData.timeslot_depots, // Use the same value for label
-                                    }
-                                    : null
-                                }
-                                placeholder="Select a depot"
-                                onChange={(e) => {
-                                  setRefinedData({
-                                    ...refinedData,
-                                    timeslot_depots: e.value,
-                                  });
-                                  setJob({
-                                    ...job,
-                                    timeslot_depots: e.value, // Update job.timeslot_depots
-                                  });
-                                }}
-                              />
-
-                            </Box>
-                          )}
+                          {job.job_category_id === 1 &&
+                            job.is_inbound_connect === true && (
+                              <Box>
+                                <CustomInputField
+                                  isSelect={true}
+                                  optionsArray={filtereddepotOptions} // Dynamically updated options
+                                  label="Timeslot depots:"
+                                  value={
+                                    filtereddepotOptions.find(
+                                      (option) =>
+                                        option.value === job.timeslot_depots,
+                                    ) || null
+                                  }
+                                  placeholder="Select a depot"
+                                  onChange={(e) => {
+                                    setRefinedData({
+                                      ...refinedData,
+                                      timeslot_depots: e.value,
+                                    });
+                                    setJob({
+                                      ...job,
+                                      timeslot_depots: e.value, // Update job.timeslot_depots
+                                    });
+                                  }}
+                                />
+                              </Box>
+                            )}
 
                           <Flex
                             flexDirection="column"
