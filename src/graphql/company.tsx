@@ -17,7 +17,7 @@ export const GET_COMPANYS_QUERY = gql`
       data {
         id
         name
-          }
+      }
       paginatorInfo {
         count
         currentPage
@@ -94,15 +94,6 @@ export const UPDATE_COMPANY_MUTATION = gql`
       is_pod_sendable
       is_invoice_sendable
       payment_term
-    }
-  }
-`;
-
-export const GET_LIST_OF_SEAFREIGHTS = gql`
-  query {
-    allSeafreights {
-      id
-      location_name
     }
   }
 `;

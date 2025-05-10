@@ -9,7 +9,21 @@ export interface CompanyRate {
   minimum_charge: number;
   created_at: string;
   updated_at: string;
+  state: string;
 }
+
+export const GET_LIST_OF_SEAFREIGHTS = gql`
+  query {
+    allSeafreights {
+      id
+      location_name
+      state
+      city
+      cbm_rate
+      min_charge
+    }
+  }
+`;
 
 export const CREATE_COMPANY_RATE_MUTATION = gql`
   mutation CreateCompanyRate(
@@ -18,6 +32,7 @@ export const CREATE_COMPANY_RATE_MUTATION = gql`
     $area: String!
     $cbm_rate: Float!
     $minimum_charge: Float!
+    $state: String!
   ) {
     createCompanyRate(
       input: {
@@ -26,6 +41,7 @@ export const CREATE_COMPANY_RATE_MUTATION = gql`
         area: $area
         cbm_rate: $cbm_rate
         minimum_charge: $minimum_charge
+        state: $state
       }
     ) {
       id
@@ -34,6 +50,7 @@ export const CREATE_COMPANY_RATE_MUTATION = gql`
       area
       cbm_rate
       minimum_charge
+      state
       created_at
       updated_at
     }
@@ -49,6 +66,7 @@ export const GET_COMPANY_RATE_QUERY = gql`
       area
       cbm_rate
       minimum_charge
+      state
       created_at
       updated_at
     }
@@ -63,6 +81,7 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
     $area: String!
     $cbm_rate: Float!
     $minimum_charge: Float!
+    $state: String!
   ) {
     updateCompanyRate(
       id: $id
@@ -72,6 +91,7 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
         area: $area
         cbm_rate: $cbm_rate
         minimum_charge: $minimum_charge
+        state: $state
       }
     ) {
       id
@@ -80,6 +100,23 @@ export const UPDATE_COMPANY_RATE_MUTATION = gql`
       area
       cbm_rate
       minimum_charge
+      state
+      created_at
+      updated_at
+    }
+  }
+`;
+
+export const DELETE_COMPANY_RATE_MUTATION = gql`
+  mutation DeleteCompanyRate($id: ID!) {
+    deleteCompanyRate(id: $id) {
+      id
+      company_id
+      seafreight_id
+      area
+      cbm_rate
+      minimum_charge
+      state
       created_at
       updated_at
     }
