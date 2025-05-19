@@ -271,8 +271,8 @@ function JobEdit() {
             pincode: depot.pincode,
           }));
         setDepotOptions(depots);
-        console.log("depots", data.allTimeslotDepots);
-        console.log("depots", depots);
+        // console.log("depots", data.allTimeslotDepots);
+        // console.log("depots", depots);
       }
     },
     onError: (error) => {
@@ -384,6 +384,7 @@ function JobEdit() {
         ...job,
         id: undefined,
         job_status_id: 1,
+        job_type_id: job.job_type_id,
         transport_type: job.transport_type,
         transport_location: job.transport_location,
         timeslot_depots: job.timeslot_depots,
@@ -616,21 +617,17 @@ function JobEdit() {
     let _jobDestinations = [...jobDestinations];
     _jobDestinations[index] = value;
     setJobDestinations(_jobDestinations);
-    let currentstate=
+    let currentstate =
       _jobDestinations[0]?.address_state == "Victoria"
         ? "VIC"
         : jobDestinations[0]?.address_state == "Queensland"
         ? "QLD"
         : "";
-        const filtereddepotOption =
-        depotOptions.filter(
-          (option) => option.state_code == currentstate
-        );
-      console.log(
-        filtereddepotOption,
-        "filtereddepotOption",
-      );
-      setFilteredDepotOptions(filtereddepotOption);     
+    const filtereddepotOption = depotOptions.filter(
+      (option) => option.state_code == currentstate,
+    );
+    // console.log(filtereddepotOption, "filtereddepotOption");
+    setFilteredDepotOptions(filtereddepotOption);
   };
   useQuery(GET_JOB_CATEGORIES_QUERY, {
     variables: defaultVariables,
@@ -957,11 +954,22 @@ function JobEdit() {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
-    if ((job.job_type_id = null)) {
+    if (job.job_type_id === null || "") {
       toast({
         title: "Job Type Required",
         description:
           "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (refinedData.transport_type === null || "") {
+      toast({
+        title: "transport Type Required",
+        description: "Please select Import or Export as the transport type.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -1057,7 +1065,7 @@ function JobEdit() {
         updated_at: refinedData.updated_at || today,
       })),
     };
-    console.log(payload, "p");
+    // console.log(payload, "p");
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
@@ -1642,10 +1650,10 @@ function JobEdit() {
                             (option) => option.state_code == currentPickupstate,
                           );
                           setFilteredDepotOptions(filtereddepotOption);
-                          console.log(
-                            filtereddepotOption,
-                            "filtereddepotOptions",
-                          );
+                          // console.log(
+                          //   filtereddepotOption,
+                          //   "filtereddepotOptions",
+                          // );
                           setJob({
                             ...job,
                             ...{
