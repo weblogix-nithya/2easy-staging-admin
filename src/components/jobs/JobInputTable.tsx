@@ -236,11 +236,22 @@ const JobInputTable = <T extends object>({
                     name="weight"
                     value={row.weight}
                     suffixText="kg"
+                    type="number"
+                    // onChange={(e) => {
+                    //   onValueChanged(
+                    //     {
+                    //       ...row,
+                    //       [e.target.name]: parseFloat(e.target.value) || null,
+                    //     },
+                    //     index,
+                    //   );
+                    // }}
                     onChange={(e) => {
+                      const newValue = parseFloat(e.target.value) || null;
                       onValueChanged(
                         {
                           ...row,
-                          [e.target.name]: parseFloat(e.target.value) || null,
+                          [e.target.name]: newValue,
                         },
                         index,
                       );

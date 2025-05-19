@@ -305,7 +305,7 @@ function JobEdit() {
             pincode: depot.pincode
           }));
         setDepotOptions(depots);
-        console.log("depots", depots)
+        // console.log("depots", depots)
 
       }
     },
@@ -379,10 +379,10 @@ function JobEdit() {
         depotOptions.filter(
           (option) => option.state_code ==  selectedStateCode
         );
-      console.log(
-        filtereddepotOption, selectedStateCode,
-        "filtereddepotOption",
-      );
+      // console.log(
+      //   filtereddepotOption, selectedStateCode,
+      //   "filtereddepotOption",
+      // );
       setFilteredDepotOptions(filtereddepotOption);
         getCustomersByCompanyId({
           query: "",
@@ -420,7 +420,7 @@ function JobEdit() {
           data.job.job_destinations.filter(
             (destination: any) => !destination.is_pickup,
           ) || [];
-          console.log("currentDestinations", currentDestinations.address_state);
+          // console.log("currentDestinations", currentDestinations.address_state);
           // console.log("jobDestinations", jobDestinations);
         setOriginalJobDestinations(_jobDestinations);
         setJobDestinations(_jobDestinations);
@@ -442,6 +442,17 @@ function JobEdit() {
             (job_cc_email: { id: number; email: string }) => job_cc_email.email,
           ),
         );
+              const totalWeight = data.job.job_items.reduce((sum: any, item: { weight: any; }) => sum + item.weight, 0);
+      const totalCbm = data.job.job_items.reduce((sum: any, item: { volume: any; }) => sum + item.volume, 0);
+
+      // Log the total weight and total cbm to the console
+      // console.log("Total Weight:", totalWeight);
+      // console.log("Total CBM:", totalCbm);
+      setQuoteCalculationRes({
+        ...quoteCalculationRes,
+        total_weight: totalWeight,
+        cbm_auto: totalCbm,
+      });
       } else {
         setJob({ ...job, media: data?.job.media });
         setJobCcEmails(data.job.job_cc_emails);
@@ -848,11 +859,15 @@ function JobEdit() {
           total_price: data.jobPriceCalculationDetail?.total_price,
           total_weight: data.jobPriceCalculationDetail?.total_weight,
         });
-        setQuoteCalculationRes({
-          ...data.jobPriceCalculationDetail,
+        setQuoteCalculationRes((prev)=>({
+          ...prev,
           total_price: data.jobPriceCalculationDetail?.total_price,
-          total_weight: data.jobPriceCalculationDetail?.total_weight,
-          cbm_auto: data.jobPriceCalculationDetail?.cbm_auto,
+          total_weight: data.jobPriceCalculationDetail.total_weight !== undefined
+            ? data.jobPriceCalculationDetail.total_weight
+            : prev.total_weight,
+          cbm_auto: data.jobPriceCalculationDetail.cbm_auto !== undefined
+            ? data.jobPriceCalculationDetail.cbm_auto
+            : prev.cbm_auto,
           customer_id: data.jobPriceCalculationDetail?.customer_id,
           dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
           freight: data.jobPriceCalculationDetail?.freight,
@@ -861,7 +876,7 @@ function JobEdit() {
           stackable: data.jobPriceCalculationDetail.stackable,
           time_slot: data.jobPriceCalculationDetail?.time_slot,
           tailgate: data.jobPriceCalculationDetail?.tailgate,
-        });
+        }));
         setButtonText("Update Quote");
 
         // console.log(data.jobPriceCalculationDetail, "imp");
@@ -872,7 +887,13 @@ function JobEdit() {
         setIsUpdateMode(false); // No data found, so we need to create a new entry
         setRefinedData(defaultJobQuoteData);
         setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-
+         const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
+  const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+  setQuoteCalculationRes((prev) => ({
+    ...prev,
+    total_weight: totalWeight,
+    cbm_auto: totalCbm,
+  }));
         setButtonText("Get A Quote");
       },
     },
@@ -956,6 +977,17 @@ function JobEdit() {
       },
     },
   );
+  useEffect(() => {
+  const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
+  const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+
+  setQuoteCalculationRes((prev) => ({
+    ...prev,
+    total_weight: totalWeight,
+    cbm_auto: totalCbm,
+  }));
+}, [jobItems]);
+
   const handleRemoveFromJobItems = (index: number) => {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
@@ -1481,7 +1513,7 @@ function JobEdit() {
       (location) =>
         location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
     );
-    console.log(selectedstate, "selectedstate");
+    // console.log(selectedstate, "selectedstate");
     const selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
@@ -1566,14 +1598,14 @@ function JobEdit() {
       })),
     };
 
-    console.log(payload);
+    // console.log(payload);
 
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
-      console.log("Response Data:", response.data);
+      // console.log("Response Data:", response.data);
       // setQuoteCalculationRes({
       //   ...response?.data,
       //   time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
@@ -1592,7 +1624,7 @@ function JobEdit() {
         stackable: (calculationData as CalculationData)?.stackable,
         total: (calculationData as CalculationData)?.total,
       });
-      console.log(calculationData, "Update mode");
+      // console.log(calculationData, "Update mode");
       toast({ title: "Quote Calculation Success", status: "success" });
       // console.log(isUpdateMode);
       // console.log(quoteCalculationRes);
@@ -2657,10 +2689,10 @@ function JobEdit() {
                                       depotOptions.filter(
                                         (option) => option.state_code == selectedStateCode
                                       );
-                                    console.log(
-                                      filtereddepotOption,job.pick_up_state,
-                                      "filtereddepotOption",
-                                    );
+                                    // console.log(
+                                    //   filtereddepotOption,job.pick_up_state,
+                                    //   "filtereddepotOption",
+                                    // );
                                     setFilteredDepotOptions(filtereddepotOption);
                                     }}
                                   >
@@ -2695,7 +2727,7 @@ function JobEdit() {
                                         ...prevData,
                                         timeslot_depots: e.value,
                                       })); // Update the selected depot directly
-                                     console.log("Selected depot: ", e.value)
+                                    //  console.log("Selected depot: ", e.value)
                                       setJob({
                                         ...job,
                                         timeslot_depots: e.value, // Update job.timeslot_depots
