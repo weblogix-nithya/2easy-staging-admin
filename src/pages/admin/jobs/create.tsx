@@ -979,16 +979,16 @@ function JobEdit() {
       return;
     }
 
-    if (refinedData.transport_type === null || "") {
-      toast({
-        title: "transport Type Required",
-        description: "Please select Import or Export as the transport type.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    // if (refinedData.transport_type === null || "") {
+    //   toast({
+    //     title: "transport Type Required",
+    //     description: "Please select Import or Export as the transport type.",
+    //     status: "warning",
+    //     duration: 3000,
+    //     isClosable: true,
+    //   });
+    //   return;
+    // }
 
     const today = new Date().toISOString(); // Gets current date and time in ISO format
 
