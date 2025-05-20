@@ -711,6 +711,19 @@ function JobEdit() {
     _jobItems[index] = value;
     setJobItems(_jobItems);
     // recalculateTempCalculations(_jobItems);
+      const totalWeight = _jobItems.reduce(
+          (sum: any, item: { weight: any }) => sum + item.weight,
+          0,
+        );
+        const totalCbm = _jobItems.reduce(
+          (sum: any, item: { volume: any }) => sum + item.volume,
+          0,
+        );
+        setQuoteCalculationRes({
+          ...quoteCalculationRes,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        });
   };
 
   useEffect(() => {
@@ -951,17 +964,6 @@ function JobEdit() {
   };
 
   const sendFreightData = async () => {
-    if (!job.transport_type) {
-      toast({
-        title: "Transport type is required.",
-        description: "Please select the transport type.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
@@ -977,16 +979,16 @@ function JobEdit() {
       return;
     }
 
-    if (refinedData.transport_type === null || "") {
-      toast({
-        title: "transport Type Required",
-        description: "Please select Import or Export as the transport type.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    // if (refinedData.transport_type === null || "") {
+    //   toast({
+    //     title: "transport Type Required",
+    //     description: "Please select Import or Export as the transport type.",
+    //     status: "warning",
+    //     duration: 3000,
+    //     isClosable: true,
+    //   });
+    //   return;
+    // }
 
     const today = new Date().toISOString(); // Gets current date and time in ISO format
 

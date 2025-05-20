@@ -452,10 +452,6 @@ function JobEdit() {
           (sum: any, item: { volume: any }) => sum + item.volume,
           0,
         );
-
-        // Log the total weight and total cbm to the console
-        // console.log("Total Weight:", totalWeight);
-        // console.log("Total CBM:", totalCbm);
         setQuoteCalculationRes({
           ...quoteCalculationRes,
           total_weight: totalWeight,
@@ -1706,18 +1702,6 @@ function JobEdit() {
   };
 
   const handleSaveJobPriceCalculation = () => {
-    //console.log(isUpdateMode);
-    if (!job.transport_type) {
-      toast({
-        title: "Transport type is required.",
-        description: "Please select the transport type.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
