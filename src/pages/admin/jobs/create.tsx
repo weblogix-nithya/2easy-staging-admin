@@ -711,6 +711,19 @@ function JobEdit() {
     _jobItems[index] = value;
     setJobItems(_jobItems);
     // recalculateTempCalculations(_jobItems);
+      const totalWeight = _jobItems.reduce(
+          (sum: any, item: { weight: any }) => sum + item.weight,
+          0,
+        );
+        const totalCbm = _jobItems.reduce(
+          (sum: any, item: { volume: any }) => sum + item.volume,
+          0,
+        );
+        setQuoteCalculationRes({
+          ...quoteCalculationRes,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        });
   };
 
   useEffect(() => {

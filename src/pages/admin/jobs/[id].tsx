@@ -51,7 +51,8 @@ import defaultJobQuoteData, {
   DELETE_JOB_MUTATION,
   GET_ALL_TIMESLOT_DEPOTS,
   GET_JOB_QUERY,
-  UPDATE_JOB_MUTATION} from "graphql/job";
+  UPDATE_JOB_MUTATION,
+} from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import {
   CREATE_JOB_CC_EMAIL_MUTATION,
@@ -177,7 +178,6 @@ function JobEdit() {
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
 
-
   const [selectedDepot, setSelectedDepot] = useState("");
 
   const [prevJobState, setPrevJobState] = useState({
@@ -302,11 +302,10 @@ function JobEdit() {
             label: depot.depot_name,
             price: depot.depot_price,
             state_code: depot.state_code,
-            pincode: depot.pincode
+            pincode: depot.pincode,
           }));
         setDepotOptions(depots);
         // console.log("depots", depots)
-
       }
     },
     onError: (error) => {
@@ -318,7 +317,7 @@ function JobEdit() {
         duration: 5000,
         isClosable: true,
       });
-    }
+    },
   });
 
   const {
@@ -364,8 +363,12 @@ function JobEdit() {
         const selectedCategoryName = jobCategories.find(
           (job_category) => job_category.value == data?.job.job_category_id,
         )?.label;
-        const selectedStateCode = data.job.pick_up_state == 'Victoria' ? 'VIC' : 
-        data.job.pick_up_state == 'Queensland' ? 'QLD' : '';        
+        const selectedStateCode =
+          data.job.pick_up_state == "Victoria"
+            ? "VIC"
+            : data.job.pick_up_state == "Queensland"
+            ? "QLD"
+            : "";
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
@@ -375,15 +378,14 @@ function JobEdit() {
           state_code: selectedLocation?.value || null,
           state: selectedLocation?.label || null,
         });
-        const filtereddepotOption =
-        depotOptions.filter(
-          (option) => option.state_code ==  selectedStateCode
+        const filtereddepotOption = depotOptions.filter(
+          (option) => option.state_code == selectedStateCode,
         );
-      // console.log(
-      //   filtereddepotOption, selectedStateCode,
-      //   "filtereddepotOption",
-      // );
-      setFilteredDepotOptions(filtereddepotOption);
+        // console.log(
+        //   filtereddepotOption, selectedStateCode,
+        //   "filtereddepotOption",
+        // );
+        setFilteredDepotOptions(filtereddepotOption);
         getCustomersByCompanyId({
           query: "",
           page: 1,
@@ -416,12 +418,12 @@ function JobEdit() {
             (destination: any) => !destination.is_pickup,
           ) || [];
 
-          let currentDestinations =
+        let currentDestinations =
           data.job.job_destinations.filter(
             (destination: any) => !destination.is_pickup,
           ) || [];
-          // console.log("currentDestinations", currentDestinations.address_state);
-          // console.log("jobDestinations", jobDestinations);
+        // console.log("currentDestinations", currentDestinations.address_state);
+        // console.log("jobDestinations", jobDestinations);
         setOriginalJobDestinations(_jobDestinations);
         setJobDestinations(_jobDestinations);
 
@@ -442,17 +444,19 @@ function JobEdit() {
             (job_cc_email: { id: number; email: string }) => job_cc_email.email,
           ),
         );
-              const totalWeight = data.job.job_items.reduce((sum: any, item: { weight: any; }) => sum + item.weight, 0);
-      const totalCbm = data.job.job_items.reduce((sum: any, item: { volume: any; }) => sum + item.volume, 0);
-
-      // Log the total weight and total cbm to the console
-      // console.log("Total Weight:", totalWeight);
-      // console.log("Total CBM:", totalCbm);
-      setQuoteCalculationRes({
-        ...quoteCalculationRes,
-        total_weight: totalWeight,
-        cbm_auto: totalCbm,
-      });
+        const totalWeight = data.job.job_items.reduce(
+          (sum: any, item: { weight: any }) => sum + item.weight,
+          0,
+        );
+        const totalCbm = data.job.job_items.reduce(
+          (sum: any, item: { volume: any }) => sum + item.volume,
+          0,
+        );
+        setQuoteCalculationRes({
+          ...quoteCalculationRes,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        });
       } else {
         setJob({ ...job, media: data?.job.media });
         setJobCcEmails(data.job.job_cc_emails);
@@ -842,7 +846,7 @@ function JobEdit() {
       skip: !job.id || !Boolean(job.id), // To ensure no falsy value interferes
       onCompleted: (data) => {
         // Process the data as needed
-        // console.log(data, "d");
+        console.log(data, "d");
         setIsUpdateMode(true); // Data exists, so it's an update
         setPricecalculationid(data.jobPriceCalculationDetail.id);
         setRefinedData({
@@ -856,18 +860,22 @@ function JobEdit() {
           tailgate: data.jobPriceCalculationDetail?.tailgate,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail?.stackable,
-          total_price: data.jobPriceCalculationDetail?.total_price,
+          total_price: data.jobPriceCalculationDetail?.total,
           total_weight: data.jobPriceCalculationDetail?.total_weight,
         });
-        setQuoteCalculationRes((prev)=>({
+        setQuoteCalculationRes((prev) => ({
           ...prev,
-          total_price: data.jobPriceCalculationDetail?.total_price,
-          total_weight: data.jobPriceCalculationDetail.total_weight !== undefined
-            ? data.jobPriceCalculationDetail.total_weight
-            : prev.total_weight,
-          cbm_auto: data.jobPriceCalculationDetail.cbm_auto !== undefined
-            ? data.jobPriceCalculationDetail.cbm_auto
-            : prev.cbm_auto,
+          total_price: data.jobPriceCalculationDetail?.total,
+          total: data.jobPriceCalculationDetail?.total,
+
+          total_weight:
+            data.jobPriceCalculationDetail.total_weight !== undefined
+              ? data.jobPriceCalculationDetail.total_weight
+              : prev.total_weight,
+          cbm_auto:
+            data.jobPriceCalculationDetail.cbm_auto !== undefined
+              ? data.jobPriceCalculationDetail.cbm_auto
+              : prev.cbm_auto,
           customer_id: data.jobPriceCalculationDetail?.customer_id,
           dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
           freight: data.jobPriceCalculationDetail?.freight,
@@ -878,15 +886,18 @@ function JobEdit() {
           tailgate: data.jobPriceCalculationDetail?.tailgate,
         }));
         setButtonText("Update Quote");
- setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-         const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
-  const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
-  setQuoteCalculationRes((prev) => ({
-    ...prev,
-    total_weight: totalWeight,
-    cbm_auto: totalCbm,
-  }));
-        // console.log(data.jobPriceCalculationDetail, "imp");
+        //  setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+        const totalWeight = jobItems.reduce(
+          (sum, item) => sum + item.weight,
+          0,
+        );
+        const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        }));
+        console.log(data.jobPriceCalculationDetail, "imp");
       },
       onError: (error) => {
         // Handle the error and set data to empty
@@ -894,13 +905,16 @@ function JobEdit() {
         setIsUpdateMode(false); // No data found, so we need to create a new entry
         setRefinedData(defaultJobQuoteData);
         setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-         const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
-  const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
-  setQuoteCalculationRes((prev) => ({
-    ...prev,
-    total_weight: totalWeight,
-    cbm_auto: totalCbm,
-  }));
+        const totalWeight = jobItems.reduce(
+          (sum, item) => sum + item.weight,
+          0,
+        );
+        const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          total_weight: totalWeight,
+          cbm_auto: totalCbm,
+        }));
         setButtonText("Get A Quote");
       },
     },
@@ -985,15 +999,15 @@ function JobEdit() {
     },
   );
   useEffect(() => {
-  const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
-  const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+    const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
+    const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
 
-  setQuoteCalculationRes((prev) => ({
-    ...prev,
-    total_weight: totalWeight,
-    cbm_auto: totalCbm,
-  }));
-}, [jobItems]);
+    setQuoteCalculationRes((prev) => ({
+      ...prev,
+      total_weight: totalWeight,
+      cbm_auto: totalCbm,
+    }));
+  }, [jobItems]);
 
   const handleRemoveFromJobItems = (index: number) => {
     let _jobItems = [...jobItems];
@@ -1528,9 +1542,9 @@ function JobEdit() {
     const selectedDepot = depotOptions.find(
       (depot) => depot.value === job.timeslot_depots,
     )?.label;
-// debugger
-    const filteredCompanyRates = companyRates?.filter(rate => 
-      rate.state === jobDestination1?.state
+    // debugger
+    const filteredCompanyRates = companyRates?.filter(
+      (rate) => rate.state === jobDestination1?.state,
     );
     // console.log(filteredCompanyRates, "filteredCompanyRates")
 
@@ -1581,7 +1595,9 @@ function JobEdit() {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
         time_slot: job.is_inbound_connect || null,
-        timeslot_depots: job.is_inbound_connect? job.timeslot_depots || selectedDepot : '', // Pass selectedDepot here
+        timeslot_depots: job.is_inbound_connect
+          ? job.timeslot_depots || selectedDepot
+          : "", // Pass selectedDepot here
         tail_lift: job.is_tailgate_required || null,
         stackable: false, // If applicable, update this
       },
@@ -1686,7 +1702,6 @@ function JobEdit() {
   };
 
   const handleSaveJobPriceCalculation = () => {
-    //console.log(isUpdateMode);
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
@@ -2072,33 +2087,22 @@ function JobEdit() {
                               : null
                           }
                           placeholder="Select type"
-                          // onChange={(e) => {
-                          //   //console.log(e, "e");
-                          //   // setJob({
-                          //   //   ...job,
-                          //   //   job_type_id: e.value || null,
-                          //   // });
-                          //   const selectedCategory = e.value;
-                          //   const selectedCategoryName = selectedCategory
-                          //     ? jobTypeOptions.find(
-                          //         (job_category) =>
-                          //           job_category.value === selectedCategory,
-                          //       )?.label
-                          //     : null;
+                          onChange={(e) => {
+                            const selectedType = e.value;
+                            const selectedTypeName = jobTypeOptions.find(
+                              (jobType) => jobType.value === selectedType,
+                            )?.label;
 
-                          //   setJob({
-                          //     ...job,
-                          //     job_type_id: selectedCategory || null,
-                          //   });
+                            setJob({
+                              ...job,
+                              job_type_id: selectedType || null,
+                            });
 
-                          //   setRefinedData({
-                          //     ...refinedData,
-                          //     service_choice: selectedCategoryName || null,
-                          //   });
-
-                          //   // console.log(refinedData, "n");
-                          //   // console.log(job, "job");
-                          // }}
+                            setRefinedData({
+                              ...refinedData,
+                              service_choice: selectedTypeName || null,
+                            });
+                          }}
                         />
 
                         <CustomInputField
@@ -2169,13 +2173,13 @@ function JobEdit() {
                             { value: "export", label: "Export" },
                           ].find((_e) => _e.value === job.transport_type)}
                           placeholder=""
-                          // onChange={(e) => {
-                          //   setJob({ ...job, transport_type: e.value });
-                          //   setRefinedData({
-                          //     ...refinedData,
-                          //     transport_type: e.value,
-                          //   });
-                          // }}
+                          onChange={(e) => {
+                            setJob({ ...job, transport_type: e.value });
+                            setRefinedData({
+                              ...refinedData,
+                              transport_type: e.value,
+                            });
+                          }}
                         />
 
                         {/* Location Select */}
@@ -2690,17 +2694,25 @@ function JobEdit() {
                                         is_inbound_connect:
                                           e === "1" ? true : false,
                                       });
-                                      const selectedStateCode = job.pick_up_state == 'Victoria' ? 'VIC' : 
-                         job.pick_up_state == 'Queensland' ? 'QLD' : '';
+                                      const selectedStateCode =
+                                        job.pick_up_state == "Victoria"
+                                          ? "VIC"
+                                          : job.pick_up_state == "Queensland"
+                                          ? "QLD"
+                                          : "";
                                       const filtereddepotOption =
-                                      depotOptions.filter(
-                                        (option) => option.state_code == selectedStateCode
+                                        depotOptions.filter(
+                                          (option) =>
+                                            option.state_code ==
+                                            selectedStateCode,
+                                        );
+                                      // console.log(
+                                      //   filtereddepotOption,job.pick_up_state,
+                                      //   "filtereddepotOption",
+                                      // );
+                                      setFilteredDepotOptions(
+                                        filtereddepotOption,
                                       );
-                                    // console.log(
-                                    //   filtereddepotOption,job.pick_up_state,
-                                    //   "filtereddepotOption",
-                                    // );
-                                    setFilteredDepotOptions(filtereddepotOption);
                                     }}
                                   >
                                     <Stack direction="row" pt={3}>
@@ -2734,7 +2746,7 @@ function JobEdit() {
                                         ...prevData,
                                         timeslot_depots: e.value,
                                       })); // Update the selected depot directly
-                                    //  console.log("Selected depot: ", e.value)
+                                      //  console.log("Selected depot: ", e.value)
                                       setJob({
                                         ...job,
                                         timeslot_depots: e.value, // Update job.timeslot_depots
