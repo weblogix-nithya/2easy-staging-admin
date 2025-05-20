@@ -878,7 +878,14 @@ function JobEdit() {
           tailgate: data.jobPriceCalculationDetail?.tailgate,
         }));
         setButtonText("Update Quote");
-
+ setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+         const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
+  const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+  setQuoteCalculationRes((prev) => ({
+    ...prev,
+    total_weight: totalWeight,
+    cbm_auto: totalCbm,
+  }));
         // console.log(data.jobPriceCalculationDetail, "imp");
       },
       onError: (error) => {
