@@ -951,6 +951,17 @@ function JobEdit() {
   };
 
   const sendFreightData = async () => {
+    if (!job.transport_type) {
+      toast({
+        title: "Transport type is required.",
+        description: "Please select the transport type.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
