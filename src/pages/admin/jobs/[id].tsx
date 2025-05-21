@@ -1865,6 +1865,70 @@ function JobEdit() {
                           }}
                         />
 
+                        {(job.job_category_id == 1 || job.job_category_id == 2) && (
+                          <>
+                             {/* Transport Type Select */}
+                        <CustomInputField
+                          key="transport_typeKey"
+                          isSelect={true}
+                          optionsArray={[
+                            { value: "import", label: "Import" },
+                            { value: "export", label: "Export" },
+                          ]}
+                          label="Transport Type"
+                          name="transport_type"
+                          value={[
+                            { value: "import", label: "Import" },
+                            { value: "export", label: "Export" },
+                          ].find((_e) => _e.value === job.transport_type)}
+                          placeholder=""
+                          onChange={(e) => {
+                            setJob({ ...job, transport_type: e.value });
+                            setRefinedData({
+                              ...refinedData,
+                              transport_type: e.value,
+                            });
+                          }}
+                        />
+
+                        {/* Location Select */}
+                        <CustomInputField
+                          key="locationKey"
+                          isSelect={true}
+                          optionsArray={[
+                            { value: "VIC", label: "Victoria" },
+                            { value: "QLD", label: "Queensland" },
+                          ]}
+                          label="Location"
+                          name="transport_location"
+                          value={[
+                            { value: "VIC", label: "Victoria" },
+                            { value: "QLD", label: "Queensland" },
+                          ].find((_e) => _e.value === job.transport_location)}
+                          placeholder=""
+                          // onChange={(e) => {
+                          //   const newState = {
+                          //     ...refinedData,
+                          //     state_code: e.value,
+                          //     state: e.label,
+                          //   };
+                          //   setJob({ ...job, transport_location: e.value });
+                          //   setRefinedData(newState);
+                          // }}
+                        />
+                        <Text
+                          style={{
+                            color: "red",
+                            paddingLeft: "11.4rem",
+                            paddingBottom: "1rem",
+                            fontSize: "14px",
+                          }}
+                        >
+                          Note: For LCL and Airfreight Only
+                        </Text>
+                          </>
+                        )}
+
                         <CustomInputField
                           isSelect={true}
                           optionsArray={customerOptions}
@@ -2158,64 +2222,7 @@ function JobEdit() {
                             })
                           }
                         />
-                        {/* Transport Type Select */}
-                        <CustomInputField
-                          key="transport_typeKey"
-                          isSelect={true}
-                          optionsArray={[
-                            { value: "import", label: "Import" },
-                            { value: "export", label: "Export" },
-                          ]}
-                          label="Transport Type"
-                          name="transport_type"
-                          value={[
-                            { value: "import", label: "Import" },
-                            { value: "export", label: "Export" },
-                          ].find((_e) => _e.value === job.transport_type)}
-                          placeholder=""
-                          onChange={(e) => {
-                            setJob({ ...job, transport_type: e.value });
-                            setRefinedData({
-                              ...refinedData,
-                              transport_type: e.value,
-                            });
-                          }}
-                        />
-
-                        {/* Location Select */}
-                        <CustomInputField
-                          key="locationKey"
-                          isSelect={true}
-                          optionsArray={[
-                            { value: "VIC", label: "Victoria" },
-                            { value: "QLD", label: "Queensland" },
-                          ]}
-                          label="Location"
-                          name="transport_location"
-                          value={[
-                            { value: "VIC", label: "Victoria" },
-                            { value: "QLD", label: "Queensland" },
-                          ].find((_e) => _e.value === job.transport_location)}
-                          placeholder=""
-                          // onChange={(e) => {
-                          //   const newState = {
-                          //     ...refinedData,
-                          //     state_code: e.value,
-                          //     state: e.label,
-                          //   };
-                          //   setJob({ ...job, transport_location: e.value });
-                          //   setRefinedData(newState);
-                          // }}
-                        />
-                        <Text
-                          style={{
-                            color: "red",
-                            paddingLeft: "11.4rem",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Note: For LCL and Airfreight Only
-                        </Text>
+                       
                       </Box>
                     ) : (
                       <Box mb="16px">

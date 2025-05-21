@@ -968,16 +968,27 @@ function JobEdit() {
 
     if (!validateAddresses()) return;
     if (job.job_type_id === null || "") {
-      toast({
-        title: "Job Type Required",
-        description:
-          "Standard service is no longer available for this time. Please select Express or Urgent.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    toast({
+      title: "Job Type Required",
+      description:
+        "Standard service is no longer available for this time. Please select Express or Urgent.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+
+  if ((job.job_category_id == 1 || job.job_category_id == 2) && (!job.transport_type || job.transport_type === "")) {
+    toast({
+      title: "Transport Type Required",
+      description: "Please select Import or Export as the transport type.",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
 
     // if (refinedData.transport_type === null || "") {
     //   toast({
@@ -1146,6 +1157,70 @@ function JobEdit() {
                       // console.log(refinedData, "n");
                     }}
                   />
+
+
+                {/* Transport Type Select */}
+                {(job.job_category_id == 1 || job.job_category_id == 2) && (
+                    <>
+                      <CustomInputField
+                        key="transport_typeKey"
+                        isSelect={true}
+                        optionsArray={[
+                          { value: "import", label: "Import" },
+                          { value: "export", label: "Export" },
+                        ]}
+                        label="Transport Type"
+                        name="transport_type"
+                        value={[
+                          { value: "import", label: "Import" },
+                          { value: "export", label: "Export" },
+                        ].find((_e) => _e.value === job.transport_type)}
+                        placeholder=""
+                        onChange={(e) => {
+                          setJob({ ...job, transport_type: e.value });
+                          setRefinedData({
+                            ...refinedData,
+                            transport_type: e.value,
+                          });
+                        }}
+                      />
+                      <CustomInputField
+                        key="locationKey"
+                        isSelect={true}
+                        optionsArray={[
+                          { value: "VIC", label: "Victoria" },
+                          { value: "QLD", label: "Queensland" },
+                        ]}
+                        label="State"
+                        name="transport_location"
+                        value={[
+                          { value: "VIC", label: "Victoria" },
+                          { value: "QLD", label: "Queensland" },
+                        ].find((_e) => _e.value === job.transport_location)}
+                        placeholder=""
+                        onChange={(e) => {
+                          const newState = {
+                            ...refinedData,
+                            state_code: e.value,
+                            state: e.label,
+                          };
+                          setJob({ ...job, transport_location: e.value });
+                          setRefinedData(newState);
+                        }}
+                      />
+                      <Text
+                        style={{
+                          color: "red",
+                          paddingLeft: "11.4rem",
+                          paddingBottom: "1rem",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Note: For LCL and Airfreight Only
+                      </Text>
+                    </>
+                  )}
+
                   {!isCompany && (
                     <CustomInputField
                       isSelect={true}
@@ -1522,65 +1597,7 @@ function JobEdit() {
                       />
                     </>
                   )}
-                  {/* Transport Type Select */}
-                  <CustomInputField
-                    key="transport_typeKey"
-                    isSelect={true}
-                    optionsArray={[
-                      { value: "import", label: "Import" },
-                      { value: "export", label: "Export" },
-                    ]}
-                    label="Transport Type"
-                    name="transport_type"
-                    value={[
-                      { value: "import", label: "Import" },
-                      { value: "export", label: "Export" },
-                    ].find((_e) => _e.value === job.transport_type)}
-                    placeholder=""
-                    onChange={(e) => {
-                      setJob({ ...job, transport_type: e.value });
-                      setRefinedData({
-                        ...refinedData,
-                        transport_type: e.value,
-                      });
-                    }}
-                  />
-
-                  {/* Location Select */}
-                  <CustomInputField
-                    key="locationKey"
-                    isSelect={true}
-                    optionsArray={[
-                      { value: "VIC", label: "Victoria" },
-                      { value: "QLD", label: "Queensland" },
-                    ]}
-                    label="State"
-                    name="transport_location"
-                    value={[
-                      { value: "VIC", label: "Victoria" },
-                      { value: "QLD", label: "Queensland" },
-                    ].find((_e) => _e.value === job.transport_location)}
-                    placeholder=""
-                    onChange={(e) => {
-                      const newState = {
-                        ...refinedData,
-                        state_code: e.value,
-                        state: e.label,
-                      };
-                      setJob({ ...job, transport_location: e.value });
-                      setRefinedData(newState);
-                    }}
-                  />
-                  <Text
-                    style={{
-                      color: "red",
-                      paddingLeft: "11.4rem",
-                      paddingBottom: "1rem",
-                      fontSize: "14px",
-                    }}
-                  >
-                    Note: For LCL and Airfreight Only
-                  </Text>
+                  
 
                   {/* {!isAdmin && job.transport_location === "QLD" && (
                     <CustomInputField
@@ -1621,6 +1638,7 @@ function JobEdit() {
                     />
                   )} */}
                 </Box>
+
 
                 <Divider className="my-12" />
 
