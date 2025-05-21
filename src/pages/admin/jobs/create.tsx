@@ -959,6 +959,17 @@ function JobEdit() {
       return;
     }
 
+    if ((job.job_category_id == 1 || job.job_category_id == 2) && (!job.transport_type || job.transport_type == "" || job.transport_type == null)) {
+      toast({
+        title: "Transport Type Required",
+        description: "Please select Import or Export as the transport type.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
     setIsSaving(true);
     handleCreateJob();
   };
