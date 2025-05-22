@@ -5,6 +5,7 @@ import {
   Divider,
   Flex,
   SimpleGrid,
+  Text,  // Add this import
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -205,6 +206,15 @@ export default function InvoiceIndex() {
       {
         Header: "job",
         accessor: "job.name" as const,
+      },
+      {
+        Header: () => (
+          <Text px={4}>Service type</Text>
+        ),
+        accessor: "job.job_category.name" as const,
+        Cell: ({ value }: { value: string }) => (
+          <Text px={4}>{value}</Text>
+        )
       },
       {
         Header: "customer",
