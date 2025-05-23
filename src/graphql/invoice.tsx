@@ -157,6 +157,10 @@ export const GET_INVOICE_QUERY = gql`
       job {
         name
         invoice_url
+        job_items {
+          weight
+          volume
+        }
       }
       vehicle_hire_id
       vehicle_hire {

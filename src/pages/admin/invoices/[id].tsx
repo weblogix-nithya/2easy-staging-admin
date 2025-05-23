@@ -977,6 +977,36 @@ function InvoiceEdit() {
         <Box className="w-full mt-4">
           <Box className="max-w-[400px] ml-auto">
             <Flex flexDirection="column" className="ml-auto">
+              <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
+                <Skeleton isLoaded={!invoiceLoading} w="50%">
+                  <p className="text-sm !font-bold">Total Weight </p>
+                </Skeleton>
+
+                <Skeleton isLoaded={!invoiceLoading} w="50%">
+                  <p className="text-sm text-right">
+                    {invoice?.job?.job_items?.reduce(
+                      (total: number, item: { weight: number }) => total + (item.weight || 0),
+                      0
+                    ).toFixed(2)}
+                  </p>
+                </Skeleton>
+              </Flex>
+
+              <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
+                <Skeleton isLoaded={!invoiceLoading} w="50%">
+                  <p className="text-sm !font-bold"> CBM </p>
+                </Skeleton>
+
+                <Skeleton isLoaded={!invoiceLoading} w="50%">
+                  <p className="text-sm text-right">
+                    {invoice?.job?.job_items?.reduce(
+                      (total: number, item: { volume: number }) => total + (item.volume || 0),
+                      0
+                    ).toFixed(2)}
+                  </p>
+                </Skeleton>
+              </Flex>
+
               <Flex
                 justifyContent="space-between"
                 className="py-4 border-b border-[#e3e3e3]"
