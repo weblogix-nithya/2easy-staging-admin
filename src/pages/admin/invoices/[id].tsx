@@ -974,138 +974,123 @@ function InvoiceEdit() {
           Add Item
         </Button>
 
-        <Box className="w-full mt-4">
-          <Box className="max-w-[400px] ml-auto">
-            <Flex flexDirection="column" className="ml-auto">
-              <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm !font-bold">Total Weight </p>
-                </Skeleton>
+        <Flex className="w-full mt-4 gap-6" justifyContent="space-between">
+  {/* Left Column: Total Weight and CBM */}
+  <Box className="w-1/2 max-w-[400px]">
+    <Flex flexDirection="column">
+      <Flex justifyContent="space-between" className="py-2">
+        
+        <p className="text-sm ">
+        <span className="text-sm !font-bold px-1">Total Weight: </span>
+          {jobData?.job?.job_items?.reduce(
+            (total: number, item: { weight: number }) => total + (item.weight || 0),
+            0
+          ).toFixed(2)}
+        </p>
+      </Flex>
 
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm text-right">
-                    {invoice?.job?.job_items?.reduce(
-                      (total: number, item: { weight: number }) => total + (item.weight || 0),
-                      0
-                    ).toFixed(2)}
-                  </p>
-                </Skeleton>
-              </Flex>
+      <Flex justifyContent="space-between" className="py-2">
+        <p className="text-sm text-left">
+        <span className="text-sm !font-bold px-1">CBM: </span>
+          {jobData?.job?.job_items?.reduce(
+            (total: number, item: { volume: number }) => total + (item.volume || 0),
+            0
+          ).toFixed(2)}
+        </p>
+      </Flex>
+    </Flex>
+  </Box>
 
-              <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm !font-bold"> CBM </p>
-                </Skeleton>
+  {/* Right Column: Invoice Info */}
+  <Box className="w-1/2 max-w-[400px] ml-auto">
+    <Flex flexDirection="column">
+      <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-sm !font-bold">SubTotal</p>
+        </Skeleton>
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-sm text-right">
+            {formatCurrency(invoice.sub_total, invoice.currency)}
+          </p>
+        </Skeleton>
+      </Flex>
 
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm text-right">
-                    {invoice?.job?.job_items?.reduce(
-                      (total: number, item: { volume: number }) => total + (item.volume || 0),
-                      0
-                    ).toFixed(2)}
-                  </p>
-                </Skeleton>
-              </Flex>
+      <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-sm !font-bold">GST</p>
+        </Skeleton>
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-sm text-right">
+            {formatCurrency(invoice.total_tax, invoice.currency)}
+          </p>
+        </Skeleton>
+      </Flex>
 
-              <Flex
-                justifyContent="space-between"
-                className="py-4 border-b border-[#e3e3e3]"
-              >
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm !font-bold">SubTotal </p>
-                </Skeleton>
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm text-right">
-                    {formatCurrency(invoice.sub_total, invoice.currency)}
-                  </p>
-                </Skeleton>
-              </Flex>
-              <Flex
-                justifyContent="space-between"
-                className="py-4 border-b border-[#e3e3e3]"
-              >
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm !font-bold">GST </p>
-                </Skeleton>
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm text-right">
-                    {formatCurrency(invoice.total_tax, invoice.currency)}
-                  </p>
-                </Skeleton>
-              </Flex>
-              <Flex
-                justifyContent="space-between"
-                className="py-4 border-b border-[#e3e3e3]"
-              >
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm !font-bold">Total </p>
-                </Skeleton>
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-sm text-right">
-                    {formatCurrency(invoice.total, invoice.currency)}
-                  </p>
-                </Skeleton>
-              </Flex>
-              <Flex
-                justifyContent="space-between"
-                className="py-4 border-b border-[#e3e3e3]"
-              >
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-base !font-bold">Balance Due </p>
-                </Skeleton>
-                <Skeleton isLoaded={!invoiceLoading} w="50%">
-                  <p className="text-base !font-bold text-right">
-                    {formatCurrency(invoice.total, invoice.currency)}
-                  </p>
-                </Skeleton>
-              </Flex>
-            </Flex>
+      <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-sm !font-bold">Total</p>
+        </Skeleton>
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-sm text-right">
+            {formatCurrency(invoice.total, invoice.currency)}
+          </p>
+        </Skeleton>
+      </Flex>
 
-            <Flex justifyContent="space-between" className="mt-8">
-              {invoice.invoice_status_id != undefined &&
-                invoice.invoice_status_id == "2" && (
-                  <Button
-                    variant="primary"
-                    className="w-[49%]"
-                    onClick={() => handleUpdateApproveInvoice()}
-                    isLoading={invoiceLoading}
-                  >
-                    {invoice.customer_id != customerId
-                      ? "Manually Approve Invoice"
-                      : "Approve Invoice"}
-                  </Button>
-                )}
+      <Flex justifyContent="space-between" className="py-4 border-b border-[#e3e3e3]">
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-base !font-bold">Balance Due</p>
+        </Skeleton>
+        <Skeleton isLoaded={!invoiceLoading} w="50%">
+          <p className="text-base !font-bold text-right">
+            {formatCurrency(invoice.total, invoice.currency)}
+          </p>
+        </Skeleton>
+      </Flex>
+    </Flex>
 
-              {invoice.job && invoice.job.invoice_url != null && (
-                <Link
-                  href={invoice.job.invoice_url}
-                  isExternal
-                  className="w-[49%]"
-                >
-                  <Button
-                    variant="secondary"
-                    className="w-[100%]"
-                    isLoading={invoiceLoading || isInvoicePdfUpdating}
-                    isDisabled={isInvoicePdfUpdating}
-                  >
-                    Download PDF
-                  </Button>
-                </Link>
-              )}
-              {invoice.invoice_status_id != undefined &&
-                invoice.invoice_status_id != "1" && (
-                  <Button
-                    variant="primary"
-                    className="w-[49%]"
-                    onClick={() => handleSendInvoice()}
-                    isLoading={invoiceLoading}
-                  >
-                    Send Invoice
-                  </Button>
-                )}
-            </Flex>
-          </Box>
-        </Box>
+    {/* Buttons */}
+    <Flex justifyContent="space-between" className="mt-8 flex-wrap gap-2">
+      {invoice.invoice_status_id !== undefined && invoice.invoice_status_id == "2" && (
+        <Button
+          variant="primary"
+          className="w-[49%]"
+          onClick={() => handleUpdateApproveInvoice()}
+          isLoading={invoiceLoading}
+        >
+          {invoice.customer_id != customerId
+            ? "Manually Approve Invoice"
+            : "Approve Invoice"}
+        </Button>
+      )}
+
+      {invoice.job?.invoice_url && (
+        <Link href={invoice.job.invoice_url} isExternal className="w-[49%]">
+          <Button
+            variant="secondary"
+            className="w-full"
+            isLoading={invoiceLoading || isInvoicePdfUpdating}
+            isDisabled={isInvoicePdfUpdating}
+          >
+            Download PDF
+          </Button>
+        </Link>
+      )}
+
+      {invoice.invoice_status_id !== undefined && invoice.invoice_status_id != "1" && (
+        <Button
+          variant="primary"
+          className="w-[49%]"
+          onClick={() => handleSendInvoice()}
+          isLoading={invoiceLoading}
+        >
+          Send Invoice
+        </Button>
+      )}
+    </Flex>
+  </Box>
+</Flex>
+
 
         <Divider className="my-10" />
       </Box>
