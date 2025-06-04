@@ -554,7 +554,7 @@ function JobEdit() {
     });
   };
 
-  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
+  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
         id: job.id,
@@ -732,7 +732,7 @@ function JobEdit() {
     },
   });
 
-  const [handleDeleteJob, {}] = useMutation(DELETE_JOB_MUTATION, {
+  const [handleDeleteJob, { }] = useMutation(DELETE_JOB_MUTATION, {
     variables: {
       id: id,
     },
@@ -1097,7 +1097,7 @@ function JobEdit() {
     //check if any job destination is_saved_address and populate setSavedAddresses
   };
   //handleDeleteJobItem
-  const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
+  const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (data) => {
       // console.log("Job Item Deleted", data);
     },
@@ -1106,7 +1106,7 @@ function JobEdit() {
     },
   });
   //handleDelete
-  const [handleDeleteJobDestination, {}] = useMutation(
+  const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -1146,7 +1146,7 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
-  const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
+  const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
     onCompleted: (data) => {
       // console.log("Job item updated");
     },
@@ -1155,7 +1155,7 @@ function JobEdit() {
     },
   });
   //handleUpdateJobDestinations
-  const [handleUpdateJobDestination, {}] = useMutation(
+  const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -1167,7 +1167,7 @@ function JobEdit() {
     },
   );
   //deleteMedia
-  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: (data) => {
       toast({
         title: "Attachment deleted",
@@ -1257,20 +1257,20 @@ function JobEdit() {
     [jobCcEmailTags, jobCcEmails],
   );
 
-  const [handleDeleteJobCcEmail, {}] = useMutation(
+  const [handleDeleteJobCcEmail, { }] = useMutation(
     DELETE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (data) => {},
+      onCompleted: (data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
     },
   );
 
-  const [handleCreateJobCcEmail, {}] = useMutation(
+  const [handleCreateJobCcEmail, { }] = useMutation(
     CREATE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
@@ -1701,7 +1701,30 @@ function JobEdit() {
     }
   };
 
+
+  // Add this validation function near the other validation helpers
+  const validateTimeslotDepot = () => {
+    // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
+    if (
+      job.is_inbound_connect &&
+      job.job_category_id == 1 &&
+      (!job.timeslot_depots || job.timeslot_depots == null || job.timeslot_depots === "")
+    ) {
+      toast({
+        title: "Timeslot depot required",
+        description: "Please select a timeslot depot when Inbound Connect is required.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // Update handleSaveJobPriceCalculation to use the validation
   const handleSaveJobPriceCalculation = () => {
+    if (!validateTimeslotDepot()) return;
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
@@ -1738,6 +1761,15 @@ function JobEdit() {
       setButtonText("Quote");
       sendFreightData("new");
     }
+  };
+
+  // Update handleUpdateJob to use the validation
+  const handleUpdateJobWithValidation = () => {
+    if (!validateTimeslotDepot()) {
+      setIsSaving(false);
+      return;
+    }
+    handleUpdateJob();
   };
 
   return (
@@ -1784,7 +1816,7 @@ function JobEdit() {
                       isDisabled={isSaving}
                       onClick={() => {
                         setIsSaving(true);
-                        handleUpdateJob();
+                        handleUpdateJobWithValidation();
                       }}
                     >
                       {isSaving ? "Saving Changes..." : "Save Changes"}
@@ -2029,7 +2061,7 @@ function JobEdit() {
                           name="operator_phone"
                           value={customerSelected.phone_no}
                           onChange={
-                            (e) => {}
+                            (e) => { }
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,
@@ -2043,7 +2075,7 @@ function JobEdit() {
                           isDisabled={true}
                           value={customerSelected.email}
                           onChange={
-                            (e) => {}
+                            (e) => { }
                             //setJob({
                             //  ...job,
                             //  [e.target.name]: e.target.value,

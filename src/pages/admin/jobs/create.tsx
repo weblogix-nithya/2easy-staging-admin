@@ -507,7 +507,7 @@ function JobEdit() {
   });
 
   //handleCreateMedia
-  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: (data) => {
       /*toast({
         title: "Media updated",
@@ -621,8 +621,8 @@ function JobEdit() {
       _jobDestinations[0]?.address_state == "Victoria"
         ? "VIC"
         : jobDestinations[0]?.address_state == "Queensland"
-        ? "QLD"
-        : "";
+          ? "QLD"
+          : "";
     const filtereddepotOption = depotOptions.filter(
       (option) => option.state_code == currentstate,
     );
@@ -711,19 +711,19 @@ function JobEdit() {
     _jobItems[index] = value;
     setJobItems(_jobItems);
     // recalculateTempCalculations(_jobItems);
-      const totalWeight = _jobItems.reduce(
-          (sum: any, item: { weight: any }) => sum + item.weight,
-          0,
-        );
-        const totalCbm = _jobItems.reduce(
-          (sum: any, item: { volume: any }) => sum + item.volume,
-          0,
-        );
-        setQuoteCalculationRes({
-          ...quoteCalculationRes,
-          total_weight: totalWeight,
-          cbm_auto: totalCbm,
-        });
+    const totalWeight = _jobItems.reduce(
+      (sum: any, item: { weight: any }) => sum + item.weight,
+      0,
+    );
+    const totalCbm = _jobItems.reduce(
+      (sum: any, item: { volume: any }) => sum + item.volume,
+      0,
+    );
+    setQuoteCalculationRes({
+      ...quoteCalculationRes,
+      total_weight: totalWeight,
+      cbm_auto: totalCbm,
+    });
   };
 
   useEffect(() => {
@@ -944,8 +944,30 @@ function JobEdit() {
     return true;
   };
 
+  // Add this validation helper near the other validation helpers
+  const validateTimeslotDepot = () => {
+    // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
+    if (
+      job.is_inbound_connect === true &&
+      job.job_category_id === 1 &&
+      (!job.timeslot_depots || job.timeslot_depots === "")
+    ) {
+      toast({
+        title: "Timeslot depot required",
+        description:
+          "Please select a timeslot depot when Inbound Connect is required.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
+    if (!validateTimeslotDepot()) return;
 
     if ((job.job_type_id = null)) {
       toast({
@@ -978,28 +1000,29 @@ function JobEdit() {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
 
     if (!validateAddresses()) return;
+    if (!validateTimeslotDepot()) return;
     if (job.job_type_id === null || "") {
-    toast({
-      title: "Job Type Required",
-      description:
-        "Standard service is no longer available for this time. Please select Express or Urgent.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
+      toast({
+        title: "Job Type Required",
+        description:
+          "Standard service is no longer available for this time. Please select Express or Urgent.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
-  if ((job.job_category_id == 1 || job.job_category_id == 2) && (!job.transport_type || job.transport_type === "")) {
-    toast({
-      title: "Transport Type Required",
-      description: "Please select Import or Export as the transport type.",
-      status: "warning",
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
+    if ((job.job_category_id == 1 || job.job_category_id == 2) && (!job.transport_type || job.transport_type === "")) {
+      toast({
+        title: "Transport Type Required",
+        description: "Please select Import or Export as the transport type.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
 
     // if (refinedData.transport_type === null || "") {
     //   toast({
@@ -1017,11 +1040,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1041,14 +1064,14 @@ function JobEdit() {
       // area: refinedData.area,
       company_rates:
         (job.job_category_id == 1 && refinedData.pick_up_stateCode === "QLD") ||
-        refinedData.pick_up_stateCode === "VIC"
+          refinedData.pick_up_stateCode === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              minimum_charge: rate.minimum_charge,
-            }))
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            minimum_charge: rate.minimum_charge,
+          }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1059,11 +1082,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1170,8 +1193,8 @@ function JobEdit() {
                   />
 
 
-                {/* Transport Type Select */}
-                {(job.job_category_id == 1 || job.job_category_id == 2) && (
+                  {/* Transport Type Select */}
+                  {(job.job_category_id == 1 || job.job_category_id == 2) && (
                     <>
                       <CustomInputField
                         key="transport_typeKey"
@@ -1379,7 +1402,7 @@ function JobEdit() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1394,7 +1417,7 @@ function JobEdit() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (e) => {}
+                      (e) => { }
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -1444,11 +1467,11 @@ function JobEdit() {
                       setIsSameDayJob(today === e.target.value);
                       setIsTomorrowJob(
                         new Date(e.target.value).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
+                        new Date(
+                          new Date(today).setDate(
+                            new Date(today).getDate() + 1,
+                          ),
+                        ).toDateString(),
                       );
                     }}
                   />
@@ -1608,7 +1631,7 @@ function JobEdit() {
                       />
                     </>
                   )}
-                  
+
 
                   {/* {!isAdmin && job.transport_location === "QLD" && (
                     <CustomInputField
@@ -1686,8 +1709,8 @@ function JobEdit() {
                             pickUpDestination.address_state == "Victoria"
                               ? "VIC"
                               : pickUpDestination.address_state == "Queensland"
-                              ? "QLD"
-                              : "";
+                                ? "QLD"
+                                : "";
                           const filtereddepotOption = depotOptions.filter(
                             (option) => option.state_code == currentPickupstate,
                           );
@@ -1977,8 +2000,8 @@ function JobEdit() {
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
                                       "Queensland"
-                                    ? "QLD"
-                                    : "";
+                                      ? "QLD"
+                                      : "";
                                 const filtereddepotOp = depotOptions.filter(
                                   (option) =>
                                     option.state_code == curretstatecode,
