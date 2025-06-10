@@ -47,75 +47,22 @@ const JobInputTable = <T extends object>({
     event.currentTarget.select();
   }
 
-  const calculateCBM = (row: any): number => {
-    const qty = parseFloat(row.quantity) || 0;
-    const length = parseFloat(row.dimension_height) || 0;
-    const width = parseFloat(row.dimension_width) || 0;
-    const height = parseFloat(row.dimension_depth) || 0;
-
-    const widthThreshold = 1.20;
-    const lengthThreshold = 1.20;
-    const heightThreshold = 1.50;
-    const palletHeight = 1.20;
-    const palletValue = widthThreshold * lengthThreshold * palletHeight; // 1.728
-
-    let palletStatus = "";
-    if (width > widthThreshold || length > lengthThreshold) {
-        palletStatus = "oversized";
-    } else if (height > heightThreshold) {
-        palletStatus = "overheight";
-    }
-
-    let lengthMultiplier = 0;
-    if (length >= 0.01 && length <= 1.20) lengthMultiplier = 1;
-    else if (length >= 1.21 && length <= 2.40) lengthMultiplier = 2;
-    else if (length >= 2.41 && length <= 3.60) lengthMultiplier = 3;
-    else if (length >= 3.61 && length <= 4.80) lengthMultiplier = 4;
-    else if (length >= 4.81 && length <= 6.00) lengthMultiplier = 5;
-    else if (length >= 6.01 && length <= 7.20) lengthMultiplier = 6;
-    else if (length >= 7.21 && length <= 9.00) lengthMultiplier = 7;
-
-    const widthMultiplier = 2;
-    const heightMultiplier = 1.5;
-
-    let cbmWithMultiplier = 0;
-    if (length < lengthThreshold && width < widthThreshold && height < heightThreshold) {
-        // No thresholds breached
-        cbmWithMultiplier = length * width * height;
-    } else if (lengthMultiplier > 0 && width <= widthThreshold && height <= heightThreshold) {
-        // Length only
-        cbmWithMultiplier = palletValue * lengthMultiplier;
-    } else if (length <= lengthThreshold && width > widthThreshold && height <= heightThreshold) {
-        // Width only
-        cbmWithMultiplier = palletValue * widthMultiplier;
-    } else if (length > lengthThreshold && width > widthThreshold && height <= heightThreshold) {
-        // Width and length
-        cbmWithMultiplier = palletValue * (widthMultiplier * lengthMultiplier);
-    } else if (length <= lengthThreshold && width <= widthThreshold && height > heightThreshold) {
-        // Height only
-        cbmWithMultiplier = palletValue * heightMultiplier;
-    } else if (length > lengthThreshold && width > widthThreshold && height > heightThreshold) {
-        // Height + width + length
-        cbmWithMultiplier = palletValue * (widthMultiplier * lengthMultiplier) * heightMultiplier;
-    } else if (length > lengthThreshold && width <= widthThreshold && height > heightThreshold) {
-        // Height + length
-        cbmWithMultiplier = palletValue * lengthMultiplier * heightMultiplier;
-    } else if (length <= lengthThreshold && width > widthThreshold && height > heightThreshold) {
-        // Height + width
-        cbmWithMultiplier = palletValue * (widthMultiplier * lengthMultiplier) * heightMultiplier;
-    }
-
-    return parseFloat((cbmWithMultiplier * qty).toFixed(3));
-  };
-
   return (
     <VStack w="full" align="start" spacing={4}>
+      {/* */}
       <Table colorScheme="white" {...getTableProps()}>
         <Thead>
           {headerGroups.map((headerGroup, index) => (
-            <Tr {...headerGroup.getHeaderGroupProps()} key={`header-row-${index}`}>
+            <Tr
+              {...headerGroup.getHeaderGroupProps()}
+              key={`header-row-${index}`}
+            >
               {headerGroup.headers.map((column) => (
-                <Th {...column.getHeaderProps()} key={`row-header-${column.id}`} className="first:pl-0">
+                <Th
+                  {...column.getHeaderProps()}
+                  key={`row-header-${column.id}`}
+                  className="first:pl-0"
+                >
                   {column.render("Header")}
                 </Th>
               ))}
@@ -127,18 +74,19 @@ const JobInputTable = <T extends object>({
           {data.map((row, index) => {
             return (
               <Tr key={index + row.id}>
-                {/* Item Type */}
                 <Td padding={"0px"}>
                   <CustomInputField
                     isSelect={true}
                     optionsArray={optionsSelect}
                     showLabel={false}
-                    value={optionsSelect.find((_entity) => _entity.value === row.item_type_id)}
+                    value={optionsSelect.find(
+                      (_entity) => _entity.value === row.item_type_id,
+                    )}
                     placeholder=""
                     onChange={(e) => {
                       onValueChanged(
                         { ...row, item_type_id: e.value || null },
-                        index
+                        index,
                       );
                     }}
                     mb="0"
@@ -163,14 +111,17 @@ const JobInputTable = <T extends object>({
                       suffixText="cm"
                       onClick={handleInputHighlight}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        const updatedRow = {
-                          ...row,
-                          [e.target.name]: val / 100 || 0,
-                          [e.target.name + "_cm"]: val || 0,
-                        };
-                        updatedRow.volume = calculateCBM(updatedRow);
-                        onValueChanged(updatedRow, index, e.target.name + "_cm");
+                        onValueChanged(
+                          {
+                            ...row,
+                            [e.target.name]:
+                              parseFloat(e.target.value) / 100 || 0,
+                            [e.target.name + "_cm"]:
+                              parseFloat(e.target.value) || 0,
+                          },
+                          index,
+                          "volume",
+                        );
                       }}
                       maxWidth="95%"
                       mb="0"
@@ -196,14 +147,17 @@ const JobInputTable = <T extends object>({
                       suffixText="cm"
                       onClick={handleInputHighlight}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        const updatedRow = {
-                          ...row,
-                          [e.target.name]: val / 100 || 0,
-                          [e.target.name + "_cm"]: val || 0,
-                        };
-                        updatedRow.volume = calculateCBM(updatedRow);
-                        onValueChanged(updatedRow, index, e.target.name + "_cm");
+                        onValueChanged(
+                          {
+                            ...row,
+                            [e.target.name]:
+                              parseFloat(e.target.value) / 100 || null,
+                            [e.target.name + "_cm"]:
+                              parseFloat(e.target.value) || null,
+                          },
+                          index,
+                          "volume",
+                        );
                       }}
                       maxWidth="95%"
                       mb="0"
@@ -229,14 +183,17 @@ const JobInputTable = <T extends object>({
                       suffixText="cm"
                       onClick={handleInputHighlight}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        const updatedRow = {
-                          ...row,
-                          [e.target.name]: val / 100 || 0,
-                          [e.target.name + "_cm"]: val || 0,
-                        };
-                        updatedRow.volume = calculateCBM(updatedRow);
-                        onValueChanged(updatedRow, index, e.target.name + "_cm");
+                        onValueChanged(
+                          {
+                            ...row,
+                            [e.target.name]:
+                              parseFloat(e.target.value) / 100 || null,
+                            [e.target.name + "_cm"]:
+                              parseFloat(e.target.value) || null,
+                          },
+                          index,
+                          "volume",
+                        );
                       }}
                       maxWidth="95%"
                       mb="0"
@@ -258,18 +215,19 @@ const JobInputTable = <T extends object>({
                     name="quantity"
                     value={row.quantity}
                     onChange={(e) => {
-                      const updatedRow = {
-                        ...row,
-                        [e.target.name]: parseFloat(e.target.value) || 0,
-                      };
-                      updatedRow.volume = calculateCBM(updatedRow);
-                      onValueChanged(updatedRow, index, e.target.name);
+                      onValueChanged(
+                        {
+                          ...row,
+                          [e.target.name]: parseInt(e.target.value) || null,
+                        },
+                        index,
+                        "volume",
+                      );
                     }}
                     mb="0"
                   />
                 </Td>
 
-                {/* Weight */}
                 <Td>
                   <CustomInputField
                     showLabel={false}
@@ -278,22 +236,11 @@ const JobInputTable = <T extends object>({
                     name="weight"
                     value={row.weight}
                     suffixText="kg"
-                    type="number"
-                    // onChange={(e) => {
-                    //   onValueChanged(
-                    //     {
-                    //       ...row,
-                    //       [e.target.name]: parseFloat(e.target.value) || null,
-                    //     },
-                    //     index,
-                    //   );
-                    // }}
                     onChange={(e) => {
-                      const newValue = parseFloat(e.target.value) || null;
                       onValueChanged(
                         {
                           ...row,
-                          [e.target.name]: newValue,
+                          [e.target.name]: parseFloat(e.target.value) || null,
                         },
                         index,
                       );
@@ -303,28 +250,28 @@ const JobInputTable = <T extends object>({
                 </Td>
 
                 <Td>
-                <CustomInputField
-                  type="number"
-                  showLabel={false}
+                  <CustomInputField
+                    type="number"
+                    showLabel={false}
                     placeholder="0.00"
-                  maxWidth="100%"
-                  name="volume"
+                    maxWidth="100%"
+                    name="volume"
                     value={row.volume}
-                  suffixText="cbm"
-                  onChange={(e) => {
+                    suffixText="cbm"
+                    onChange={(e) => {
                       onValueChanged(
                         {
-                      ...row,
-                      [e.target.name]: parseFloat(e.target.value) || null,
-                      [e.target.name + "_cm"]:
-                        parseFloat(e.target.value) * 1000000 || null,
+                          ...row,
+                          [e.target.name]: parseFloat(e.target.value) || null,
+                          [e.target.name + "_cm"]:
+                            parseFloat(e.target.value) * 1000000 || null,
                         },
                         index,
                       );
-                  }}
-                  mb="0"
-                />
-              </Td>
+                    }}
+                    mb="0"
+                  />
+                </Td>
 
                 <Td>
                   {/* Hide button if this is the ONLY index of the loop */}
@@ -352,6 +299,5 @@ const JobInputTable = <T extends object>({
       </Table>
     </VStack>
   );
-};
-
+};    
 export default JobInputTable;
