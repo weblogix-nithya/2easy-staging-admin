@@ -1307,122 +1307,6 @@ function JobEdit() {
     }
   }, [job.customer_id, customerOptions]);
 
-  // useEffect(() => {
-  //   // Function to calculate filtered job types based on cutoff logic
-  //   if (
-  //     new Date(job.created_at).setHours(0, 0, 0, 0) <
-  //     new Date(NEW_CUTOFF_RULES_START_DATE).setHours(0, 0, 0, 0)
-  //   ) {
-  //     return;
-  //   }
-
-  //   const calculateFilteredOptions = async () => {
-  //     let filteredOptions = Array.isArray(jobTypeOptions)
-  //       ? [...jobTypeOptions]
-  //       : [];
-
-  //     if (
-  //       !job.job_category_id ||
-  //       pickUpDestination.lat === 0 ||
-  //       pickUpDestination.lng === 0
-  //     ) {
-  //       return setFilteredJobTypeOptions(filteredOptions);
-  //     }
-
-  //     try {
-  //       const timezone = await getTimezone(
-  //         pickUpDestination.lat,
-  //         pickUpDestination.lng,
-  //       );
-  //       if (job.job_category_id == 1) {
-  //         // LCL Bookings
-  //         if (isSameDayJob) {
-  //           filteredOptions = filteredOptions.filter(
-  //             (opt) => opt.label !== "Standard",
-  //           );
-  //           resetJobTypeAndShowToast();
-  //         } else if (isTomorrowJob) {
-  //           const isAfterLclCutoff = isAfterCutoff("16:00", timezone);
-
-  //           if (isAfterLclCutoff) {
-  //             filteredOptions = filteredOptions.filter(
-  //               (opt) => opt.label !== "Standard",
-  //             );
-  //             resetJobTypeAndShowToast();
-  //           }
-  //         }
-  //       } else if (job.job_category_id == 2) {
-  //         // Airfreight Bookings
-  //         if (isSameDayJob) {
-  //           const isAfterAirfreightCutoff = isAfterCutoff("11:00", timezone);
-
-  //           if (isAfterAirfreightCutoff) {
-  //             filteredOptions = filteredOptions.filter(
-  //               (opt) => opt.label !== "Standard",
-  //             );
-  //             resetJobTypeAndShowToast();
-  //           }
-  //         }
-  //       }
-  //       if (
-  //         job.job_type_id &&
-  //         !filteredOptions.some(
-  //           (opt) => Number(opt.value) == Number(job.job_type_id),
-  //         )
-  //       ) {
-  //         // Instead of nullifying, preserve the job type
-  //         const existingJobType = jobTypeOptions.find(
-  //           (type) => Number(type.id) === Number(job.job_type_id)
-  //         );
-
-  //         if (existingJobType) {
-  //           // If the job type exists in all options, keep it
-  //           setJob({
-  //             ...job,
-  //             job_type_id: job.job_type_id
-  //           });
-  //         }
-  //       }
-
-  //       setFilteredJobTypeOptions(filteredOptions);
-  //     } catch (error) {
-  //       console.error(
-  //         "Error fetching timezone or applying cutoff logic",
-  //         error,
-  //       );
-  //     }
-  //   };
-
-  //   calculateFilteredOptions();
-  // }, [
-  //   job.job_category_id,
-  //   jobDateAt,
-  //   pickUpDestination,
-  //   jobTypeOptions,
-  //   isSameDayJob,
-  //   isTomorrowJob,
-  // ]);
-
-  // Define the reusable function
-  // const resetJobTypeAndShowToast = () => {
-  //   if (job.job_type_id == 1) {
-  //     setJob({
-  //       ...job,
-  //       ready_at: formatDateTimeToDB(jobDateAt, readyAt),
-  //       drop_at: formatDateTimeToDB(jobDateAt, dropAt),
-  //       job_type_id: null,
-  //     });
-  //     toast({
-  //       title: "Job Type Required",
-  //       description:
-  //         "Standard service is no longer available for this time. Please select Express or Urgent.",
-  //       status: "warning",
-  //       duration: 3000,
-  //       isClosable: true,
-  //     });
-  //   }
-  // };
-
   const handleCreateJobPriceCalculationDetail = (
     jobPriceDetail: CreateJobPriceCalculationDetailInput,
   ) => {
@@ -1505,7 +1389,7 @@ function JobEdit() {
     return true;
   };
 
-  const sendFreightData = async (string: string) => {
+  const sendFreightData = async () => {
     const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
     // console.log(string, "st");
     if (!validateAddresses()) return;
@@ -1621,22 +1505,14 @@ function JobEdit() {
       })),
     };
 
-    // console.log(payload);
-
     try {
       const response = await axios.post(apiUrl, payload, {
         headers: { "Content-Type": "application/json" },
       });
-
-      // console.log("Response Data:", response.data);
-      // setQuoteCalculationRes({
-      //   ...response?.data,
-      //   time_slot: response?.data?.time_slot || 0, // Ensure time_slot is set
-      // });
       const calculationData = response?.data;
       setQuoteCalculationRes({
         ...quoteCalculationRes,
-        time_slot: (calculationData as CalculationData)?.time_slot, // Ensure time_slot is set with type assertion
+        time_slot: (calculationData as CalculationData)?.time_slot, 
         cbm_auto: (calculationData as CalculationData)?.cbm_auto,
         total_weight: (calculationData as CalculationData)?.total_weight,
         freight: (calculationData as CalculationData)?.freight,
@@ -1647,15 +1523,12 @@ function JobEdit() {
         stackable: (calculationData as CalculationData)?.stackable,
         total: (calculationData as CalculationData)?.total,
       });
-      // console.log(calculationData, "Update mode");
       toast({ title: "Quote Calculation Success", status: "success" });
-      // console.log(isUpdateMode);
-      // console.log(quoteCalculationRes);
-      // console.log("Quote Calculation Response:", response.data);
       if (isUpdateMode) {
         await handleUpdateJobPriceCalculationDetail(calculationData)
           .then((data) => {
-            //console.log("Updated successfully:", data);
+            console.log("Updated successfully:", data);
+            handleUpdateJob()
             toast({
               title: "Quote price updated",
               status: "success",
@@ -1694,7 +1567,20 @@ function JobEdit() {
           tail_lift: Number(calculationData.tail_lift),
           stackable: Number(calculationData.stackable),
           total: Number(calculationData.total),
-        });
+        })
+         .then((data) => {
+            console.log("created successfully:", data);
+            handleUpdateJob()
+            toast({
+              title: "Quote price created",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+          })
+          .catch((error) => {
+            console.error("Error creating job price:", error);
+          });
       }
     } catch (error) {
       console.error("Error:", error);
@@ -1744,7 +1630,7 @@ function JobEdit() {
     if (isUpdateMode) {
       if (hasChanged) {
         setButtonText("Quote");
-        sendFreightData("update");
+        sendFreightData();
       } else {
         // setIsSaving(true);
         // handleUpdateJob();
@@ -1759,7 +1645,7 @@ function JobEdit() {
     } else {
       // console.log("add");
       setButtonText("Quote");
-      sendFreightData("new");
+      sendFreightData();
     }
   };
 
@@ -2790,6 +2676,7 @@ function JobEdit() {
                                         ...job,
                                         timeslot_depots: e.value, // Update job.timeslot_depots
                                       });
+                                     sendFreightData()
                                     }}
                                   />
                                 </Box>
