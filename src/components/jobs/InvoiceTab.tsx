@@ -18,7 +18,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { formatCurrency } from "helpers/helper";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
@@ -28,13 +28,13 @@ export default function InvoiceTab(props: { jobObject: any }) {
   const toast = useToast();
 
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const textColor = useColorModeValue("navy.700", "white");
   let menuBg = useColorModeValue("white", "navy.800");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = React.useState<any>(jobObject);
-  const router = useRouter();
+  // const router = useRouter();
   useEffect(() => {
     let _customer = null;
 
@@ -67,6 +67,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
       },
     });
   }, [jobObject]);
+
   return (
     <Box mt={5}>
       {/* Invoice */}
@@ -117,6 +118,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
             <Tbody>
               {job.customer_invoice?.invoice_line_items?.map(
                 (item: any, index: number) => {
+                  console.log(item,'i')
                   return (
                     <Tr key={"row-" + index}>
                       <Td>{item.name}</Td>

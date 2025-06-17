@@ -1,30 +1,84 @@
 import {
   ApolloClient,
+  ApolloLink,
+  from,
   HttpOptions,
   InMemoryCache,
-  NormalizedCacheObject,
-} from "@apollo/client";
+  NormalizedCacheObject} from "@apollo/client";
 import { createUploadLink } from "apollo-upload-client";
-import { parseCookies } from "nookies";
+import { destroyCookie, parseCookies } from "nookies";
 import { useMemo } from "react";
 
-let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
+export let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
+
+// Add this new function to handle cookie clearing
+const clearAllCookies = () => {
+  const cookieNames = [
+    "access_token",
+    "user_name",
+    "user_email",
+    "customer_id",
+    "driver_id",
+    "company_id",
+    "is_admin",
+    "is_company_admin",
+    "user_id",
+    "state"
+  ];
+
+  const paths = ["/", "/admin", "/admin/jobs", "*"];
+
+  cookieNames.forEach(name => {
+    paths.forEach(path => {
+      destroyCookie(null, name, { path });
+    });
+  });
+};
 
 const createLink = (opts: HttpOptions = {}) => {
   return createUploadLink({
     uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
-    ...opts,
+    credentials: 'include',
+    fetchOptions: {
+      credentials: 'include'
+    },
+    ...opts
   });
 };
 
 function createApolloClient() {
+  const uploadLink = createLink();
+
+  const errorLink = new ApolloLink((operation, forward) => {
+    return forward(operation).map((response) => {
+      const { errors } = response;
+      const networkError = (response as any).networkError;
+      const graphQLErrors = errors;
+
+      if (networkError?.message?.includes('401') ||
+          graphQLErrors?.some((error: { message: string }) => error.message.includes('Unauthenticated'))) {
+        // Clear all cookies across all paths
+        clearAllCookies();
+        
+        // Clear Apollo cache
+        apolloClient?.clearStore().then(() => {
+          window.location.href = '/auth/login';
+        });
+      }
+
+      return response;
+    });
+  });
+  
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
-    // link: new HttpLink({
-    //   uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
-    // }),
-    link: createLink(),
+    link: from([errorLink, uploadLink]),
     cache: new InMemoryCache({ addTypename: false }),
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: 'all'
+      }
+    }
   });
 }
 
