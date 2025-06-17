@@ -789,6 +789,15 @@ function JobEdit() {
     setTemporaryMedia(_temporaryMedia);
   };
   const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
+     variables: {
+    query: "",
+    page: 1,
+    first: 100,
+    orderByColumn: "id",
+    orderByOrder: "ASC",
+    company_id: job.company_id, // Ensure this is provided if needed
+  },
+    skip: !isCompany,
     onCompleted: (data) => {
       setCustomerOptions([]);
       let _customerOptions = formatToSelect(
@@ -796,9 +805,9 @@ function JobEdit() {
         "id",
         "full_name",
       );
+      console.log(data,_customerOptions, "custSelected");
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
-        // console.log(customerSelected, "customerSelected");
 
         setJob({ ...job, ...{ customer_id: customerId } });
         const selectedCustomer = _customerOptions.find(
@@ -1273,6 +1282,7 @@ function JobEdit() {
                           ...defaultVariables,
                           company_id: e.value,
                         });
+                        console.log(e.value, "company_id");
                         setJob({
                           ...job,
                           company_id: e.value || null,
