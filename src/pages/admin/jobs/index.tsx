@@ -584,7 +584,8 @@ export default function JobIndex() {
             tabs={isAdmin ? adminTabs : customerTabs}
             onChange={(tabId) => changeTab(tabId)}
           />
-          {isAdmin && !loading && jobs?.jobs.data.length >= 0 && (
+          {/* {isAdmin && !loading && jobs?.jobs.data.length >= 0 && ( */}
+          {isAdmin && !loading && jobs?.jobs?.data && jobs?.jobs.data.length > 0 && (
             <PaginationTable
               columns={columns}
               data={jobs?.jobs.data}
