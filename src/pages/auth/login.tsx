@@ -72,55 +72,25 @@ export default function SignIn() {
           password: password,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: (data) => { // inside onCompleted callback — ✅ updated paths
         if (data.login.user.driver?.id == undefined) {
-          setCookie(null, "access_token", data.login.access_token, {
+          const cookieOptions = {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "user_name", data.login.user.name, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "user_email", data.login.user.email, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "customer_id", data.login.user.customer?.id, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "company_id", data.login.user.customer?.company_id, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "user_id", data.login.user?.id, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "driver_id", data.login.user.driver?.id, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(null, "is_admin", data.login.user.is_admin, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setCookie(
-            null,
-            "is_company_admin",
-            data.login.user.is_company_admin,
-            {
-              maxAge: 30 * 24 * 60 * 60,
-              path: "*",
-            },
-          );
-          setCookie(null, "state", data.login.user.state, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "*",
-          });
-          setAuthToken();
+            path: "/", // ✅ consistent
+          };
 
+          setCookie(null, "access_token", data.login.access_token, cookieOptions);
+          setCookie(null, "user_name", data.login.user.name, cookieOptions);
+          setCookie(null, "user_email", data.login.user.email, cookieOptions);
+          setCookie(null, "customer_id", data.login.user.customer?.id, cookieOptions);
+          setCookie(null, "company_id", data.login.user.customer?.company_id, cookieOptions);
+          setCookie(null, "user_id", data.login.user?.id, cookieOptions);
+          setCookie(null, "driver_id", data.login.user.driver?.id, cookieOptions);
+          setCookie(null, "is_admin", data.login.user.is_admin, cookieOptions);
+          setCookie(null, "is_company_admin", data.login.user.is_company_admin, cookieOptions);
+          setCookie(null, "state", data.login.user.state, cookieOptions);
+
+          setAuthToken();
           router.push("/admin/dashboard");
         } else {
           toast({
