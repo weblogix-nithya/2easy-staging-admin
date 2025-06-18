@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery,useMutation, useQuery } from "@apollo/client";
 import {
   AlertDialog,
   AlertDialogBody,
@@ -43,6 +43,7 @@ export default function StatementGenerateModal({
 }: StatementGenerateModalProps) {
   const { companyId, customerId, isAdmin, isCompanyAdmin, isCustomer } =
     useSelector((state: RootState) => state.user);
+
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [companiesOptions, setCompaniesOptions] = useState([]);
   const [customerOptions, setCustomerOptions] = useState([]);
@@ -55,6 +56,7 @@ export default function StatementGenerateModal({
   const cancelRef = useRef();
   const toast = useToast();
 
+  // ✅ Prefill for customer role
   useEffect(() => {
     if (isCustomer) {
       setSelectedCompany({ value: companyId, label: "" });
@@ -62,12 +64,14 @@ export default function StatementGenerateModal({
     }
   }, [isCustomer, companyId, customerId]);
 
+  // ✅ Debounced company search
   const onChangeSearchCompany = useMemo(() => {
     return debounce((e) => {
       setDebouncedSearch(e);
     }, 300);
   }, []);
 
+  // ✅ Companies for admin
   useQuery(GET_COMPANYS_QUERY, {
     variables: {
       query: debouncedSearch,
@@ -78,35 +82,38 @@ export default function StatementGenerateModal({
     },
     skip: !isAdmin,
     onCompleted: (data) => {
-      setCompaniesOptions([]);
-      data.companys.data.map((_entity: any) => {
-        setCompaniesOptions((companys) => [
-          ...companys,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
+      setCompaniesOptions(
+        data.companys.data.map((_entity: any) => ({
+          value: parseInt(_entity.id),
+          label: _entity.name,
+        }))
+      );
     },
   });
 
-  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
+  // ✅ Lazy customers query for selected company
+  const [getCustomersByCompanyId] = useLazyQuery(GET_CUSTOMERS_QUERY, {
+    onCompleted: (data) => {
+      const options = data.customers.data.map((customer: any) => ({
+        value: parseInt(customer.id),
+        label: customer.full_name,
+      }));
+      setCustomerOptions(options);
+    },
+  });
+
+  // ✅ Initial load for company admin / customer role
+  useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
       company_id: isAdmin ? undefined : companyId,
     },
-    skip: !isAdmin && !isCompanyAdmin,
+    skip: !isCompanyAdmin && !isCustomer,
     onCompleted: (data) => {
-      setCustomerOptions([]);
-      data.customers.data.map((customer: any) => {
-        setCustomerOptions((customers) => [
-          ...customers,
-          {
-            value: parseInt(customer.id),
-            label: customer.full_name,
-          },
-        ]);
-      });
+      const options = data.customers.data.map((customer: any) => ({
+        value: parseInt(customer.id),
+        label: customer.full_name,
+      }));
+      setCustomerOptions(options);
     },
   });
 
@@ -138,7 +145,7 @@ export default function StatementGenerateModal({
         setIsLoading(false);
         showGraphQLErrorToast(error);
       },
-    },
+    }
   );
 
   const handleGenerateCompanyStatementPDF = () => {
@@ -152,7 +159,7 @@ export default function StatementGenerateModal({
     }
 
     toast({
-      title: "Company statement PDF generating. Please wait to download.",
+      title: "Generating PDF. Please wait...",
       status: "success",
       duration: 3000,
     });
@@ -178,16 +185,11 @@ export default function StatementGenerateModal({
   };
 
   const handleCustomerChange = (selectedOptions: any) => {
-    setSelectedCustomer(
-      selectedOptions && selectedOptions.length > 0
-        ? selectedOptions.map((item: any) => item.value)
-        : [],
-    );
-    if (selectedOptions && selectedOptions.length === customerOptions.length) {
-      setSelectAllCustomers(true);
-    } else {
-      setSelectAllCustomers(false);
-    }
+    const selected = selectedOptions && selectedOptions.length > 0
+      ? selectedOptions.map((item: any) => item.value)
+      : [];
+    setSelectedCustomer(selected);
+    setSelectAllCustomers(selected.length === customerOptions.length);
   };
 
   return (
@@ -219,19 +221,26 @@ export default function StatementGenerateModal({
                     }}
                     onChange={(e) => {
                       setSelectedCompany(e);
+                      // Reset customer state on company change!
+                      setSelectedCustomer([]);
+                      setSelectAllCustomers(false);
                       if (e) {
                         getCustomersByCompanyId({
-                          query: "",
-                          page: 1,
-                          first: 100,
-                          orderByColumn: "id",
-                          orderByOrder: "ASC",
-                          company_id: e.value,
+                          variables: {
+                            company_id: e.value,
+                            query: "",
+                            page: 1,
+                            first: 100,
+                            orderByColumn: "id",
+                            orderByOrder: "ASC",
+                          },
                         });
+                      } else {
+                        setCustomerOptions([]);
                       }
                     }}
                     isClearable={true}
-                  ></Select>
+                  />
                 </Box>
               )}
 
@@ -255,23 +264,16 @@ export default function StatementGenerateModal({
                     size="lg"
                     className="select mb-0"
                     classNamePrefix="two-easy-select"
-                    onChange={(selectedOptions) =>
-                      handleCustomerChange(selectedOptions)
-                    }
+                    onChange={handleCustomerChange}
                     isClearable={true}
                     value={customerOptions.filter((option) =>
-                      selectedCustomer.includes(option.value),
+                      selectedCustomer.includes(option.value)
                     )}
-                  ></Select>
+                  />
                 </Box>
               )}
 
-              <Box
-                alignItems="center"
-                flexDirection="column"
-                w="full"
-                h="max-content"
-              >
+              <Box w="full">
                 <FormLabel>Period</FormLabel>
                 {/* @ts-ignore */}
                 <DateRangePicker value={rangeDate} onChange={setRangeDate} />
@@ -283,7 +285,6 @@ export default function StatementGenerateModal({
               <Flex justifyContent={"space-between"}>
                 <Button
                   variant="primary"
-                  className="ml-2"
                   onClick={handleGenerateCompanyStatementPDF}
                   isDisabled={!selectedCompany || selectedCustomer.length === 0}
                   isLoading={isLoading}
