@@ -1,4 +1,4 @@
-import { useLazyQuery,useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   AlertDialog,
   AlertDialogBody,
@@ -86,13 +86,21 @@ export default function StatementGenerateModal({
         data.companys.data.map((_entity: any) => ({
           value: parseInt(_entity.id),
           label: _entity.name,
-        }))
+        })),
       );
     },
   });
 
   // ✅ Lazy customers query for selected company
   const [getCustomersByCompanyId] = useLazyQuery(GET_CUSTOMERS_QUERY, {
+    variables: {
+      query: "",
+      page: 1,
+      first: 100,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
+      company_id: companyId, // Ensure this is provided if needed
+    },
     onCompleted: (data) => {
       const options = data.customers.data.map((customer: any) => ({
         value: parseInt(customer.id),
@@ -145,7 +153,7 @@ export default function StatementGenerateModal({
         setIsLoading(false);
         showGraphQLErrorToast(error);
       },
-    }
+    },
   );
 
   const handleGenerateCompanyStatementPDF = () => {
@@ -185,9 +193,10 @@ export default function StatementGenerateModal({
   };
 
   const handleCustomerChange = (selectedOptions: any) => {
-    const selected = selectedOptions && selectedOptions.length > 0
-      ? selectedOptions.map((item: any) => item.value)
-      : [];
+    const selected =
+      selectedOptions && selectedOptions.length > 0
+        ? selectedOptions.map((item: any) => item.value)
+        : [];
     setSelectedCustomer(selected);
     setSelectAllCustomers(selected.length === customerOptions.length);
   };
@@ -267,7 +276,7 @@ export default function StatementGenerateModal({
                     onChange={handleCustomerChange}
                     isClearable={true}
                     value={customerOptions.filter((option) =>
-                      selectedCustomer.includes(option.value)
+                      selectedCustomer.includes(option.value),
                     )}
                   />
                 </Box>

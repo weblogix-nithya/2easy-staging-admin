@@ -345,6 +345,7 @@ function JobEdit() {
           company_area: data?.job.company_area,
           job_type_id: data?.job.job_type_id,
           pick_up_state: data?.job.pick_up_state,
+          timeslot_depots: data?.job.timeslot_depots,
         });
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
@@ -1182,7 +1183,16 @@ function JobEdit() {
     },
   });
 
-  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
+  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {    
+    variables: {
+    query: "",
+    page: 1,
+    first: 100,
+    orderByColumn: "id",
+    orderByOrder: "ASC",
+    company_id: job.company_id, // Ensure this is provided if needed
+  },
+    skip: !job.company_id,
     onCompleted: (data) => {
       setCustomerOptions([]);
       setCustomerOptions(
