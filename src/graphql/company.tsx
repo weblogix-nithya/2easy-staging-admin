@@ -221,4 +221,5 @@ export const paymentTerms = [
   { label: "14 Days EOM", value: "14_days_eom" },
   { label: "21 Days EOM", value: "21_days_eom" },
   { label: "30 Days EOM", value: "30_days_eom" },
+  { label: "75 Days EOM", value: "75_days_eom" },
 ];
