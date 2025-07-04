@@ -24,6 +24,7 @@ export default function Default(props: {
   suffixText?: string;
   type?: string;
   name?: string;
+  min?: string;
   showLabel?: boolean;
   value?: string | number | any;
   defaultValue?: string | number | any;
@@ -50,6 +51,7 @@ export default function Default(props: {
     value,
     defaultValue,
     name,
+    min,
     type,
     maxWidth,
     minWidth = "10%",
@@ -135,7 +137,17 @@ export default function Default(props: {
               value={value}
               defaultValue={defaultValue}
               onChange={onChange}
-              onClick={type == "date" ? undefined : onClick}
+              min={props.min}
+              // onClick={type == "date" ? undefined : onClick}
+              onClick={
+                type === "date"
+                  ? (e) => {
+                      // Ensure input is focused and date picker opens
+                      e.preventDefault();
+                      e.currentTarget.showPicker?.();
+                    }
+                  : onClick
+              }
               ms={{ base: "0px", md: "0px" }}
               mb="0"
               size="lg"
