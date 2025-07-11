@@ -68,9 +68,10 @@ export default function JobIndex() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sorting, setSorting] = useState<any>({ id: "id", direction: true });
 
-  const { isAdmin, companyId, isCompany, isCustomer, userId } = useSelector(
+  const { isAdmin, companyId, customerId, isCompany,isCompanyAdmin, isCustomer, userId } = useSelector(
     (state: RootState) => state.user,
   );
+  console.log(customerId,isCompanyAdmin, isCustomer, userId,"checkmike")
   const { filters, displayName, jobMainFilters, is_filter_ticked } =
     useSelector((state: RootState) => state.jobFilter);
   const cookies = parseCookies();
@@ -367,6 +368,7 @@ export default function JobIndex() {
       first: queryPageSize,
       orderByRelationship: orderByRelationship,
       company_id: parseInt(companyId),
+      customer_id: isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
       job_status_ids: isCompleted ? [6, 7] : isPending ? [1] : [2, 3, 4, 5],
       ...mainJobFilter,
     },
