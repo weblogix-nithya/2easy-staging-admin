@@ -79,10 +79,15 @@ import { RootState } from "store/store";
 function JobEdit() {
   const toast = useToast();
 
-  const { isAdmin, customerId, companyId, isCompany, isCustomer } = useSelector(
-    (state: RootState) => state.user,
-  );
-  // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
+  const {
+    isAdmin,
+    customerId,
+    companyId,
+    isCompanyAdmin,
+    isCompany,
+    isCustomer,
+  } = useSelector((state: RootState) => state.user);
+  console.log(isAdmin, customerId, companyId, isCompany, isCustomer,isCompanyAdmin, "isAdmin, customerId, companyId, isCompany, isCustomer,isCompanyAdmin");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
@@ -1313,91 +1318,19 @@ function JobEdit() {
                     />
                   )}
 
-                  {/* {!isCompany && (
-                    <>
-                      <CustomInputField
-                        isSelect={true}
-                        optionsArray={companyRates.map((rate) => ({
-                          value: rate.area,
-                          label: rate.area,
-                        }))}
-                        label="Area :"
-                        value={
-                          selectedRegion.area
-                            ? {
-                              value: selectedRegion.area,
-                              label: selectedRegion.area,
-                            }
-                            : null
-                        }
-                        placeholder="Select area"
-                        onChange={(e) => {
-                          const selectedRate = companyRates.find(
-                            (rate) => rate.area === e.value,
-                          );
-                          if (selectedRate) {
-                            setJob({
-                              ...job,
-                              //company_area: selectedRate.area,
-                            });
-
-                            setSelectedRegion({
-                              area: selectedRate.area,
-                              cbm_rate: selectedRate.cbm_rate,
-                              minimum_charge: selectedRate.minimum_charge,
-                            });
-
-                            setRefinedData((prev) => ({
-                              ...prev,
-                              area: selectedRate.area,
-                              cbm_rate: selectedRate.cbm_rate,
-                              minimum_charge: selectedRate.minimum_charge,
-                            }));
-                            console.log(job, "job");
-                          }
-                        }}
-                      />
-
-                      <CustomInputFieldAdornment
-                        label="Minium Rate"
-                        placeholder=""
-                        isDisabled={true}
-                        name="minimum_charge"
-                        value={selectedRegion?.minimum_charge || ""}
-                        addonsEnd={
-                          <Text mr="2" fontSize="sm">
-                            $
-                          </Text>
-                        }
-                        onChange={(e) => { }}
-                      />
-                      <CustomInputFieldAdornment
-                        label="CBM Rate"
-                        placeholder=""
-                        isDisabled={true}
-                        name="cbm_rate"
-                        value={selectedRegion?.cbm_rate || ""}
-                        addonsEnd={
-                          <Text mr="2" fontSize="sm">
-                            $
-                          </Text>
-                        }
-                        onChange={(e) => { }}
-                      />
-                    </>
-                  )} */}
-
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
-                    label={isCompany ? "Booked by" : "Customer:"}
+                    label={isCompany ? "Booked byss" : "Customer:"}
                     value={
                       customerOptions.find(
                         (entity) => entity.value === job.customer_id,
                       ) || { value: 0, label: "" }
                     }
                     placeholder=""
+                    isDisabled={isCompany || isCompanyAdmin}
                     onChange={(e) => {
+                      if (isCompany && isCompanyAdmin) return;
                       setJob({
                         ...job,
                         customer_id: e.value || null,
@@ -2431,21 +2364,6 @@ function JobEdit() {
                   >
                     Create Job
                   </Button>
-                  {/* <Button
-                    variant="primary"
-                    onClick={handleJobCreation}
-                    isDisabled={
-                      (job.job_category_id === 1 ||
-                        job.job_category_id === 2) &&
-                      (job.transport_location === "VIC" ||
-                        job.transport_location === "QLD") &&
-                      !isQuotePrice // Disable the button if setIsQuotePrice (isQuotePrice) is false
-                        ? true
-                        : isSaving // Otherwise, consider the existing `isSaving` condition
-                    }
-                  >
-                    Create Job
-                  </Button> */}
                 </Flex>
               </FormControl>
             </Grid>

@@ -98,7 +98,7 @@ export default function CompanyIndex() {
             </Link>
           </Flex>
 
-          {!loading && companys?.companys.data.length >= 0 && (
+          {!loading && companys?.companys?.data?.length >= 0 && (
             <PaginationTable
               columns={columns}
               data={companys?.companys.data}
