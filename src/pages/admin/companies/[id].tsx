@@ -1988,7 +1988,7 @@ function CompanyEdit() {
                           </Flex>
 
                           {!loading &&
-                            customers?.customers.data.length >= 0 && (
+                            customers?.customers?.data?.length >= 0 && (
                               <PaginationTable
                                 columns={columns}
                                 showDelete={true}

@@ -131,7 +131,7 @@ export default function CustomerIndex() {
             </Link>
           </Flex>
 
-          {isAdmin && !loading && customers?.customers.data.length >= 0 && (
+          {isAdmin && !loading && customers?.customers?.data?.length >= 0 && (
             <PaginationTable
               columns={columns}
               data={customers?.customers.data}
@@ -151,7 +151,7 @@ export default function CustomerIndex() {
 
           {isCompany &&
             !companyCustomerLoading &&
-            companyCustomers?.customers.data.length >= 0 && (
+            companyCustomers?.customers?.data?.length >= 0 && (
               <PaginationTable
                 columns={columns}
                 data={companyCustomers?.customers.data}

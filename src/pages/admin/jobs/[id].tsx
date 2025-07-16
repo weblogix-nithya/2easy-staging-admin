@@ -2830,6 +2830,7 @@ function JobEdit() {
                                     py={3}
                                     fontWeight="500"
                                     fontSize="sm"
+                                    isDisabled={!isAdmin}
                                     onClick={() => {
                                       handleSaveJobPriceCalculation();
                                     }}
