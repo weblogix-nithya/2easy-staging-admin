@@ -87,7 +87,7 @@ function JobEdit() {
     isCompany,
     isCustomer,
   } = useSelector((state: RootState) => state.user);
-  console.log(isAdmin, customerId, companyId, isCompany, isCustomer,isCompanyAdmin, "isAdmin, customerId, companyId, isCompany, isCustomer,isCompanyAdmin");
+  // console.log(isAdmin, customerId, companyId, isCompany, isCustomer,isCompanyAdmin, "isAdmin, customerId, companyId, isCompany, isCustomer,isCompanyAdmin");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
@@ -810,7 +810,7 @@ function JobEdit() {
         "id",
         "full_name",
       );
-      console.log(data, _customerOptions, "custSelected");
+      // console.log(data, _customerOptions, "custSelected");
       setCustomerOptions(_customerOptions);
       if (isCustomer) {
         setJob({ ...job, ...{ customer_id: customerId } });
@@ -1293,7 +1293,7 @@ function JobEdit() {
                           ...defaultVariables,
                           company_id: e.value,
                         });
-                        console.log(e.value, "company_id");
+                        // console.log(e.value, "company_id");
                         setJob({
                           ...job,
                           company_id: e.value || null,
@@ -1321,7 +1321,7 @@ function JobEdit() {
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
-                    label={isCompany ? "Booked byss" : "Customer:"}
+                    label={isCompany ? "Booked by" : "Customer:"}
                     value={
                       customerOptions.find(
                         (entity) => entity.value === job.customer_id,
