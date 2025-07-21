@@ -28,6 +28,7 @@ export const GET_QUOTES_QUERY = gql`
         company {
           name
         }
+        quote_url
         customer_name
         customer_reference
         date_required
@@ -63,6 +64,7 @@ export const GET_QUOTE_QUERY = gql`
       customer {
         rate_card_url
       }
+      quote_url
       company_id
       company {
         name
@@ -206,6 +208,7 @@ export const UPDATE_QUOTE_MUTATION = gql`
       sub_total
       total_tax
       total
+      quote_url
     }
   }
 `;
@@ -248,6 +251,14 @@ export const SEND_QUOTE_MUTATION = gql`
   }
 `;
 
+export const GENERATE_QUOTE_PDF_MUTATION = gql`
+  mutation generateQuotePdf($id: ID!) {
+    generateQuotePdf(id: $id) {
+      id
+    }
+  }
+`;
+
 export interface CreateQuoteInput {
   name: String;
 }
@@ -259,6 +270,7 @@ export interface UpdateQuoteInput {
   sub_total: number;
   total_tax: number;
   total: number;
+  quote_url: String
 }
 
 type Quote = {
@@ -291,6 +303,7 @@ type Quote = {
   job: any;
   quote_line_items: QuoteLineItem;
   quoted_price?: string;
+  quote_url?: string;
   [key: string]: string | number | boolean | undefined | QuoteLineItem | any;
 };
 
@@ -307,6 +320,7 @@ export const defaultQuote: Quote = {
   quote_category_id: null,
   quote_service_id: null,
   quote_type_id: null,
+  // quote_url: "",
   media: [],
   is_tailgate_required: false,
   is_stackable_freight: false,

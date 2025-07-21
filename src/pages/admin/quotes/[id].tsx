@@ -44,6 +44,7 @@ import { DELETE_MEDIA_MUTATION } from "graphql/media";
 import {
   defaultQuote,
   DELETE_QUOTE_MUTATION,
+  GENERATE_QUOTE_PDF_MUTATION,
   GET_QUOTE_QUERY,
   PROCESS_QUOTE_AND_BOOK_MUTATION,
   PROCESS_QUOTE_MUTATION,
@@ -120,6 +121,8 @@ export default function QuoteEdit() {
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
   const [rateCardUrl, setRateCardUrl] = useState("");
+  const [isQuotePdfgenerate, setIsQuotePdfgenerate] = useState(false);
+
   // const onChangeSearchQuery = useMemo(() => {
   //   return debounce((e) => {
   //     setSearchQuery(e);
@@ -153,6 +156,7 @@ export default function QuoteEdit() {
       }
       if (!isUpdatingMedia) {
         setQuote({ ...quote, ...data?.quote, media: data?.quote.media });
+        console.log("first", data?.quote);
         setRateCardUrl(data?.quote.customer.rate_card_url);
         // quoteDestinations without is_pickup
         let _quoteDestinations = data.quote.quote_destinations.filter(
@@ -196,6 +200,26 @@ export default function QuoteEdit() {
     onError(error) {
       console.log("onError");
       console.log(error);
+    },
+  });
+
+  const [handleGenerateQuotePdf] = useMutation(GENERATE_QUOTE_PDF_MUTATION, {
+    variables: {
+      id: quote.id,
+    },
+    onCompleted: (data) => {
+      toast({
+        title:
+          "Quote PDF is being generated. Please wait 1 minute to refresh before downloading.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      // setIsQuotePdfgenerate(false);
+    },
+    onError: (error) => {
+      showGraphQLErrorToast(error);
+      // setIsQuotePdfgenerate(false);
     },
   });
 
@@ -455,6 +479,7 @@ export default function QuoteEdit() {
       variables: {
         input: {
           ...quote,
+          quote_url: undefined,
           quote_items: undefined,
           media: undefined,
           is_approved: undefined,
@@ -926,6 +951,75 @@ export default function QuoteEdit() {
                     </Tag>
                   </Flex>
                   <Flex alignItems="center">
+                    {quote?.quote_status?.name === "Processed" && (
+                      <Button
+                        mx="5px"
+                        variant="secondary"
+                        // isLoading={isQuotePdfgenerate}
+                        isDisabled={quoteLoading}
+                        hidden={isCustomer}
+                        onClick={() => {
+                          if (isQuotePdfgenerate) {
+                            toast({
+                              title: "Waiting for the updated PDF...",
+                              status: "info",
+                              duration: 3000,
+                              isClosable: true,
+                            });
+
+                            setTimeout(async () => {
+                              await getQuote(); // Refresh quote to get latest PDF
+                              setIsQuotePdfgenerate(false); // Reset flag
+
+                              toast({
+                                title:
+                                  "Quote PDF is refreshed. Try Downloading now...",
+                                status: "success",
+                                duration: 3000,
+                                isClosable: true,
+                              });
+
+                              // if (quote?.quote_url) {
+                              //   window.open(
+                              //     quote.quote_url,
+                              //     "_blank",
+                              //     "noopener,noreferrer",
+                              //   );
+                              // }
+                            }, 10000); // Wait 1 min
+                          } else {
+                            if (quote?.quote_url) {
+                              window.open(
+                                quote.quote_url,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
+                            }
+                          }
+                        }}
+                      >
+                        Download PDF
+                      </Button>
+                    )}
+
+                    {quote?.quote_status?.name === "Processed" &&
+                      Array.isArray(quote.quote_destinations) &&
+                      quote.quote_destinations.length > 0 && (
+                        <Button
+                          mx="5px"
+                          variant="secondary"
+                          // isLoading={isQuotePdfgenerate}
+                          hidden={isCustomer}
+                          isDisabled={quoteLoading}
+                          onClick={() => {
+                            setIsQuotePdfgenerate(true);
+                            handleGenerateQuotePdf();
+                          }}
+                        >
+                          Generate PDF
+                        </Button>
+                      )}
+
                     <Button
                       mx="5px"
                       hidden={quote.is_approved || !quote.is_quote_send}
