@@ -11,6 +11,7 @@ import {
   Grid,
   GridItem,
   Input,
+  Link,
   Radio,
   RadioGroup,
   SimpleGrid,
@@ -156,7 +157,6 @@ export default function QuoteEdit() {
       }
       if (!isUpdatingMedia) {
         setQuote({ ...quote, ...data?.quote, media: data?.quote.media });
-        console.log("first", data?.quote);
         setRateCardUrl(data?.quote.customer.rate_card_url);
         // quoteDestinations without is_pickup
         let _quoteDestinations = data.quote.quote_destinations.filter(
