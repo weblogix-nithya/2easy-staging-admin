@@ -251,6 +251,14 @@ export const SEND_QUOTE_MUTATION = gql`
   }
 `;
 
+export const GENERATE_QUOTE_PDF_MUTATION = gql`
+  mutation generateQuotePdf($id: ID!) {
+    generateQuotePdf(id: $id) {
+      id
+    }
+  }
+`;
+
 export interface CreateQuoteInput {
   name: String;
 }
