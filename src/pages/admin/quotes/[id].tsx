@@ -11,6 +11,7 @@ import {
   Grid,
   GridItem,
   Input,
+  Link,
   Radio,
   RadioGroup,
   SimpleGrid,
@@ -153,6 +154,7 @@ export default function QuoteEdit() {
       }
       if (!isUpdatingMedia) {
         setQuote({ ...quote, ...data?.quote, media: data?.quote.media });
+        console.log("first", data?.quote);
         setRateCardUrl(data?.quote.customer.rate_card_url);
         // quoteDestinations without is_pickup
         let _quoteDestinations = data.quote.quote_destinations.filter(
@@ -455,6 +457,7 @@ export default function QuoteEdit() {
       variables: {
         input: {
           ...quote,
+          quote_url: undefined,
           quote_items: undefined,
           media: undefined,
           is_approved: undefined,
@@ -926,6 +929,40 @@ export default function QuoteEdit() {
                     </Tag>
                   </Flex>
                   <Flex alignItems="center">
+                    {quote?.quote_status?.name === "Processed" &&
+                      quote.quote_url && (
+                        <Link
+                          href={quote.quote_url}
+                          isExternal
+                          style={{ width: "auto" }}
+                        >
+                          <Button
+                            mx="5px"
+                            variant="secondary"
+                            isLoading={quoteLoading}
+                            isDisabled={quoteLoading}
+                          >
+                            Download PDF
+                          </Button>
+                        </Link>
+                      )}
+                    {quote?.quote_status?.name === "Processed" &&
+                      quote?.media?.[0]?.downloadable_url && (
+                        <Link
+                          href={quote.media[0].downloadable_url}
+                          isExternal
+                          style={{ width: "auto" }}
+                        >
+                          <Button
+                            mx="5px"
+                            variant="secondary"
+                            isLoading={quoteLoading}
+                            isDisabled={quoteLoading}
+                          >
+                            generate PDF
+                          </Button>
+                        </Link>
+                      )}
                     <Button
                       mx="5px"
                       hidden={quote.is_approved || !quote.is_quote_send}
