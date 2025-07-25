@@ -956,7 +956,7 @@ export default function QuoteEdit() {
                         variant="secondary"
                         // isLoading={isQuotePdfgenerate}
                         isDisabled={quoteLoading}
-                        hidden={isCustomer}
+                        // hidden={isCustomer}
                         onClick={() => {
                           if (isQuotePdfgenerate) {
                             toast({
@@ -1008,7 +1008,7 @@ export default function QuoteEdit() {
                           mx="5px"
                           variant="secondary"
                           // isLoading={isQuotePdfgenerate}
-                          hidden={isCustomer}
+                          // hidden={isCustomer}
                           isDisabled={quoteLoading}
                           onClick={() => {
                             setIsQuotePdfgenerate(true);
