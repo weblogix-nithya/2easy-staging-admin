@@ -404,6 +404,15 @@ export const GET_JOB_QUERY = gql`
         uploaded_by
         created_at
       }
+      media_admin {
+        id
+        name
+        downloadable_url
+        collection_name
+        file_name
+        uploaded_by
+        created_at
+      }
       chats {
         id
         name
