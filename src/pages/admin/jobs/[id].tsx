@@ -1,5 +1,5 @@
 // Chakra imports
-import { useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -98,6 +98,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useSelector } from "react-redux";
@@ -116,8 +117,22 @@ interface CalculationData {
   total: number;
 }
 
+export function useIsMounted() {
+  const isMounted = useRef(false);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  return isMounted;
+}
 function JobEdit() {
   const toast = useToast();
+    const isMounted = useIsMounted();
+
   // const textColor = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = useState(defaultJob);
@@ -981,13 +996,12 @@ function JobEdit() {
     },
   });
 
-  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+  const [getCompanyRates, { data: _companyRatesData }] = useLazyQuery(
     GET_COMPANY_RATE_QUERY,
     {
-      variables: { company_id: job?.company_id || "" },
-      skip: !job?.company_id,
       fetchPolicy: "network-only",
       onCompleted: (data) => {
+        if (!isMounted.current) return;
         if (data?.getRatesByCompany) {
           const rates = [...data.getRatesByCompany];
           setCompanyRates(rates);
@@ -997,8 +1011,20 @@ function JobEdit() {
           }));
         }
       },
+      onError: (error) => {
+        console.error("Company rates error:", error);
+        if (!error.message.includes("No record found")) {
+          showGraphQLErrorToast(error);
+        }
+      },
     },
   );
+    useEffect(() => {
+    if (job?.company_id && job.company_id !== 0) {
+      getCompanyRates({ variables: { company_id: Number(job.company_id) } });
+    }
+  }, [job.company_id,getCompanyRates]);
+
   useEffect(() => {
     const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
     const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
