@@ -705,15 +705,17 @@ type Job = {
   timeslot_depots: string;
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
+  media_admin: any[] | null;
+
   [key: string]:
-  | string
-  | number
-  | null
-  | boolean
-  | undefined
-  | Date
-  | any[]
-  | any;
+    | string
+    | number
+    | null
+    | boolean
+    | undefined
+    | Date
+    | any[]
+    | any;
 };
 
 export const defaultJob: Job = {
@@ -753,6 +755,7 @@ export const defaultJob: Job = {
   //is_dangerous_goods: false,
   //is_tailgate_required: false,
   media: [],
+  media_admin: [],
   transport_type: "",
   transport_location: "",
   timeslot_depots: "",
@@ -826,7 +829,7 @@ export type JobQuoteData = {
 const defaultJobQuoteData: JobQuoteData = {
   freight_type: "",
   transport_type: "",
-  service_choice: '',
+  service_choice: "",
   state: "",
   state_code: "",
   created_at: "",
@@ -835,7 +838,7 @@ const defaultJobQuoteData: JobQuoteData = {
   cbm_rate: 0,
   minimum_charge: 0,
   area: "",
-  company_rates:[],
+  company_rates: [],
   job_pickup_address: {
     state: "",
     suburb: "",
@@ -863,7 +866,6 @@ const defaultJobQuoteData: JobQuoteData = {
     stackable: null,
   },
   job_items: [],
-
 };
 
 export default defaultJobQuoteData;
