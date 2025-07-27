@@ -354,7 +354,7 @@ function JobEdit() {
           ...job,
           ...data?.job,
           company_id: data?.job.company_id,
-          media: data?.job.media_admin,
+          media_admin: data?.job.media_admin,
           job_category_id: data?.job.job_category_id,
           transport_location: data?.job.transport_location,
           company_area: data?.job.company_area,
@@ -474,7 +474,7 @@ function JobEdit() {
           cbm_auto: totalCbm,
         });
       } else {
-        setJob({ ...job, media: data?.job.media_admin });
+        setJob({ ...job, media_admin: data?.job.media_admin });
         setJobCcEmails(data.job.job_cc_emails);
         setUpdatingMedia(false);
       }
@@ -2553,19 +2553,19 @@ function JobEdit() {
                       )}
 
                       {/* foreach jobAttachments */}
-                      {!jobLoading && job?.media.length >= 0 && (
-                        <PaginationTable
-                          columns={attachmentColumns}
-                          data={job.media_admin}
-                          showDelete={isAdmin}
-                          onDelete={(mediaId) => {
-                            handleDeleteMedia({
-                              variables: {
-                                id: mediaId,
-                              },
-                            });
-                          }}
-                        />
+                    {!jobLoading && Array.isArray(job?.media_admin) && (
+  <PaginationTable
+    columns={attachmentColumns}
+    data={job.media_admin}
+    showDelete={isAdmin}
+    onDelete={(mediaId) => {
+      handleDeleteMedia({
+        variables: {
+          id: mediaId,
+        },
+      });
+    }}
+  />
                       )}
                     </Box>
 
