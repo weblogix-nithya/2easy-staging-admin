@@ -44,9 +44,9 @@ export default function VehicleTypeIndex() {
 
   const {
     loading,
-    error,
+    // error,
     data: vehicleTypes,
-    refetch: getVehicleTypes,
+    // refetch: getVehicleTypes,
   } = useQuery(GET_VEHICLE_TYPES_QUERY, {
     variables: {
       query: searchQuery,
@@ -59,6 +59,7 @@ export default function VehicleTypeIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

@@ -1,3 +1,5 @@
+// ✅ Updated AddressesModal.tsx with externalized autocomplete utils
+
 import {
   Button,
   Divider,
@@ -11,15 +13,19 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  useColorModeValue,
+  // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
-import GooglePlacesAutocomplete, {
-  geocodeByPlaceId,
-} from "react-google-places-autocomplete";
+import React, { useEffect, useRef, useState } from "react";
 
+import {
+  fetchPlaceDetails,
+  fetchSuggestions,
+  getAddressComponent,
+} from "../../utils/autocomplete";
 import { GenericAddressType } from "./genericAddressType";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faHandHolding, faInfinity, faTruckRampBox, faWarning } from "@fortawesome/free-solid-svg-icons";
 
 export default function AddressesModal<T extends GenericAddressType>(props: {
   defaultAddress?: T;
@@ -35,23 +41,29 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
     onSetAddress,
     onModalClose,
   } = props;
-  const textColor = useColorModeValue("navy.700", "white");
-  const [entityAddress, setEntityAddress] = useState({
-    id: defaultAddress?.id,
-    address: defaultAddress?.address,
-    address_line_1: defaultAddress?.address_line_1,
-    address_line_2: defaultAddress?.address_line_2,
-    address_postal_code: defaultAddress?.address_postal_code,
-    address_city: defaultAddress?.address_city,
-    address_state: defaultAddress?.address_state,
-    address_country: defaultAddress?.address_country,
-    address_business_name: defaultAddress?.address_business_name,
-    lng: defaultAddress?.lng,
-    lat: defaultAddress?.lat,
+  const prevQueryRef = useRef("");
+  const selectedLabelRef = useRef("");
+  // const textColor = useColorModeValue("navy.700", "white");
+  const [entityAddress, setEntityAddress] = useState<GenericAddressType>({
+    id: defaultAddress?.id ?? 0,
+    address: defaultAddress?.address ?? "",
+    address_line_1: defaultAddress?.address_line_1 ?? "",
+    address_line_2: defaultAddress?.address_line_2 ?? "",
+    address_postal_code: defaultAddress?.address_postal_code ?? "",
+    address_city: defaultAddress?.address_city ?? "",
+    address_state: defaultAddress?.address_state ?? "",
+    address_country: defaultAddress?.address_country ?? "",
+    address_business_name: defaultAddress?.address_business_name ?? "",
+    lng: defaultAddress?.lng ?? 0,
+    lat: defaultAddress?.lat ?? 0,
   });
-  const [googleAddress, setGoogleAddress] = useState(null);
+  const [googleAddress, setGoogleAddress] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(isModalOpen || false);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const controllerRef = useRef<AbortController | null>(null);
   const toast = useToast();
+
   const onClose = () => {
     setIsOpen(false);
     onModalClose(false);
@@ -64,25 +76,63 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   useEffect(() => {
     if (defaultAddress?.address)
       setEntityAddress({
-        id: defaultAddress?.id,
-        address: defaultAddress?.address,
-        address_line_1: defaultAddress?.address_line_1,
-        address_line_2: defaultAddress?.address_line_2,
-        address_postal_code: defaultAddress?.address_postal_code,
-        address_city: defaultAddress?.address_city,
-        address_state: defaultAddress?.address_state,
-        address_country: defaultAddress?.address_country,
-        address_business_name: defaultAddress?.address_business_name,
-        lng: defaultAddress?.lng,
-        lat: defaultAddress?.lat,
+        id: defaultAddress?.id ?? 0,
+        address: defaultAddress?.address ?? "",
+        address_line_1: defaultAddress?.address_line_1 ?? "",
+        address_line_2: defaultAddress?.address_line_2 ?? "",
+        address_postal_code: defaultAddress?.address_postal_code ?? "",
+        address_city: defaultAddress?.address_city ?? "",
+        address_state: defaultAddress?.address_state ?? "",
+        address_country: defaultAddress?.address_country ?? "",
+        address_business_name: defaultAddress?.address_business_name ?? "",
+        lng: defaultAddress?.lng ?? 0,
+        lat: defaultAddress?.lat ?? 0,
       });
   }, [defaultAddress]);
 
   useEffect(() => {
-    if (googleAddress) {
-      updateEntityAddress(googleAddress.value.place_id, googleAddress);
-    }
-  }, [googleAddress]);
+    if (query === selectedLabelRef.current) return;
+
+    const timeout = setTimeout(() => {
+      const isTyping = query.length >= 2;
+      const isNotBackspace = query.length > prevQueryRef.current.length;
+
+      if (isTyping && isNotBackspace) {
+        if (controllerRef.current) controllerRef.current.abort();
+        controllerRef.current = new AbortController();
+
+        fetchSuggestions(query, controllerRef.current.signal).then((results) => {
+          setSuggestions(results);
+        });
+      }
+
+      prevQueryRef.current = query;
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
+
+  const handleFetchPlaceDetails = async (placeId: string) => {
+    const data = await fetchPlaceDetails(placeId);
+    if (!data) return;
+
+    const components = data.addressComponents || [];
+
+    setEntityAddress({
+      ...entityAddress,
+      address: data.formattedAddress || "",
+      address_line_1:
+        getAddressComponent(components, "street_address") ||
+        getAddressComponent(components, "route") ||
+        "",
+      address_city: getAddressComponent(components, "locality"),
+      address_state: getAddressComponent(components, "administrative_area_level_1"),
+      address_country: getAddressComponent(components, "country"),
+      address_postal_code: getAddressComponent(components, "postal_code"),
+      lat: data.location?.latitude || 0,
+      lng: data.location?.longitude || 0,
+    });
+  };
 
   const handleSaveAddress = async () => {
     entityAddress.address =
@@ -96,16 +146,8 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
       entityAddress.address_postal_code +
       ", " +
       entityAddress.address_country;
-    if (
-      entityAddress.lng == 0 ||
-      entityAddress.lat == 0 ||
-      !entityAddress.lat ||
-      !entityAddress.lng ||
-      entityAddress.lat == null ||
-      entityAddress.lng == null ||
-      entityAddress.lat == undefined ||
-      entityAddress.lng == undefined
-    ) {
+
+    if (!entityAddress.lat || !entityAddress.lng) {
       toast({
         title: "Error",
         description:
@@ -119,461 +161,90 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
       onClose();
     }
   };
-  function updateEntityAddress(placeId: string, googleAddress: any) {
-    var addressBusinessName = "";
-    if (googleAddress?.value?.structured_formatting?.main_text != undefined) {
-      if (googleAddress?.value?.types.includes("establishment")) {
-        // console.log(googleAddress?.value?.structured_formatting?.main_text);
-        addressBusinessName =
-          googleAddress?.value?.structured_formatting?.main_text;
-      }
-    }
-    geocodeByPlaceId(placeId)
-      .then((results) => {
-        var addressLine1 = "";
-        var addressLine2 = "";
-        var addressCity = "";
-        var addressState = "";
-        var addressCountry = "";
-        var addressPostalCode = "";
 
-        if (results[0]) {
-          // console.log(results[0]);
-          results[0].address_components.forEach((component) => {
-            if (component.types.includes("street_number")) {
-              addressLine1 += component.long_name + " ";
-            } else if (component.types.includes("route")) {
-              addressLine1 += component.long_name;
-            } else if (component.types.includes("subpremise")) {
-              addressLine2 = component.long_name;
-            } else if (component.types.includes("locality")) {
-              addressCity = component.long_name;
-            } else if (
-              component.types.includes("administrative_area_level_1")
-            ) {
-              addressState = component.long_name;
-            } else if (component.types.includes("country")) {
-              addressCountry = component.long_name;
-            } else if (component.types.includes("postal_code")) {
-              addressPostalCode = component.long_name;
-            }
-          });
-
-          if (results[0].geometry.location) {
-            let address = {
-              address: results[0].formatted_address,
-              address_line_1: addressLine1,
-              address_line_2: addressLine2,
-              address_city: addressCity,
-              address_state: addressState,
-              address_country: addressCountry,
-              address_postal_code: addressPostalCode,
-              lat: results[0].geometry.location.lat(),
-              lng: results[0].geometry.location.lng(),
-              address_business_name: addressBusinessName,
-            };
-            setEntityAddress({ ...entityAddress, ...address });
-            //onSetAddress({ ...entityAddress, ...address });
-          }
-        }
-      })
-      .catch((error) => console.error(error));
-  }
   return (
-    <>
-      <Flex justifyContent="space-between" alignItems="center" mb="">
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>
-              {description ? description : "Add address"}
-            </ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <Divider mb="24px" />
-              <p className="mb-4">
-                <strong>Address Details</strong>
-              </p>
+    <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>{description || "Add addresses"}</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          <Divider mb="24px" />
+ 
 
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  mr="4px"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Search address
-                </FormLabel>
+          <Flex mt={4} direction="column" gap="12px">
+            <FormLabel>Search Address</FormLabel>
+            <Input
+              placeholder="Type location"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              size="lg"
+            />
+            {suggestions.map((sugg) => {
+              const prediction = sugg.placePrediction;
+              const mainText = prediction.structuredFormat?.mainText?.text || "";
+              const secondaryText = prediction.structuredFormat?.secondaryText?.text || "";
+              const fullLabel = `${mainText}, ${secondaryText}`.trim();
 
-                <GooglePlacesAutocomplete
-                  apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-                  autocompletionRequest={{
-                    componentRestrictions: {
-                      country: ["au"],
-                    },
+              return (
+                <Button
+                  key={prediction.placeId}
+                  onClick={() => {
+                    setQuery(fullLabel);
+                    setSuggestions([]);
+                    setGoogleAddress(prediction);
+                    handleFetchPlaceDetails(prediction.placeId);
+                    selectedLabelRef.current = fullLabel;
                   }}
-                  minLengthAutocomplete={2}
-                  selectProps={{
-                    // @ts-ignore
-                    googleAddress,
-                    onChange: setGoogleAddress,
-                    styles: {
-                      // @ts-ignore
-                      control: (provided) => ({
-                        ...provided,
-                        paddingLeft: "8px",
-                        height: "48px",
-                        backgroundColor: "white",
-                        border: "1px solid #e3e3e3",
-                        borderRadius: "8px",
-                      }),
-                      // @ts-ignore
-                      singleValue: (provided) => ({
-                        ...provided,
-                        paddingLeft: "8px",
-                        fontFamily: "Manrope",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }),
-                      // @ts-ignore
-                      option: (provided) => ({
-                        ...provided,
-                        fontFamily: "Manrope",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }),
-                      // @ts-ignore
-                      container: (provided) => ({
-                        ...provided,
-                        width: "100%",
-                      }),
-                      // @ts-ignore
-                      input: (provided) => ({
-                        ...provided,
-                        paddingLeft: "8px",
-                        minWidth: "100",
-                        width: "100%",
-                        fontFamily: "Manrope",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }),
-                    },
-                  }}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
+                  w="100%"
+                  justifyContent="flex-start"
+                  variant="ghost"
+                  whiteSpace="normal"
                   fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
+                  textAlign="left"
                 >
-                  Business or Building Name
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={entityAddress.address_business_name}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="address_business_name"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
+                  {fullLabel}
+                </Button>
+              );
+            })}
 
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address line 1
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={entityAddress.address_line_1}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="address_line_1"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
+            {[
+              "address_business_name",
+              "address_line_1",
+              "address_line_2",
+              "address_city",
+              "address_state",
+              "address_country",
+              "address_postal_code",
+              "lng",
+              "lat",
+            ].map((name) => (
+              <Input
+                key={name}
+                name={name}
+                placeholder={name.replaceAll("_", " ").replace("address ", "").replace(/\b\w/g, (c) => c.toUpperCase())}
+                value={(entityAddress as any)[name] ?? ""}
+                onChange={(e) =>
+                  setEntityAddress({
+                    ...entityAddress,
+                    [e.target.name]: e.target.value,
+                  })
+                }
+                isDisabled={!googleAddress}
+              />
+            ))}
+          </Flex>
+        </ModalBody>
 
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Apt / Suite / Floor
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={entityAddress.address_line_2}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="address_line_2"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address City
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={entityAddress.address_city}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="address_city"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address state
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={entityAddress.address_state}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="address_state"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address Country
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={entityAddress.address_country}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="address_country"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address Postcode
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  name="address_postal_code"
-                  value={entityAddress.address_postal_code}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address Longitude
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  name="lng"
-                  value={entityAddress.lng}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-
-              <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  Address Latitude
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  name="lat"
-                  value={entityAddress.lat}
-                  onChange={(e) =>
-                    setEntityAddress({
-                      ...entityAddress,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={googleAddress == null ? true : false}
-                />
-              </Flex>
-            </ModalBody>
-
-            <ModalFooter>
-              <Button variant="outline" mr="auto" onClick={onClose}>
-                Close
-              </Button>
-              <Button variant="primary" onClick={() => handleSaveAddress()}>
-                Save
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </Flex>
-    </>
+        <ModalFooter>
+          <Button variant="outline" mr="auto" onClick={onClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleSaveAddress}>
+            Save
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }

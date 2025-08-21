@@ -9,6 +9,7 @@ import "styles/MiniCalendar.css";
 import "styles/DatePickerCalendar.css";
 
 import { ApolloProvider } from "@apollo/client";
+import { CacheProvider } from "@emotion/react";
 import { useApollo } from "graphql/ApolloClient";
 import { AppProps } from "next/app";
 import Head from "next/head";
@@ -17,6 +18,7 @@ import { Provider } from "react-redux";
 import { store } from "store/store";
 
 import { Chakra } from "../Chakra";
+import { createEmotionCache } from "../emotionCache";
 
 // Handle FA6 quirks in NextJS: https://fontawesome.com/docs/web/use-with/react/use-with#getting-font-awesome-css-to-work
 // import { config } from "@fortawesome/fontawesome-svg-core";
@@ -26,28 +28,32 @@ config.autoAddCss = false;
 
 // Set up FA6 Pro icon access
 // import { library } from "@fortawesome/fontawesome-svg-core";
+import { fas } from "@fortawesome/free-solid-svg-icons";
 import { fal } from "@fortawesome/pro-light-svg-icons";
 import { far } from "@fortawesome/pro-regular-svg-icons";
-import { fas } from "@fortawesome/pro-solid-svg-icons";
 library.add(fas, far, fal);
 
 function MyApp({ Component, pageProps }: AppProps) {
   const apolloClient = useApollo(pageProps.initialApolloState);
   const title = `${process.env.NEXT_PUBLIC_APP_NAME} UI Dashboard`;
-
+  // Detect direction (default to ltr)
+  const dir = typeof window !== "undefined" && window.document.documentElement.dir === "ar" ? "rtl" : "ltr";
+  const cache = React.useMemo(() => createEmotionCache(dir), [dir]);
   return (
-    <ApolloProvider client={apolloClient}>
-      <Head>
-        <title>{title}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-      </Head>
-      <Provider store={store}>
-        <Chakra cookies={pageProps.cookies}>
-          <Component {...pageProps} />
-        </Chakra>
-      </Provider>
-    </ApolloProvider>
+    <CacheProvider value={cache}>
+      <ApolloProvider client={apolloClient}>
+        <Head>
+          <title>{title}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <meta name="theme-color" content="#000000" />
+        </Head>
+        <Provider store={store}>
+          <Chakra cookies={pageProps.cookies}>
+            <Component {...pageProps} />
+          </Chakra>
+        </Provider>
+      </ApolloProvider>
+    </CacheProvider>
   );
 }
 

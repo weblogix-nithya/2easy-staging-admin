@@ -16,11 +16,10 @@ export function SearchBar(props: {
   borderRadius?: string | number;
   [x: string]: any;
 }) {
-  // Pass the computed styles into the `__css` prop
   const {
-    variant,
-    background,
-    children,
+    _variant,
+    _background,
+    _children,
     ms,
     placeholder,
     borderRadius,
@@ -28,9 +27,7 @@ export function SearchBar(props: {
     onChangeSearchQuery,
     ...rest
   } = props;
-  // Chakra Color Mode
   const searchIconColor = useColorModeValue("gray.700", "white");
-  const inputBg = useColorModeValue("secondaryGray.300", "navy.900");
   const inputText = useColorModeValue("gray.700", "gray.100");
 
   return (
@@ -45,11 +42,9 @@ export function SearchBar(props: {
       <InputLeftElement>
         <IconButton
           aria-label="search"
-          // bg="inherit"
           bg="transparent"
           borderRadius="inherit"
           _active={{
-            // bg: "inherit",
             bg: "transparent",
             transform: "none",
             borderColor: "transparent",
@@ -65,13 +60,14 @@ export function SearchBar(props: {
       </InputLeftElement>
 
       <Input
+        id="job-search"
+        name="job-search"
         variant="search"
         placeholder={placeholder ? placeholder : "Search..."}
         value={searchQuery}
         onChange={(e) => {
           onChangeSearchQuery(e.target.value);
         }}
-        // bg={background ? background : inputBg}
         bg="white"
         fontWeight="500"
         fontSize="sm"

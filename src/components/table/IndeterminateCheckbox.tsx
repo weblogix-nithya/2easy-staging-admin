@@ -10,15 +10,16 @@ const IndeterminateCheckbox = ({
 
   useEffect(() => {
     if (typeof indeterminate === "boolean") {
-      ref.current.indeterminate = !rest.checked && indeterminate;
+      ref.current.indeterminate = indeterminate && !rest.checked;
     }
-  }, [ref, indeterminate]);
+  }, [indeterminate, rest.checked]); // Depend on both `indeterminate` and `checked`
 
   return (
     <input
       type="checkbox"
       ref={ref}
       className={className + " cursor-pointer"}
+      id={`checkbox-${rest.value}`} // Add unique `id` based on the `value`
       {...rest}
     />
   );

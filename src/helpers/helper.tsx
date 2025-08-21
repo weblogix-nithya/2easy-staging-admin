@@ -12,12 +12,37 @@ export function formatDate(date: any, format: string = "YYYY-MM-DD") {
   return moment.utc(date).local().format(format);
 }
 
+export function formatedDate(date: any, format: string = "YYYY-MM-DD") {
+  return moment.utc(date).local().format(format);
+}
+
 export function formatTime(dateTime: string) {
   return moment.utc(dateTime).local().format("hh:mm a");
 }
 
 export function formatTimeUTCtoInput(dateTime: string) {
   return moment.utc(dateTime).local().format("HH:mm");
+}
+
+export const getRowBgColor = (status?: string): string => {
+  const normalizedStatus = status?.toLowerCase();
+
+  switch (normalizedStatus) {
+    case "in transit":
+    case "assigned":
+      return "yellow.100"; // light yellow
+    case "delivered":
+    case "completed":
+      return "green.200"; // light green
+    default:
+      return "transparent";
+  }
+};
+
+
+export function formatToTimeDate(apiDate: string): string {
+  if (!apiDate) return "-";
+  return moment.utc(apiDate).local().format("HH:mm, DD/MM/YYYY");
 }
 
 export function formatDateTimeToDB(date: string, time: string) {

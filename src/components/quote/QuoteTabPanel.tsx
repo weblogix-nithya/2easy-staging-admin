@@ -17,7 +17,7 @@ export default function QuoteTabPanel(props: {
   const [queryPageIndexChild, setQueryPageIndexChild] =
     useState(queryPageIndex);
   const [queryPageSize, setQueryPageSize] = useState(50);
-  const { isAdmin, isCustomer, customerId } = useSelector(
+  const { isCustomer, customerId } = useSelector(
     (state: RootState) => state.user,
   );
 
@@ -86,7 +86,7 @@ export default function QuoteTabPanel(props: {
 
   const {
     loading,
-    error,
+    // error,
     data: quotes,
     refetch: getQuotes,
   } = useQuery(GET_QUOTES_QUERY, {
@@ -104,6 +104,7 @@ export default function QuoteTabPanel(props: {
 
   useEffect(() => {
     getQuotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId, tabId, searchQuery]);
 
   return (

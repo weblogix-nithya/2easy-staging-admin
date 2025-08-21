@@ -19,7 +19,7 @@ import { useState } from "react";
 function InvoiceStatusCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoiceStatus, setInvoiceStatus] = useState(defaultInvoiceStatus);
   const router = useRouter();
 

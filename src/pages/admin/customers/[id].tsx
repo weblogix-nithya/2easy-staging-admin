@@ -12,16 +12,16 @@ import {
   Input,
   Radio,
   RadioGroup,
+  // Select,
   Stack,
   Textarea,
   useColorModeValue,
-  useToast,
-} from "@chakra-ui/react";
+  useToast} from "@chakra-ui/react";
 // Font awesome icons
-import { faUser } from "@fortawesome/pro-solid-svg-icons";
-import { faMapLocationDot } from "@fortawesome/pro-solid-svg-icons";
-import { faTruck } from "@fortawesome/pro-solid-svg-icons";
-import { faTruckClock } from "@fortawesome/pro-solid-svg-icons";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { faMapLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { faTruck } from "@fortawesome/free-solid-svg-icons";
+import { faTruckFast } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import CustomerAddressesTab from "components/customers/CustomerAddressesTab";
@@ -35,16 +35,16 @@ import {
   UPDATE_CUSTOMER_MUTATION,
 } from "graphql/customer";
 import AdminLayout from "layouts/admin";
-import debounce from "lodash.debounce";
+// import debounce from "lodash.debounce";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useState} from "react";
 
 function CustomerEdit() {
   const toast = useToast();
   // let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [customer, setCustomer] = useState(defaultCustomer);
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
@@ -52,12 +52,13 @@ function CustomerEdit() {
 
   const {
     loading: customerLoading,
-    data: customerData,
-    refetch: getCustomer,
+    // data: customerData,
+    // refetch: getCustomer,
   } = useQuery(GET_CUSTOMER_QUERY, {
     variables: {
       id: id,
     },
+    skip: !id,
     onCompleted: (data) => {
       if (data?.customer == null) {
         router.push("/admin/customers");
@@ -74,7 +75,7 @@ function CustomerEdit() {
     variables: {
       input: customer,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Customer updated",
         status: "success",
@@ -91,7 +92,7 @@ function CustomerEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Customer deleted",
         status: "success",
@@ -105,16 +106,19 @@ function CustomerEdit() {
     },
   });
 
-  const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [queryPageIndex, setQueryPageIndex] = useState(0);
+  // const [queryPageSize, setQueryPageSize] = useState(50);
+  // const [searchQuery, setSearchQuery] = useState("");
 
-  const onChangeSearchQuery = useMemo(() => {
-    return debounce((e) => {
-      setSearchQuery(e);
-      setQueryPageIndex(0);
-    }, 300);
-  }, []);
+  // const _onChangeSearchQuery = useMemo(() => {
+  //   return debounce((e) => {
+  //     setSearchQuery(e);
+  //     setQueryPageIndex(0);
+  //   }, 300);
+  // }, []);
+
+
+
 
   return (
     <AdminLayout>
@@ -175,7 +179,7 @@ function CustomerEdit() {
                   </FormLabel>
                   <Textarea
                     name="admin_notes"
-                    value={customer.admin_notes}
+                    value={customer.admin_notes || ""}
                     onChange={(e) =>
                       setCustomer({
                         ...customer,
@@ -200,7 +204,7 @@ function CustomerEdit() {
                   <Textarea
                     fontSize="sm"
                     name="base_notes"
-                    value={customer.base_notes}
+                    value={customer.base_notes|| ""}
                     onChange={(e) =>
                       setCustomer({
                         ...customer,
@@ -248,6 +252,8 @@ function CustomerEdit() {
                     <FontAwesomeIcon icon={faMapLocationDot} className="mr-1" />
                     Addresses
                   </Button>
+                 
+
                   <Button
                     disabled={tabId == 2}
                     onClick={() => setTabId(2)}
@@ -277,7 +283,7 @@ function CustomerEdit() {
                         : "text-[var(--chakra-colors-black-400)] !bg-white")
                     }
                   >
-                    <FontAwesomeIcon icon={faTruckClock} className="mr-1" />
+                    <FontAwesomeIcon icon={faTruckFast} className="mr-1" />
                     Hourly Hires
                   </Button>
                 </Flex>
@@ -679,7 +685,10 @@ function CustomerEdit() {
                         </RadioGroup>
                       </Flex>
                     </Flex>
-                  </FormControl>
+
+                   
+                </FormControl>
+
                 )}
 
                 {tabId == 1 && (
@@ -697,6 +706,8 @@ function CustomerEdit() {
                     customer={customer}
                   ></CustomerVehicleHiresTab>
                 )}
+
+              
               </GridItem>
             </Grid>
           )}

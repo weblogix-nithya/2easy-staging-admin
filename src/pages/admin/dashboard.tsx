@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { Box, Flex, SimpleGrid, useColorModeValue } from "@chakra-ui/react";
+import { Box, Flex, SimpleGrid } from "@chakra-ui/react";
 import DashboardBookingCard from "components/card/DashboardBookingCard";
 import DashboardInfoCard from "components/card/DashboardInfoCard";
 import DashboardInfoCardRow from "components/card/DashboardInfoCardRow";
@@ -13,17 +13,17 @@ import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 export default function Dashboard() {
-  const brandColor = useColorModeValue("brand.500", "white");
-  const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
+  // const brandColor = useColorModeValue("brand.500", "white");
+  // const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
 
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
-  const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
-  const [date, setDate] = useState(
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
+  const [date, _setDate] = useState(
     moment(today).utc().format("YYYY-MM-DD HH:mm:ss"),
   );
 
-  const { loading: unassignedJobsLoading, data: unassignedJobs } = useQuery(
+  const { data: unassignedJobs } = useQuery(
     GET_JOBS_QUERY,
     {
       variables: {
@@ -38,7 +38,7 @@ export default function Dashboard() {
   );
 
   const {
-    loading: unassignedStandardJobsLoading,
+    // loading: unassignedStandardJobsLoading,
     data: unassignedStandardJobs,
   } = useQuery(GET_JOBS_QUERY, {
     variables: {
@@ -52,7 +52,7 @@ export default function Dashboard() {
     skip: !isAdmin,
   });
 
-  const { loading: unassignedExpressJobsLoading, data: unassignedExpressJobs } =
+  const { data: unassignedExpressJobs } =
     useQuery(GET_JOBS_QUERY, {
       variables: {
         page: 1,
@@ -65,7 +65,7 @@ export default function Dashboard() {
       skip: !isAdmin,
     });
 
-  const { loading: unassignedUrgentJobsLoading, data: unassignedUrgentJobs } =
+  const { data: unassignedUrgentJobs } =
     useQuery(GET_JOBS_QUERY, {
       variables: {
         page: 1,
@@ -78,7 +78,7 @@ export default function Dashboard() {
       skip: !isAdmin,
     });
 
-  const { loading: declinedJobsLoading, data: declinedJobs } = useQuery(
+  const { data: declinedJobs } = useQuery(
     GET_JOBS_QUERY,
     {
       variables: {
@@ -92,7 +92,7 @@ export default function Dashboard() {
     },
   );
 
-  const { loading: incompleteJobsLoading, data: incompleteJobs } = useQuery(
+  const { data: incompleteJobs } = useQuery(
     GET_JOBS_QUERY,
     {
       variables: {
@@ -106,8 +106,7 @@ export default function Dashboard() {
     },
   );
 
-  const { loading: incompleteUrgentJobsLoading, data: incompleteUrgentJobs } =
-    useQuery(GET_JOBS_QUERY, {
+  const {  data: incompleteUrgentJobs } = useQuery(GET_JOBS_QUERY, {
       variables: {
         page: 1,
         first: 30,
@@ -119,8 +118,7 @@ export default function Dashboard() {
       skip: !isAdmin,
     });
 
-  const { loading: incompleteExpressJobsLoading, data: incompleteExpressJobs } =
-    useQuery(GET_JOBS_QUERY, {
+  const {  data: incompleteExpressJobs } = useQuery(GET_JOBS_QUERY, {
       variables: {
         page: 1,
         first: 30,
@@ -132,10 +130,7 @@ export default function Dashboard() {
       skip: !isAdmin,
     });
 
-  const {
-    loading: incompleteStandardJobsLoading,
-    data: incompleteStandardJobs,
-  } = useQuery(GET_JOBS_QUERY, {
+  const {data: incompleteStandardJobs } = useQuery(GET_JOBS_QUERY, {
     variables: {
       page: 1,
       first: 30,
@@ -147,10 +142,7 @@ export default function Dashboard() {
     skip: !isAdmin,
   });
 
-  const {
-    loading: customerIssueReportJobsLoading,
-    data: customerIssueReportJobs,
-  } = useQuery(GET_JOBS_QUERY, {
+  const {data: customerIssueReportJobs} = useQuery(GET_JOBS_QUERY, {
     variables: {
       page: 1,
       first: 30,
@@ -161,7 +153,7 @@ export default function Dashboard() {
     skip: !isAdmin,
   });
 
-  const { loading: driverIssueReportJobsLoading, data: driverIssueReportJobs } =
+  const { loading: _driverIssueReportJobsLoading, data: driverIssueReportJobs } =
     useQuery(GET_JOBS_QUERY, {
       variables: {
         page: 1,
@@ -173,7 +165,7 @@ export default function Dashboard() {
       skip: !isAdmin,
     });
 
-  const { loading: reportIssueReportJobsLoading, data: reportIssueReportJobs } =
+  const { loading: _reportIssueReportJobsLoading, data: _reportIssueReportJobs } =
     useQuery(GET_JOBS_QUERY, {
       variables: {
         page: 1,
@@ -185,7 +177,7 @@ export default function Dashboard() {
       skip: !isAdmin,
     });
 
-  const { loading: onlineDriversLoading, data: onlineDrivers } = useQuery(
+  const { loading: _onlineDriversLoading, data: onlineDrivers } = useQuery(
     GET_DRIVERS_QUERY,
     {
       variables: {
@@ -199,7 +191,7 @@ export default function Dashboard() {
     },
   );
 
-  const { loading: pendingDriversLoading, data: pendingDrivers } = useQuery(
+  const { loading: _pendingDriversLoading, data: pendingDrivers } = useQuery(
     GET_DRIVERS_QUERY,
     {
       variables: {
@@ -213,7 +205,7 @@ export default function Dashboard() {
     },
   );
 
-  const { loading: expiredLicenseDriversLoading, data: expiredLicenseDrivers } =
+  const { loading: _expiredLicenseDriversLoading, data: expiredLicenseDrivers } =
     useQuery(GET_DRIVERS_QUERY, {
       variables: {
         page: 1,

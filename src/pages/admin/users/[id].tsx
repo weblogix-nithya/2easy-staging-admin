@@ -33,22 +33,17 @@ import { setState } from "store/userSlice";
 
 import CustomInputField from "../../../components/fields/CustomInputField";
 
-export default function UserEdit(prop: any) {
+export default function UserEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const brandColor = useColorModeValue("brand.500", "white");
-  const textColorSecondary = "gray.400";
+  // const brandColor = useColorModeValue("brand.500", "white");
+  //  const textColorSecondary = "gray.400";
   const [user, setUser] = useState(defaultUser);
   const [userRoles, setUserRoles] = useState([]);
   const [australianState, setAustralianState] = useState(null);
   const [roleIds, setRoleIds] = useState([]);
-  const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isDriver = useSelector((state: RootState) => state.user.isDriver);
-  const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const userId = useSelector((state: RootState) => state.user.userId);
-  const isCompanyAdmin = useSelector(
-    (state: RootState) => state.user.isCompanyAdmin,
-  );
+
   const dispatch = useDispatch();
 
   const router = useRouter();
@@ -56,8 +51,8 @@ export default function UserEdit(prop: any) {
 
   const {
     loading: userLoading,
-    data: userData,
-    refetch: getUser,
+    // data: userData,
+    // refetch: getUser,
   } = useQuery(GET_USER_QUERY, {
     variables: {
       id: id,
@@ -114,7 +109,7 @@ export default function UserEdit(prop: any) {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "User deleted",
         status: "success",

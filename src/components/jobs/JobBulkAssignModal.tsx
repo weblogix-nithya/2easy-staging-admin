@@ -30,6 +30,7 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { defaultDriver, Driver } from "graphql/driver";
 import { BULK_UPDATE_JOB_MUTATION } from "graphql/job";
 import { reorderArray } from "helpers/helper";
+import moment from "moment";
 import { useEffect, useState } from "react";
 
 import { JobBulkAssignRow } from "./JobBulkAssignRow";
@@ -62,31 +63,35 @@ export default function JobBulkAssignModal({
     selectedJobs?.findIndex(
       (dynamicTableUser: any) => dynamicTableUser.id == id,
     );
+  // console.log(selectedJobs, "sssss");
   const activeIndex = activeId ? getIndex(activeId) : -1;
   const totals = selectedJobs.reduce(
     (acc, job) => {
-      acc.totalWeights += job.original.total_weight;
-      acc.totalCBM += job.original.total_volume;
+      acc.totalWeights += job.original.job.total_weight;
+      acc.totalCBM += job.original.job.total_volume;
       return acc;
     },
     { totalWeights: 0, totalCBM: 0 },
   );
   const sortedBulkAssignJobs = selectedJobs.map((item, index) => {
+    // console.log(item, "te");
     return {
-      id: item.original.id,
-      customer_id: item.original.customer_id,
-      company_id: item.original.company_id,
+      id: item.original.job.id,
+      customer_id: item.original.job.customer.id,
+      company_id: item.original.job.company.id,
       driver_id: selectedDriver.id,
-      name: item.original.name,
-      sort_id: index + 1,
-      job_type_id: item.original.job_type_id,
+      name: item.original.job.name,
+      d_sort_id: Number(index + 1),
+      sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"), // ⬅️ NEW
+      job_type_id: item.original.job.job_type.id,
     };
   });
+  // console.log(sortedBulkAssignJobs,'sortedBulkAssignJobs')
   const [handleBulkAssignJobs, {}] = useMutation(BULK_UPDATE_JOB_MUTATION, {
     variables: {
       input: sortedBulkAssignJobs,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Jobs assigned",
         status: "success",
@@ -125,6 +130,7 @@ export default function JobBulkAssignModal({
                     (driver: any) => driver.id == e.value,
                   );
                   setSelectedDriver(_selectedDriver);
+                  console.log(_selectedDriver, "selectedDriver")
                 }}
               ></Select>
             </FormControl>
@@ -180,7 +186,7 @@ export default function JobBulkAssignModal({
                     {selectedJobs.map((item) => {
                       return (
                         <JobBulkAssignRow
-                          key={item.original.id}
+                          key={item.original.job.id}
                           columns={columns}
                           item={item}
                         />

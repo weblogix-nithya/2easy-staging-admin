@@ -22,7 +22,7 @@ import DefaultAuthLayout from "layouts/auth/Default";
 // Assets
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { parseCookies } from "nookies";
+// import { parseCookies } from "nookies";
 import React, { useState } from "react";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
@@ -30,31 +30,31 @@ import { RiEyeCloseLine } from "react-icons/ri";
 export default function PasswordReset() {
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "black.500";
+   const textColorSecondary = "black.500";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
   const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
-  const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
-  const googleText = useColorModeValue("navy.700", "white");
-  const googleHover = useColorModeValue(
-    { bg: "gray.200" },
-    { bg: "whiteAlpha.300" },
-  );
-  const googleActive = useColorModeValue(
-    { bg: "secondaryGray.300" },
-    { bg: "whiteAlpha.200" },
-  );
+  // const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
+  // const googleText = useColorModeValue("navy.700", "white");
+  // const googleHover = useColorModeValue(
+  //   { bg: "gray.200" },
+  //   { bg: "whiteAlpha.300" },
+  // );
+  // const googleActive = useColorModeValue(
+  //   { bg: "secondaryGray.300" },
+  //   { bg: "whiteAlpha.200" },
+  // );
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
   const router = useRouter();
   const toast = useToast();
-  const cookies = parseCookies();
+  // const cookies = parseCookies();
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const token = router.query.token;
   const email = router.query.email;
 
-  const [handleForgotPassword, { data, loading, error, reset }] = useMutation(
+  const [handleForgotPassword, {  }] = useMutation(
     MUTATION_UPDATE_PASSWORD,
     {
       variables: {
@@ -65,7 +65,7 @@ export default function PasswordReset() {
           password_confirmation: passwordConfirmation,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({ title: "Password reset successful", status: "success" });
         router.push("/auth/login");
       },
@@ -90,9 +90,6 @@ export default function PasswordReset() {
           showGraphQLErrorToast(error);
         }
       },
-      // onError: (error) => {
-      //   showGraphQLErrorToast(error);
-      // },
       // onError: (error) => {
       //   showGraphQLErrorToast(error);
       // },

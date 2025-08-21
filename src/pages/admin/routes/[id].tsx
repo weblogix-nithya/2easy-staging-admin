@@ -25,17 +25,15 @@ import { useState } from "react";
 function RouteEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [route, setRoute] = useState(defaultRoute);
-  const [routeStatuses, setRouteStatuses] = useState([]);
-  const [routeTypes, setRouteTypes] = useState([]);
   const router = useRouter();
   const { id } = router.query;
 
   const {
     loading: routeLoading,
-    data: routeData,
-    refetch: getRoute,
+    // data: routeData,
+    // refetch: getRoute,
   } = useQuery(GET_ROUTE_QUERY, {
     variables: {
       id: id,
@@ -56,7 +54,7 @@ function RouteEdit() {
     variables: {
       input: route,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Route updated",
         status: "success",
@@ -73,7 +71,7 @@ function RouteEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Route deleted",
         status: "success",

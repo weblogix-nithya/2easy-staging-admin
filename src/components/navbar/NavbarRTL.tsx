@@ -20,7 +20,7 @@ export default function AdminNavbar(props: {
   fixed: boolean;
   onOpen: (...args: any[]) => any;
 }) {
-  const [scrolled, setScrolled] = useState(false);
+  const [_scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (isWindowAvailable()) {
@@ -30,9 +30,10 @@ export default function AdminNavbar(props: {
         window.removeEventListener("scroll", changeNavbar);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
-  const { secondary, message, brandText, fixed } = props;
+  const { secondary, brandText, fixed } = props;
 
   // Here are all the props that may change depending on navbar's type or state.(secondary, variant, scrolled)
   let mainText = useColorModeValue("navy.700", "white");

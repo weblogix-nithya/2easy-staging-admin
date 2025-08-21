@@ -31,13 +31,13 @@ import {
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
-import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
 import {
   faFileInvoiceDollar,
   faGear,
-  faTimes,
   faUserLock,
-} from "@fortawesome/pro-solid-svg-icons";
+} from "@fortawesome/free-solid-svg-icons";
+import { faUserMinus } from "@fortawesome/pro-regular-svg-icons";
+import { faTimes } from "@fortawesome/pro-solid-svg-icons";
 // External library imports
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
@@ -51,7 +51,7 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 // Local GraphQL queries and mutations
 import {
   defaultCompany,
-  DELETE_COMPANY_MUTATION,
+  // DELETE_COMPANY_MUTATION,
   GET_COMPANY_QUERY,
   paymentTerms,
   UPDATE_COMPANY_MUTATION,
@@ -63,7 +63,7 @@ import {
   GET_COMPANY_RATE_QUERY,
   GET_LIST_OF_SEAFREIGHTS,
   UPDATE_COMPANY_RATE_MUTATION,
-} from "graphql/companyRate";
+} from "graphql/CompanyRate";
 import {
   GET_CUSTOMERS_QUERY,
   UPDATE_CUSTOMER_MUTATION,
@@ -91,7 +91,7 @@ function CompanyEdit() {
   const toast = useToast();
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [company, setCompany] = useState(defaultCompany);
   const [initialCompany, setInitialCompany] = useState(defaultCompany);
   const [isCompanySetting, setIsCompanySetting] = useState(0);
@@ -136,28 +136,28 @@ function CompanyEdit() {
     updated_at: new Date().toISOString(),
   });
 
-  const {
-    loading: companyLoading,
-    data: companyData,
-    refetch: getCompany,
-  } = useQuery(GET_COMPANY_QUERY, {
-    variables: {
-      id: id,
+  const { loading: companyLoading, refetch: getCompany } = useQuery(
+    GET_COMPANY_QUERY,
+    {
+      variables: {
+        id: id,
+      },
+      skip: !id,
+      onCompleted: (data) => {
+        if (data?.company == null) {
+          router.push("/admin/companies");
+        }
+        setCompany({ ...company, ...data?.company });
+        setInitialCompany({ ...data?.company });
+        setRateCardUrl(data?.company.rate_card_url);
+        setLogoUrl(data?.company.logo_url);
+      },
+      onError(error) {
+        // console.log("onError");
+        console.log(error);
+      },
     },
-    onCompleted: (data) => {
-      if (data?.company == null) {
-        router.push("/admin/companies");
-      }
-      setCompany({ ...company, ...data?.company });
-      setInitialCompany({ ...data?.company });
-      setRateCardUrl(data?.company.rate_card_url);
-      setLogoUrl(data?.company.logo_url);
-    },
-    onError(error) {
-      // console.log("onError");
-      console.log(error);
-    },
-  });
+  );
   const hasCompanyChanges = () => {
     // Skip comparison if company data hasn't been loaded yet
     if (!initialCompany.id || !company.id) return false;
@@ -190,9 +190,9 @@ function CompanyEdit() {
   );
 
   const {
-    data: seafreightData,
-    loading: seafreightLoading,
-    error: seafreightError,
+    // data: seafreightData,
+    // loading: seafreightLoading,
+    // error: seafreightError,
   } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
     onCompleted(data) {
       const grouped = data.allSeafreights.reduce(
@@ -251,6 +251,7 @@ function CompanyEdit() {
     if (company.id) {
       getCompanyRates();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company.id, getCompanyRates]);
 
   const handleRegionChange = (selected: any) => {
@@ -617,23 +618,23 @@ function CompanyEdit() {
     },
   });
 
-  const [handleDeleteCompany, {}] = useMutation(DELETE_COMPANY_MUTATION, {
-    variables: {
-      id: id,
-    },
-    onCompleted: (data) => {
-      toast({
-        title: "Company deleted",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-      router.push("/admin/companies");
-    },
-    onError: (error) => {
-      showGraphQLErrorToast(error);
-    },
-  });
+  // const [handleDeleteCompany, {}] = useMutation(DELETE_COMPANY_MUTATION, {
+  //   variables: {
+  //     id: id,
+  //   },
+  //   onCompleted: (data) => {
+  //     toast({
+  //       title: "Company deleted",
+  //       status: "success",
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //     router.push("/admin/companies");
+  //   },
+  //   onError: (error) => {
+  //     showGraphQLErrorToast(error);
+  //   },
+  // });
 
   const [deleteCompanyRate] = useMutation(DELETE_COMPANY_RATE_MUTATION);
 
@@ -684,35 +685,16 @@ function CompanyEdit() {
   const [availableCustomersOptions, setAvailableCustomersOptions] = useState(
     [],
   );
-  const [searchAvailableCustomerQuery, setSearchAvailableCustomerQuery] =
+  const [_searchAvailableCustomerQuery, _setSearchAvailableCustomerQuery] =
     useState("");
 
   const [selectCustomerId, setSelectCustomerId] = useState(null);
 
-  const onChangeSearchAvailableCustomerQuery = useMemo(() => {
-    return debounce((e) => {
-      setSearchAvailableCustomerQuery(e);
-    }, 300);
-  }, []);
-
-  const hasRateChanges = () => {
-    // Check if there are any new rates (rates without IDs)
-    const hasNewRates = companyRates.some((rate) => !rate.id);
-
-    // Check if there are any modified existing rates
-    const hasModifiedRates = companyRates.some((rate) => {
-      const prevRate = prevCompanyRates.find((pr) => pr.id === rate.id);
-      return (
-        prevRate &&
-        (prevRate.seafreight_id !== rate.seafreight_id ||
-          prevRate.area !== rate.area ||
-          prevRate.cbm_rate !== rate.cbm_rate ||
-          prevRate.minimum_charge !== rate.minimum_charge)
-      );
-    });
-
-    return hasNewRates || hasModifiedRates;
-  };
+  // const onChangeSearchAvailableCustomerQuery = useMemo(() => {
+  //   return debounce((e) => {
+  //     setSearchAvailableCustomerQuery(e);
+  //   }, 300);
+  // }, []);
 
   const columns = useMemo(
     () => [
@@ -766,8 +748,8 @@ function CompanyEdit() {
   );
 
   const {
-    loading: availableCustomersLoading,
-    data: availableCustomers,
+    // loading: availableCustomersLoading,
+    // data: availableCustomers,
     refetch: getAvailableCustomers,
   } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
@@ -791,7 +773,7 @@ function CompanyEdit() {
 
   const {
     loading,
-    error,
+    // error,
     data: customers,
     refetch: getCustomers,
   } = useQuery(GET_CUSTOMERS_QUERY, {
@@ -812,7 +794,7 @@ function CompanyEdit() {
         company_id: id,
       },
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Customer updated",
         status: "success",
@@ -833,11 +815,12 @@ function CompanyEdit() {
     {
       variables: {
         input: {
-          id: selectCustomerId,
+          id: Number(selectCustomerId),
           company_id: null,
         },
       },
-      onCompleted: (data) => {
+
+      onCompleted: () => {
         toast({
           title: "Customer removed",
           status: "success",
@@ -1139,6 +1122,40 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
+                          Weight (kg/cubic)
+                        </FormLabel>
+                        <Input
+                          isRequired
+                          type="number"
+                          name="weight_per_cubic"
+                          value={company.weight_per_cubic}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              [e.target.name]: e.target.value ? parseInt(e.target.value, 10) : ""
+                            })
+                          }
+                          placeholder=""
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          ms={{ base: "0px", md: "0px" }}
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
                           Company Logo
                         </FormLabel>
                         <Flex
@@ -1231,7 +1248,7 @@ function CompanyEdit() {
 
                         <Textarea
                           name="admin_notes"
-                          value={company.admin_notes}
+                          value={company.admin_notes || ""}
                           onChange={(e) =>
                             setCompany({
                               ...company,
@@ -1260,7 +1277,7 @@ function CompanyEdit() {
                         <Flex className="flex-col w-full max-w-md">
                           <Textarea
                             name="base_notes"
-                            value={company.base_notes}
+                            value={company.base_notes || ""}
                             onChange={(e) =>
                               setCompany({
                                 ...company,
@@ -1770,7 +1787,7 @@ function CompanyEdit() {
                                 )}
                                 options={
                                   (groupedSeafreights as Record<string, any[]>)[
-                                    selectedState
+                                  selectedState
                                   ] || []
                                 }
                                 onChange={handleRegionChange}
@@ -1988,7 +2005,7 @@ function CompanyEdit() {
                           </Flex>
 
                           {!loading &&
-                            customers?.customers?.data?.length >= 0 && (
+                            customers?.customers.data.length >= 0 && (
                               <PaginationTable
                                 columns={columns}
                                 showDelete={true}

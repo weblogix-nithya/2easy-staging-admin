@@ -8,7 +8,7 @@ import {
   MenuItem,
   MenuList,
   Text,
-  useColorMode,
+  // useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { faChevronDown } from "@fortawesome/pro-light-svg-icons";
@@ -31,9 +31,12 @@ import routes from "routes";
 import { RootState } from "store/store";
 import { logoutUser } from "store/userSlice";
 
+// Change to:
+import { apolloClient } from "../../graphql/ApolloClient";
+
 export default function HeaderLinks(props: { secondary: boolean }) {
   const { secondary } = props;
-  const { colorMode, toggleColorMode } = useColorMode();
+  // const { colorMode, toggleColorMode } = useColorMode();
   const dispatch = useDispatch();
 
   // Chakra Color Mode
@@ -49,7 +52,7 @@ export default function HeaderLinks(props: { secondary: boolean }) {
     "14px 17px 40px 4px rgba(112, 144, 176, 0.18)",
     "14px 17px 40px 4px rgba(112, 144, 176, 0.06)",
   );
-  const borderButton = useColorModeValue("secondaryGray.500", "whiteAlpha.200");
+  // const borderButton = useColorModeValue("secondaryGray.500", "whiteAlpha.200");
   const router = useRouter();
   const cookies = parseCookies();
   const [userName, setUserName] = useState("-");
@@ -57,19 +60,47 @@ export default function HeaderLinks(props: { secondary: boolean }) {
 
   useEffect(() => {
     setUserName(cookies.user_name ? cookies.user_name : "-");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.user_name]);
 
-  function onLogout() {
-    destroyCookie(null, "access_token", { path: "*" });
-    destroyCookie(null, "user_name", { path: "*" });
-    destroyCookie(null, "user_email", { path: "*" });
-    destroyCookie(null, "customer_id", { path: "*" });
-    destroyCookie(null, "driver_id", { path: "*" });
-    destroyCookie(null, "company_id", { path: "*" });
-    destroyCookie(null, "is_admin", { path: "*" });
+  // Add this function at the top level of the file, after the imports
+  const clearAllCookies = () => {
+    const cookieNames = [
+      "access_token",
+      "user_name",
+      "user_email",
+      "customer_id",
+      "driver_id",
+      "company_id",
+      "is_admin",
+      "is_company_admin",
+      "user_id",
+      "state"
+    ];
+  
+    const paths = ["/", "/admin", "/admin/jobs", "*"];
+  
+    cookieNames.forEach(name => {
+      paths.forEach(path => {
+        destroyCookie(null, name, { path });
+      });
+    });
+  };
+
+  async function onLogout() {
+    // Clear all cookies using the new function
+    clearAllCookies();
+    
+    // Clear Apollo Client cache
+    try {
+        await apolloClient?.clearStore();
+    } catch (error) {
+        console.error('Error clearing Apollo cache:', error);
+    }
+    
     dispatch(logoutUser());
     router.push("/auth/login");
-  }
+}
 
   return (
     <Flex

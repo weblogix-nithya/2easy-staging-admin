@@ -25,17 +25,15 @@ import { useState } from "react";
 function RoutePointEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [routePoint, setRoutePoint] = useState(defaultRoutePoint);
-  const [routePointStatuses, setRoutePointStatuses] = useState([]);
-  const [routePointTypes, setRoutePointTypes] = useState([]);
   const router = useRouter();
   const { id } = router.query;
 
   const {
     loading: routePointLoading,
-    data: routePointData,
-    refetch: getRoutePoint,
+    // data: routePointData,
+    // refetch: getRoutePoint,
   } = useQuery(GET_ROUTE_POINT_QUERY, {
     variables: {
       id: id,
@@ -58,7 +56,7 @@ function RoutePointEdit() {
       variables: {
         input: routePoint,
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "RoutePoint updated",
           status: "success",
@@ -78,7 +76,7 @@ function RoutePointEdit() {
       variables: {
         id: id,
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "RoutePoint deleted",
           status: "success",

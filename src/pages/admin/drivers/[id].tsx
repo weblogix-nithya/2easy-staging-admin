@@ -19,7 +19,7 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { faCar, faNote, faUser } from "@fortawesome/pro-solid-svg-icons";
+import { faCar, faNotdef, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
@@ -46,7 +46,7 @@ import { useMemo, useState } from "react";
 function DriverEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [driver, setDriver] = useState(defaultDriver);
   const [driverPayRatePercentage, setDriverPayRatePercentage] = useState(0);
   const [driverLevyRatePercentage, setDriverLevyRatePercentage] = useState(0);
@@ -57,20 +57,20 @@ function DriverEdit() {
   const [transmissionTypes, setTransmissionTypes] = useState([]);
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(50);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [driverTypes, setDriverTypes] = useState([]);
+  const [searchQuery, _setSearchQuery] = useState("");
+  // const [driverTypes, setDriverTypes] = useState([]);
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
   const { id } = router.query;
 
-  const placeholderOptions = [
-    { value: 1, label: "option 1" },
-    { value: 2, label: "option 2" },
-  ];
+  // const placeholderOptions = [
+  //   { value: 1, label: "option 1" },
+  //   { value: 2, label: "option 2" },
+  // ];
 
   const {
     loading: driverLoading,
-    data: driverData,
+    // data: driverData,
     refetch: getDriver,
   } = useQuery(GET_DRIVER_QUERY, {
     variables: {
@@ -180,7 +180,7 @@ function DriverEdit() {
         current_occupied_capacity: undefined,
       },
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Driver updated",
         status: "success",
@@ -197,7 +197,7 @@ function DriverEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Driver deleted",
         status: "success",
@@ -242,9 +242,9 @@ function DriverEdit() {
   );
   const {
     loading,
-    error,
+    // error,
     data: invoices,
-    refetch: getInvoices,
+    // refetch: getInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
     variables: {
       query: searchQuery,
@@ -410,7 +410,7 @@ function DriverEdit() {
                         : "text-[var(--chakra-colors-black-400)] !bg-white")
                     }
                   >
-                    <FontAwesomeIcon icon={faNote} className="mr-1" />
+                    <FontAwesomeIcon icon={faNotdef} className="mr-1" />
                     RCTIs
                   </Button>
                 </Flex>

@@ -25,17 +25,17 @@ import { useState } from "react";
 function InvoiceLineItemEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoiceLineItem, setInvoiceLineItem] = useState(defaultInvoiceLineItem);
-  const [invoiceLineItemStatuses, setInvoiceLineItemStatuses] = useState([]);
-  const [invoiceLineItemTypes, setInvoiceLineItemTypes] = useState([]);
+  // const [invoiceLineItemStatuses, setInvoiceLineItemStatuses] = useState([]);
+  // const [invoiceLineItemTypes, setInvoiceLineItemTypes] = useState([]);
   const router = useRouter();
   const { id } = router.query;
 
   const {
     loading: invoiceLineItemLoading,
-    data: invoiceLineItemData,
-    refetch: getInvoiceLineItem,
+    // data: invoiceLineItemData,
+    // refetch: getInvoiceLineItem,
   } = useQuery(GET_INVOICE_LINE_ITEM_QUERY, {
     variables: {
       id: id,
@@ -56,7 +56,7 @@ function InvoiceLineItemEdit() {
     variables: {
       input: invoiceLineItem,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "InvoiceLineItem updated",
         status: "success",
@@ -73,7 +73,7 @@ function InvoiceLineItemEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "InvoiceLineItem deleted",
         status: "success",

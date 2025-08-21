@@ -25,11 +25,11 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import {
-  faForklift,
-  faHandHoldingBox,
+  faHandHolding,
   faInfinity,
+  faTruck,
   faWarning,
-} from "@fortawesome/pro-solid-svg-icons";
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
@@ -49,7 +49,7 @@ import { setRightSideBarJob } from "store/rightSideBarSlice";
 import RsbJobIndicatorCircle from "./components/RsbJobIndicatorCircle";
 
 const RightSideBarJob = forwardRef((props: any, ref: any) => {
-  const { initJob, driverOptions, ...rest } = props;
+  const { initJob, driverOptions, ..._rest } = props;
 
   const dispatch = useDispatch();
   const toast = useToast();
@@ -83,7 +83,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
         admin_notes: job.admin_notes,
       },
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Job updated",
         status: "success",
@@ -339,7 +339,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
             {job.is_hand_unloading && (
               <Tooltip label="Handling">
                 <FontAwesomeIcon
-                  icon={faHandHoldingBox}
+                  icon={faHandHolding}
                   className="!text-[var(--chakra-colors-red-400)] p-1"
                   size="sm"
                 />
@@ -357,7 +357,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
             {job.is_tailgate_required && (
               <Tooltip label="Tail lift">
                 <FontAwesomeIcon
-                  icon={faForklift}
+                  icon={faTruck}
                   className="!text-[var(--chakra-colors-red-400)] p-1"
                   size="sm"
                 />
@@ -527,7 +527,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
           Base notes
         </FormLabel>
         <Box className="!max-w-md w-full">
-          <p className="text-sm">{job.base_notes ? job.base_notes : "N/A"}</p>
+        <p className="text-sm">{job.base_notes ? job.base_notes : "N/A"}</p>
         </Box>
       </Flex>
 

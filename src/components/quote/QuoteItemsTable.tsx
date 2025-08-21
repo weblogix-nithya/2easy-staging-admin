@@ -55,7 +55,7 @@ const QuoteItemsTable = ({
     [],
   );
 
-  const { getTableProps, getTableBodyProps, headerGroups, prepareRow, page } =
+  const { getTableProps, getTableBodyProps, headerGroups } =
     useTable<QuoteItem>(
       { ...optionsSelect, columns, data },
       usePagination,

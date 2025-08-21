@@ -30,7 +30,7 @@ import {
   CompanyRate,
   CREATE_COMPANY_RATE_MUTATION,
   GET_LIST_OF_SEAFREIGHTS,
-} from "graphql/companyRate";
+} from "graphql/CompanyRate";
 // Layout imports
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
@@ -51,7 +51,7 @@ interface GroupedSeafreights {
 function CompanyCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [company, setCompany] = useState(defaultCompany);
   const router = useRouter();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -97,6 +97,7 @@ function CompanyCreate() {
         rate_card_url: undefined,
         logo_url: undefined,
         payment_term: company.payment_term ?? "7_days",
+        weight_per_cubic: company.weight_per_cubic ?? 500, // default value
       },
     },
     onCompleted: async (data) => {
@@ -152,9 +153,9 @@ function CompanyCreate() {
   };
 
   const {
-    data: seafreightData,
-    loading: seafreightLoading,
-    error: seafreightError,
+    // data: seafreightData,
+    // loading: seafreightLoading,
+    // error: seafreightError,
   } = useQuery(GET_LIST_OF_SEAFREIGHTS, {
     onCompleted(data) {
       const grouped = data.allSeafreights.reduce(
@@ -272,7 +273,7 @@ function CompanyCreate() {
       (rate) => rate.state === state && rate.area === region,
     );
   };
-  
+
 
   return (
     <AdminLayout>
@@ -450,6 +451,36 @@ function CompanyCreate() {
                 />
               </Box>
             </Flex>
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                width="200px"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                color={textColor}
+              >
+                Weight(kg/cubic)
+              </FormLabel>
+              <Input
+                isRequired={true}
+                type="text"
+                name="weight_per_cubic"
+                value={company.weight_per_cubic}
+                onChange={(e) =>
+                  setCompany({ ...company, [e.target.name]: e.target.value })
+                }
+                placeholder=""
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                ms={{ base: "0px", md: "0px" }}
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
 
             <Divider />
             <h3 className="mt-6 mb-4">Billing</h3>

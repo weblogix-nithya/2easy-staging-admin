@@ -31,7 +31,7 @@ export default function NFT(props: {
       py="21px"
       transition="0.2s linear"
     >
-      <Flex direction={{ base: "column" }} justify="center">
+      <Flex flexDirection={{ base: "column" }} justify="center">
         <Flex position="relative" align="center">
           <Box>
             <Image

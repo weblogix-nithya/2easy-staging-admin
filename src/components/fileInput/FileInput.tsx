@@ -41,12 +41,12 @@ function FileInput(props: {
     defaulTemporaryFiles = [],
     ...rest
   } = props;
-  const brandColor = useColorModeValue("brand.500", "white");
+  // const brandColor = useColorModeValue("brand.500", "white");
   const toast = useToast();
   const [media, setMedia] = useState({ raw: null, preview: null });
-  const [isMedia, setIsMedia] = useState(media_url ? true : false);
+  const [isMedia, _setIsMedia] = useState(media_url ? true : false);
   const [temporaryFiles, setTemporaryFiles] = useState([]);
-  const [temporaryTest, setTemporaryTest] = useState(defaulTemporaryFiles);
+  const [_temporaryTest, _setTemporaryTest] = useState(defaulTemporaryFiles);
 
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     variables: {
@@ -107,7 +107,7 @@ function FileInput(props: {
         onTemporaryUpload(_temporaryFiles);
       }
     },
-    [handleCreateMedia, temporaryFiles],
+    [handleCreateMedia, temporaryFiles, isTemporary, onTemporaryUpload],
   );
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });

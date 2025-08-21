@@ -2,8 +2,6 @@ import {
   Box,
   Divider,
   Flex,
-  useColorModeValue,
-  useToast,
 } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { formatDate } from "helpers/helper";
@@ -13,11 +11,11 @@ export default function ReportsVehicleHiresTab(props: {
   vehicleHireObject: any;
 }) {
   const { vehicleHireObject } = props;
-  const toast = useToast();
-  const textColor = useColorModeValue("navy.700", "white");
-  let menuBg = useColorModeValue("white", "navy.800");
-  const [vehicleHire, setVehicleHire] = useState(vehicleHireObject);
-  const [jobDestinationsConfirmed, setJobDestinationsConfirmed] = useState([]);
+  // const toast = useToast();
+  // const textColor = useColorModeValue("navy.700", "white");
+  // let menuBg = useColorModeValue("white", "navy.800");
+  const [_vehicleHire, setVehicleHire] = useState(vehicleHireObject);
+  // const [jobDestinationsConfirmed, setJobDestinationsConfirmed] = useState([]);
   const [driverIssues, setDriverIssues] = useState([]);
   const [customerIssues, setCustomerIssues] = useState([]);
 
@@ -67,6 +65,7 @@ export default function ReportsVehicleHiresTab(props: {
     }
     setDriverIssues(_driverIssues);
     setCustomerIssues(_customerIssues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHireObject]);
 
   return (

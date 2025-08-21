@@ -15,7 +15,7 @@ type ActionBarProps = {
   onClickBulkAssign: () => void;
 };
 
-const ActionBar = <P extends object>({
+const ActionBar = <_P extends object>({
   selectedJobs,
   onSwitch,
   onClickBulkAssign,
@@ -24,8 +24,8 @@ const ActionBar = <P extends object>({
 
   const totals = selectedJobs.reduce(
     (acc, job) => {
-      acc.totalWeights += job.original.total_weight;
-      acc.totalCBM += job.original.total_volume;
+      acc.totalWeights += job.original.job.total_weight;
+      acc.totalCBM += job.original.job.total_volume;
       return acc;
     },
     { totalWeights: 0, totalCBM: 0 },
@@ -52,7 +52,7 @@ const ActionBar = <P extends object>({
         <Flex align="center" borderRadius="16px">
           <Switch
             id="show-selected"
-            onChange={(e) => {
+            onChange={(_e) => {
               setIsSwitched(!isSwitched);
               onSwitch(!isSwitched);
             }}

@@ -26,7 +26,7 @@ import DefaultAuthLayout from "layouts/auth/Default";
 // Assets
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { parseCookies, setCookie } from "nookies";
+import {  setCookie } from "nookies";
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
@@ -35,7 +35,7 @@ import { RiEyeCloseLine } from "react-icons/ri";
 export default function SignUp() {
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "black.500";
+   const textColorSecondary = "black.500";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
   const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
@@ -53,7 +53,7 @@ export default function SignUp() {
   const handleClick = () => setShow(!show);
   const router = useRouter();
   const toast = useToast();
-  const cookies = parseCookies();
+  // const cookies = parseCookies();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -79,7 +79,7 @@ export default function SignUp() {
     },
   });
 
-  const [handleLogin, { data: loginData }] = useMutation(MUTATION_LOGIN, {
+  const [handleLogin, {  }] = useMutation(MUTATION_LOGIN, {
     variables: {
       input: {
         username: username,

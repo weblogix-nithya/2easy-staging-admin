@@ -52,6 +52,8 @@ export default function SignIn() {
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
   const router = useRouter();
+  const { redirectTo } = router.query; // Get `redirectTo` from query params
+
   const toast = useToast();
 
   const [username, setUsername] = useState(
@@ -63,7 +65,7 @@ export default function SignIn() {
     process.env.NEXT_PUBLIC_APP_ENV !== "production" ? "secret" : "",
   );
 
-  const [handleLogin, { data: loginData, loading, error, reset }] = useMutation(
+  const [handleLogin, { data: _loginData, loading }] = useMutation(
     MUTATION_LOGIN,
     {
       variables: {
@@ -72,26 +74,64 @@ export default function SignIn() {
           password: password,
         },
       },
-      onCompleted: (data) => { // inside onCompleted callback — ✅ updated paths
+      onCompleted: (data) => {
         if (data.login.user.driver?.id == undefined) {
-          const cookieOptions = {
+          setCookie(null, "access_token", data.login.access_token, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "/", // ✅ consistent
-          };
-
-          setCookie(null, "access_token", data.login.access_token, cookieOptions);
-          setCookie(null, "user_name", data.login.user.name, cookieOptions);
-          setCookie(null, "user_email", data.login.user.email, cookieOptions);
-          setCookie(null, "customer_id", data.login.user.customer?.id, cookieOptions);
-          setCookie(null, "company_id", data.login.user.customer?.company_id, cookieOptions);
-          setCookie(null, "user_id", data.login.user?.id, cookieOptions);
-          setCookie(null, "driver_id", data.login.user.driver?.id, cookieOptions);
-          setCookie(null, "is_admin", data.login.user.is_admin, cookieOptions);
-          setCookie(null, "is_company_admin", data.login.user.is_company_admin, cookieOptions);
-          setCookie(null, "state", data.login.user.state, cookieOptions);
-
+            path: "*",
+          });
+          setCookie(null, "user_name", data.login.user.name, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(null, "user_email", data.login.user.email, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(null, "customer_id", data.login.user.customer?.id, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(null, "company_id", data.login.user.customer?.company_id, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(null, "user_id", data.login.user?.id, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(null, "driver_id", data.login.user.driver?.id, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(null, "is_admin", data.login.user.is_admin, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
+          setCookie(
+            null,
+            "is_company_admin",
+            data.login.user.is_company_admin,
+            {
+              maxAge: 30 * 24 * 60 * 60,
+              path: "*",
+            },
+          );
+          setCookie(null, "state", data.login.user.state, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "*",
+          });
           setAuthToken();
-          router.push("/admin/dashboard");
+
+          // const { redirectTo } = router.query;
+          if (redirectTo) {
+            // If `redirectTo` exists, redirect to that URL
+            router.push(redirectTo as string);
+          } else {
+            // If no `redirectTo`, default to dashboard
+            router.push("/admin/dashboard");
+          }
+          // router.push("/admin/dashboard");
         } else {
           toast({
             title: "Login failed",
@@ -170,10 +210,12 @@ export default function SignIn() {
                 <FormLabel
                   className="!flex ml-1 mb-2 !text-sm !font-medium"
                   color={textColor}
+                  htmlFor="login-email"
                 >
                   Email<Text color={brandStars}>*</Text>
                 </FormLabel>
                 <Input
+                  id="login-email"
                   isRequired={true}
                   variant="auth"
                   type="email"
@@ -188,12 +230,14 @@ export default function SignIn() {
 
                 <FormLabel
                   className="!flex ml-1 mb-2 !text-sm !font-medium"
+                  htmlFor="login-password"
                   color={textColor}
                 >
                   Password<Text color={brandStars}>*</Text>
                 </FormLabel>
                 <InputGroup size="md">
                   <Input
+                    id="login-password"
                     isRequired={true}
                     placeholder="Min. 8 characters"
                     size="lg"
@@ -226,12 +270,12 @@ export default function SignIn() {
                 <Flex justifyContent="space-between" align="center" mb="24px">
                   <FormControl display="flex" alignItems="center">
                     <Checkbox
-                      id="remember-login"
+                      id="login-remember-checkbox"
                       colorScheme="primary"
                       me="10px"
                     />
                     <FormLabel
-                      htmlFor="remember-login"
+                      htmlFor="login-remember-checkbox"
                       mb="0"
                       fontWeight="normal"
                       color={textColor}

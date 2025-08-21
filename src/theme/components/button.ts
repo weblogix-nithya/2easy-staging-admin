@@ -20,7 +20,7 @@ export const buttonStyles = {
         },
       },
       variants: {
-        primary: (props: StyleFunctionProps) => ({
+        primary: (_props: StyleFunctionProps) => ({
           fontSize: "14px",
           bg: "primary.400",
           color: "white",
@@ -34,7 +34,7 @@ export const buttonStyles = {
             bg: "primary.500",
           },
         }),
-        secondary: (props: StyleFunctionProps) => ({
+        secondary: (_props: StyleFunctionProps) => ({
           height: "40px",
           fontSize: "14px",
           bg: "primary.200",
@@ -49,7 +49,7 @@ export const buttonStyles = {
             bg: "primaryHover.200",
           },
         }),
-        grey: (props: StyleFunctionProps) => ({
+        grey: (_props: StyleFunctionProps) => ({
           fontSize: "14px",
           bg: "primary.200",
           color: "primary.400",
@@ -63,7 +63,7 @@ export const buttonStyles = {
             bg: "gray.400",
           },
         }),
-        smallGreySquare: (props: StyleFunctionProps) => ({
+        smallGreySquare: (_props: StyleFunctionProps) => ({
           py: "2px",
           px: "4px",
           height: "20px",
@@ -106,7 +106,7 @@ export const buttonStyles = {
             bg: mode("redHover.500", "redHover.400")(props),
           },
         }),
-        brand: (props: StyleFunctionProps) => ({
+        brand: (_props: StyleFunctionProps) => ({
           fontSize: "14px",
           bg: "primary.400",
           color: "white",

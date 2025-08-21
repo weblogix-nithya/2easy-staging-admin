@@ -43,7 +43,7 @@ export default forwardRef(function ChakraTagInput(
     onTagsChange,
     onTagAdd,
     onTagRemove,
-    vertical = false,
+    // vertical = false,
     addKeys = ["Enter"],
     wrapProps,
     wrapItemProps,

@@ -12,7 +12,7 @@ export default function Projects(props: { [x: string]: any }) {
   const { ...rest } = props;
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = "gray.400";
+   const textColorSecondary = "gray.400";
   const cardShadow = useColorModeValue(
     "0px 18px 40px rgba(112, 144, 176, 0.12)",
     "unset"
@@ -35,7 +35,7 @@ export default function Projects(props: { [x: string]: any }) {
       <Project
         boxShadow={cardShadow}
         mb="20px"
-        image={Project1}
+        image={Project1.src}
         ranking="1"
         link="#"
         title="Technology behind the Blockchain"
@@ -43,14 +43,14 @@ export default function Projects(props: { [x: string]: any }) {
       <Project
         boxShadow={cardShadow}
         mb="20px"
-        image={Project2}
+        image={Project2.src}
         ranking="2"
         link="#"
         title="Greatest way to a good Economy"
       />
       <Project
         boxShadow={cardShadow}
-        image={Project3}
+        image={Project3.src}
         ranking="3"
         link="#"
         title="Most essential tips for Burnout"

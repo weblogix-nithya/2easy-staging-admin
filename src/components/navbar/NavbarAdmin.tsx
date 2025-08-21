@@ -5,7 +5,7 @@ import {
   // BreadcrumbItem,
   // BreadcrumbLink,
   Flex,
-  useColorModeValue,
+  // useColorModeValue,
   // Link,
   // useColorModeValue,
 } from "@chakra-ui/react";
@@ -23,7 +23,7 @@ export default function AdminNavbar(props: {
   fixed: boolean;
   onOpen: (...args: any[]) => any;
 }) {
-  const [scrolled, setScrolled] = useState(false);
+  const [_scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (isWindowAvailable()) {
@@ -34,22 +34,23 @@ export default function AdminNavbar(props: {
         window.removeEventListener("scroll", changeNavbar);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
-  const { secondary, message, brandTitle, brandText, brandPath } = props;
+  const { secondary} = props;
 
   // Here are all the props that may change depending on navbar's type or state.(secondary, variant, scrolled)
   let navbarPosition = "fixed" as const;
   let navbarFilter = "none";
   let navbarBackdrop = "blur(20px)";
   let navbarShadow = "none";
-  let mainText = useColorModeValue("navy.700", "white");
-  let secondaryText = useColorModeValue("gray.700", "white");
-  let navbarBg = useColorModeValue(
-    "rgba(244, 247, 254, 0.2)",
-    "rgba(11,20,55,0.5)",
-  );
-  let navbarBorder = "transparent";
+  // let mainText = useColorModeValue("navy.700", "white");
+  // let secondaryText = useColorModeValue("gray.700", "white");
+  // let navbarBg = useColorModeValue(
+  //   "rgba(244, 247, 254, 0.2)",
+  //   "rgba(11,20,55,0.5)",
+  // );
+  // let navbarBorder = "transparent";
   let secondaryMargin = "0px";
   let paddingX = "15px";
   let gap = "0px";

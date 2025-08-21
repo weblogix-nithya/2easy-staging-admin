@@ -28,10 +28,10 @@ export default function InvoiceVehicleHiresTab(props: {
   const toast = useToast();
 
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const textColor = useColorModeValue("navy.700", "white");
-  let menuBg = useColorModeValue("white", "navy.800");
+  // let menuBg = useColorModeValue("white", "navy.800");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = React.useState<any>(vehicleHireObject);
   const router = useRouter();
@@ -60,6 +60,7 @@ export default function InvoiceVehicleHiresTab(props: {
           : vehicleHireObject.customer_invoice?.customer,
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHireObject]);
   return (
     <Box mt={5}>

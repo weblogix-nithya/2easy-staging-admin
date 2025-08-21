@@ -1,5 +1,5 @@
 // chakra imports
-import { Flex, SimpleGrid, useColorModeValue } from "@chakra-ui/react";
+import { Flex, SimpleGrid } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 type tabContent = {
   id: number;
@@ -13,11 +13,12 @@ export function TabsComponent(props: {
   onChange: (tabId: number) => void;
 }) {
   const { tabs, onChange } = props;
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   // tabs behave
   const [tabId, setActiveTab] = useState(1); // 1 = pending, 2 = active, 4 = inactive
   useEffect(() => {
     validateHash();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const validateHash = () => {
     if (window.location.hash) {
@@ -37,9 +38,11 @@ export function TabsComponent(props: {
     return () => {
       window.removeEventListener("popstate", validateHash);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     onChange(tabId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabId]);
   return (
     <>

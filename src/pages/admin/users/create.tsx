@@ -22,10 +22,10 @@ import { useState } from "react";
 
 import CustomInputField from "../../../components/fields/CustomInputField";
 
-export default function UserEdit(prop: any) {
+export default function UserEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [user, setUser] = useState({
     name: "",
     email: "",
@@ -35,7 +35,7 @@ export default function UserEdit(prop: any) {
     password: "",
   });
   const router = useRouter();
-  const [userRoles, setUserRoles] = useState([]);
+  const [userRoles, _setUserRoles] = useState([]);
   const [roleIds, setRoleIds] = useState([]);
 
   const [handleCreateUser, {}] = useMutation(CREATE_USER_MUTATION, {

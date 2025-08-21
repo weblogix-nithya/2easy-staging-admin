@@ -11,7 +11,7 @@ export default function DashboardInfoCardRow(props: {
   data?: any[];
   path?: string;
 }) {
-  const { title, description, descriptionBgColor, link, data, path } = props;
+  const { title, description, descriptionBgColor, data, path } = props;
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -37,7 +37,7 @@ export default function DashboardInfoCardRow(props: {
       </Flex>
       {isOpen && data != undefined && data.length != 0 && (
         <>
-          {data.map((row: any, index) => {
+          {data.map((row: any) => {
             return (
               <Text key={row.id}>
                 <Link href={`${path}/${row.id}`} className="px-3">

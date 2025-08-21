@@ -58,6 +58,7 @@ export default function DevelopmentTable(props: TableProps) {
   useEffect(() => {
     if (isMounted) return;
     setIsMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMounted]);
 
   if (!isMounted) return <></>;

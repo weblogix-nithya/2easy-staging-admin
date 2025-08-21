@@ -26,7 +26,7 @@ export default function TotalSpent(props: { [x: string]: any }) {
   // Chakra Color Mode
 
   const textColor = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
+   const textColorSecondary = useColorModeValue("secondaryGray.600", "white");
   const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
   const iconColor = useColorModeValue("brand.500", "white");
   const bgButton = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
@@ -39,7 +39,7 @@ export default function TotalSpent(props: { [x: string]: any }) {
     { bg: "whiteAlpha.100" }
   );
 
-  const [mounted, setMounted] = useState(false);
+  const [_mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -48,6 +48,7 @@ export default function TotalSpent(props: { [x: string]: any }) {
     return () => {
       clearTimeout(timeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

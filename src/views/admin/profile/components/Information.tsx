@@ -11,7 +11,7 @@ export default function Information(props: {
   const { title, value, ...rest } = props;
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
-  const textColorSecondary = "gray.400";
+   const textColorSecondary = "gray.400";
   const bg = useColorModeValue("white", "navy.700");
   return (
     <Card bg={bg} {...rest}>

@@ -29,7 +29,7 @@ import { useState } from "react";
 function ClientEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [client, setClient] = useState(defaultClient);
   const [clientStatuses, setClientStatuses] = useState([]);
   const [clientTypes, setClientTypes] = useState([]);
@@ -77,8 +77,8 @@ function ClientEdit() {
 
   const {
     loading: clientLoading,
-    data: clientData,
-    refetch: getClient,
+    // data: clientData,
+    // refetch: getClient,
   } = useQuery(GET_CLIENT_QUERY, {
     variables: {
       id: id,
@@ -99,7 +99,7 @@ function ClientEdit() {
     variables: {
       input: client,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Client updated",
         status: "success",
@@ -116,7 +116,7 @@ function ClientEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: () => {
       toast({
         title: "Client deleted",
         status: "success",

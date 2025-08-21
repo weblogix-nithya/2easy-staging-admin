@@ -25,17 +25,15 @@ import { useState } from "react";
 function VehicleTypeEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [vehicleType, setVehicleType] = useState(defaultVehicleType);
-  const [vehicleTypeStatuses, setVehicleTypeStatuses] = useState([]);
-  const [vehicleTypeTypes, setVehicleTypeTypes] = useState([]);
   const router = useRouter();
   const { id } = router.query;
 
   const {
     loading: vehicleTypeLoading,
-    data: vehicleTypeData,
-    refetch: getVehicleType,
+    // data: vehicleTypeData,
+    // refetch: getVehicleType,
   } = useQuery(GET_VEHICLE_TYPE_QUERY, {
     variables: {
       id: id,
@@ -58,7 +56,7 @@ function VehicleTypeEdit() {
       variables: {
         input: vehicleType,
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "VehicleType updated",
           status: "success",
@@ -78,7 +76,7 @@ function VehicleTypeEdit() {
       variables: {
         id: id,
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "VehicleType deleted",
           status: "success",

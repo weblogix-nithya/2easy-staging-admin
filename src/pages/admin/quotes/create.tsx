@@ -52,7 +52,7 @@ export default function QuoteCreate() {
   const [requiredDateAt, setRequiredDateAt] = useState(today);
   const [readyAt, setReadyAt] = useState("06:00");
   const [dropAt, setDropAt] = useState("17:00");
-  const [itemTypes, setItemTypes] = useState([]);
+  const [_itemTypes, setItemTypes] = useState([]);
   const [companiesOptions, setCompaniesOptions] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const onChangeSearchQuery = useMemo(() => {
@@ -62,6 +62,7 @@ export default function QuoteCreate() {
   }, []);
   useEffect(() => {
     dateChanged();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requiredDateAt, dropAt, readyAt]);
   const dateChanged = () => {
     try {
@@ -85,6 +86,7 @@ export default function QuoteCreate() {
         ...(companyId ? { company_id: companyId } : {}),
       });
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, isCustomer]);
 
   useQuery(GET_QUOTE_CATEGORIES_QUERY, {
@@ -154,9 +156,9 @@ export default function QuoteCreate() {
   });
 
   const {
-    loading,
-    error,
-    data,
+    // loading,
+    // error,
+    // data,
     refetch: getCustomers,
   } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
@@ -191,6 +193,7 @@ export default function QuoteCreate() {
       });
       
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.company_id, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
@@ -214,7 +217,7 @@ export default function QuoteCreate() {
       });
     },
   });
-
+  
   useEffect(() => {
     if (quote.customer_id && isAdmin) {
       const customer = customers.find((customer) => customer.id === quote.customer_id);
@@ -224,6 +227,7 @@ export default function QuoteCreate() {
         setRateCardUrl('');
       }
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.customer_id]);
 
   const [handleCreateQuote, { loading: saving }] = useMutation(

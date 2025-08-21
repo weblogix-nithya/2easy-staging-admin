@@ -15,7 +15,7 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { faUser } from "@fortawesome/pro-solid-svg-icons";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import AddressesModal from "components/addresses/AddressesModal";
@@ -34,7 +34,7 @@ function DriverCreate() {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
-  const { id } = router.query;
+  // const { id } = router.query;
 
   useQuery(GET_DRIVER_STATUSES_QUERY, {
     variables: {

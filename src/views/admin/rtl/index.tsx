@@ -81,7 +81,7 @@ export default function UserReports() {
           endContent={
             <Flex me="-16px" mt="10px">
               <FormLabel htmlFor="balance">
-                <Avatar src={Usa} />
+                <Avatar src={Usa.src} />
               </FormLabel>
               <Select
                 id="balance"

@@ -1,6 +1,6 @@
 // Chakra imports
 import { useMutation } from "@apollo/client";
-import { Flex, Link, useColorModeValue, useToast } from "@chakra-ui/react";
+import { Flex, Link, useToast } from "@chakra-ui/react";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
 import { useCallback, useState } from "react";
@@ -21,15 +21,15 @@ function FileInputLink(props: {
     entity,
     entityId,
     collection_name,
-    description,
-    media_url,
+    _description,
+    _media_url,
     onUpload,
     ...rest
   } = props;
-  const brandColor = useColorModeValue("brand.500", "white");
+  // const brandColor = useColorModeValue("brand.500", "white");
   const toast = useToast();
   const [media, setMedia] = useState({ raw: null, preview: null });
-  const [isMedia, setIsMedia] = useState(media_url ? true : false);
+  // const [isMedia, setIsMedia] = useState(media_url ? true : false);
 
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     variables: {
@@ -54,7 +54,7 @@ function FileInputLink(props: {
     },
   });
 
-  function isImgUrl(url: string) {
+  function _isImgUrl(url: string) {
     return /\.(jpg|jpeg|png|webp|avif|gif)$/.test(url);
   }
 
@@ -81,8 +81,6 @@ function FileInputLink(props: {
     onDrop,
     accept: props.accept,
   });
-  const bg = useColorModeValue("gray.100", "navy.700");
-  const borderColor = useColorModeValue("secondaryGray.100", "whiteAlpha.100");
 
   return (
     <Flex

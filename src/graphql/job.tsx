@@ -32,6 +32,7 @@ export const GET_JOBS_QUERY = gql`
     $weight_to: Int
     $volume_from: Int
     $volume_to: Int
+    $between_at: JobBetweenInput
   ) {
     jobs(
       query: $query
@@ -64,6 +65,7 @@ export const GET_JOBS_QUERY = gql`
       weight_to: $weight_to
       volume_from: $volume_from
       volume_to: $volume_to
+      between_at: $between_at
     ) {
       data {
         id
@@ -153,12 +155,7 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-          media {
-            id
-            name
-            downloadable_url
-            collection_name
-          }
+
           job_destination_status_id
           route_point {
             id
@@ -188,12 +185,6 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-          media {
-            id
-            name
-            downloadable_url
-            collection_name
-          }
         }
         job_items {
           id
@@ -219,6 +210,164 @@ export const GET_JOBS_QUERY = gql`
         lastPage
         perPage
         total
+      }
+    }
+  }
+`;
+
+export const GROUPED_PAGINATED_JOBS_QUERY = gql`
+  query GroupedPaginatedJobs(
+    $query: String
+    $page: Int!
+    $per_page: Int
+    $orderBy: [OrderByClause!]
+    $today: DateTime
+    $driver_id: ID
+    $customer_id: ID
+    $company_id: ID
+    $pickup_address: String
+    $delivery_address: String
+    $customer_name: String
+    $pick_up_state: String
+    $job_status_ids: [Int]
+    $job_type_id: Int
+    $has_customer_issue: Boolean
+    $has_driver_issue: Boolean
+    $has_report_issue: Boolean
+    $states: [String]
+    $suburbs: [String]
+    $address_business_name: [String]
+    $has_company_ids: [ID]
+    $has_job_category_ids: [ID]
+    $job_date_at: DateTime
+    $job_status_id: [ID]
+    $is_tailgate_required: Boolean
+    $weight_from: Int
+    $weight_to: Int
+    $volume_from: Int
+    $volume_to: Int
+    $between_at: JobBetweenInput
+  ) {
+    groupedPaginatedJobs(
+      query: $query
+      page: $page
+      per_page: $per_page
+      orderBy: $orderBy
+      today: $today
+      driver_id: $driver_id
+      customer_id: $customer_id
+      company_id: $company_id
+      pickup_address: $pickup_address
+      delivery_address: $delivery_address
+      customer_name: $customer_name
+      pick_up_state: $pick_up_state
+      job_status_ids: $job_status_ids
+      job_type_id: $job_type_id
+      has_customer_issue: $has_customer_issue
+      has_driver_issue: $has_driver_issue
+      has_report_issue: $has_report_issue
+      states: $states
+      suburbs: $suburbs
+      address_business_name: $address_business_name
+      has_company_ids: $has_company_ids
+      has_job_category_ids: $has_job_category_ids
+      job_date_at: $job_date_at
+      job_status_id: $job_status_id
+      is_tailgate_required: $is_tailgate_required
+      weight_from: $weight_from
+      weight_to: $weight_to
+      volume_from: $volume_from
+      volume_to: $volume_to
+      between_at: $between_at
+    ) {
+      current_page
+      last_page
+      total
+      per_page
+      data {
+        driver {
+          id
+          full_name
+          driver_no
+          phone_no
+          registration_no
+          is_tailgated
+          first_job_start_at_today
+          last_job_drop_at_today
+          cbm_summary_today
+          weight_summary_today
+          no_max_volume
+          no_max_capacity
+          no_max_pallets
+        }
+        job {
+          id
+          reference_no
+          name
+          driver_id
+          total_weight
+          total_volume
+          job_type {
+            id
+            name
+          }
+          job_status {
+            id
+            name
+          }
+          ready_at
+          start_at
+          drop_at
+          pick_up_address
+          last_free_at
+          timeslot
+          extras
+          admin_notes
+          customer_notes
+          driver {
+            id
+            full_name
+          }
+          company {
+            id
+            name
+          }
+          job_category {
+            id
+            name
+          }
+          customer {
+            id
+            full_name
+          }
+          job_items {
+            id
+            quantity
+            weight
+            volume
+            dimension_height
+            dimension_depth
+            dimension_width
+            item_type {
+              id
+              name
+            }
+          }
+          job_destinations {
+            id
+            is_pickup
+            address_line_1
+            address_city
+            address_postal_code
+            address_business_name
+            updated_at
+            media {
+              name
+              collection_name
+              downloadable_url
+            }
+          }
+        }
       }
     }
   }
@@ -345,12 +494,7 @@ export const GET_JOB_QUERY = gql`
           sourceable_id
           updated_at
         }
-        media {
-          id
-          name
-          downloadable_url
-          collection_name
-        }
+
         route_point {
           id
           route_id
@@ -404,15 +548,7 @@ export const GET_JOB_QUERY = gql`
         uploaded_by
         created_at
       }
-      media_admin {
-        id
-        name
-        downloadable_url
-        collection_name
-        file_name
-        uploaded_by
-        created_at
-      }
+
       chats {
         id
         name
@@ -569,6 +705,7 @@ export const BULK_UPDATE_JOB_MUTATION = gql`
       name
       driver_id
       start_at
+      d_sort_id
     }
   }
 `;
@@ -605,6 +742,7 @@ export const GET_ALL_TIMESLOT_DEPOTS = gql`
 export interface UpdateJobInput {
   id: number;
   name?: string;
+  d_sort_id?: number;
   driver_id?: number;
   job_type_id?: number;
   job_status_id?: number;
@@ -663,7 +801,7 @@ export interface CreateJobInput {
   // job_price_quote?: JobPriceCalculationDetail[];
 }
 
-type Job = {
+export type Job = {
   id: number | null;
   //name: string;
   reference_no: string;
@@ -705,7 +843,7 @@ type Job = {
   timeslot_depots: string;
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
-  media_admin?: any[] | null;
+  // media_admin?: any[] | null;
 
   [key: string]:
     | string
@@ -729,33 +867,10 @@ export const defaultJob: Job = {
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: 1,
-  //decline_reason_id: 0,
-  //driver_id: 0,
-  //region_id: 0,
+
   customer_id: null,
   company_id: null,
-  //start_at: "",
-  //ready_at: "",
-  //drop_at: "",
-  //pick_up_lng: 0,
-  //pick_up_lat: 0,
-  //pick_up_address: "",
-  //pick_up_notes: "",
-  //pick_up_name: "",
-  //pick_up_report: "",
-  //delivery_name: "",
-  //delivery_report: "",
-  //customer_notes: "",
-  //base_notes: "",
-  //admin_notes: "",
-  //decline_notes: "",
-  //minutes_waited: 0,
-  //is_inbound_connect: false,
-  //is_hand_unloading: false,
-  //is_dangerous_goods: false,
-  //is_tailgate_required: false,
   media: [],
-  // media_admin: [],
   transport_type: "",
   transport_location: "",
   timeslot_depots: "",

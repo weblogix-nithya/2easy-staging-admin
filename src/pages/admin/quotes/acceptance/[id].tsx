@@ -49,7 +49,7 @@ import { GET_QUOTE_SERVICES_QUERY } from "graphql/quoteService";
 import { GET_QUOTE_TYPES_QUERY } from "graphql/quoteType";
 import { formatCurrency, formatDate, formatTime } from "helpers/helper";
 import AdminLayout from "layouts/admin";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -57,10 +57,10 @@ export default function QuoteEdit() {
   const toast = useToast();
   const router = useRouter();
   const { id } = router.query;
-  const ReactQuill = useMemo(
-    () => dynamic(() => import("react-quill"), { ssr: false }),
-    [],
-  );
+  // const ReactQuill = useMemo(
+  //   () => dynamic(() => import("react-quill"), { ssr: false }),
+  //   [],
+  // );
 
   const [categories, setCategories] = useState([]);
   const [serviceTypes, setServiceTypes] = useState([]);
@@ -68,16 +68,16 @@ export default function QuoteEdit() {
   const [quote, setQuote] = useState(defaultQuote);
   const [quoteItems, setQuoteItems] = useState([defaultQuoteItem]);
   const [quoteLineItems, setQuoteLineItems] = useState([defaultQuoteLineItem]);
-  const [subTotal, setSubTotal] = useState(0);
-  const [gst, setGst] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [_subTotal, setSubTotal] = useState(0);
+  const [_gst, setGst] = useState(0);
+  const [_total, setTotal] = useState(0);
 
-  const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [queryPageIndex, _setQueryPageIndex] = useState(0);
+  const [queryPageSize, _setQueryPageSize] = useState(50);
+  const [searchQuery, _setSearchQuery] = useState("");
 
   // Addresses
-  const [originalQuoteDestinations, setOriginalQuoteDestinations] = useState(
+  const [_originalQuoteDestinations, setOriginalQuoteDestinations] = useState(
     [],
   );
   const [quoteDestinations, setQuoteDestinations] = useState([]);
@@ -87,8 +87,8 @@ export default function QuoteEdit() {
   const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
   const {
     loading: quoteLoading,
-    data: quoteData,
-    refetch: getQuote,
+    // data: quoteData,
+    // refetch: getQuote,
   } = useQuery(GET_QUOTE_QUERY, {
     variables: {
       id: id,
@@ -123,9 +123,9 @@ export default function QuoteEdit() {
   });
   const {
     loading,
-    error,
-    data: quoteLineItemsData,
-    refetch: getQuoteLineItems,
+    // error,
+    // data: quoteLineItemsData,
+    // refetch: getQuoteLineItems,
   } = useQuery(GET_QUOTE_LINE_ITEMS_QUERY, {
     variables: {
       quote_id: id,
@@ -236,6 +236,7 @@ export default function QuoteEdit() {
     setSubTotal(quote.sub_total);
     setGst(quote.total_tax);
     setTotal(quote.total);
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote]);
 
   return (

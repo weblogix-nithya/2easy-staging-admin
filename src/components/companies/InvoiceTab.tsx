@@ -31,25 +31,25 @@ export default function InvoiceTab(props: any) {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const [invoiceStatuses, setInvoiceStatuses] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
-  const [jobCategoryFilter, setJobCategoryFilter] = useState(null);
-  const [stateFilter, setStateFilter] = useState(null);
-  const [companyFilter, setCompanyFilter] = useState(null);
+  const [_invoiceStatuses, setInvoiceStatuses] = useState([]);
+  // const [jobCategories, setJobCategories] = useState([]);
+  const [jobCategoryFilter, _setJobCategoryFilter] = useState(null);
+  const [stateFilter, _setStateFilter] = useState(null);
+  // const [companyFilter, setCompanyFilter] = useState(null);
   const [tabs, setTabs] = useState([]);
   const { companyId, customerId, isAdmin, isCompanyAdmin, isCustomer } =
     useSelector((state: RootState) => state.user);
-  const [companiesOptions, setCompaniesOptions] = useState([]);
-  const [debouncedCompanySearch, setDebouncedCompanySearch] = useState("");
+  // const [companiesOptions, setCompaniesOptions] = useState([]);
+  // const [debouncedCompanySearch, setDebouncedCompanySearch] = useState("");
   const [customerOptions, setCustomerOptions] = useState([]);
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [customerFilter, setCustomerFilter] = useState([]);
 
-  const onChangeSearchCompany = useMemo(() => {
-    return debounce((e) => {
-      setDebouncedCompanySearch(e);
-    }, 300);
-  }, []);
+  // const onChangeSearchCompany = useMemo(() => {
+  //   return debounce((e) => {
+  //     setDebouncedCompanySearch(e);
+  //   }, 300);
+  // }, []);
 
   const onChangeSearchCustomer = useMemo(() => {
     return debounce((e) => {
@@ -63,7 +63,7 @@ export default function InvoiceTab(props: any) {
   //   (state: RootState) => state.user.isCompanyAdmin,
   // );
   // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
-  const [date, setDate] = useState("");
+  // const [date, setDate] = useState("");
   const [rangeDate, setRangeDate] = useState([null, null]);
   const [tabId, setActiveTab] = useState(isAdmin == true ? 1 : 2);
 
@@ -73,9 +73,10 @@ export default function InvoiceTab(props: any) {
     useSelector((state: RootState) => state.routes.routes).find(
       (route) => route.layout + route.path == router.pathname,
     )?.isPrivate || false;
-  useEffect(() => {
-    if (isPrivateRoute && isAdmin) onOpen();
-  }, [isPrivateRoute]);
+
+    useEffect(() => {
+      if (isPrivateRoute && isAdmin) onOpen();
+    }, [isPrivateRoute, isAdmin, onOpen]);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -86,7 +87,7 @@ export default function InvoiceTab(props: any) {
 
   const {
     isOpen: isStatementModalOpen,
-    onOpen: onOpenStatementModal,
+    onOpen: _onOpenStatementModal,
     onClose: onCloseStatementModal,
   } = useDisclosure();
 
@@ -186,7 +187,7 @@ export default function InvoiceTab(props: any) {
 
   const {
     loading,
-    error,
+    // error,
     data: invoices,
     refetch: getInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
@@ -219,7 +220,7 @@ export default function InvoiceTab(props: any) {
     skip: !isAdmin,
   });
 
-  const { data: invoiceTotals, refetch: getInvoiceTotals } = useQuery(
+  const { data: _invoiceTotals, refetch: getInvoiceTotals } = useQuery(
     GET_INVOICE_TOTALS_QUERY,
     {
       variables: {
@@ -254,7 +255,7 @@ export default function InvoiceTab(props: any) {
 
   const {
     loading: companyInvoiceLoading,
-    error: companyInvoiceError,
+    error: _companyInvoiceError,
     data: companyInvoices,
     refetch: getCompanyInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
@@ -288,7 +289,7 @@ export default function InvoiceTab(props: any) {
 
   const {
     loading: customerInvoiceLoading,
-    error: customerInvoiceError,
+    error: _customerInvoiceError,
     data: customerInvoices,
     refetch: getCustomerInvoices,
   } = useQuery(GET_INVOICES_QUERY, {
@@ -333,7 +334,7 @@ export default function InvoiceTab(props: any) {
     } else if (isCompanyAdmin) getCompanyInvoices();
     else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
     else return;
-  }, [jobCategoryFilter]);
+  }, [jobCategoryFilter, isAdmin, isCompanyAdmin, isCustomer, getInvoices, getInvoiceTotals, getCompanyInvoices, getCustomerInvoices]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -342,7 +343,7 @@ export default function InvoiceTab(props: any) {
     } else if (isCompanyAdmin) getCompanyInvoices();
     else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
     else return;
-  }, [stateFilter]);
+  }, [stateFilter, isAdmin, isCompanyAdmin, isCustomer, getInvoices, getInvoiceTotals, getCompanyInvoices, getCustomerInvoices]);
 
   return (
  <>

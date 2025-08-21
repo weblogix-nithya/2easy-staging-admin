@@ -45,9 +45,9 @@ function VehicleHireEdit() {
   const customerId = useSelector((state: RootState) => state.user.customerId);
   const companyId = useSelector((state: RootState) => state.user.companyId);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
-  const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
+  // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
 
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   const textColorPrimary = useColorModeValue("navy.700", "white");
   const [vehicleHire, setVehicleHire] = useState(defaultVehicleHire);
   const [customerSelected, setCustomerSelected] = useState(defaultCustomer);
@@ -116,6 +116,7 @@ function VehicleHireEdit() {
     } else if (customerId) {
       getCustomersByCompanyId({ ...defaultVariables });
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
   //handleCreateVehicleHire
   const [handleCreateVehicleHire, {}] = useMutation(
@@ -167,7 +168,7 @@ function VehicleHireEdit() {
 
   //handleCreateMedia
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       /*toast({
         title: "Media updated",
         status: "success",
@@ -228,6 +229,7 @@ function VehicleHireEdit() {
   });
   useEffect(() => {
     dateChanged();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHireDateAt, hireFromAt, hireToAt]);
   const dateChanged = () => {
     try {
@@ -295,6 +297,7 @@ function VehicleHireEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHire.customer_id, customerOptions]);
   return (
     <AdminLayout>
@@ -364,7 +367,7 @@ function VehicleHireEdit() {
                     isDisabled={true}
                     name="operator_phone"
                     value={customerSelected.phone_no}
-                    onChange={(e) => {}}
+                    onChange={() => {}}
                   />
                   <CustomInputField
                     label="Operator email:"
@@ -372,7 +375,7 @@ function VehicleHireEdit() {
                     name="operator_email"
                     isDisabled={true}
                     value={customerSelected.email}
-                    onChange={(e) => {}}
+                    onChange={() => {}}
                   />
 
                   <Flex alignItems="center" mb={"16px"}>
@@ -520,7 +523,7 @@ function VehicleHireEdit() {
                       <JobAddressesSection
                         entityModel={vehicleHire}
                         savedAddressesSelect={savedAddressesSelect}
-                        onAddressSaved={(hasChanged) => {
+                        onAddressSaved={() => {
                           getCustomerAddresses();
                         }}
                         defaultJobDestination={pickUpDestination}

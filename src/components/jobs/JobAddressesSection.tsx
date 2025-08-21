@@ -46,14 +46,14 @@ export default function JobAddressesTab(props: {
   const [isSavedAddress, setIsSavedAddress] = useState(false);
   const [jobDestination, setJobDestination] = useState(defaultJobDestination);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [randomIdSection, setRandomIdSection] = useState(
+  const [randomIdSection, _setRandomIdSection] = useState(
     Math.random().toString(36).substring(7),
   );
   const [randomIdKey, setRandomIdKey] = useState(
     Math.random().toString(36).substring(7),
   );
 
-  const [isAddressExpanded, setIsAddressExpanded] = useState(false);
+  const [_isAddressExpanded, setIsAddressExpanded] = useState(false);
 
   const handleAddressDone = () => {
     setIsAddressExpanded(false);
@@ -121,7 +121,7 @@ export default function JobAddressesTab(props: {
   const [updateCustomerAddress, {}] = useMutation(
     UPDATE_CUSTOMER_ADDRESS_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "Saved customer address updated",
           status: "success",
@@ -139,10 +139,12 @@ export default function JobAddressesTab(props: {
     if (isSavedAddress && savedAddressSelectedId != null) {
       handleUpdateCustomerAddress();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobDestination]);
   useEffect(() => {
     if (jobDestination.id != defaultJobDestination.id)
       setJobDestination(defaultJobDestination);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultJobDestination]);
   useEffect(() => {
     setIsSavedAddress(false);

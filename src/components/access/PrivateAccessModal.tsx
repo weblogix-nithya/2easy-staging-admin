@@ -1,4 +1,4 @@
-import {
+ import {
   Button,
   Flex,
   FormControl,
@@ -13,13 +13,16 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
-  UseDisclosureProps,
-} from "@chakra-ui/react";
+ } from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, {  useState } from "react";
 
-export default function PrivateAccessModal(props: UseDisclosureProps) {
-  const { isOpen, onClose } = props;
+type PrivateAccessModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessModalProps) {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<boolean>(false);
   const [show, setShow] = useState(false);
@@ -46,12 +49,7 @@ export default function PrivateAccessModal(props: UseDisclosureProps) {
   };
 
   return (
-    <Modal
-      isCentered
-      isOpen={isOpen}
-      onClose={onClose}
-      closeOnOverlayClick={false}
-    >
+    <Modal isCentered isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false}>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
       <ModalContent>
         <ModalHeader>Password required</ModalHeader>
@@ -74,6 +72,11 @@ export default function PrivateAccessModal(props: UseDisclosureProps) {
                   setError(false);
                   setPassword(e.target.value);
                 }}
+                  onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleAccess();
+    }
+  }}
                 name="password"
                 className="max-w-md"
                 fontSize="sm"
@@ -96,14 +99,10 @@ export default function PrivateAccessModal(props: UseDisclosureProps) {
           </FormControl>
         </ModalBody>
         <ModalFooter>
-          <Button
-            variant="primary"
-            onClick={() => handleAccess()}
-            className="mr-2"
-          >
+          <Button variant="primary" onClick={handleAccess} className="mr-2">
             Access
           </Button>
-          <Button onClick={() => handleClose()}>Close</Button>
+          <Button onClick={handleClose}>Close</Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

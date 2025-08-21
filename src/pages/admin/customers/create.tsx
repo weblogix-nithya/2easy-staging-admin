@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 function CustomerCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [customer, setCustomer] = useState(defaultCustomer);
   const [companyName, setCompanyName] = useState(null);
   const router = useRouter();
@@ -74,6 +74,7 @@ function CustomerCreate() {
     if (company_id) {
       getCompany();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company_id]);
 
   return (

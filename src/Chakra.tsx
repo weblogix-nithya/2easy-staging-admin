@@ -1,25 +1,28 @@
 import {
-  ChakraProvider,
-  cookieStorageManager,
+  cookieStorageManagerSSR,
   localStorageManager,
-} from "@chakra-ui/react";
+} from "@chakra-ui/color-mode";
+import { 
+  ChakraProvider} from "@chakra-ui/react";
 import { GetServerSidePropsContext } from "next";
 import { ReactNode } from "react";
 import theme from "theme/theme";
+
 
 interface ChakraProps {
   cookies?: string;
   children: ReactNode;
 }
 
-export const Chakra = ({ children, cookies = "cookies" }: ChakraProps) => {
+export const Chakra = ({ children, cookies }: ChakraProps) => {
+  const colorModeManager =
+  typeof cookies === "string"
+    ? cookieStorageManagerSSR(cookies)
+    : localStorageManager;
   return (
-    <ChakraProvider
-      colorModeManager={cookies ? cookieStorageManager : localStorageManager}
-      theme={theme}
-    >
-      {children}
-    </ChakraProvider>
+    <ChakraProvider theme={theme} colorModeManager={colorModeManager}>
+    {children}
+  </ChakraProvider>
   );
 };
 

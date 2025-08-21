@@ -4,15 +4,13 @@ import {
   from,
   HttpOptions,
   InMemoryCache,
-  NormalizedCacheObject
-} from "@apollo/client";
+  NormalizedCacheObject} from "@apollo/client";
 import { createUploadLink } from "apollo-upload-client";
 import { destroyCookie, parseCookies } from "nookies";
 import { useMemo } from "react";
 
 export let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
 
-// ✅ Clean, consistent cookie clear function
 const clearAllCookies = () => {
   const cookieNames = [
     "access_token",
@@ -58,28 +56,31 @@ const createLink = (opts: HttpOptions = {}) => {
 function createApolloClient() {
   const uploadLink = createLink();
 
-  const errorLink = new ApolloLink((operation, forward) => {
-    return forward(operation).map((response) => {
-      const { errors } = response;
-      const networkError = (response as any).networkError;
-      const graphQLErrors = errors;
+const errorLink = new ApolloLink((operation, forward) => {
+  return forward(operation).map((response) => {
+    const { errors } = response;
+    const networkError = (response as any).networkError;
+    const graphQLErrors = errors;
 
-      if (
-        networkError?.message?.includes("401") ||
-        graphQLErrors?.some((error: { message: string }) =>
-          error.message.includes("Unauthenticated")
-        )
-      ) {
-        clearAllCookies();
+    if (
+      networkError?.message?.includes("401") ||
+      graphQLErrors?.some((error: { message: string }) =>
+        error.message.toLowerCase().includes("unauthenticated")
+      )
+    ) {
+      // Redirect to login page and pass the current URL as `redirectTo`
+      const redirectTo = window.location.pathname + window.location.search;
+      
+      clearAllCookies(); // Clear cookies upon unauthentication
 
-        apolloClient?.clearStore().then(() => {
-          window.location.href = "/auth/login";
-        });
-      }
+      apolloClient?.clearStore().then(() => {
+        window.location.href = `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`;
+      });
+    }
 
-      return response;
-    });
+    return response;  // Return the response
   });
+});
 
   return new ApolloClient({
     ssrMode: typeof window === "undefined",

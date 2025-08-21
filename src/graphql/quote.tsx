@@ -27,7 +27,7 @@ export const GET_QUOTES_QUERY = gql`
         name
         company {
           name
-        }
+        }        
         quote_url
         customer_name
         customer_reference
@@ -258,7 +258,6 @@ export const GENERATE_QUOTE_PDF_MUTATION = gql`
     }
   }
 `;
-
 export interface CreateQuoteInput {
   name: String;
 }
@@ -270,7 +269,7 @@ export interface UpdateQuoteInput {
   sub_total: number;
   total_tax: number;
   total: number;
-  quote_url: String
+  quote_url: string;
 }
 
 type Quote = {
@@ -320,7 +319,6 @@ export const defaultQuote: Quote = {
   quote_category_id: null,
   quote_service_id: null,
   quote_type_id: null,
-  // quote_url: "",
   media: [],
   is_tailgate_required: false,
   is_stackable_freight: false,

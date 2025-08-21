@@ -1,8 +1,7 @@
-import { Box } from "@chakra-ui/react";
-import { faClock } from "@fortawesome/pro-solid-svg-icons";
+import { Avatar, Box, Image } from "@chakra-ui/react";
+import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Driver } from "graphql/driver";
-import Image from "next/image";
 
 interface AvailableDriverCardProps {
   driver: Driver;
@@ -12,8 +11,19 @@ const AvailableDriverCard = ({ driver }: AvailableDriverCardProps) => {
   return (
     <Box className="flex gap-2 items-center py-3 w-full" width="100%">
       <div>
-        <Image src={driver?.media_url} alt="driver" height={24} width={24} />
+        {driver?.media_url ? (
+          <Image
+            src={driver.media_url}
+            alt="driver"
+            boxSize="24px"
+            borderRadius="full"
+            fallback={<Avatar size="sm" name={driver?.full_name || "Driver"} />}
+          />
+        ) : (
+          <Avatar size="sm" name={driver?.full_name || "Driver"} />
+        )}
       </div>
+
       <Box className="flex flex-col w-full">
         <div className="flex justify-between">
           <span className="font-bold text-sm">{driver?.full_name}</span>

@@ -65,6 +65,7 @@ export function TrackingMap({
     } else {
       console.error("Google Maps API is not loaded.");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function TrackingMap({
     driversRef.current.forEach((driver) => driver.setMap(null));
     driversRef.current = [];
 
-    drivers?.forEach((driver, index) => {
+    drivers?.forEach((driver) => {
       if (driver.lng && driver.lat) {
         let driverMarker = new window.google.maps.Marker({
           position: { lat: driver.lat, lng: driver.lng },
@@ -98,6 +99,7 @@ export function TrackingMap({
         driversRef.current.push(driverMarker);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drivers]);
 
   useEffect(() => {
@@ -184,137 +186,12 @@ export function TrackingMap({
         },
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markers]);
 
-  // useEffect(() => {
-  //   const map = new window.google.maps.Map(mapRef.current, {
-  //     center: center,
-  //     zoom: zoom,
-  //   });
-
-  //   var driverMarkers: google.maps.Marker[] = [];
-  //   var googleMarkers: google.maps.Marker[] = [];
-  //   const waypoints: google.maps.DirectionsWaypoint[] = [];
-
-  //   const directionsService = new google.maps.DirectionsService();
-  //   const directionsDisplay = new google.maps.DirectionsRenderer({
-  //     map: map,
-  //     suppressMarkers: true,
-  //     suppressInfoWindows: true,
-  //   });
-
-  //   var bounds = new google.maps.LatLngBounds();
-
-  //   map.addListener("zoom_changed", () => {
-  //     onZoomChanged(map.getZoom());
-  //   });
-
-  //   map.addListener("center_changed", () => {
-  //     onCenterChanged({
-  //       lat: map.getCenter().lat(),
-  //       lng: map.getCenter().lng(),
-  //     });
-  //   });
-
-  //   markers?.forEach((marker, index) => {
-  //     let googleMarker = new window.google.maps.Marker({
-  //       position: { lat: marker.lat, lng: marker.lng },
-  //       map,
-  //       icon: {
-  //         url: marker.icon,
-  //         size: new google.maps.Size(71, 71),
-  //         origin: new google.maps.Point(0, 0),
-  //         anchor: new google.maps.Point(27, 44),
-  //         scaledSize: new google.maps.Size(50, 50),
-  //       },
-  //       // @ts-ignore
-  //       data: marker.data || null,
-  //       zIndex: 1000,
-  //     });
-
-  //     googleMarkers.push(googleMarker);
-  //     if (index > 0 && index < markers.length - 1) {
-  //       waypoints.push({
-  //         location: {
-  //           lng: googleMarker.getPosition().lng(),
-  //           lat: googleMarker.getPosition().lat(),
-  //         },
-  //         stopover: true,
-  //       });
-  //     }
-
-  //     // bounds.extend(googleMarker.getPosition());
-
-  //     googleMarker.addListener("click", () => {
-  //       // @ts-ignore
-  //       onMarkerClick(googleMarker.data);
-  //     });
-  //   });
-
-  //   drivers?.forEach((driver, index) => {
-  //     if (driver.lng && driver.lat) {
-  //       let driverMarker = new window.google.maps.Marker({
-  //         position: { lat: driver.lat, lng: driver.lng },
-  //         map,
-  //         icon: {
-  //           url: driver.icon,
-  //           size: new google.maps.Size(71, 71),
-  //           origin: new google.maps.Point(0, 0),
-  //           anchor: new google.maps.Point(17, 34),
-  //           scaledSize: new google.maps.Size(25, 25),
-  //         },
-  //         // @ts-ignore
-  //         data: driver.data || null,
-  //         zIndex: 1000,
-  //       });
-
-  //       driverMarkers.push(driverMarker);
-  //       // bounds.extend(driverMarker.getPosition());
-
-  //       driverMarker.addListener("click", () => {
-  //         // @ts-ignore
-  //         onDriverClick(driverMarker.data);
-  //       });
-  //     }
-  //   });
-
-  //   // 23 waypoints max
-  //   if (
-  //     waypoints.length < 23 &&
-  //     googleMarkers.length > 1 &&
-  //     (rightSideBarJob != null || rightSideBarRoute != null)
-  //   ) {
-  //     directionsService.route(
-  //       {
-  //         origin: {
-  //           lat: googleMarkers[0].getPosition().lat(),
-  //           lng: googleMarkers[0].getPosition().lng(),
-  //         },
-  //         destination: {
-  //           lat: googleMarkers[googleMarkers.length - 1].getPosition().lat(),
-  //           lng: googleMarkers[googleMarkers.length - 1].getPosition().lng(),
-  //         },
-  //         avoidTolls: true,
-  //         avoidHighways: false,
-  //         waypoints: waypoints,
-  //         optimizeWaypoints: true,
-  //         travelMode: google.maps.TravelMode.DRIVING,
-  //       },
-  //       function (response, status) {
-  //         if (status == google.maps.DirectionsStatus.OK) {
-  //           directionsDisplay.setDirections(response);
-  //         } else {
-  //           toast({
-  //             title: "No route or jobs found",
-  //             status: "error",
-  //             duration: 3000,
-  //             isClosable: true,
-  //           });
-  //         }
-  //       },
-  //     );
-  //   }
-  // });
-
-  return <div ref={mapRef} id="map" style={{ height: "100%" }} />;
+  return (
+    <div style={{ height: "100vh", width: "100%" }}>
+      <div ref={mapRef} id="map" style={{ height: "100%", width: "100%" }} />
+    </div>
+  );
 }

@@ -23,7 +23,7 @@ import { useState } from "react";
 function ClientCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [client, setClient] = useState(defaultClient);
   const [clientStatuses, setClientStatuses] = useState([]);
   const [clientTypes, setClientTypes] = useState([]);

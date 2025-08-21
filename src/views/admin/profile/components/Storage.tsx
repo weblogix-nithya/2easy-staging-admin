@@ -24,7 +24,7 @@ export default function Banner(props: {
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
   const brandColor = useColorModeValue("brand.500", "white");
-  const textColorSecondary = "gray.400";
+   const textColorSecondary = "gray.400";
   const box = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
   return (
     <Card mb={{ base: "0px", lg: "20px" }} alignItems="center">

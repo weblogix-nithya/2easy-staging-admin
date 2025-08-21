@@ -25,7 +25,7 @@ type PaginationTableProps<T extends JobItem> = {
   onValueChanged?: (value: any, index: number, fieldToUpdate?: string) => void;
 };
 
-const JobInputTable = <T extends object>({
+const JobInputTable = <_T extends object>({
   columns,
   data,
   onRemoveClick,
@@ -33,7 +33,7 @@ const JobInputTable = <T extends object>({
   optionsSelect = [],
   plugins = [],
 }: PaginationTableProps<JobItem>) => {
-  const { getTableProps, getTableBodyProps, headerGroups, prepareRow, page } =
+  const { getTableProps, getTableBodyProps, headerGroups} =
     useTable<JobItem>(
       { ...optionsSelect, columns, data },
       usePagination,

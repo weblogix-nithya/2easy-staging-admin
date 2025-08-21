@@ -4,11 +4,15 @@ import { Box, Grid } from "@chakra-ui/react";
 import banner from "img/auth/banner.png";
 import avatar from "img/avatars/avatar4.png";
 import AdminLayout from "layouts/admin";
+import dynamic from "next/dynamic";
 import { parseCookies } from "nookies";
 import { useEffect, useState } from "react";
 // Custom components
-import Banner from "views/admin/profile/components/Banner";
+// import Banner from "views/admin/profile/components/Banner";
 
+const Banner = dynamic(() => import("views/admin/profile/components/Banner"), {
+  ssr: false
+});
 export default function ProfileOverview() {
   const cookies = parseCookies();
   const [userName, setUserName] = useState("-");
@@ -17,6 +21,7 @@ export default function ProfileOverview() {
   useEffect(() => {
     setUserName(cookies.user_name ? cookies.user_name : "-");
     setUserEmail(cookies.user_email ? cookies.user_email : "-");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cookies.user_name, cookies.user_email]);
 
   return (
@@ -36,8 +41,8 @@ export default function ProfileOverview() {
         >
           <Banner
             gridArea="1 / 1 / 2 / 2"
-            banner={banner}
-            avatar={avatar}
+            banner={banner.src}
+            avatar={avatar.src}
             name={userName}
             email={userEmail}
             posts="-"

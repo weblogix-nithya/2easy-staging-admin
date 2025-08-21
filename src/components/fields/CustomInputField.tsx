@@ -74,7 +74,7 @@ export default function Default(props: {
   const textColorPrimary = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   // RandomId
-  const [randomIdSection, setRandomIdSection] = useState(
+  const [randomIdSection, _setRandomIdSection] = useState(
     (id ? id : name) + Math.random().toString(36).substring(7),
   );
 
@@ -137,12 +137,11 @@ export default function Default(props: {
               value={value}
               defaultValue={defaultValue}
               onChange={onChange}
-              min={props.min}
+              min={min}
               // onClick={type == "date" ? undefined : onClick}
               onClick={
                 type === "date"
                   ? (e) => {
-                      // Ensure input is focused and date picker opens
                       e.preventDefault();
                       e.currentTarget.showPicker?.();
                     }

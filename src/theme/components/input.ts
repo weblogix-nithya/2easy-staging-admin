@@ -208,7 +208,7 @@ export const inputStyles = {
             _placeholder: { color: "secondaryGray.600" },
           },
         }),
-        authSecondary: (props: StyleFunctionProps) => ({
+        authSecondary: (_props: StyleFunctionProps) => ({
           field: {
             bg: "transparent",
             border: "1px solid",
@@ -218,7 +218,7 @@ export const inputStyles = {
             _placeholder: { color: "secondaryGray.600" },
           },
         }),
-        search: (props: StyleFunctionProps) => ({
+        search: (_props: StyleFunctionProps) => ({
           field: {
             border: "none",
             py: "11px",

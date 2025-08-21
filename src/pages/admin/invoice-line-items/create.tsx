@@ -19,7 +19,7 @@ import { useState } from "react";
 function InvoiceLineItemCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoiceLineItem, setInvoiceLineItem] = useState(defaultInvoiceLineItem);
   const router = useRouter();
 

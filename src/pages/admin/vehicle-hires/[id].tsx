@@ -59,9 +59,9 @@ function VehicleHireEdit() {
   const customerId = useSelector((state: RootState) => state.user.customerId);
   const companyId = useSelector((state: RootState) => state.user.companyId);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
-  const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
+  // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
 
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const textColorPrimary = useColorModeValue("navy.700", "white");
   const [vehicleHire, setVehicleHire] = useState(defaultVehicleHire);
@@ -147,11 +147,11 @@ function VehicleHireEdit() {
         isDownload: true,
       },
     ],
-    [],
+    [isAdmin],
   );
   const {
     loading: vehicleHireLoading,
-    data: vehicleHireData,
+    // data: vehicleHireData,
     refetch: getVehicleHire,
   } = useQuery(GET_VEHICLE_HIRE_QUERY, {
     variables: {
@@ -257,6 +257,7 @@ function VehicleHireEdit() {
     } else if (customerId) {
       getCustomersByCompanyId({ ...defaultVariables });
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
   useEffect(() => {
     if (vehicleHire.customer_id && customerOptions.length > 0) {
@@ -268,6 +269,7 @@ function VehicleHireEdit() {
     if (vehicleHire.customer_id == null) {
       setCustomerSelected(defaultCustomer);
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHire.customer_id, customerOptions]);
 
   //handleUpdateVehicleHire
@@ -291,7 +293,7 @@ function VehicleHireEdit() {
           issue_reports: undefined,
         },
       },
-      onCompleted: async (data) => {
+      onCompleted: async (_data) => {
         toast({
           title: "Hourly hire updated",
           status: "success",
@@ -348,6 +350,7 @@ function VehicleHireEdit() {
   });
   useEffect(() => {
     dateChanged();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHireDateAt, hireFromAt, hireToAt]);
   const dateChanged = () => {
     try {
@@ -362,7 +365,7 @@ function VehicleHireEdit() {
   };
   //deleteMedia
   const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Attachment deleted",
         status: "success",
@@ -425,6 +428,7 @@ function VehicleHireEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleHire.customer_id, customerOptions]);
   return (
     <AdminLayout>
@@ -570,7 +574,7 @@ function VehicleHireEdit() {
                           isDisabled={true}
                           name="operator_phone"
                           value={customerSelected.phone_no}
-                          onChange={(e) => {}}
+                          onChange={() => {}}
                         />
                         <CustomInputField
                           label="Operator email:"
@@ -578,7 +582,7 @@ function VehicleHireEdit() {
                           name="operator_email"
                           isDisabled={true}
                           value={customerSelected.email}
-                          onChange={(e) => {}}
+                          onChange={() => {}}
                         />
 
                         <Flex alignItems="center" mb={"16px"}>
@@ -803,7 +807,7 @@ function VehicleHireEdit() {
                               entityModel={vehicleHire}
                               savedAddressesSelect={savedAddressesSelect}
                               defaultJobDestination={pickUpDestination}
-                              onAddressSaved={(hasChanged) => {
+                              onAddressSaved={() => {
                                 getCustomerAddresses();
                               }}
                               jobDestinationChanged={

@@ -19,7 +19,7 @@ function AuthIllustration(props: {
   illustrationBackground: string;
 }) {
   const authBg = useColorModeValue("white", "navy.900");
-  const { children, illustrationBackground } = props;
+  const { children } = props;
   // Chakra color mode
   return (
     <Flex
@@ -42,7 +42,7 @@ function AuthIllustration(props: {
         // px={{ lg: "30px", xl: "0px" }}
         // ps={{ xl: "70px" }}
         // justifyContent="start"
-        // flexDirection="column"
+        // direction="column"
       >
         {/* <Link
           href="/"

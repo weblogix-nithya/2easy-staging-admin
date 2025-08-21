@@ -6,7 +6,7 @@ export const avatarStyles = {
 
       },
       variants: {
-        jobAllocation: (props: StyleFunctionProps) => ({
+        jobAllocation: (_props: StyleFunctionProps) => ({
             container: {
                 height: '24px',
                 width: '24px',

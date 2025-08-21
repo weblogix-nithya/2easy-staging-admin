@@ -1,5 +1,6 @@
-// Chakra imports
+// External Imports
 import { useMutation, useQuery } from "@apollo/client";
+// Chakra UI Imports
 import {
   Box,
   Button,
@@ -10,6 +11,7 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
+// Local Imports
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
@@ -20,19 +22,27 @@ import {
 } from "graphql/customerAddress";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
-import { useState } from "react";
-import GooglePlacesAutocomplete, {
-  geocodeByPlaceId,
-} from "react-google-places-autocomplete";
+import { useEffect, useState } from "react";
+
+// import GooglePlacesAutocomplete, {
+//   geocodeByPlaceId,
+// } from "react-google-places-autocomplete";
+import {
+  fetchPlaceDetails,
+  fetchSuggestions,
+  getAddressComponent,
+} from "../../../utils/autocomplete";
 
 function CustomerAddressEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  // const textColorSecondary = "gray.400";
+  // //  const textColorSecondary = "gray.400";
   const [customerAddress, setCustomerAddress] = useState(
     defaultCustomerAddress,
   );
   const [originalCustomerAddress, setOriginalCustomerAddress] = useState(null);
+  const [query, setQuery] = useState("");
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
 
   // const [customerAddressStatuses, setCustomerAddressStatuses] = useState([]);
   // const [customerAddressTypes, setCustomerAddressTypes] = useState([]);
@@ -40,25 +50,26 @@ function CustomerAddressEdit() {
   const { id } = router.query;
   // const [googleAddress, setGoogleAddress] = useState(null);
 
- const {
-  loading: customerAddressLoading,
-} = useQuery(GET_CUSTOMER_ADDRESS_QUERY, {
-  variables: {
-    id: id,
-  },
-  onCompleted: (data) => {
-    if (data?.customerAddress == null) {
-      router.push("/admin/customer-addresses");
-    }
-    setCustomerAddress({ ...customerAddress, ...data?.customerAddress });
-    setOriginalCustomerAddress({ ...data?.customerAddress });
-  },
-  onError(error) {
-    console.log("onError");
-    console.log(error);
-  },
-});
-
+  const { loading: customerAddressLoading } = useQuery(
+    GET_CUSTOMER_ADDRESS_QUERY,
+    {
+      variables: {
+        id: id,
+      },
+      skip: !id,
+      onCompleted: (data) => {
+        if (data?.customerAddress == null) {
+          router.push("/admin/customer-addresses");
+        }
+        setCustomerAddress({ ...customerAddress, ...data?.customerAddress });
+        setOriginalCustomerAddress({ ...data?.customerAddress });
+      },
+      onError(error) {
+        console.log("onError");
+        console.log(error);
+      },
+    },
+  );
 
   const hasChanges = () => {
     return (
@@ -73,7 +84,7 @@ function CustomerAddressEdit() {
       variables: {
         input: {
           id: customerAddress.id,
-          name: customerAddress.name,
+          name: customerAddress.address,
           customer_id: customerAddress.customer_id,
           pick_up_name: customerAddress.pick_up_name,
           pick_up_notes: customerAddress.pick_up_notes,
@@ -124,6 +135,50 @@ function CustomerAddressEdit() {
       },
     },
   );
+  useEffect(() => {
+    const fetchAutoCompleteResults = async () => {
+      if (query.length >= 2) {
+        const results = await fetchSuggestions(query);
+        // console.log(results);
+        setAddressSuggestions(results);
+      } else {
+        setAddressSuggestions([]);
+      }
+    };
+
+    fetchAutoCompleteResults();
+  }, [query]);
+  const handleSelectAddress = async (placeId: string) => {
+    try {
+      const data = await fetchPlaceDetails(placeId);
+      if (!data) return;
+
+      const components = data.addressComponents || [];
+
+      const getComponent = (type: string) =>
+        getAddressComponent(components, type) || "";
+
+      setCustomerAddress({
+        ...customerAddress,
+        address: data.formattedAddress || "",
+        address_line_1:
+          getComponent("street_number") + " " + getComponent("route"),
+        address_city:
+          getComponent("locality") ||
+          getComponent("administrative_area_level_2"),
+        address_state: getComponent("administrative_area_level_1"),
+        address_country: getComponent("country"),
+        address_postal_code: getComponent("postal_code"),
+        lng: data.location?.longitude || null,
+        lat: data.location?.latitude || null,
+      });
+
+      setQuery( "");
+      setAddressSuggestions([]);
+    } catch (error) {
+      console.log("Error fetching place details:", error);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -147,112 +202,33 @@ function CustomerAddressEdit() {
                   <FormLabel fontSize="sm" fontWeight="500" color={textColor}>
                     Search address
                   </FormLabel>
-                  <GooglePlacesAutocomplete
-                    apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-                    autocompletionRequest={{
-                      componentRestrictions: {
-                        country: ["au"],
-                      },
-                    }}
-                    minLengthAutocomplete={2}
-                    selectProps={{
-                      value: {
-                        label: customerAddress.address,
-                        value: customerAddress.address,
-                      },
-                      onChange: (value) => {
-                        if (!value) {
-                          setCustomerAddress({
-                            ...customerAddress,
-                            googleAddress: null,
-                            address: "",
-                            address_line_1: "",
-                            address_city: "",
-                            address_state: "",
-                            address_country: "",
-                            lng: null,
-                            lat: null,
-                          });
-                        } else {
-                          geocodeByPlaceId(value.value.place_id)
-                            .then((results) => {
-                              const location = results[0].geometry.location;
-                              const addressComponents =
-                                results[0].address_components;
-
-                              const getAddressComponent = (type: any) => {
-                                const component = addressComponents.find(
-                                  (comp) => comp.types.includes(type),
-                                );
-                                return component ? component.long_name : "";
-                              };
-
-                              setCustomerAddress({
-                                ...customerAddress,
-                                googleAddress: value,
-                                address: value.label,
-                                address_line_1:
-                                  getAddressComponent("street_number") +
-                                  " " +
-                                  getAddressComponent("route"),
-                                address_city:
-                                  getAddressComponent("locality") ||
-                                  getAddressComponent(
-                                    "administrative_area_level_2",
-                                  ),
-                                address_state: getAddressComponent(
-                                  "administrative_area_level_1",
-                                ),
-                                address_country: getAddressComponent("country"),
-                                address_postal_code:
-                                  getAddressComponent("postal_code"),
-                                lng: location.lng(),
-                                lat: location.lat(),
-                              });
-                            })
-                            .catch((error) =>
-                              console.error("Error in geocoding:", error),
-                            );
-                        }
-                      },
-                      styles: {
-                        control: (provided) => ({
-                          ...provided,
-                          paddingLeft: "8px",
-                          height: "48px",
-                          backgroundColor: "white",
-                          border: "1px solid #e3e3e3",
-                          borderRadius: "8px",
-                        }),
-                        singleValue: (provided) => ({
-                          ...provided,
-                          paddingLeft: "8px",
-                          fontFamily: "Manrope",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                        }),
-                        option: (provided) => ({
-                          ...provided,
-                          fontFamily: "Manrope",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                        }),
-                        container: (provided) => ({
-                          ...provided,
-                          width: "100%",
-                        }),
-                        input: (provided) => ({
-                          ...provided,
-                          paddingLeft: "8px",
-                          minWidth: "100",
-                          width: "100%",
-                          fontFamily: "Manrope",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                        }),
-                      },
-                    }}
+                  <Input
+                    placeholder="Search for an address"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
                   />
+                  <Box mt="2" maxH="150px" overflowY="auto">
+                    {addressSuggestions.map((suggestion) => {
+                      const pred = suggestion.placePrediction;
+                      // const mainText = pred.structuredFormat?.mainText?.text || "";
+                      // const secondaryText =pred.structuredFormat?.secondaryText?.text || "";
+                      const label = pred?.text?.text
+                     
+                      return (
+                        <Button
+                          key={pred.placeId}
+                          onClick={() => handleSelectAddress(pred.placeId)}
+                          variant="ghost"
+                          justifyContent="flex-start"
+                          width="100%"
+                          whiteSpace="normal"
+                          fontSize="sm"
+                        >
+                          {label}
+                        </Button>
+                      );
+                    })}
+                  </Box>
                 </FormControl>
 
                 <FormControl mb="16px">
@@ -379,7 +355,7 @@ function CustomerAddressEdit() {
                 ></AreYouSureAlert>
                 <Button
                   // mb="16px"
-                  ml='10px'
+                  ml="10px"
                   variant="outline"
                   onClick={() =>
                     router.push(

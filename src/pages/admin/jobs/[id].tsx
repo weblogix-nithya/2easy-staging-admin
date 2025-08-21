@@ -3,45 +3,21 @@ import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
-  Divider,
   Flex,
   FormControl,
-  FormLabel,
   Grid,
-  GridItem,
-  Radio,
-  RadioGroup,
-  SimpleGrid,
-  Stack,
-  Table,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import { faTrashCan } from "@fortawesome/pro-regular-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
-import AreYouSureAlert from "components/alert/AreYouSureAlert";
-import ColorSelect from "components/fields/ColorSelect";
-import CustomInputField from "components/fields/CustomInputField";
-// import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
-import FileInput from "components/fileInput/FileInput";
 import InvoiceTab from "components/jobs/InvoiceTab";
-import JobAddressesSection from "components/jobs/JobAddressesSection";
-import JobInputTable from "components/jobs/JobInputTable";
+import JobDetailsTab from "components/jobs/JobDetailsTab";
 import MessageLogTab from "components/jobs/MessageLogTab";
 import ReportsTab from "components/jobs/ReportsTab";
-import PaginationTable from "components/table/PaginationTable";
 import { TabsComponent } from "components/tabs/TabsComponet";
-import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
-import { GET_COMPANY_RATE_QUERY } from "graphql/companyRate";
+import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_DRIVERS_QUERY } from "graphql/driver";
@@ -84,7 +60,6 @@ import { DELETE_MEDIA_MUTATION } from "graphql/media";
 import {
   formatDate,
   formatDateTimeToDB,
-  formatTime,
   formatTimeUTCtoInput,
   // getTimezone,
   // isAfterCutoff,
@@ -103,8 +78,8 @@ import {
 } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-
-interface CalculationData {
+import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
+interface _CalculationData {
   cbm_auto: number;
   total_weight: number;
   freight: number;
@@ -129,10 +104,10 @@ export function useIsMounted() {
 
   return isMounted;
 }
+
 function JobEdit() {
   const toast = useToast();
-    const isMounted = useIsMounted();
-
+  const isMounted = useIsMounted();
   // const textColor = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = useState(defaultJob);
@@ -143,10 +118,14 @@ function JobEdit() {
   // const [changedFields, setChangedFields] =
   //   useState<typeof defaultJob>(defaultJob);
   const [isUpdateMode, setIsUpdateMode] = useState(false);
-  const [pricecalculationid, setPricecalculationid] = useState(null);
+  const [_pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
-  const { id } = router.query;
+  // const { id } = router.query;
+  const routeReady = router.isReady && typeof router.query.id === "string";
+  const jobId = routeReady ? parseInt(router.query.id as string, 10) : null;
+  const id = jobId;
+  // console.log(id, "ids");
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -168,32 +147,33 @@ function JobEdit() {
   const [jobDestinations, setJobDestinations] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [debouncedSearchDriver, setDebouncedSearchDriver] = useState("");
-  let re =
-    /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re = useMemo(() => {
+    return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  }, []);
   const [deleteJobCcEmailId, setDeleteJobCcEmailId] = useState(null);
   const [createdCcEmail, setCreatedCcEmail] = useState(null);
   const [jobCcEmails, setJobCcEmails] = useState([]);
   const [jobCcEmailTags, setJobCcEmailTags] = useState([]);
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const customerId = useSelector((state: RootState) => state.user.customerId);
-  const companyId = useSelector((state: RootState) => state.user.companyId);
+  // const customerId = useSelector((state: RootState) => state.user.customerId);
+  // const companyId = useSelector((state: RootState) => state.user.companyId);
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
-  const [isSameDayJob, setIsSameDayJob] = useState(false);
-  const [isTomorrowJob, setIsTomorrowJob] = useState(false);
+  const [_isSameDayJob, setIsSameDayJob] = useState(false);
+  const [_isTomorrowJob, setIsTomorrowJob] = useState(false);
   // const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
-  const [locationOptions, setLocationOptions] = useState([
+  const [locationOptions, _setLocationOptions] = useState([
     { value: "VIC", label: "Victoria" },
     { value: "QLD", label: "Queensland" },
   ]);
 
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
-
-  const [selectedDepot, setSelectedDepot] = useState("");
+  const [companyWeight, setCompanyWeight] = useState(null);
+  const [_selectedDepot, setSelectedDepot] = useState("");
 
   const [prevJobState, setPrevJobState] = useState({
     freight_type: refinedData.freight_type,
@@ -204,7 +184,7 @@ function JobEdit() {
 
   const [companyRates, setCompanyRates] = useState([]);
 
-  const [selectedRegion, setSelectedRegion] = useState({
+  const [_selectedRegion, setSelectedRegion] = useState({
     area: "",
     cbm_rate: 0,
     minimum_charge: 0,
@@ -243,7 +223,7 @@ function JobEdit() {
     },
   ];
 
-  const NEW_CUTOFF_RULES_START_DATE = "2024-10-24";
+  // const NEW_CUTOFF_RULES_START_DATE = "2024-10-24";
 
   const itemsTableColumns = useMemo(
     () => [
@@ -292,7 +272,7 @@ function JobEdit() {
         isDownload: true,
       },
     ],
-    [],
+    [isAdmin],
   );
 
   const onChangeSearchQuery = useMemo(() => {
@@ -307,34 +287,6 @@ function JobEdit() {
     }, 300);
   }, []);
 
-  const { data: depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
-    onCompleted: (data) => {
-      if (data?.allTimeslotDepots) {
-        const depots = data.allTimeslotDepots
-          .filter((depot: any) => depot.is_active)
-          .map((depot: any) => ({
-            value: depot.depot_name,
-            label: depot.depot_name,
-            price: depot.depot_price,
-            state_code: depot.state_code,
-            pincode: depot.pincode,
-          }));
-        setDepotOptions(depots);
-        // console.log("depots", depots)
-      }
-    },
-    onError: (error) => {
-      console.error("Error fetching depots:", error);
-      toast({
-        title: "Error fetching depots",
-        description: error.message,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    },
-  });
-
   const {
     loading: jobLoading,
     data: jobData, // Renamed 'data' to 'jobData'
@@ -343,25 +295,30 @@ function JobEdit() {
     variables: {
       id: id,
     },
-    skip: !id,
+    skip: !routeReady || !id,
     onCompleted: (data) => {
-      if (data?.job == null) {
+      if (!isMounted.current) return; 
+
+      if (!data?.job) {
         router.push("/admin/jobs");
+        return;
       }
 
       if (!updatingMedia) {
-        setJob({
-          ...job,
+        setJob((prev) => ({
+          ...prev,
           ...data?.job,
-          company_id: data?.job.company_id,
-          media_admin: data?.job.media_admin,
+          company_id: parseInt(data?.job.company_id, 10),
+          media: data?.job.media,
           job_category_id: data?.job.job_category_id,
           transport_location: data?.job.transport_location,
+          transport_type: data?.job.transport_type,
           company_area: data?.job.company_area,
           job_type_id: data?.job.job_type_id,
           pick_up_state: data?.job.pick_up_state,
           timeslot_depots: data?.job.timeslot_depots,
-        });
+          job_status_id: data?.job.job_status_id,
+        }));
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
             (rate) => rate.area === data.job.company_area,
@@ -374,10 +331,15 @@ function JobEdit() {
             });
           }
         }
-        getCompanyRates({ variables: { company_id: data.job.company_id } }); // Fetch company rates here
 
+        // ✅ Refetch company rates if company_id is valid
+        if (data.job.company_id) {
+          getCompanyRates();
+        }
+
+        // ✅ Set refined data (freight type, state, etc.)
         const selectedCategoryName = jobCategories.find(
-          (job_category) => job_category.value == data?.job.job_category_id,
+          (job_category) => job_category.value == data.job.job_category_id,
         )?.label;
         const selectedStateCode =
           data.job.pick_up_state == "Victoria"
@@ -388,20 +350,20 @@ function JobEdit() {
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
-        setRefinedData({
-          ...refinedData,
+        setRefinedData((prev) => ({
+          ...prev,
           freight_type: selectedCategoryName || null,
           state_code: selectedLocation?.value || null,
           state: selectedLocation?.label || null,
-        });
-        const filtereddepotOption = depotOptions.filter(
-          (option) => option.state_code == selectedStateCode,
+        }));
+
+        setFilteredDepotOptions(
+          depotOptions.filter(
+            (option) => option.state_code === selectedStateCode,
+          ),
         );
-        // console.log(
-        //   filtereddepotOption, selectedStateCode,
-        //   "filtereddepotOption",
-        // );
-        setFilteredDepotOptions(filtereddepotOption);
+
+        // ✅ Fetch customers by company ID
         getCustomersByCompanyId({
           query: "",
           page: 1,
@@ -411,6 +373,7 @@ function JobEdit() {
           company_id: data.job.company_id,
         });
 
+        // ✅ Set date/time fields
         setJobDateAt(
           data.job.ready_at ? formatDate(data.job.ready_at) : jobDateAt,
         );
@@ -427,64 +390,87 @@ function JobEdit() {
             new Date(today).setDate(new Date(today).getDate() + 1),
           ).toDateString(),
         );
-        // jobDestinations without is_pickup
-        // let _jobDestinations = data.job.job_destinations || [];
-        let _jobDestinations =
-          data.job.job_destinations.filter(
-            (destination: any) => !destination.is_pickup,
-          ) || [];
 
-        let currentDestinations =
-          data.job.job_destinations.filter(
-            (destination: any) => !destination.is_pickup,
-          ) || [];
-        // console.log("currentDestinations", currentDestinations.address_state);
-        // console.log("jobDestinations", jobDestinations);
-        setOriginalJobDestinations(_jobDestinations);
-        setJobDestinations(_jobDestinations);
+        // ✅ Set destination data
+        const _destinations =
+          data.job.job_destinations?.filter((d: any) => !d.is_pickup) || [];
+
+        setOriginalJobDestinations(_destinations);
+        setJobDestinations(_destinations);
 
         setPickUpDestination(
-          data.job.pick_up_destination
-            ? data.job.pick_up_destination
-            : { ...defaultJobDestination, id: 0, is_new: true },
+          data.job.pick_up_destination || {
+            ...defaultJobDestination,
+            id: 0,
+            is_new: true,
+          },
         );
 
-        setOriginalJobItems([]);
-        setOriginalJobItems(data.job.job_items);
-        setJobItems([]);
-        setJobItems(data.job.job_items);
-        setJobCcEmails([]);
-        setJobCcEmails(data.job.job_cc_emails);
+        // ✅ Set job items
+        setOriginalJobItems(data.job.job_items || []);
+        setJobItems(data.job.job_items || []);
+
+        // ✅ Set CC emails
+        setJobCcEmails(data.job.job_cc_emails || []);
         setJobCcEmailTags(
-          data.job.job_cc_emails.map(
-            (job_cc_email: { id: number; email: string }) => job_cc_email.email,
-          ),
+          data.job.job_cc_emails?.map((e: { email: string }) => e.email) || [],
         );
-        const totalWeight = data.job.job_items.reduce(
-          (sum: any, item: { weight: any }) => sum + item.weight,
-          0,
-        );
-        const totalCbm = data.job.job_items.reduce(
-          (sum: any, item: { volume: any }) => sum + item.volume,
-          0,
-        );
-        setQuoteCalculationRes({
-          ...quoteCalculationRes,
+
+        // ✅ Quote Calculation
+        const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
+
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
           total_weight: totalWeight,
-          cbm_auto: totalCbm,
-        });
+          cbm_auto: totalCBM,
+        }));
       } else {
-        setJob({ ...job, media_admin: data?.job.media_admin });
-        setJobCcEmails(data.job.job_cc_emails);
+        // ✅ For updating media only
+        setJob((prev) => ({
+          ...prev,
+          media: data?.job.media,
+        }));
+        setJobCcEmails(data.job.job_cc_emails || []);
         setUpdatingMedia(false);
       }
+      // console.log({ jobStatuses, drivers, jobCategories }, "ll");
     },
+
     onError(error) {
       // console.log("onError");
-      // console.log(error);
+      console.log(error);
     },
   });
 
+ const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+    context: { noAuthRedirect: true },
+    onCompleted: (data) => {
+      if (!isMounted.current) return; // ✅ skip if unmounted
+      if (data?.allTimeslotDepots) {
+        const depots = data.allTimeslotDepots
+          .filter((depot: any) => depot.is_active)
+          .map((depot: any) => ({
+            value: depot.depot_name,
+            label: depot.depot_name,
+            price: depot.depot_price,
+            state_code: depot.state_code,
+            pincode: depot.pincode,
+          }));
+        setDepotOptions(depots);
+      }
+    },
+    onError: (error) => {
+      console.error("Error fetching depots:", error);
+      if (!isMounted.current) return; // ✅ skip if unmounted
+      toast({
+        title: "Error fetching depots",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    },
+  });
   useEffect(() => {
     if (job.company_area && companyRates.length > 0) {
       const matchingRate = companyRates.find(
@@ -500,7 +486,7 @@ function JobEdit() {
     }
   }, [companyRates, job.company_area]);
 
-  const { loading: companyLoading, data: companyData } = useQuery(
+  const { loading: _companyLoading, data: _companyData } = useQuery(
     GET_COMPANY_QUERY,
     {
       variables: {
@@ -511,11 +497,15 @@ function JobEdit() {
         if (data?.company == null) {
           // router.push("/admin/companies");
         }
+        // console.log("Company data:", data.company);
+        if (data?.company?.weight_per_cubic != null) {
+          setCompanyWeight(data.company.weight_per_cubic);
+        }
         setRefinedData({
           ...refinedData,
         });
       },
-      onError(error) {
+      onError(_error) {
         // console.log("onError");
         // console.log(error);
       },
@@ -541,7 +531,7 @@ function JobEdit() {
         (location) => location.value === jobData.job.transport_location,
       );
 
-      const matchedJobType = jobTypeOptions.find(
+      const _matchedJobType = jobTypeOptions.find(
         (type) => type.id === jobData.job.job_type_id,
       );
 
@@ -554,6 +544,7 @@ function JobEdit() {
         // job_type_color: matchedJobType?.color || null
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobData, jobCategories, jobTypeOptions, companyRates]); // Use 'jobData' instead of 'data'
 
   const formatToSelect = (
@@ -670,7 +661,7 @@ function JobEdit() {
       let _jobDestinations = [...jobDestinations];
       for (let jobDestination of _jobDestinations) {
         if (jobDestination.is_new) {
-          const resultPickup = await handleCreateJobDestination({
+          await handleCreateJobDestination({
             input: {
               ...jobDestination,
               job_id: parseInt(data.updateJob.id),
@@ -752,7 +743,7 @@ function JobEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Job deleted",
         status: "success",
@@ -774,17 +765,14 @@ function JobEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
-      setJobCategories([]);
-      data.jobCategorys.data.map((driverStatus: any) => {
-        setJobCategories((jobCategories) => [
-          ...jobCategories,
-          {
-            value: parseInt(driverStatus.id),
-            label: driverStatus.name,
-          },
-        ]);
-      });
+      if (!isMounted.current) return;
+      const options = data.jobCategorys.data.map((item: any) => ({
+        value: parseInt(item.id),
+        label: item.name,
+      }));
+      setJobCategories(options);
     },
   });
   useQuery(GET_JOB_STATUSES_QUERY, {
@@ -795,8 +783,10 @@ function JobEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
-      setJobStatuses([]);
+      if (!isMounted.current) return;
+      // setJobStatuses([]);
       data.jobStatuses.data.map((jobStatus: any) => {
         setJobStatuses((_entity) => [
           ..._entity,
@@ -816,9 +806,12 @@ function JobEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
-      setDrivers([]);
+      if (!isMounted.current) return;
+      // setDrivers([]);
       data.drivers.data.map((driver: any) => {
+        if (!isMounted.current) return;
         setDrivers((_entity) => [
           ..._entity,
           {
@@ -838,35 +831,30 @@ function JobEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
-      setJobTypeOptions([]);
-      data.jobTypes.data.map((_entity: any) => {
-        setJobTypeOptions((jobTypes) => [
-          ...jobTypes,
-          {
-            value: parseInt(_entity.id),
-            label: _entity.name,
-          },
-        ]);
-      });
+      if (!isMounted.current) return;
+      setJobTypeOptions(
+        data.jobTypes?.data.map((jobType: any) => ({
+          label: jobType.name,
+          value: jobType.id,
+        })),
+      );
     },
   });
   // Use the useQuery hook to fetch the data
-  const { loading, error, data } = useQuery(
-    GET_JOB_PRICE_CALCULATION_DETAIL_QUERY,
-    {
-      variables: {
-        job_id: job.id,
-      },
-      // skip: !job.id,
-      skip: !job.id || !Boolean(job.id), // To ensure no falsy value interferes
-      onCompleted: async (data) => {
-        // Process the data as needed
-        // console.log(data, "d");
+  useQuery(GET_JOB_PRICE_CALCULATION_DETAIL_QUERY, {
+    variables: { job_id: Number(job.id) },
+    fetchPolicy: "network-only",
+    skip: !job.id || !Boolean(job.id), // To ensure no falsy value interferes
+    onCompleted: async (data) => {
+      if (!isMounted.current) return;
+      if (data.jobPriceCalculationDetail) {
         setIsUpdateMode(true); // Data exists, so it's an update
         setPricecalculationid(data.jobPriceCalculationDetail.id);
         setRefinedData({
           ...data.jobPriceCalculationDetail,
+          tail_lift: data.jobPriceCalculationDetail?.tail_lift,
           cbm_auto: data.jobPriceCalculationDetail?.cbm_auto,
           customer_id: data.jobPriceCalculationDetail?.customer_id,
           dangerous_goods: data.jobPriceCalculationDetail?.dangerous_goods,
@@ -883,7 +871,7 @@ function JobEdit() {
           ...prev,
           total_price: data.jobPriceCalculationDetail?.total,
           total: data.jobPriceCalculationDetail?.total,
-
+          tail_lift: data.jobPriceCalculationDetail?.tail_lift,
           total_weight:
             data.jobPriceCalculationDetail.total_weight !== undefined
               ? data.jobPriceCalculationDetail.total_weight
@@ -902,39 +890,40 @@ function JobEdit() {
           tailgate: data.jobPriceCalculationDetail?.tailgate,
         }));
         setButtonText("Update Quote");
-        //  setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-        const totalWeight = jobItems.reduce(
-          (sum, item) => sum + item.weight,
-          0,
-        );
-        const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
-        setQuoteCalculationRes((prev) => ({
-          ...prev,
-          total_weight: totalWeight,
-          cbm_auto: totalCbm,
-        }));
-        getJob();
-      },
-      onError: (error) => {
-        // Handle the error and set data to empty
-        console.error("Error fetching job price calculation detail:", error);
-        setIsUpdateMode(false); // No data found, so we need to create a new entry
-        setRefinedData(defaultJobQuoteData);
-        setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-        const totalWeight = jobItems.reduce(
-          (sum, item) => sum + item.weight,
-          0,
-        );
-        const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
-        setQuoteCalculationRes((prev) => ({
-          ...prev,
-          total_weight: totalWeight,
-          cbm_auto: totalCbm,
-        }));
-        setButtonText("Get A Quote");
-      },
+      }
+      //  setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
+      setQuoteCalculationRes((prev) => ({
+        ...prev,
+        total_weight: totalWeight,
+        cbm_auto: totalCBM,
+      }));
+      getJob();
     },
-  );
+    onError: (error) => {
+      // Handle the error and set data to empty
+      console.log("Error fetching job price calculation detail:", error);
+      setIsUpdateMode(false); // No data found, so we need to create a new entry
+      setRefinedData(defaultJobQuoteData);
+      setQuoteCalculationRes(defaultJobPriceCalculationDetail);
+
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
+      setQuoteCalculationRes((prev) => ({
+        ...prev,
+        total_weight: totalWeight,
+        cbm_auto: totalCBM,
+      }));
+      setButtonText("Get A Quote");
+      if (error.message.includes("No record found")) {
+        console.warn(
+          "No quote calculation detail yet for this job — skipping.",
+        );
+      } else {
+        console.error("Error fetching job price calculation detail:", error);
+        showGraphQLErrorToast(error);
+      }
+    },
+  });
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: {
       query: "",
@@ -943,6 +932,7 @@ function JobEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
       const itemTypesArray = data.itemTypes.data.map(
         (_entity: { id: string; name: string }) => ({
@@ -975,6 +965,7 @@ function JobEdit() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+    fetchPolicy: "network-only",
     onCompleted: (data) => {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
@@ -1019,28 +1010,34 @@ function JobEdit() {
       },
     },
   );
-    useEffect(() => {
+  useEffect(() => {
     if (job?.company_id && job.company_id !== 0) {
       getCompanyRates({ variables: { company_id: Number(job.company_id) } });
     }
-  }, [job.company_id,getCompanyRates]);
-
+  }, [job.company_id, getCompanyRates]);
   useEffect(() => {
-    const totalWeight = jobItems.reduce((sum, item) => sum + item.weight, 0);
-    const totalCbm = jobItems.reduce((sum, item) => sum + item.volume, 0);
+    if (!jobItems || jobItems.length === 0) return; // no calculation if no items
 
-    setQuoteCalculationRes((prev) => ({
-      ...prev,
-      total_weight: totalWeight,
-      cbm_auto: totalCbm,
-    }));
-  }, [jobItems]);
+    const calculateTotals = () => {
 
-  const handleRemoveFromJobItems = (index: number) => {
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
+
+      setQuoteCalculationRes((prev) => ({
+        ...prev,
+        total_weight: totalWeight,
+        cbm_auto: totalCBM,
+      }));
+    };
+
+    calculateTotals();
+  }, [companyWeight, job.job_category_id, jobItems]);
+
+
+  function handleRemoveFromJobItems(index: number) {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
     setJobItems(_jobItems);
-  };
+  }
   const handleJobItemChanged = (
     value: any,
     index: number,
@@ -1090,6 +1087,7 @@ function JobEdit() {
 
   useEffect(() => {
     dateChanged();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobDateAt, readyAt, dropAt]);
   const dateChanged = () => {
     try {
@@ -1125,7 +1123,7 @@ function JobEdit() {
   };
   //handleDeleteJobItem
   const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       // console.log("Job Item Deleted", data);
     },
     onError: (error) => {
@@ -1136,7 +1134,7 @@ function JobEdit() {
   const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         // console.log("Job destination Deleted", data);
       },
       onError: (error) => {
@@ -1174,7 +1172,7 @@ function JobEdit() {
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
   const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       // console.log("Job item updated");
     },
     onError: (error) => {
@@ -1185,7 +1183,7 @@ function JobEdit() {
   const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         // console.log("Job destination updated");
       },
       onError: (error) => {
@@ -1195,7 +1193,7 @@ function JobEdit() {
   );
   //deleteMedia
   const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Attachment deleted",
         status: "success",
@@ -1209,15 +1207,15 @@ function JobEdit() {
     },
   });
 
-  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {    
+  const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
-    query: "",
-    page: 1,
-    first: 100,
-    orderByColumn: "id",
-    orderByOrder: "ASC",
-    company_id: job.company_id, // Ensure this is provided if needed
-  },
+      query: "",
+      page: 1,
+      first: 100,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
+      company_id: job.company_id, // Ensure this is provided if needed
+    },
     skip: !job.company_id,
     onCompleted: (data) => {
       setCustomerOptions([]);
@@ -1258,10 +1256,33 @@ function JobEdit() {
         }),
       );
     },
-    [],
+    [re],
+  );
+  const [handleCreateJobCcEmail, { }] = useMutation(
+    CREATE_JOB_CC_EMAIL_MUTATION,
+    {
+      variables: {
+        input: {
+          job_id: job.id,
+          email: createdCcEmail,
+        },
+      },
+      onCompleted: (_data) => {
+        toast({
+          title: "Additional email notification created",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        getJob();
+      },
+      onError: (error) => {
+        showGraphQLErrorToast(error);
+      },
+    },
   );
   const handleJobCcEmailAdd = useCallback(
-    (event: SyntheticEvent, email: string) => {
+    (_event: SyntheticEvent, email: string) => {
       if (re.test(email)) {
         setCreatedCcEmail(email);
         setTimeout(() => {
@@ -1277,11 +1298,11 @@ function JobEdit() {
         });
       }
     },
-    [],
+    [handleCreateJobCcEmail, re, toast],
   );
 
   const handleJobCcEmailRemove = useCallback(
-    (event: SyntheticEvent, index: number) => {
+    (_event: SyntheticEvent, index: number) => {
       setDeleteJobCcEmailId(jobCcEmails[index]["id"]);
       setJobCcEmails(jobCcEmails.filter((_, i) => i !== index));
       setJobCcEmailTags(jobCcEmailTags.filter((_, i) => i !== index));
@@ -1290,6 +1311,7 @@ function JobEdit() {
         handleDeleteJobCcEmail();
       }, 500);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [jobCcEmailTags, jobCcEmails],
   );
 
@@ -1299,31 +1321,7 @@ function JobEdit() {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (data) => { },
-      onError: (error) => {
-        showGraphQLErrorToast(error);
-      },
-    },
-  );
-
-  const [handleCreateJobCcEmail, { }] = useMutation(
-    CREATE_JOB_CC_EMAIL_MUTATION,
-    {
-      variables: {
-        input: {
-          job_id: job.id,
-          email: createdCcEmail,
-        },
-      },
-      onCompleted: (data) => {
-        toast({
-          title: "Additional email notification created",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        getJob();
-      },
+      onCompleted: (_data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
@@ -1341,7 +1339,7 @@ function JobEdit() {
       setCustomerSelected(defaultCustomer);
       setSavedAddressesSelect([]);
     }
-  }, [job.customer_id, customerOptions]);
+  }, [job.customer_id, customerOptions, getCustomerAddresses]);
 
   const handleCreateJobPriceCalculationDetail = (
     jobPriceDetail: CreateJobPriceCalculationDetailInput,
@@ -1548,23 +1546,23 @@ function JobEdit() {
       const calculationData = response?.data;
       setQuoteCalculationRes({
         ...quoteCalculationRes,
-        time_slot: (calculationData as CalculationData)?.time_slot, 
-        cbm_auto: (calculationData as CalculationData)?.cbm_auto,
-        total_weight: (calculationData as CalculationData)?.total_weight,
-        freight: (calculationData as CalculationData)?.freight,
-        fuel: (calculationData as CalculationData)?.fuel,
-        hand_unload: (calculationData as CalculationData)?.hand_unload,
-        dangerous_goods: (calculationData as CalculationData)?.dangerous_goods,
-        tail_lift: (calculationData as CalculationData)?.tail_lift,
-        stackable: (calculationData as CalculationData)?.stackable,
-        total: (calculationData as CalculationData)?.total,
+        cbm_auto: Number(calculationData?.cbm_auto ?? 0),
+        total_weight: Number(calculationData?.total_weight ?? 0),
+        freight: Number(calculationData?.freight ?? 0),
+        fuel: Number(calculationData?.fuel ?? 0),
+        hand_unload: Number(calculationData?.hand_unload ?? 0),
+        dangerous_goods: Number(calculationData?.dangerous_goods ?? 0),
+        time_slot: Number(calculationData?.time_slot ?? 0),
+        tail_lift: Number(calculationData?.tail_lift ?? 0),
+        stackable: Number(calculationData?.stackable ?? 0),
+        total: Number(calculationData?.total ?? 0),
       });
       toast({ title: "Quote Calculation Success", status: "success" });
       if (isUpdateMode) {
         await handleUpdateJobPriceCalculationDetail(calculationData)
-          .then((data) => {
-            console.log("Updated successfully:", data);
-            handleUpdateJob()
+          .then((_data) => {
+            // console.log("Updated successfully:", data);
+            handleUpdateJob();
             toast({
               title: "Quote price updated",
               status: "success",
@@ -1604,9 +1602,9 @@ function JobEdit() {
           stackable: Number(calculationData.stackable),
           total: Number(calculationData.total),
         })
-         .then((data) => {
+          .then((data) => {
             console.log("created successfully:", data);
-            handleUpdateJob()
+            handleUpdateJob();
             toast({
               title: "Quote price created",
               status: "success",
@@ -1623,18 +1621,20 @@ function JobEdit() {
     }
   };
 
-
   // Add this validation function near the other validation helpers
   const validateTimeslotDepot = () => {
     // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
     if (
       job.is_inbound_connect &&
       job.job_category_id == 1 &&
-      (!job.timeslot_depots || job.timeslot_depots == null || job.timeslot_depots === "")
+      (!job.timeslot_depots ||
+        job.timeslot_depots == null ||
+        job.timeslot_depots === "")
     ) {
       toast({
         title: "Timeslot depot required",
-        description: "Please select a timeslot depot when Inbound Connect is required.",
+        description:
+          "Please select a timeslot depot when Inbound Connect is required.",
         status: "warning",
         duration: 3000,
         isClosable: true,
@@ -1755,1318 +1755,73 @@ function JobEdit() {
 
                 {/* Job Details */}
                 {tabId == 1 && (
-                  <Box mt={10}>
-                    {/* Basic fields */}
-                    {isAdmin ? (
-                      <Box mb="16px">
-                        <CustomInputField
-                          isSelect={true}
-                          optionsArray={jobStatuses}
-                          label="Job Status:"
-                          value={jobStatuses.find(
-                            (job_status) =>
-                              job_status?.value == job.job_status_id,
-                          )}
-                          placeholder=""
-                          onChange={(e) => {
-                            setJob({
-                              ...job,
-                              job_status_id: e.value || null,
-                            });
-                          }}
-                        />
-                        <CustomInputField
-                          isSelect={true}
-                          optionsArray={drivers}
-                          label="Assigned to:"
-                          onInputChange={(e) => {
-                            onChangeCustomerSearchQuery(e);
-                          }}
-                          value={drivers.find(
-                            (driver) => driver.value == job.driver_id,
-                          )}
-                          placeholder=""
-                          onChange={(e) => {
-                            setJob({
-                              ...job,
-                              driver_id: e.value || null,
-                            });
-                          }}
-                        />
-                        <CustomInputField
-                          isSelect={true}
-                          optionsArray={jobCategories}
-                          label="Job category:"
-                          value={jobCategories.find(
-                            (job_category) =>
-                              job_category.value == job.job_category_id,
-                          )}
-                          placeholder=""
-                          onChange={(e) => {
-                            const selectedCategory = e.value;
-                            const selectedCategoryName = jobCategories.find(
-                              (job_category) =>
-                                job_category.value === selectedCategory,
-                            )?.label;
-                            setJob({
-                              ...job,
-                              job_category_id: selectedCategory || null,
-                            });
-                            setRefinedData({
-                              ...refinedData,
-                              freight_type: selectedCategoryName || null,
-                            });
-                          }}
-                        />
-
-                        {(job.job_category_id == 1 || job.job_category_id == 2) && (
-                          <>
-                            {/* Transport Type Select */}
-                            <CustomInputField
-                              key="transport_typeKey"
-                              isSelect={true}
-                              optionsArray={[
-                                { value: "import", label: "Import" },
-                                { value: "export", label: "Export" },
-                              ]}
-                              label="Transport Type"
-                              name="transport_type"
-                              value={[
-                                { value: "import", label: "Import" },
-                                { value: "export", label: "Export" },
-                              ].find((_e) => _e.value === job.transport_type)}
-                              placeholder=""
-                              onChange={(e) => {
-                                setJob({ ...job, transport_type: e.value });
-                                setRefinedData({
-                                  ...refinedData,
-                                  transport_type: e.value,
-                                });
-                              }}
-                            />
-
-                            {/* Location Select */}
-                            <CustomInputField
-                              key="locationKey"
-                              isSelect={true}
-                              optionsArray={[
-                                { value: "VIC", label: "Victoria" },
-                                { value: "QLD", label: "Queensland" },
-                              ]}
-                              label="Location"
-                              name="transport_location"
-                              value={[
-                                { value: "VIC", label: "Victoria" },
-                                { value: "QLD", label: "Queensland" },
-                              ].find((_e) => _e.value === job.transport_location)}
-                              placeholder=""
-                            // onChange={(e) => {
-                            //   const newState = {
-                            //     ...refinedData,
-                            //     state_code: e.value,
-                            //     state: e.label,
-                            //   };
-                            //   setJob({ ...job, transport_location: e.value });
-                            //   setRefinedData(newState);
-                            // }}
-                            />
-                            <Text
-                              style={{
-                                color: "red",
-                                paddingLeft: "11.4rem",
-                                paddingBottom: "1rem",
-                                fontSize: "14px",
-                              }}
-                            >
-                              Note: For LCL and Airfreight Only
-                            </Text>
-                          </>
-                        )}
-
-                        <CustomInputField
-                          isSelect={true}
-                          optionsArray={customerOptions}
-                          label="Customer:"
-                          value={
-                            customerOptions.find(
-                              (entity) => entity.value == job.customer_id,
-                            ) || { value: null, label: "" }
-                          }
-                          placeholder=""
-                          onChange={(e) => {
-                            // Update job with the selected customer ID
-                            setJob({
-                              ...job,
-                              customer_id: e.value || null,
-                            });
-
-                            // Fetch the selected customer details
-                            const selectedCustomer = customerOptions.find(
-                              (option) => option.value === e.value,
-                            )?.entity;
-
-                            if (selectedCustomer) {
-                              getCustomerAddresses(); // Re-fetch customer addresses
-                            }
-                          }}
-                        />
-
-                        {!isCompany && (
-                          <CustomInputField
-                            isSelect={true}
-                            optionsArray={companiesOptions}
-                            label="Company:"
-                            onInputChange={(e) => {
-                              onChangeSearchQuery(e);
-                            }}
-                            value={companiesOptions.find(
-                              (entity) => entity.value == job.company_id,
-                            )}
-                            placeholder=""
-                            isDisabled={true}
-
-                          // onChange={(e) => {
-                          //   setJob({
-                          //     ...job,
-                          //     company_id: e.value || null,
-                          //     customer_id: null,
-                          //   });
-                          //   getCustomersByCompanyId({
-                          //     query: "",
-                          //     page: 1,
-                          //     first: 100,
-                          //     orderByColumn: "id",
-                          //     orderByOrder: "ASC",
-                          //     company_id: e.value,
-                          //   });
-                          // }}
-                          />
-                        )}
-
-                        <Flex alignItems="center" mb="16px">
-                          <FormLabel
-                            display="flex"
-                            mb="0"
-                            width="200px"
-                            fontSize="sm"
-                            fontWeight="500"
-                            _hover={{ cursor: "pointer" }}
-                          >
-                            <SimpleGrid columns={{ sm: 1 }}>
-                              <GridItem>
-                                Additional email notification to:{" "}
-                              </GridItem>
-                            </SimpleGrid>
-                          </FormLabel>
-                          <Box>
-                            <TagsInput
-                              tags={jobCcEmailTags}
-                              onTagsChange={handleJobCcEmailsChange}
-                              onTagAdd={handleJobCcEmailAdd}
-                              onTagRemove={handleJobCcEmailRemove}
-                              wrapProps={{
-                                direction: "column",
-                                align: "start",
-                                width: "300px",
-                              }}
-                              wrapItemProps={(isInput) =>
-                                isInput ? { alignSelf: "stretch" } : null
-                              }
-                            />
-                          </Box>
-                        </Flex>
-
-                        <CustomInputField
-                          label="Operator phone:"
-                          placeholder=""
-                          isDisabled={true}
-                          name="operator_phone"
-                          value={customerSelected.phone_no}
-                          onChange={
-                            (e) => { }
-                            //setJob({
-                            //  ...job,
-                            //  [e.target.name]: e.target.value,
-                            //})
-                          }
-                        />
-                        <CustomInputField
-                          label="Operator email:"
-                          placeholder=""
-                          name="operator_email"
-                          isDisabled={true}
-                          value={customerSelected.email}
-                          onChange={
-                            (e) => { }
-                            //setJob({
-                            //  ...job,
-                            //  [e.target.name]: e.target.value,
-                            //})
-                          }
-                        />
-                        <CustomInputField
-                          label="Date:"
-                          type={"date"}
-                          placeholder=""
-                          name="job_date_at"
-                          value={jobDateAt}
-                          onChange={(e) => {
-                            setJobDateAt(e.target.value);
-                            setIsSameDayJob(today === e.target.value);
-                            setIsTomorrowJob(
-                              new Date(e.target.value).toDateString() ===
-                              new Date(
-                                new Date(today).setDate(
-                                  new Date(today).getDate() + 1,
-                                ),
-                              ).toDateString(),
-                            );
-                          }}
-                        />
-
-                        <CustomInputField
-                          label="Ready by:"
-                          type={"time"}
-                          placeholder=""
-                          name="ready_at"
-                          value={readyAt}
-                          onChange={(e) => {
-                            setReadyAt(e.target.value);
-                            setJob({
-                              ...job,
-                              ready_at: new Date(
-                                `${jobDateAt} ${e.target.value}`,
-                              ).toISOString(),
-                              drop_at: new Date(
-                                `${jobDateAt} ${dropAt}`,
-                              ).toISOString(),
-                            });
-                          }}
-                        />
-
-                        <CustomInputField
-                          label="Drop by:"
-                          type={"time"}
-                          placeholder=""
-                          name="drop_at"
-                          value={dropAt}
-                          onChange={(e) => {
-                            setDropAt(e.target.value);
-                            setJob({
-                              ...job,
-                              ready_at: new Date(
-                                `${jobDateAt} ${readyAt}`,
-                              ).toISOString(),
-                              drop_at: new Date(
-                                `${jobDateAt} ${e.target.value}`,
-                              ).toISOString(),
-                            });
-                          }}
-                        />
-
-                        <CustomInputField
-                          label="Timeslot:"
-                          placeholder=""
-                          name="timeslot"
-                          value={job.timeslot}
-                          onChange={(e) =>
-                            setJob({
-                              ...job,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                        />
-
-                        <CustomInputField
-                          label="Last Free Day:"
-                          type={"date"}
-                          placeholder=""
-                          name="last_free_at"
-                          value={job.last_free_at}
-                          onChange={(e) => {
-                            const value =
-                              e.target.value == "" ? null : e.target.value;
-                            setJob({
-                              ...job,
-                              [e.target.name]: value,
-                            });
-                          }}
-                        />
-
-                        <ColorSelect
-                          label="Type:"
-                          optionsArray={jobTypeOptions}
-                          selectedJobId={job.job_type_id}
-                          value={
-                            job.job_type_id
-                              ? jobTypeOptions.find(
-                                (jobType) => jobType.value == job.job_type_id,
-                              )
-                              : null
-                          }
-                          placeholder="Select type"
-                          onChange={(e) => {
-                            const selectedType = e.value;
-                            const selectedTypeName = jobTypeOptions.find(
-                              (jobType) => jobType.value === selectedType,
-                            )?.label;
-
-                            setJob({
-                              ...job,
-                              job_type_id: selectedType || null,
-                            });
-
-                            setRefinedData({
-                              ...refinedData,
-                              service_choice: selectedTypeName || null,
-                            });
-                          }}
-                        />
-
-                        <CustomInputField
-                          label="Reference:"
-                          placeholder=""
-                          name="reference_no"
-                          value={job.reference_no}
-                          onChange={(e) =>
-                            setJob({
-                              ...job,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                        />
-
-                        <CustomInputField
-                          label="Booked By:"
-                          placeholder=""
-                          name="booked_by"
-                          value={job.booked_by}
-                          onChange={(e) =>
-                            setJob({
-                              ...job,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                        />
-
-                        <CustomInputField
-                          isInput
-                          label="Quoted Price (Buy Price)"
-                          placeholder=""
-                          name="quoted_price"
-                          value={job.quoted_price}
-                          onChange={(e) =>
-                            setJob({
-                              ...job,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                        />
-
-                        <CustomInputField
-                          isTextArea={true}
-                          label="Admin notes:"
-                          placeholder="Admin notes"
-                          name="admin_notes"
-                          value={job.admin_notes}
-                          onChange={(e) =>
-                            setJob({
-                              ...job,
-                              [e.target.name]: e.target.value,
-                            })
-                          }
-                        />
-
-                      </Box>
-                    ) : (
-                      <Box mb="16px">
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Status:
-                          </Text>
-                          <Text fontSize="sm">{job.job_status?.name}</Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Job category:
-                          </Text>
-                          <Text fontSize="sm">{job.job_category?.name}</Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Booked by:
-                          </Text>
-
-                          <SimpleGrid columns={{ sm: 1 }}>
-                            <GridItem>
-                              <Text fontSize="sm">
-                                {job.customer?.full_name}
-                              </Text>
-                            </GridItem>
-                            <GridItem>
-                              <Text fontSize="xs" color={textColorSecodary}>
-                                {job.company?.name}
-                              </Text>
-                            </GridItem>
-                          </SimpleGrid>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Operator phone:
-                          </Text>
-                          <Text fontSize="sm">{job.customer?.phone_no}</Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Operator email:
-                          </Text>
-                          <Text fontSize="sm">{job.customer?.email}</Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Notification Emails:
-                          </Text>
-                          {job.job_cc_emails?.map((email: any) => (
-                            <Text fontSize="sm" key={email?.email}>
-                              {email?.email}
-                              {", "}
-                            </Text>
-                          ))}
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Date:
-                          </Text>
-                          <Text fontSize="sm">
-                            {formatDate(jobDateAt, "DD MMM YYYY")}
-                          </Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Ready by:
-                          </Text>
-                          <Text fontSize="sm">{formatTime(job.ready_at)}</Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Drop by:
-                          </Text>
-                          <Text fontSize="sm">{formatTime(job.drop_at)}</Text>
-                        </Flex>
-                        <Flex alignItems="center" mb={"16px"}>
-                          <Text width="200px" fontSize="sm">
-                            Reference:
-                          </Text>
-                          <Text fontSize="sm">{job.reference_no}</Text>
-                        </Flex>
-                      </Box>
-                    )}
-
-                    <Divider className="my-12" />
-
-                    {/* Addresses */}
-                    <Box>
-                      <h2 className="mb-4">Addresses</h2>
-
-                      {/* Pickup address */}
-                      <Box mb="16px">
-                        <h3 className="mb-5 mt-3">Pickup Information</h3>
-                        <Grid templateColumns="repeat(10, 1fr)" gap={0}>
-                          <GridItem colSpan={2}>
-                            <h4 className="mt-3">Pickup depot</h4>
-                          </GridItem>
-                          {isAdmin ? (
-                            <JobAddressesSection
-                              isAdmin={isAdmin}
-                              entityModel={job}
-                              savedAddressesSelect={savedAddressesSelect}
-                              defaultJobDestination={pickUpDestination}
-                              onAddressSaved={(hasChanged) => {
-                                getCustomerAddresses();
-                              }}
-                              jobDestinationChanged={(jobDestination) => {
-                                setPickUpDestination({
-                                  ...pickUpDestination,
-                                  ...jobDestination,
-                                  ...{ is_pickup: true },
-                                });
-                                // const selectedStateCode= jobDestination?.address_state=="Victoria"? "VIC" : jobDestination?.address_state=="Queensland"? "QLD" :"";
-                                // setFilteredDepotOptions(depotOptions.filter((option) => option.label === selectedStateCode));
-                                // console.log(depotOptions.filter((option) => option.label === selectedStateCode))
-                                setJob({
-                                  ...job,
-                                  ...{
-                                    pick_up_lng: jobDestination.lng,
-                                    pick_up_lat: jobDestination.lat,
-                                    pick_up_address: jobDestination.address,
-                                    pick_up_notes: jobDestination.notes,
-                                    pick_up_name: jobDestination.name,
-                                    pick_up_report: jobDestination.report,
-                                  },
-                                });
-                              }}
-                            />
-                          ) : (
-                            <GridItem colSpan={7}>
-                              <Flex
-                                alignItems="center"
-                                justifyContent="space-between"
-                                width="100%"
-                                className="py-0"
-                              >
-                                <p className="py-3 text-sm">
-                                  {pickUpDestination.address}
-                                </p>
-                              </Flex>
-                            </GridItem>
-                          )}
-                        </Grid>
-                      </Box>
-
-                      <Divider className="my-6" />
-
-                      {/* Delivery Information */}
-                      <Box mb="16px">
-                        <h3 className="mb-5 mt-3">Delivery Information</h3>
-                        {/* foreach jobDestinations */}
-                        {jobDestinations.map((jobDestination, index) => {
-                          return (
-                            <Box key={jobDestination.id}>
-                              <Grid templateColumns="repeat(10, 1fr)" gap={4}>
-                                <GridItem colSpan={2}>
-                                  <h4 className="mt-3">
-                                    Delivery Address {index + 1}
-                                  </h4>
-                                </GridItem>
-                                {isAdmin ? (
-                                  <JobAddressesSection
-                                    isAdmin={isAdmin}
-                                    entityModel={job}
-                                    savedAddressesSelect={savedAddressesSelect}
-                                    defaultJobDestination={jobDestination}
-                                    jobDestinationChanged={(jobDestination) => {
-                                      handleJobDestinationChanged(
-                                        jobDestination,
-                                        index,
-                                      );
-                                    }}
-                                    onAddressSaved={(hasChanged) => {
-                                      getCustomerAddresses();
-                                    }}
-                                  />
-                                ) : (
-                                  <GridItem colSpan={7}>
-                                    <Flex
-                                      alignItems="center"
-                                      justifyContent="space-between"
-                                      width="100%"
-                                      className="py-0"
-                                    >
-                                      <p className="py-3 text-sm">
-                                        {jobDestination.address}
-                                      </p>
-                                    </Flex>
-                                  </GridItem>
-                                )}
-
-                                <GridItem>
-                                  <Flex>
-                                    {/* if index == 0 */}
-                                    {jobDestinations.length > 1 && isAdmin && (
-                                      <Button
-                                        bg="white"
-                                        className="!text-[var(--chakra-colors-black-400)] mt-[3px] !py-3 !px-1 !h-[unset]"
-                                        onClick={() => {
-                                          handleRemoveFromJobDestinations(
-                                            index,
-                                          );
-                                        }}
-                                      >
-                                        <FontAwesomeIcon
-                                          icon={faTrashCan}
-                                          className="!text-[var(--chakra-colors-black-400)]"
-                                        />
-                                      </Button>
-                                    )}
-                                  </Flex>
-                                </GridItem>
-                              </Grid>
-                              <Divider className="my-6" />
-                            </Box>
-                          );
-                        })}
-                      </Box>
-
-                      {isAdmin && (
-                        <Box mb="16px">
-                          <Flex alignItems="center" mb="16px" mt={5}>
-                            <Button
-                              variant="secondary"
-                              onClick={() => {
-                                addToJobDestinations();
-                              }}
-                            >
-                              + Add delivery location
-                            </Button>
-                          </Flex>
-                          <Divider className="my-12" />
-                        </Box>
-                      )}
-                    </Box>
-
-                    {/* Items */}
-                    <Box mb="16px" mt={4}>
-                      <Flex justify="space-between" align="center" mb="37px">
-                        <h3 className="">Items</h3>
-                        <Button
-                          hidden={!isAdmin}
-                          variant="secondary"
-                          onClick={() => {
-                            addToJobItems();
-                          }}
-                        >
-                          + Add item
-                        </Button>
-                      </Flex>
-                      {isAdmin ? (
-                        <Box>
-                          <JobInputTable
-                            columns={itemsTableColumns}
-                            data={jobItems}
-                            optionsSelect={itemTypes}
-                            onRemoveClick={(index) => {
-                              handleRemoveFromJobItems(index);
-                            }}
-                            onValueChanged={handleJobItemChanged}
-                          />
-
-                          {/* <Divider className="my-12" /> */}
-                        </Box>
-                      ) : (
-                        <Table>
-                          <Thead>
-                            <Tr>
-                              <Th>TYPE</Th>
-                              <Th>DIMENSIONS (L,W,H)</Th>
-                              <Th>QTY</Th>
-                              <Th>WEIGHT</Th>
-                              <Th>CBM</Th>
-                            </Tr>
-                          </Thead>
-                          <Tbody
-                            className="bg-white divide-y divide-gray-200"
-                            style={{ height: "200px" }}
-                          >
-                            {jobItems.map((jobItem) => {
-                              return (
-                                <Tr key={jobItem.id}>
-                                  <Td> {jobItem.item_type?.name}</Td>
-                                  <Td>
-                                    {(jobItem.dimension_height * 100).toFixed(
-                                      2,
-                                    )}
-                                    cm x{" "}
-                                    {(jobItem.dimension_width * 100).toFixed(2)}
-                                    cm x{" "}
-                                    {(jobItem.dimension_depth * 100).toFixed(2)}
-                                    cm
-                                  </Td>
-                                  <Td> {jobItem.quantity}</Td>
-                                  <Td> {jobItem.weight}kg</Td>
-                                  <Td>{jobItem.volume.toFixed(2)}cbm</Td>
-                                </Tr>
-                              );
-                            })}
-                          </Tbody>
-                        </Table>
-                      )}
-                      <Box
-                        mt={4}
-                        p={3}
-                        borderWidth="1px"
-                        borderColor="gray.200"
-                        borderRadius="md"
-                        backgroundColor="gray.50"
-                      >
-                        {/* CBM Auto */}
-                        <Flex justify="flex-end" align="center" mb={2}>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="500"
-                            color="gray.700"
-                            pl={4}
-                          >
-                            CBM Auto&nbsp;:&nbsp;
-                          </Text>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color="blue.600"
-                            textAlign="right"
-                            pr={4}
-                          >
-                            {quoteCalculationRes.cbm_auto}
-                          </Text>
-                        </Flex>
-
-                        {/* Total Weight */}
-                        <Flex justify="flex-end" align="center">
-                          <Text
-                            fontSize="sm"
-                            fontWeight="500"
-                            color="gray.700"
-                            pl={4}
-                          >
-                            Total Weight&nbsp;:&nbsp;
-                          </Text>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color="blue.600"
-                            textAlign="right"
-                            pr={4}
-                          >
-                            {quoteCalculationRes.total_weight}
-                          </Text>
-                        </Flex>
-                      </Box>
-                    </Box>
-
-                    {/* Attachments */}
-                    <Divider />
-                    <Box>
-                      <h3 className="mb-6">Attachments</h3>
-                      {isAdmin && (
-                        <Flex width="100%" className="mb-6">
-                          <FileInput
-                            entity="Job"
-                            entityId={job.id}
-                            onUpload={() => {
-                              getJob();
-                              setUpdatingMedia(true);
-                            }}
-                            description="Browse or drop your files here to upload"
-                            height="80px"
-                            bg="primary.100"
-                          ></FileInput>
-                        </Flex>
-                      )}
-
-                      {/* foreach jobAttachments */}
-                    {!jobLoading && Array.isArray(job?.media_admin) && (
-  <PaginationTable
-    columns={attachmentColumns}
-    data={job.media_admin}
-    showDelete={isAdmin}
-    onDelete={(mediaId) => {
-      handleDeleteMedia({
-        variables: {
-          id: mediaId,
-        },
-      });
-    }}
-  />
-                      )}
-                    </Box>
-
-                    <Divider className="my-12" />
-
-                    {/* Additional Info */}
-                    <Box mb="16px">
-                      <h3 className="mb-5">Additional Info</h3>
-                      {isAdmin ? (
-                        <Box mb="16px">
-                          <CustomInputField
-                            label="Customer Notes"
-                            placeholder=""
-                            extra="Visible to driver"
-                            isTextArea={true}
-                            name="customer_notes"
-                            value={job.customer_notes}
-                            onChange={(e) =>
-                              setJob({
-                                ...job,
-                                [e.target.name]: e.target.value,
-                              })
-                            }
-                          />
-                          <CustomInputField
-                            isTextArea={true}
-                            label="Base notes"
-                            placeholder=""
-                            name="base_notes"
-                            value={job.base_notes}
-                            onChange={(e) =>
-                              setJob({
-                                ...job,
-                                [e.target.name]: e.target.value,
-                              })
-                            }
-                          />
-
-                          {/* <Text fontSize="sm" color={textColorSecodary} mt={3}>
-                            <strong>Hint: </strong>To get a quote, the location
-                            must be <strong>Victoria or Queensland</strong>, and
-                            the job category should be{" "}
-                            <strong>Air Freight or LCL</strong>.
-                          </Text> */}
-                        </Box>
-                      ) : (
-                        <Flex alignItems="center" mb={"16px"}>
-                          <SimpleGrid width="200px" columns={{ sm: 1 }}>
-                            <GridItem>
-                              <Text fontSize="sm">Customer Notes</Text>
-                            </GridItem>
-                            <GridItem>
-                              <Text fontSize="xs" color={textColorSecodary}>
-                                Visible to driver
-                              </Text>
-                            </GridItem>
-                          </SimpleGrid>
-                          <Text fontSize="sm" width={"50%"}>
-                            {job.customer_notes}
-                          </Text>
-                        </Flex>
-                      )}
-                      <Box mb="16px">
-                        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                          <Box>
-                            <Flex alignItems="center" width="100%" pt={7}>
-                              <SimpleGrid columns={{ sm: 1 }} width="100%">
-                                <GridItem>
-                                  <FormLabel
-                                    display="flex"
-                                    mb="0"
-                                    fontSize="sm"
-                                    fontWeight="500"
-                                    _hover={{ cursor: "pointer" }}
-                                  >
-                                    Does this job require a timeslot booking
-                                    through Inbound Connect?
-                                  </FormLabel>
-                                </GridItem>
-                                <GridItem>
-                                  <RadioGroup
-                                    isDisabled={!isAdmin}
-                                    value={job.is_inbound_connect ? "1" : "0"}
-                                    onChange={(e) => {
-                                      setJob({
-                                        ...job,
-                                        is_inbound_connect:
-                                          e === "1" ? true : false,
-                                      });
-                                      const selectedStateCode =
-                                        job.pick_up_state == "Victoria"
-                                          ? "VIC"
-                                          : job.pick_up_state == "Queensland"
-                                            ? "QLD"
-                                            : "";
-                                      const filtereddepotOption =
-                                        depotOptions.filter(
-                                          (option) =>
-                                            option.state_code ==
-                                            selectedStateCode,
-                                        );
-                                      // console.log(
-                                      //   filtereddepotOption,job.pick_up_state,
-                                      //   "filtereddepotOption",
-                                      // );
-                                      setFilteredDepotOptions(
-                                        filtereddepotOption,
-                                      );
-                                    }}
-                                  >
-                                    <Stack direction="row" pt={3}>
-                                      <Radio value="0">No</Radio>
-                                      <Radio value="1" pl={6}>
-                                        Yes
-                                      </Radio>
-                                    </Stack>
-                                  </RadioGroup>
-                                </GridItem>
-                              </SimpleGrid>
-                            </Flex>
-
-                            {job.job_category_id == 1 &&
-                              job.is_inbound_connect == true && (
-                                <Box>
-                                  <CustomInputField
-                                    isSelect={true}
-                                    optionsArray={filtereddepotOptions} // Use the state directly
-                                    label="Timeslot depots:"
-                                    value={
-                                      filtereddepotOptions.find(
-                                        (option) =>
-                                          option.value === job.timeslot_depots,
-                                      ) || null
-                                    }
-                                    placeholder="Select a depot"
-                                    onChange={(e) => {
-                                      setSelectedDepot(e.value);
-                                      setRefinedData((prevData) => ({
-                                        ...prevData,
-                                        timeslot_depots: e.value,
-                                      })); // Update the selected depot directly
-                                      //  console.log("Selected depot: ", e.value)
-                                      setJob({
-                                        ...job,
-                                        timeslot_depots: e.value, // Update job.timeslot_depots
-                                      });
-                                     sendFreightData()
-                                    }}
-                                  />
-                                </Box>
-                              )}
-
-                            <Flex alignItems="center" width="100%" pt={7}>
-                              <SimpleGrid columns={{ sm: 1 }} width="100%">
-                                <GridItem>
-                                  <FormLabel
-                                    display="flex"
-                                    mb="0"
-                                    fontSize="sm"
-                                    fontWeight="500"
-                                    _hover={{ cursor: "pointer" }}
-                                  >
-                                    Does this job require hand unloading?
-                                  </FormLabel>
-                                </GridItem>
-                                <GridItem>
-                                  <RadioGroup
-                                    isDisabled={!isAdmin}
-                                    value={job.is_hand_unloading ? "1" : "0"}
-                                    onChange={(e) => {
-                                      setJob({
-                                        ...job,
-                                        is_hand_unloading:
-                                          e === "1" ? true : false,
-                                      });
-                                    }}
-                                  >
-                                    <Stack direction="row" pt={3}>
-                                      <Radio value="0">No</Radio>
-                                      <Radio value="1" pl={6}>
-                                        Yes
-                                      </Radio>
-                                    </Stack>
-                                  </RadioGroup>
-                                </GridItem>
-                              </SimpleGrid>
-                            </Flex>
-
-                            <Flex alignItems="center" width="100%" pt={7}>
-                              <SimpleGrid columns={{ sm: 1 }} width="100%">
-                                <GridItem>
-                                  <FormLabel
-                                    display="flex"
-                                    mb="0"
-                                    fontSize="sm"
-                                    fontWeight="500"
-                                    _hover={{ cursor: "pointer" }}
-                                  >
-                                    Are there dangerous goods being transported?
-                                  </FormLabel>
-                                </GridItem>
-                                <GridItem>
-                                  <RadioGroup
-                                    isDisabled={!isAdmin}
-                                    value={job.is_dangerous_goods ? "1" : "0"}
-                                    onChange={(e) => {
-                                      setJob({
-                                        ...job,
-                                        is_dangerous_goods:
-                                          e === "1" ? true : false,
-                                      });
-                                    }}
-                                  >
-                                    <Stack direction="row" pt={3}>
-                                      <Radio value="0">No</Radio>
-                                      <Radio value="1" pl={6}>
-                                        Yes
-                                      </Radio>
-                                    </Stack>
-                                  </RadioGroup>
-                                </GridItem>
-                              </SimpleGrid>
-                            </Flex>
-
-                            <Flex alignItems="center" width="100%" pt={7}>
-                              <SimpleGrid columns={{ sm: 1 }} width="100%">
-                                <GridItem>
-                                  <FormLabel
-                                    display="flex"
-                                    mb="0"
-                                    fontSize="sm"
-                                    fontWeight="500"
-                                    _hover={{ cursor: "pointer" }}
-                                  >
-                                    Is a Tail Lift vehicle required?
-                                  </FormLabel>
-                                </GridItem>
-                                <GridItem>
-                                  <RadioGroup
-                                    isDisabled={!isAdmin}
-                                    value={job.is_tailgate_required ? "1" : "0"}
-                                    onChange={(e) => {
-                                      setJob({
-                                        ...job,
-                                        is_tailgate_required:
-                                          e === "1" ? true : false,
-                                      });
-                                    }}
-                                  >
-                                    <Stack direction="row" pt={3}>
-                                      <Radio value="0">No</Radio>
-                                      <Radio value="1" pl={6}>
-                                        Yes
-                                      </Radio>
-                                    </Stack>
-                                  </RadioGroup>
-                                </GridItem>
-                              </SimpleGrid>
-                            </Flex>
-                          </Box>
-                          <Box>
-                            {/* Right side content goes here */}
-                            <GridItem pr={4}>
-                              {/* {(job.job_category_id == 1 ||
-                                job.job_category_id == 2) &&
-                                (job.transport_location === "VIC" ||
-                                  job.transport_location === "QLD") && ( */}
-                              <Flex
-                                height="100%"
-                                justifyContent="center"
-                                pt={7}
-                                flexDirection="column"
-                              >
-                                {/* First Row: Button */}
-                                <Flex justify="center">
-                                  <Button
-                                    bg="#3b82f6" /* Match the blue color */
-                                    color="white"
-                                    _hover={{
-                                      bg: "#2563eb", // Slightly darker blue for hover
-                                    }}
-                                    _active={{
-                                      bg: "#2563eb", // Active state
-                                      transform: "scale(0.95)", // Slightly shrink button when activated
-                                    }}
-                                    borderRadius="8px" /* Rounded corners */
-                                    px={6}
-                                    py={3}
-                                    fontWeight="500"
-                                    fontSize="sm"
-                                    isDisabled={!isAdmin}
-                                    onClick={() => {
-                                      handleSaveJobPriceCalculation();
-                                    }}
-                                  >
-                                    {buttonText}
-                                  </Button>
-                                </Flex>
-
-                                {/* Second Row: Other Elements */}
-                                {quoteCalculationRes && (
-                                  <Box mt={4}>
-                                    <Stack spacing={3}>
-                                      {/* Freight */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Freight:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.freight}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* Fuel */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Fuel:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.fuel}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* Hand Unload */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Hand Unload:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.hand_unload}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* Time Slot */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Time Slot:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.time_slot}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* Dangerous Goods */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Dangerous Goods:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.dangerous_goods}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* tail_lift */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Tail Lift:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.tail_lift}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* Stackable */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Stackable:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.stackable}
-                                        </Text>
-                                      </Flex>
-
-                                      {/* Total */}
-                                      <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
-                                        >
-                                          Total:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.total}
-                                        </Text>
-                                      </Flex>
-                                    </Stack>
-                                  </Box>
-                                )}
-                              </Flex>
-                              {/* )} */}
-                            </GridItem>
-                          </Box>
-                        </SimpleGrid>
-                      </Box>
-                    </Box>
-                    {isAdmin && (
-                      <Box>
-                        <Divider className="mt-12 mb-6" />
-
-                        <Flex alignItems="center" className="mb-8">
-                          <AreYouSureAlert
-                            onDelete={handleDeleteJob}
-                          ></AreYouSureAlert>
-                        </Flex>
-                      </Box>
-                    )}
-                  </Box>
+                  <JobDetailsTab
+                    isAdmin={isAdmin}
+                    job={job}
+                    setJob={setJob}
+                    jobStatuses={jobStatuses}
+                    jobCategories={jobCategories}
+                    depotOptions={depotOptions}
+                    _setDepotOptions={setDepotOptions}
+                    drivers={drivers}
+                    companiesOptions={companiesOptions}
+                    customerOptions={customerOptions}
+                    customerSelected={customerSelected}
+                    jobCcEmailTags={jobCcEmailTags}
+                    handleJobCcEmailsChange={handleJobCcEmailsChange}
+                    handleJobCcEmailAdd={handleJobCcEmailAdd}
+                    handleJobCcEmailRemove={handleJobCcEmailRemove}
+                    jobDateAt={jobDateAt}
+                    setJobDateAt={setJobDateAt}
+                    readyAt={readyAt}
+                    setReadyAt={setReadyAt}
+                    dropAt={dropAt}
+                    setDropAt={setDropAt}
+                    jobTypeOptions={jobTypeOptions}
+                    refinedData={refinedData}
+                    setRefinedData={setRefinedData}
+                    today={today}
+                    setIsSameDayJob={setIsSameDayJob}
+                    setIsTomorrowJob={setIsTomorrowJob}
+                    savedAddressesSelect={savedAddressesSelect}
+                    pickUpDestination={pickUpDestination}
+                    setPickUpDestination={setPickUpDestination}
+                    getCustomerAddresses={getCustomerAddresses}
+                    jobDestinations={jobDestinations}
+                    handleJobDestinationChanged={handleJobDestinationChanged}
+                    addToJobDestinations={addToJobDestinations}
+                    handleRemoveFromJobDestinations={
+                      handleRemoveFromJobDestinations
+                    }
+                    isCompany={isCompany}
+                    quoteCalculationRes={quoteCalculationRes}
+                    buttonText={buttonText}
+                    handleSaveJobPriceCalculation={
+                      handleSaveJobPriceCalculation
+                    }
+                    filtereddepotOptions={filtereddepotOptions}
+                    setFilteredDepotOptions={setFilteredDepotOptions}
+                    setSelectedDepot={setSelectedDepot}
+                    sendFreightData={sendFreightData}
+                    jobItems={jobItems}
+                    addToJobItems={addToJobItems}
+                    handleRemoveFromJobItems={handleRemoveFromJobItems}
+                    handleJobItemChanged={handleJobItemChanged}
+                    itemsTableColumns={itemsTableColumns}
+                    itemTypes={itemTypes}
+                    getJob={getJob}
+                    handleDeleteMedia={handleDeleteMedia}
+                    jobLoading={jobLoading}
+                    attachmentColumns={attachmentColumns}
+                    handleDeleteJob={handleDeleteJob}
+                    onChangeCustomerSearchQuery={onChangeCustomerSearchQuery}
+                    onChangeSearchQuery={onChangeSearchQuery}
+                    textColorSecodary={textColorSecodary}
+                    _updatingMedia={updatingMedia}
+                    setUpdatingMedia={setUpdatingMedia}
+                  />
                 )}
+
                 {/* Job Details */}
                 {tabId == 2 && <ReportsTab jobObject={job} />}
                 {/* Message Log */}

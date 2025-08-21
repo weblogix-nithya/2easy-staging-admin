@@ -1,13 +1,15 @@
 /* eslint-disable @next/next/no-sync-scripts */
+import { Link } from "@chakra-ui/react";
 import { ColorModeScript } from "@chakra-ui/system";
 import { Head, Html, Main, NextScript } from "next/document";
+// import Script from "next/script";
 import theme from "theme/theme";
 
 export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="apple-touch-icon" href="/logo192.png" />
+        <Link rel="apple-touch-icon" href="/logo192.png" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
 
@@ -22,11 +24,6 @@ export default function Document() {
           href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Montserrat:wght@400;700&display=swap"
           rel="stylesheet"
         ></link>
-        {/* <script
-          async
-          type="text/javascript"
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&libraries=places&loading=async`}
-        /> */}
       </Head>
 
       <body id="root">

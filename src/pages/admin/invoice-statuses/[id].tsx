@@ -25,17 +25,17 @@ import { useState } from "react";
 function InvoiceStatusEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoiceStatus, setInvoiceStatus] = useState(defaultInvoiceStatus);
-  const [invoiceStatusStatuses, setInvoiceStatusStatuses] = useState([]);
-  const [invoiceStatusTypes, setInvoiceStatusTypes] = useState([]);
+  // const [invoiceStatusStatuses, setInvoiceStatusStatuses] = useState([]);
+  // const [invoiceStatusTypes, setInvoiceStatusTypes] = useState([]);
   const router = useRouter();
   const { id } = router.query;
 
   const {
     loading: invoiceStatusLoading,
-    data: invoiceStatusData,
-    refetch: getInvoiceStatus,
+    // data: invoiceStatusData,
+    // refetch: getInvoiceStatus,
   } = useQuery(GET_INVOICE_STATUS_QUERY, {
     variables: {
       id: id,
@@ -56,7 +56,7 @@ function InvoiceStatusEdit() {
     variables: {
       input: invoiceStatus,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "InvoiceStatus updated",
         status: "success",
@@ -73,7 +73,7 @@ function InvoiceStatusEdit() {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "InvoiceStatus deleted",
         status: "success",

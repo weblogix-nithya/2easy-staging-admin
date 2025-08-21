@@ -15,6 +15,7 @@ export default function Home() {
     } else {
       router.push("/auth/login");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (

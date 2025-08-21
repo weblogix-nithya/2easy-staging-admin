@@ -18,35 +18,35 @@ import { MUTATION_FORGOT_PASSWORD } from "graphql/auth";
 import DefaultAuthLayout from "layouts/auth/Default";
 // Assets
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { parseCookies } from "nookies";
+// import { useRouter } from "next/router";
+// import { parseCookies } from "nookies";
 import React, { useState } from "react";
 
 export default function ForgotPassword() {
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "black.500";
+   const textColorSecondary = "black.500";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
   const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
-  const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
-  const googleText = useColorModeValue("navy.700", "white");
-  const googleHover = useColorModeValue(
-    { bg: "gray.200" },
-    { bg: "whiteAlpha.300" },
-  );
-  const googleActive = useColorModeValue(
-    { bg: "secondaryGray.300" },
-    { bg: "whiteAlpha.200" },
-  );
-  const [show, setShow] = React.useState(false);
-  const handleClick = () => setShow(!show);
-  const router = useRouter();
+  // const googleBg = useColorModeValue("secondaryGray.300", "whiteAlpha.200");
+  // const googleText = useColorModeValue("navy.700", "white");
+  // const googleHover = useColorModeValue(
+  //   { bg: "gray.200" },
+  //   { bg: "whiteAlpha.300" },
+  // );
+  // const googleActive = useColorModeValue(
+  //   { bg: "secondaryGray.300" },
+  //   { bg: "whiteAlpha.200" },
+  // );
+  // const [show, setShow] = React.useState(false);
+  // const handleClick = () => setShow(!show);
+  // const router = useRouter();
   const toast = useToast();
-  const cookies = parseCookies();
+  // const cookies = parseCookies();
   const [email, setEmail] = useState("");
 
-  const [handleForgotPassword, { data, loading, error, reset }] = useMutation(
+  const [handleForgotPassword, {  }] = useMutation(
     MUTATION_FORGOT_PASSWORD,
     {
       variables: {
@@ -54,7 +54,7 @@ export default function ForgotPassword() {
           email: email,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: () => {
         toast({
           title: "Password reset link sent to your email",
           status: "success",

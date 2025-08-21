@@ -5,8 +5,8 @@ import {
   Flex,
   SimpleGrid,
   useColorModeValue,
-  useDisclosure,
-  useToast,
+  // useDisclosure,
+  // useToast,
 } from "@chakra-ui/react";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import PaginationTable from "components/table/PaginationTable";
@@ -15,15 +15,15 @@ import debounce from "lodash.debounce";
 import React, { useEffect, useMemo, useState } from "react";
 
 export default function CustomerVehicleHiresTab(props: any) {
-  const toast = useToast();
+  // const toast = useToast();
   const { customer } = props;
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
   let menuBg = useColorModeValue("white", "navy.800");
 
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  // const { isOpen, onOpen, onClose } = useDisclosure();
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -68,9 +68,9 @@ export default function CustomerVehicleHiresTab(props: any) {
 
   const {
     loading,
-    error,
+    // error,
     data: customerVehicleHires,
-    refetch: getVehicleHires,
+    // refetch: getVehicleHires,
   } = useQuery(GET_VEHICLE_HIRES_QUERY, {
     variables: {
       query: searchQuery,

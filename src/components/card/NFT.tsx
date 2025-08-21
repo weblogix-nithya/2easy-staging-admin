@@ -32,7 +32,7 @@ export default function NFT(props: {
   const textColorBid = useColorModeValue("brand.500", "white");
   return (
     <Card p="20px">
-      <Flex direction={{ base: "column" }} justify="center">
+      <Flex flexDirection={{ base: "column" }} justify="center">
         <Box mb={{ base: "20px", "2xl": "20px" }} position="relative">
           <AspectRatio ratio={7 / 5}>
             <Image src={image} w={"100%"} borderRadius="20px" alt="" />
@@ -65,7 +65,7 @@ export default function NFT(props: {
         <Flex flexDirection="column" justify="space-between" h="100%">
           <Flex
             justify="space-between"
-            direction={{
+            flexDirection={{
               base: "row",
               md: "column",
               lg: "row",
@@ -129,7 +129,7 @@ export default function NFT(props: {
               "2xl": "center",
             }}
             justify="space-between"
-            direction={{
+            flexDirection={{
               base: "row",
               md: "column",
               lg: "row",

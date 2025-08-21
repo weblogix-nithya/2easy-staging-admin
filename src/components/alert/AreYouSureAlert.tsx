@@ -1,4 +1,4 @@
-import {
+ import {
   AlertDialog,
   AlertDialogBody,
   AlertDialogContent,
@@ -10,10 +10,14 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 
-export default function AreYouSureAlert(props: any) {
-  const { onDelete, isLoading } = props;
+type AreYouSureAlertProps = {
+  onDelete: () => void;
+  isLoading?: boolean;
+};
+
+export default function AreYouSureAlert({ onDelete, isLoading }: AreYouSureAlertProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = React.useRef();
+  const cancelRef = React.useRef<HTMLButtonElement>(null); // ✅ Proper typing
 
   function handleDelete() {
     onDelete();
@@ -37,7 +41,9 @@ export default function AreYouSureAlert(props: any) {
               Delete
             </AlertDialogHeader>
 
-            <AlertDialogBody>Are you sure?</AlertDialogBody>
+            <AlertDialogBody>
+              Are you sure?
+            </AlertDialogBody>
 
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={onClose}>

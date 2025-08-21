@@ -49,9 +49,9 @@ function InvoiceEdit() {
   let menuBg = useColorModeValue("white", "navy.800");
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [invoice, setInvoice] = useState(defaultInvoice);
-  const [invoiceStatuses, setInvoiceStatuses] = useState([
+  const [invoiceStatuses, _setInvoiceStatuses] = useState([
     { id: 1, value: "1", name: "Pending/Draft", label: "Pending/Draft" },
     {
       id: 6,
@@ -62,15 +62,15 @@ function InvoiceEdit() {
   ]);
   const [invoiceLineItems, setInvoiceLineItems] = useState([]);
   const [deleteInvoiceLineItemId, setDeleteInvoiceLineItemId] = useState(null);
-  const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const customerId = useSelector((state: RootState) => state.user.customerId);
   const router = useRouter();
   const { id } = router.query;
 
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
+  const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
 
   const onChangeSearchQuery = useMemo(() => {
@@ -82,8 +82,8 @@ function InvoiceEdit() {
 
   const {
     loading,
-    error,
-    data: invoiceLineItemsData,
+    // error,
+    // data: invoiceLineItemsData,
     refetch: getInvoiceLineItems,
   } = useQuery(GET_INVOICE_LINE_ITEMS_QUERY, {
     variables: {
@@ -101,7 +101,7 @@ function InvoiceEdit() {
 
   const {
     loading: invoiceLoading,
-    data: invoiceData,
+    // data: invoiceData,
     refetch: getInvoice,
   } = useQuery(GET_INVOICE_QUERY, {
     variables: {
@@ -122,7 +122,7 @@ function InvoiceEdit() {
   const [handleUpdateLineItem, {}] = useMutation(
     UPDATE_INVOICE_LINE_ITEM_MUTATION,
     {
-      onCompleted: (data: any) => {
+      onCompleted: () => {
         toast({
           title: "Line Item updated",
           status: "success",
@@ -139,7 +139,7 @@ function InvoiceEdit() {
   const [handleCreateLineItem, {}] = useMutation(
     CREATE_INVOICE_LINE_ITEM_MUTATION,
     {
-      onCompleted: (data: any) => {
+      onCompleted: () => {
         toast({
           title: "Line Item created",
           status: "success",
@@ -162,7 +162,7 @@ function InvoiceEdit() {
           invoice_status_id: 6,
         },
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Invoice Approved",
           status: "success",
@@ -191,7 +191,7 @@ function InvoiceEdit() {
         total: invoice.total,
       },
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Invoice updated",
         status: "success",
@@ -240,11 +240,11 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
-    onCompleted: (data) => {
+    onCompleted: (_data) => {
       toast({
         title: "Invoice deleted",
         status: "success",
@@ -264,7 +264,7 @@ function InvoiceEdit() {
       variables: {
         id: deleteInvoiceLineItemId,
       },
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Line Item deleted",
           status: "success",
@@ -293,6 +293,7 @@ function InvoiceEdit() {
       sub_total: invoiceTotal,
       total: invoiceTotal * 1.1,
     });
+     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoiceLineItems]);
 
   return (

@@ -5,7 +5,7 @@ import {
   Divider,
   Flex,
   Link,
-  useColorModeValue,
+  // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
@@ -18,8 +18,6 @@ import PaginationMultipleImageTable from "./PaginationMultipleImageTable";
 export default function ReportsTab(props: { jobObject: any }) {
   const { jobObject } = props;
   const toast = useToast();
-  const textColor = useColorModeValue("navy.700", "white");
-  let menuBg = useColorModeValue("white", "navy.800");
   const [job, setJob] = useState(jobObject);
   const [jobDestinationsConfirmed, setJobDestinationsConfirmed] = useState([]);
   const [driverIssues, setDriverIssues] = useState([]);
@@ -92,9 +90,9 @@ export default function ReportsTab(props: { jobObject: any }) {
     [],
   );
 
-  const handleDownloadPod = () => {
-    console.log("download pod"); //TODO: download pod
-  };
+  // const handleDownloadPod = () => {
+  //   console.log("download pod"); //TODO: download pod
+  // };
   useEffect(() => {
     setJob(jobObject);
     let _driverIssues: any[] = [];

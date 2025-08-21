@@ -22,7 +22,7 @@ import { useState } from "react";
 function VehicleTypeCreate() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
-  const textColorSecondary = "gray.400";
+  //  const textColorSecondary = "gray.400";
   const [vehicleType, setVehicleType] = useState(defaultVehicleType);
   const router = useRouter();
 

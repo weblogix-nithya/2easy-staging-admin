@@ -48,14 +48,14 @@ export default function QuoteAddressesTab(props: {
     defaultQuoteDestination,
   );
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [randomIdSection, setRandomIdSection] = useState(
+  const [randomIdSection, _setRandomIdSection] = useState(
     Math.random().toString(36).substring(7),
   );
   const [randomIdKey, setRandomIdKey] = useState(
     Math.random().toString(36).substring(7),
   );
 
-  const [isAddressExpanded, setIsAddressExpanded] = useState(false);
+  const [_isAddressExpanded, setIsAddressExpanded] = useState(false);
 
   const handleAddressDone = () => {
     setIsAddressExpanded(false);
@@ -122,7 +122,7 @@ export default function QuoteAddressesTab(props: {
   const [updateCustomerAddress, {}] = useMutation(
     UPDATE_CUSTOMER_ADDRESS_MUTATION,
     {
-      onCompleted: (data) => {
+      onCompleted: (_data) => {
         toast({
           title: "Saved customer address updated",
           status: "success",
@@ -140,14 +140,17 @@ export default function QuoteAddressesTab(props: {
     if (isSavedAddress && savedAddressSelectedId != null) {
       handleUpdateCustomerAddress();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quoteDestination]);
   useEffect(() => {
     if (quoteDestination.id != defaultQuoteDestination.id)
       setQuoteDestination(defaultQuoteDestination);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultQuoteDestination]);
   useEffect(() => {
     setIsSavedAddress(false);
     handleSetRandomIdKey();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entityModel?.customer_id]);
   const handleSetRandomIdKey = () => {
     setRandomIdKey(Math.random().toString(36).substring(7));

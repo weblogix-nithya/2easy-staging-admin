@@ -1,29 +1,36 @@
 // External Imports
 import {
   faBriefcase,
+  faClock,
   faFileInvoiceDollar,
   faGaugeSimpleHigh,
-  faTruckClock,
   faTruckRampBox,
   faUser,
   faUserLock,
-} from "@fortawesome/pro-solid-svg-icons";
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import dynamic from 'next/dynamic';
 // Admin Page Imports
 import Clients from "pages/admin/clients/index";
 import Companies from "pages/admin/companies/index";
 import Customers from "pages/admin/customers/index";
-import MainDashboard from "pages/admin/dashboard";
+// import MainDashboard from "pages/admin/dashboard";
 import Drivers from "pages/admin/drivers/index";
 import Invoices from "pages/admin/invoices/index";
 import JobAllocationIndex from "pages/admin/job-allocations/index";
 import Jobs from "pages/admin/jobs/index";
-import Profile from "pages/admin/profile";
-import Quote from "pages/admin/quotes/index";
+// import Profile from "pages/admin/profile";
+import Quote from "pages/admin/quotes/quotes";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
 import VehicleHire from "pages/admin/vehicle-hires";
-// import Vendors from "pages/admin/vendors/index";
+import Vendors from "pages/admin/vendors/index";
+const Profile = dynamic(() => import('pages/admin/profile'), {
+  ssr: false,
+});
+const MainDashboard = dynamic(() => import('pages/admin/dashboard'), {
+  ssr: false,
+});
 // Types
 import { IRoute } from "types/navigation";
 
@@ -70,7 +77,7 @@ const routes: IRoute[] = [
     title: "Hourly Hire",
     layout: "/admin",
     path: "/vehicle-hires",
-    icon: <FontAwesomeIcon icon={faTruckClock} className="mr-1" />,
+    icon: <FontAwesomeIcon icon={faClock} className="mr-1" />,
     component: VehicleHire,
     sidebar: true,
     isAdmin: true,
@@ -167,18 +174,18 @@ const routes: IRoute[] = [
     isCompany: false,
     isPrivate: false,
   },
-  // {
-  //   name: "Vendors",
-  //   layout: "/admin",
-  //   icon: <FontAwesomeIcon icon={faBriefcase} className="mr-1" />,
-  //   // icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-  //   path: "/vendors",
-  //   component: Vendors,
-  //   sidebar: true,
-  //   isAdmin: true,
-  //   isCompany: false,
-  //   isPrivate: true,
-  // },
+  {
+    name: "Vendors",
+    layout: "/admin",
+    icon: <FontAwesomeIcon icon={faBriefcase} className="mr-1" />,
+    // icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+    path: "/vendors",
+    component: Vendors,
+    sidebar: true,
+    isAdmin: true,
+    isCompany: false,
+    isPrivate: true,
+  },
   {
     name: "Profile",
     layout: "/admin",

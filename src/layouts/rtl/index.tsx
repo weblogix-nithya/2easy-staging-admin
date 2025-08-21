@@ -26,6 +26,7 @@ export default function RTLLayout(props: RTLLayoutProps) {
   useEffect(() => {
     if (!isWindowAvailable()) return;
     window.document.documentElement.dir = "rtl";
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   const { onOpen } = useDisclosure();

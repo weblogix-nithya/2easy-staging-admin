@@ -58,6 +58,7 @@ export const GET_COMPANY_QUERY = gql`
       rate_card_url
       logo_url
       payment_term
+      weight_per_cubic
     }
   }
 `;
@@ -75,6 +76,7 @@ export const CREATE_COMPANY_MUTATION = gql`
       admin_notes
       base_notes
       payment_term
+      weight_per_cubic
     }
   }
 `;
@@ -94,6 +96,7 @@ export const UPDATE_COMPANY_MUTATION = gql`
       is_pod_sendable
       is_invoice_sendable
       payment_term
+      weight_per_cubic
     }
   }
 `;
@@ -129,6 +132,7 @@ export interface UpdateCompanyInput {
   lng: Number;
   lat: Number;
   payment_term: String;
+  weight_per_cubic: Number;
 }
 
 export interface CreateCompanyInput {
@@ -154,6 +158,7 @@ export interface CreateCompanyInput {
   lng: Number;
   lat: Number;
   payment_term: String;
+  weight_per_cubic: Number;
 }
 
 type Company = {
@@ -182,6 +187,7 @@ type Company = {
   rate_card_url: string | null;
   logo_url: string | null;
   payment_term: string | null;
+  weight_per_cubic: number | null;
 };
 
 export const defaultCompany: Company = {
@@ -210,6 +216,7 @@ export const defaultCompany: Company = {
   rate_card_url: null,
   logo_url: null,
   payment_term: "7_days",
+  weight_per_cubic: 500, // default weight per cubic meter
 };
 
 export const paymentTerms = [

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 
 export default function MessageLogTab(props: { jobObject: any }) {
   const { jobObject } = props;
-  const toast = useToast();
+  const _toast = useToast();
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [chatMessages, setChatMessages] = useState([]);
 
