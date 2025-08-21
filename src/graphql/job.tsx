@@ -381,6 +381,15 @@ export const GET_JOB_QUERY = gql`
       driver_id
       pick_up_state
       company_area
+      media_admin {
+        id
+        name
+        downloadable_url
+        collection_name
+        file_name
+        uploaded_by
+        created_at
+      }
       driver {
         full_name
         no_max_capacity
@@ -505,16 +514,6 @@ export const GET_JOB_QUERY = gql`
         name
         label
         address
-        media_admin {
-          id
-          name
-          downloadable_url
-          collection_name
-          file_name
-          uploaded_by
-          created_at
-        }
-
         address_business_name
         address_line_1
         address_line_2

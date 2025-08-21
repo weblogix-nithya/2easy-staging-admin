@@ -859,10 +859,10 @@ const JobDetailsTab = ({
         )}
 
         {/* foreach jobAttachments */}
-        {!jobLoading && Array.isArray(job?.media) && (
+        {!jobLoading && Array.isArray(job?.media_admin) && (
           <PaginationTable
             columns={attachmentColumns}
-            data={job.media}
+            data={job.media_admin}
             showDelete={isAdmin}
             onDelete={(mediaId) => {
               handleDeleteMedia({
