@@ -24,7 +24,7 @@ import Quote from "pages/admin/quotes/quotes";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
 import VehicleHire from "pages/admin/vehicle-hires";
-import Vendors from "pages/admin/vendors/index";
+// import Vendors from "pages/admin/vendors/index";
 const Profile = dynamic(() => import('pages/admin/profile'), {
   ssr: false,
 });
@@ -174,18 +174,18 @@ const routes: IRoute[] = [
     isCompany: false,
     isPrivate: false,
   },
-  {
-    name: "Vendors",
-    layout: "/admin",
-    icon: <FontAwesomeIcon icon={faBriefcase} className="mr-1" />,
-    // icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
-    path: "/vendors",
-    component: Vendors,
-    sidebar: true,
-    isAdmin: true,
-    isCompany: false,
-    isPrivate: true,
-  },
+  // {
+  //   name: "Vendors",
+  //   layout: "/admin",
+  //   icon: <FontAwesomeIcon icon={faBriefcase} className="mr-1" />,
+  //   // icon: <Icon as={MdPerson} width="20px" height="20px" color="inherit" />,
+  //   path: "/vendors",
+  //   component: Vendors,
+  //   sidebar: true,
+  //   isAdmin: true,
+  //   isCompany: false,
+  //   isPrivate: true,
+  // },
   {
     name: "Profile",
     layout: "/admin",
