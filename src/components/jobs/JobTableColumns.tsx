@@ -180,7 +180,28 @@ export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   const businessName = filteredDestinations[0]?.address_business_name || "-";
   return `${formattedAddress}\n${businessName}`;
 };
+export const PickupAddressWithTimebulkCell = ({ row }: any) => {
+  const pickupDest = row.original.job.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
 
+  return (
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}\n ${pickupDest?.address_business_name || "-"}`}
+      </Text>
+  );
+};
+export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
+  const pickupDest = row.original.job.job_destinations?.find(
+    (dest: any) => dest.is_pickup === false,
+  );
+
+  return (
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}\n ${pickupDest?.address_business_name || "-"}`}
+      </Text>
+  );
+};
 export const PickupAddressWithTimeCell = ({ row }: any) => {
   const pickupDest = row.original.job.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
@@ -304,10 +325,10 @@ export const ReadyDropByCell = ({ row }: any) => {
         {row.original.job.job_category?.name ?? "-"}
       </Text>
       <Text isTruncated w={"fit-content"}>
-        R: {formatToTimeDate(row.original.job.ready_at)}
+        R: {formatTime(row.original.job.ready_at)}
       </Text>
       <Text isTruncated w={"fit-content"}>
-        D: {formatToTimeDate(row.original.job.drop_at)}
+        D: {formatTime(row.original.job.drop_at)}
       </Text>
     </>
   );
@@ -918,6 +939,157 @@ export const getColumns = (
   return columns;
 };
 
+export const bulkassigntableColumn = [
+  {
+    id: "name",
+    Header: "Delivery ID",
+    Cell: DeliveryCell,
+    // width: "100px",
+  },
+  {
+    id: "company.name",
+    Header: "Booked By",
+    Cell: BookedByCell, // Use the new cell component
+    // CellExport: BookedByCellExport,
+  },
+  {
+    id: "reference_no",
+    Header: "Customer Reference",
+    Cell: CustomerReferenceCell,
+  },
+  {
+    id: "job_category.name",
+    Header: "category",
+    Cell: CategoryCell,
+  },
+  {
+    id: "job_type.name",
+    Header: "Type",
+    Cell: JobTypeCell, // Add this line
+    // width: "100px",
+  },
+  {
+    id: "job_status.name",
+    Header: "Status",
+    Cell: StatusCell, // Add this line
+    // width: "100px",
+  },
+  {
+    id: "ready_at",
+    Header: "Date",
+    Cell: ReadyAtCell, // Add this line
+    // type: "date",
+  },
+  {
+    id: "pick_up_destination.address_formatted",
+    Header: "Pickup From",
+    Cell: PickupAddressCell, // Add this line
+    // width: "150px",
+  },
+  {
+    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+    Header: "Pickup Address and Name ",
+    // width: "200px",
+    Cell: PickupAddressWithTimebulkCell, // Use the new cell component
+    // CellExport: PickupAddressWithTimeCellExport,
+  },
+  {
+    id: "job_destinations.address,job_destinations.address_business_name",
+    Header: "Delivery Address and Name",
+    Cell: deliveryAddressWithTimebulkCell,
+    // CellExport: JobDestinationWithBusinessNameCellExport,
+  },
+  {
+    id: "pick_up_destination.address_business_name",
+    Header: "Pickup Business Name",
+    Cell: PickupBusinessNameCell, // Add this line
+  },
+  {
+    id: "job_destinations.address",
+    Header: "Delivery Address", 
+    width: "100px",
+    Cell: JobDestinationsCell,
+    CellExport: JobDestinationsCellExport,
+  },
+  {
+    id: "job_destinations.address_business_name",
+    Header: "Delivery Business Name",
+    Cell: JobDestinationBusinessNameCell,
+    CellExport: JobDestinationBusinessNameCellExport,
+  },
+  {
+    id: "job_category.name,ready_at,drop_at",
+    Header: "Ready By / Drop by",
+    Cell: ReadyDropByCell,
+    CellExport: ReadyDropByCellExport,
+  },
+  {
+    id: "timeslot",
+    Header: "Timeslot",
+    Cell: TimeslotCell, // Add this line
+    // width: "50px",
+  },
+  {
+    id: "last_free_at",
+    Header: "Last Free Day",
+    Cell: LastFreeAtCell, // Add this line
+    // type: "date",
+  },
+  {
+    id: "job_items.item_type",
+    Header: "Item Type",
+    Cell: ItemsTypeCell,
+    CellExport: ItemsTypeCellExport,
+  },
+  {
+    id: "job_items.dimensions",
+    Header: "Dimensions",
+    Cell: ItemsDimensionCell,
+    CellExport: ItemsDimensionCellExport,
+  },
+  {
+    id: "job_items.quantity",
+    Header: "Quantity",
+    Cell: ItemsQuantityCell,
+    CellExport: ItemsQuantityCellExport,
+  },
+  {
+    id: "job_items.weight",
+    Header: "Weight",
+    Cell: ItemsWeightCell,
+    CellExport: ItemsWeightCellExport,
+  },
+  {
+    id: "job_items.volume",
+    Header: "CBM",
+    Cell: ItemsCbmCell,
+    CellExport: ItemsCbmCellExport,
+  },
+  {
+    id: "extras",
+    Header: "Extras",
+    Cell: ItemsExtrasCell,
+    // width: "100px",
+  },
+  {
+    id: "customer_notes",
+    Header: "Client notes",
+    Cell: NotesCell,
+  },
+  {
+    id: "driver.full_name",
+    Header: "Drivers",
+    Cell: DriverCell,
+    enableSorting: true,
+  },
+  {
+    id: "admin_notes",
+    Header: "Admin Notes",
+    accessor: "admin_notes" as const,
+    Cell: AdminNotesCell,
+    // show: isCustomer,
+  },
+];
 
 export const getBulkAssignColumns = (
   isAdmin: boolean,
@@ -935,7 +1107,7 @@ export const getBulkAssignColumns = (
           </div>
         ),
       },
-      ...tableColumn,
+      ...bulkassigntableColumn,
       {
         id: "actions",
         Header: "Actions",
@@ -947,7 +1119,7 @@ export const getBulkAssignColumns = (
     ];
   }
 
-  const dynamicColumns = outputDynamicTable(dynamicTableUsers, tableColumn);
+  const dynamicColumns = outputDynamicTable(dynamicTableUsers, bulkassigntableColumn);
 
   var columns: any[] = [
     {

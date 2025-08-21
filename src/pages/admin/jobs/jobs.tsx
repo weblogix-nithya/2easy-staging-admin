@@ -181,6 +181,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const [_jobStatuses, setJobStatuses] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [selectedJobs, setSelectedJobs] = useState([]);
+  console.log(selectedJobs,'selectedJobs')
   const [drivers, setDrivers] = useState([]);
   // const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);

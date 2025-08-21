@@ -854,6 +854,7 @@ function JobPage() {
         customer_id: job.customer_id,
       },
       onCompleted: (data) => {
+        console.log(data,"savedaddress")
         setSavedAddressesSelect([]);
         setSavedAddressesSelect(
           formatToSelect(
