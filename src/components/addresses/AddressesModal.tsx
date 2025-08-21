@@ -101,9 +101,11 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
         if (controllerRef.current) controllerRef.current.abort();
         controllerRef.current = new AbortController();
 
-        fetchSuggestions(query, controllerRef.current.signal).then((results) => {
-          setSuggestions(results);
-        });
+        fetchSuggestions(query, controllerRef.current.signal).then(
+          (results) => {
+            setSuggestions(results);
+          },
+        );
       }
 
       prevQueryRef.current = query;
@@ -115,18 +117,24 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   const handleFetchPlaceDetails = async (placeId: string) => {
     const data = await fetchPlaceDetails(placeId);
     if (!data) return;
-
+    console.log(data, "data");
     const components = data.addressComponents || [];
-
+    // console.log("Fetched place details:", data, components);
     setEntityAddress({
       ...entityAddress,
       address: data.formattedAddress || "",
-      address_line_1:
-        getAddressComponent(components, "street_address") ||
-        getAddressComponent(components, "route") ||
-        "",
+      address_line_1: [
+        getAddressComponent(components, "street_number"),
+        getAddressComponent(components, "route"),
+      ]
+        .filter(Boolean) // removes empty/undefined parts
+        .join(" ")
+        .trim(),
       address_city: getAddressComponent(components, "locality"),
-      address_state: getAddressComponent(components, "administrative_area_level_1"),
+      address_state: getAddressComponent(
+        components,
+        "administrative_area_level_1",
+      ),
       address_country: getAddressComponent(components, "country"),
       address_postal_code: getAddressComponent(components, "postal_code"),
       lat: data.location?.latitude || 0,
@@ -135,6 +143,8 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   };
 
   const handleSaveAddress = async () => {
+    // debugger
+    console.log("Saving address:", entityAddress);
     entityAddress.address =
       (entityAddress.address_line_2 ? entityAddress.address_line_2 + "/" : "") +
       entityAddress.address_line_1 +
@@ -170,7 +180,6 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
         <ModalCloseButton />
         <ModalBody>
           <Divider mb="24px" />
- 
 
           <Flex mt={4} direction="column" gap="12px">
             <FormLabel>Search Address</FormLabel>
@@ -182,8 +191,10 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
             />
             {suggestions.map((sugg) => {
               const prediction = sugg.placePrediction;
-              const mainText = prediction.structuredFormat?.mainText?.text || "";
-              const secondaryText = prediction.structuredFormat?.secondaryText?.text || "";
+              const mainText =
+                prediction.structuredFormat?.mainText?.text || "";
+              const secondaryText =
+                prediction.structuredFormat?.secondaryText?.text || "";
               const fullLabel = `${mainText}, ${secondaryText}`.trim();
 
               return (
@@ -209,6 +220,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
             })}
 
             {[
+              "address",
               "address_business_name",
               "address_line_1",
               "address_line_2",
@@ -222,7 +234,10 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
               <Input
                 key={name}
                 name={name}
-                placeholder={name.replaceAll("_", " ").replace("address ", "").replace(/\b\w/g, (c) => c.toUpperCase())}
+                placeholder={name
+                  .replaceAll("_", " ")
+                  .replace("address ", "")
+                  .replace(/\b\w/g, (c) => c.toUpperCase())}
                 value={(entityAddress as any)[name] ?? ""}
                 onChange={(e) =>
                   setEntityAddress({
