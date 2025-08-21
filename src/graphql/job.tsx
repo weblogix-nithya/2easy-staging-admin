@@ -505,6 +505,16 @@ export const GET_JOB_QUERY = gql`
         name
         label
         address
+        media_admin {
+          id
+          name
+          downloadable_url
+          collection_name
+          file_name
+          uploaded_by
+          created_at
+        }
+
         address_business_name
         address_line_1
         address_line_2
@@ -843,7 +853,7 @@ export type Job = {
   timeslot_depots: string;
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
-  // media_admin?: any[] | null;
+  media_admin?: any[] | null;
 
   [key: string]:
     | string
