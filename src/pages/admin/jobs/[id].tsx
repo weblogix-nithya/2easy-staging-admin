@@ -122,9 +122,9 @@ function JobEdit() {
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
   // const { id } = router.query;
-  const routeReady = router.isReady && typeof router.query.id === "string";
-  const id = routeReady ? (router.query.id as string) : undefined; // use string ID
-  // console.log(id, "ids");
+const routeReady = router.isReady && typeof router.query.id === "string";
+const id = routeReady ? (router.query.id as string) : undefined; // use string ID
+   // console.log(id, "ids");
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -189,6 +189,7 @@ function JobEdit() {
     minimum_charge: 0,
   });
 
+  
   const tabs = [
     {
       id: 1,
@@ -296,31 +297,14 @@ function JobEdit() {
     },
     skip: !routeReady || !id,
     fetchPolicy: "network-only",
-    notifyOnNetworkStatusChange: true,
+notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
-      if (!isMounted.current) return;
+      if (!isMounted.current) return; 
 
       if (!data?.job) {
         router.push("/admin/jobs");
         return;
       }
-      const safeJobDestinations = Array.isArray(data.job.job_destinations)
-        ? data.job.job_destinations.map((d: any) => ({
-            ...d,
-            media: Array.isArray(d?.media) ? d.media : [],
-            issue_reports: Array.isArray(d?.issue_reports)
-              ? d.issue_reports
-              : [],
-          }))
-        : [];
-
-      const safeJobItems = Array.isArray(data.job.job_items)
-        ? data.job.job_items
-        : [];
-      const safeJobCcEmails = Array.isArray(data.job.job_cc_emails)
-        ? data.job.job_cc_emails
-        : [];
-      const safeMedia = Array.isArray(data.job.media) ? data.job.media : [];
 
       if (!updatingMedia) {
         setJob((prev) => ({
@@ -336,11 +320,6 @@ function JobEdit() {
           pick_up_state: data?.job.pick_up_state,
           timeslot_depots: data?.job.timeslot_depots,
           job_status_id: data?.job.job_status_id,
-          job_destinations: safeJobDestinations,
-          job_items: safeJobItems,
-          job_cc_emails: safeJobCcEmails,
-          pick_up_destination: data.job.pick_up_destination ?? null,
-          pod_url: data.job.pod_url ?? null,
         }));
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
@@ -356,9 +335,7 @@ function JobEdit() {
         }
 
         if (data.job.company_id) {
-          getCompanyRates({
-            variables: { company_id: String(data.job.company_id) },
-          });
+          getCompanyRates({ variables: { company_id: String(data.job.company_id) } });
         }
 
         // ✅ Set refined data (freight type, state, etc.)
@@ -369,8 +346,8 @@ function JobEdit() {
           data.job.pick_up_state == "Victoria"
             ? "VIC"
             : data.job.pick_up_state == "Queensland"
-            ? "QLD"
-            : "";
+              ? "QLD"
+              : "";
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
@@ -410,9 +387,9 @@ function JobEdit() {
         setIsSameDayJob(today === formatDate(data.job.ready_at));
         setIsTomorrowJob(
           new Date(formatDate(data.job.ready_at)).toDateString() ===
-            new Date(
-              new Date(today).setDate(new Date(today).getDate() + 1),
-            ).toDateString(),
+          new Date(
+            new Date(today).setDate(new Date(today).getDate() + 1),
+          ).toDateString(),
         );
 
         // ✅ Set destination data
@@ -441,11 +418,7 @@ function JobEdit() {
         );
 
         // ✅ Quote Calculation
-        const { totalCBM, totalWeight } = calculateFinalWeightCBM(
-          job.job_category_id,
-          jobItems,
-          companyWeight,
-        );
+        const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
 
         setQuoteCalculationRes((prev) => ({
           ...prev,
@@ -457,8 +430,6 @@ function JobEdit() {
         setJob((prev) => ({
           ...prev,
           media: data?.job.media,
-          job_cc_emails: safeJobCcEmails,
-          job_destinations: safeJobDestinations,
         }));
         setJobCcEmails(data.job.job_cc_emails || []);
         setUpdatingMedia(false);
@@ -473,10 +444,11 @@ function JobEdit() {
   });
 
   useEffect(() => {
-    if (routeReady && id) getJob({ id });
-  }, [routeReady, id, getJob]);
+  if (routeReady && id) getJob({ id });
+}, [routeReady, id, getJob]);
 
-  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
+
+ const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     context: { noAuthRedirect: true },
     onCompleted: (data) => {
       if (!isMounted.current) return; // ✅ skip if unmounted
@@ -595,7 +567,7 @@ function JobEdit() {
     });
   };
 
-  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
+  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
         id: job.id,
@@ -773,7 +745,7 @@ function JobEdit() {
     },
   });
 
-  const [handleDeleteJob, {}] = useMutation(DELETE_JOB_MUTATION, {
+  const [handleDeleteJob, { }] = useMutation(DELETE_JOB_MUTATION, {
     variables: {
       id: id,
     },
@@ -800,7 +772,7 @@ function JobEdit() {
       orderByOrder: "ASC",
     },
     fetchPolicy: "network-only",
-    notifyOnNetworkStatusChange: true,
+      notifyOnNetworkStatusChange: true,
 
     onCompleted: (data) => {
       if (!isMounted.current) return;
@@ -928,11 +900,7 @@ function JobEdit() {
         setButtonText("Update Quote");
       }
       //  setQuoteCalculationRes(defaultJobPriceCalculationDetail);
-      const { totalCBM, totalWeight } = calculateFinalWeightCBM(
-        job.job_category_id,
-        jobItems,
-        companyWeight,
-      );
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
       setQuoteCalculationRes((prev) => ({
         ...prev,
         total_weight: totalWeight,
@@ -947,11 +915,7 @@ function JobEdit() {
       setRefinedData(defaultJobQuoteData);
       setQuoteCalculationRes(defaultJobPriceCalculationDetail);
 
-      const { totalCBM, totalWeight } = calculateFinalWeightCBM(
-        job.job_category_id,
-        jobItems,
-        companyWeight,
-      );
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
       setQuoteCalculationRes((prev) => ({
         ...prev,
         total_weight: totalWeight,
@@ -1064,11 +1028,8 @@ function JobEdit() {
     if (!jobItems || jobItems.length === 0) return; // no calculation if no items
 
     const calculateTotals = () => {
-      const { totalCBM, totalWeight } = calculateFinalWeightCBM(
-        job.job_category_id,
-        jobItems,
-        companyWeight,
-      );
+
+      const { totalCBM, totalWeight } = calculateFinalWeightCBM(job.job_category_id, jobItems, companyWeight);
 
       setQuoteCalculationRes((prev) => ({
         ...prev,
@@ -1079,6 +1040,7 @@ function JobEdit() {
 
     calculateTotals();
   }, [companyWeight, job.job_category_id, jobItems]);
+
 
   function handleRemoveFromJobItems(index: number) {
     let _jobItems = [...jobItems];
@@ -1169,7 +1131,7 @@ function JobEdit() {
     //check if any job destination is_saved_address and populate setSavedAddresses
   };
   //handleDeleteJobItem
-  const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
+  const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
       // console.log("Job Item Deleted", data);
     },
@@ -1178,7 +1140,7 @@ function JobEdit() {
     },
   });
   //handleDelete
-  const [handleDeleteJobDestination, {}] = useMutation(
+  const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
@@ -1218,7 +1180,7 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
-  const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
+  const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
       // console.log("Job item updated");
     },
@@ -1227,7 +1189,7 @@ function JobEdit() {
     },
   });
   //handleUpdateJobDestinations
-  const [handleUpdateJobDestination, {}] = useMutation(
+  const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
@@ -1239,7 +1201,7 @@ function JobEdit() {
     },
   );
   //deleteMedia
-  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: (_data) => {
       toast({
         title: "Attachment deleted",
@@ -1305,7 +1267,7 @@ function JobEdit() {
     },
     [re],
   );
-  const [handleCreateJobCcEmail, {}] = useMutation(
+  const [handleCreateJobCcEmail, { }] = useMutation(
     CREATE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
@@ -1362,13 +1324,13 @@ function JobEdit() {
     [jobCcEmailTags, jobCcEmails],
   );
 
-  const [handleDeleteJobCcEmail, {}] = useMutation(
+  const [handleDeleteJobCcEmail, { }] = useMutation(
     DELETE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (_data) => {},
+      onCompleted: (_data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
@@ -1481,11 +1443,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const selectedCategoryName = jobCategories.find(
@@ -1525,15 +1487,15 @@ function JobEdit() {
       state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
         (job.job_category_id == 1 && selectedstate?.value === "QLD") ||
-        selectedstate?.value === "VIC"
+          selectedstate?.value === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              state: rate.state,
-              minimum_charge: rate.minimum_charge,
-            }))
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            state: rate.state,
+            minimum_charge: rate.minimum_charge,
+          }))
           : [],
       job_pickup_address: {
         state: pickUpDestination?.address_state,
@@ -1544,11 +1506,11 @@ function JobEdit() {
       job_destination_address:
         jobDestinations.length > 0
           ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
           : {},
       pickup_time: {
         ready_by: readyAt,
@@ -1741,7 +1703,7 @@ function JobEdit() {
     handleUpdateJob();
   };
 
-  const handleTabChange = async (nextTabId: number) => {
+   const handleTabChange = async (nextTabId: number) => {
     try {
       // Only refetch for tabs that show server data
       if (nextTabId === 2 || nextTabId === 3 || nextTabId === 4) {
@@ -1760,7 +1722,6 @@ function JobEdit() {
       setActiveTab(nextTabId);
     }
   };
-
   return (
     <AdminLayout>
       <Box
@@ -1815,7 +1776,7 @@ function JobEdit() {
 
                 {/* Tabs */}
 
-                <TabsComponent
+ <TabsComponent
                   tabs={tabs}
                   onChange={handleTabChange}
 
