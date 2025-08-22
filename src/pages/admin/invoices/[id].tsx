@@ -120,7 +120,7 @@ function InvoiceEdit() {
 
   const {
     // loading: jobLoading,
-    // data: jobData, // Renamed 'data' to 'jobData'
+    data: jobData, // Renamed 'data' to 'jobData'
     // refetch: getJob,
   } = useQuery(GET_JOB_QUERY, {
     variables: {
@@ -229,7 +229,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
+  const [handleUpdateApproveInvoice, { }] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -329,7 +329,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [_handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -347,7 +347,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -364,7 +364,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, {}] = useMutation(
+  const [handleGenerateInvoicePdf, { }] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -397,7 +397,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, {}] = useMutation(
+  const [handleDeleteInvoiceLineItem, { }] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -993,8 +993,34 @@ function InvoiceEdit() {
           Add Item
         </Button>
 
-        <Box className="w-full mt-4">
-          <Box className="max-w-[400px] ml-auto">
+        {/* Wrap the two columns in a parent Flex and close it properly */}
+        <Flex className="w-full mt-4 gap-6" justifyContent="space-between">
+          {/* Left Column: Total Weight and CBM */}
+          <Box className="w-1/2 max-w-[400px]">
+            <Flex flexDirection="column">
+              <Flex justifyContent="space-between" className="py-2">
+                <p className="text-sm ">
+                  <span className="text-sm !font-bold px-1">Total Weight: </span>
+                  {jobData?.job?.job_items?.reduce(
+                    (total: number, item: { weight: number }) => total + (item.weight || 0),
+                    0
+                  ).toFixed(2)}
+                </p>
+              </Flex>
+              <Flex justifyContent="space-between" className="py-2">
+                <p className="text-sm text-left">
+                  <span className="text-sm !font-bold px-1">CBM: </span>
+                  {jobData?.job?.job_items?.reduce(
+                    (total: number, item: { volume: number }) => total + (item.volume || 0),
+                    0
+                  ).toFixed(2)}
+                </p>
+              </Flex>
+            </Flex>
+          </Box>
+
+          {/* Right Column: Invoice Info */}
+          <Box className="w-1/2 max-w-[400px] ml-auto">
             <Flex flexDirection="column" className="ml-auto">
               <Flex
                 justifyContent="space-between"
@@ -1117,8 +1143,7 @@ function InvoiceEdit() {
                 )}
             </Flex>
           </Box>
-        </Box>
-
+        </Flex>
         <Divider className="my-10" />
       </Box>
     </AdminLayout>
