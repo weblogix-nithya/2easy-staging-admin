@@ -122,10 +122,9 @@ function JobEdit() {
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
   // const { id } = router.query;
-  const routeReady = router.isReady && typeof router.query.id === "string";
-  const jobId = routeReady ? parseInt(router.query.id as string, 10) : null;
-  const id = jobId;
-  // console.log(id, "ids");
+const routeReady = router.isReady && typeof router.query.id === "string";
+const id = routeReady ? (router.query.id as string) : undefined; // use string ID
+   // console.log(id, "ids");
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -190,6 +189,7 @@ function JobEdit() {
     minimum_charge: 0,
   });
 
+  
   const tabs = [
     {
       id: 1,
@@ -296,6 +296,8 @@ function JobEdit() {
       id: id,
     },
     skip: !routeReady || !id,
+    fetchPolicy: "network-only",
+notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
       if (!isMounted.current) return; 
 
@@ -332,9 +334,8 @@ function JobEdit() {
           }
         }
 
-        // ✅ Refetch company rates if company_id is valid
         if (data.job.company_id) {
-          getCompanyRates();
+          getCompanyRates({ variables: { company_id: String(data.job.company_id) } });
         }
 
         // ✅ Set refined data (freight type, state, etc.)
@@ -441,6 +442,11 @@ function JobEdit() {
       console.log(error);
     },
   });
+
+  useEffect(() => {
+  if (routeReady && id) getJob({ id });
+}, [routeReady, id, getJob]);
+
 
  const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     context: { noAuthRedirect: true },
@@ -766,6 +772,8 @@ function JobEdit() {
       orderByOrder: "ASC",
     },
     fetchPolicy: "network-only",
+      notifyOnNetworkStatusChange: true,
+
     onCompleted: (data) => {
       if (!isMounted.current) return;
       const options = data.jobCategorys.data.map((item: any) => ({
@@ -1012,9 +1020,10 @@ function JobEdit() {
   );
   useEffect(() => {
     if (job?.company_id && job.company_id !== 0) {
-      getCompanyRates({ variables: { company_id: Number(job.company_id) } });
+      getCompanyRates({ variables: { company_id: String(job.company_id) } });
     }
   }, [job.company_id, getCompanyRates]);
+
   useEffect(() => {
     if (!jobItems || jobItems.length === 0) return; // no calculation if no items
 
