@@ -37,8 +37,13 @@ export function calculateFinalWeightCBM(
         (total, item) => total + (item.volume || 0),
         0
     );
-    const totalWeight = jobItems.reduce(
+    if (rawCBM <= 0) return { totalCBM: 0, totalWeight: 0 };
+    /* const totalWeight = jobItems.reduce(
         (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+        0
+    ); */
+    const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.weight || 0),
         0
     );
     let finalWeightCBM = rawCBM;
@@ -67,7 +72,7 @@ export function calculateFinalWeightCBM(
     // console.log("Total Weight:", totalWeight);
 
     return {
-        totalCBM: finalWeightCBM ? finalWeightCBM : 0,
+        totalCBM: rawCBM ? rawCBM : 0,
         totalWeight: totalWeight ? totalWeight : 0
     };
 }
