@@ -330,7 +330,7 @@ const PaginationMultipleImageTable = <T extends object>({
                               ),
                             )}
                         </Grid>
-                        {(!cell.value || cell.value.length == 0) && (
+                        {(!cell.value || cell.value.length === 0) && (
                           <Flex
                             alignItems="center"
                             justifyContent="center"
@@ -341,11 +341,13 @@ const PaginationMultipleImageTable = <T extends object>({
                             mr="4"
                           >
                             <Image
-                              src="/images/no-image.png"
-                              alt="No Image"
-                              width="100%"
-                              height="100%"
-                              objectFit="cover"
+                              src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
+                              alt=""
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
                             />
                           </Flex>
                         )}
