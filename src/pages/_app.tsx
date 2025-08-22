@@ -33,7 +33,7 @@ import { fal } from "@fortawesome/pro-light-svg-icons";
 import { far } from "@fortawesome/pro-regular-svg-icons";
 library.add(fas, far, fal);
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({ Component, pageProps,router }: AppProps) {
   const apolloClient = useApollo(pageProps.initialApolloState);
   const title = `${process.env.NEXT_PUBLIC_APP_NAME} UI Dashboard`;
   // Detect direction (default to ltr)
@@ -49,7 +49,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         </Head>
         <Provider store={store}>
           <Chakra cookies={pageProps.cookies}>
-            <Component {...pageProps} />
+            <Component {...pageProps} key={router.asPath} />
           </Chakra>
         </Provider>
       </ApolloProvider>

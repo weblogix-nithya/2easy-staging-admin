@@ -184,6 +184,7 @@ function JobPage() {
   }, []);
 
   const router = useRouter();
+  
   const defaultVariables = {
     query: "",
     page: 1,
@@ -681,16 +682,26 @@ function JobPage() {
       // } else {
       //   console.log("Router is not ready, delaying navigation");
       // }
-      await router.replace(`/admin/jobs/${data.createJob.id}`);
-      if (!router.isReady) {
-        router.reload();
-      }
+      // await router.replace(`/admin/jobs/${data.createJob.id}`);
+      // if (!router.isReady) {
+      //   router.reload();
+      // }
       // router.push(`/admin/jobs/${data.createJob.id}`);
+     const jobId = String(data.createJob.id);
+
+await router.push(
+  { pathname: "/admin/jobs/[id]", query: { id: jobId } },
+  `/admin/jobs/${jobId}`
+);
+
+return;
+
+ 
       console.log("navigating to after", `/admin/jobs/${data.createJob.id}`);
       // window.location.href = `/admin/jobs/${data.createJob.id}`;
 
-      setIsSaving(false);
-    },
+  
+    },  
     onError: (error) => {
       setIsSaving(false);
       showGraphQLErrorToast(error);
