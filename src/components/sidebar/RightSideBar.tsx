@@ -162,7 +162,8 @@ function RightSideBar() {
     variables: {
       first: 100,
       page: 1,
-      today: moment().utc().format("YYYY-MM-DD HH:mm:ss"),
+      // today: moment().utc().format("YYYY-MM-DD HH:mm:ss"),
+      today: moment().utc().format("YYYY-MM-DD") + " 14:00:00",
       orderByColumn: "id",
       orderByOrder: "ASC",
       driver_id: route.driver_id,
