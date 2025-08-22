@@ -103,7 +103,7 @@ export default function ReportsTab(props: { jobObject: any }) {
       (jobDestination: any) => jobDestination.job_destination_status_id === 3,
     );
     // change is_pickup to pickup or delivery
-    _jobDestinationsConfirmed = _jobDestinationsConfirmed.map(
+    _jobDestinationsConfirmed = _jobDestinationsConfirmed?.map(
       (jobDestination: any) => {
         if (jobDestination.is_pickup) {
           jobDestination = { ...jobDestination, type: "Pickup" };
@@ -119,7 +119,7 @@ export default function ReportsTab(props: { jobObject: any }) {
           ),
         };
         if (jobDestination.issue_reports.length > 0) {
-          jobDestination.issue_reports.map((issueReport: any) => {
+          jobDestination.issue_reports?.map((issueReport: any) => {
             // if sourceable_type = App\\Models\\Driver
             let _issue = {
               ...issueReport,
@@ -140,7 +140,7 @@ export default function ReportsTab(props: { jobObject: any }) {
         return jobDestination;
       },
     );
-    _jobDestinationsConfirmed = _jobDestinationsConfirmed.map(
+    _jobDestinationsConfirmed = _jobDestinationsConfirmed?.map(
       (destination: any) => {
         // Filter media array for items with collection_name equal to "signatures"
         const signatureMedia = destination.media.filter(
@@ -173,7 +173,7 @@ export default function ReportsTab(props: { jobObject: any }) {
         let _issueReport = data.updateIssueReport;
         if (_issueReport.sourceable.__typename === "Driver") {
           setDriverIssues([]);
-          let _driverIssues = driverIssues.map((issue: any) => {
+          let _driverIssues = driverIssues?.map((issue: any) => {
             if (issue.id === _issueReport.id) {
               issue = {
                 ...issue,
@@ -185,7 +185,7 @@ export default function ReportsTab(props: { jobObject: any }) {
           });
           setDriverIssues(_driverIssues);
         } else if (_issueReport.sourceable.__typename === "Customer") {
-          let _customerIssues = customerIssues.map((issue: any) => {
+          let _customerIssues = customerIssues?.map((issue: any) => {
             if (issue.id === _issueReport.id) {
               issue = {
                 ...issue,
