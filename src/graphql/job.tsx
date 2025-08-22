@@ -818,14 +818,14 @@ export type Job = {
   //notes: string;
   job_category_id: number;
   // job_category_name?: string;
-  job_status_id: number;
+  job_status_id: number |null;
   job_type_id: number;
   company_area: string;
   //decline_reason_id: number;
   //driver_id: number;
   //region_id: number;
-  customer_id: number;
-  company_id: number;
+  customer_id: number| null;
+  company_id: number | null;
   //start_at: string;
   //ready_at: string;
   //drop_at: string;
@@ -853,7 +853,11 @@ export type Job = {
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
   media_admin?: any[] | null;
-
+job_destinations?: any[];      
+  job_items?: any[];
+  job_cc_emails?: any[];
+  pick_up_destination?: any | null;
+  pod_url?: string | null;
   [key: string]:
     | string
     | number
@@ -884,6 +888,11 @@ export const defaultJob: Job = {
   transport_location: "",
   timeslot_depots: "",
   // job_price_quote: []
+  job_destinations: [],
+  job_items: [],
+  job_cc_emails: [],
+  pick_up_destination: null,
+  pod_url: null,
 };
 
 export type JobAddress = {

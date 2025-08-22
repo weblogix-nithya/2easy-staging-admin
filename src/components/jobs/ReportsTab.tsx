@@ -94,6 +94,8 @@ export default function ReportsTab(props: { jobObject: any }) {
   //   console.log("download pod"); //TODO: download pod
   // };
   useEffect(() => {
+      if (!jobObject) return;
+
     setJob(jobObject);
     let _driverIssues: any[] = [];
     let _customerIssues: any[] = [];
