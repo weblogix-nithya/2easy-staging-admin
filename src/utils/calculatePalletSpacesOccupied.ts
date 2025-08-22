@@ -68,7 +68,7 @@ export function calculateFinalWeightCBM(
             finalWeightCBM = Math.max(finalCBM, weightCBM);
         }
     }
-    // console.log("Final CBM:", finalWeightCBM);
+    console.log("Final CBM:", finalWeightCBM);
     // console.log("Total Weight:", totalWeight);
 
     return {
