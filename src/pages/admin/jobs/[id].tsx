@@ -1702,7 +1702,8 @@ notifyOnNetworkStatusChange: true,
     }
     handleUpdateJob();
   };
-
+ 
+  
    const handleTabChange = async (nextTabId: number) => {
     try {
       // Only refetch for tabs that show server data
