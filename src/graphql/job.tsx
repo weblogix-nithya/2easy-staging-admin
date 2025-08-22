@@ -886,6 +886,22 @@ export const defaultJob: Job = {
   // job_price_quote: []
 };
 
+export type ReportJob = Job & {
+  allocations?: any[];
+  destinations?: any[];
+  items?: any[];
+  cc_emails?: string[];
+  // add whatever fields you need in Reports tab
+};
+
+export const defaultReportJob: ReportJob = {
+  ...defaultJob,
+  allocations: [],
+  destinations: [],
+  items: [],
+  cc_emails: [],
+};
+
 export type JobAddress = {
   state: string;
   suburb: string;

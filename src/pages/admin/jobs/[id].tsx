@@ -24,9 +24,11 @@ import { GET_DRIVERS_QUERY } from "graphql/driver";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
 import defaultJobQuoteData, {
   defaultJob,
+  defaultReportJob,
   DELETE_JOB_MUTATION,
   GET_ALL_TIMESLOT_DEPOTS,
   GET_JOB_QUERY,
+  ReportJob,
   UPDATE_JOB_MUTATION,
 } from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
@@ -111,6 +113,8 @@ function JobEdit() {
   // const textColor = useColorModeValue("navy.700", "white");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = useState(defaultJob);
+  const [reportJob, setReportJob] = useState<ReportJob>(defaultReportJob);
+
   const [refinedData, setRefinedData] = useState(defaultJobQuoteData);
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
@@ -1703,26 +1707,30 @@ notifyOnNetworkStatusChange: true,
     handleUpdateJob();
   };
  
-  
-   const handleTabChange = async (nextTabId: number) => {
-    try {
-      // Only refetch for tabs that show server data
-      if (nextTabId === 2 || nextTabId === 3 || nextTabId === 4) {
-        // Apollo's refetch returns a promise
-        await getJob(); // since your query already has { variables: { id } }, no args needed
+const handleTabChange = async (nextTabId: number) => {
+  try {
+    if (nextTabId === 2 || nextTabId === 3 || nextTabId === 4) {
+      const { data } = await getJob();   // Apollo’s useLazyQuery/useQuery
+      if (data?.job) {
+        setReportJob({
+          ...defaultReportJob,
+          ...data.job,   // overwrite with API response
+        });
       }
-    } catch (e) {
-      console.error("Refetch failed:", e);
-      toast({
-        title: "Couldn’t refresh data",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setActiveTab(nextTabId);
     }
-  };
+  } catch (e) {
+    console.error("Refetch failed:", e);
+    toast({
+      title: "Couldn’t refresh data",
+      status: "warning",
+      duration: 3000,
+      isClosable: true,
+    });
+  } finally {
+    setActiveTab(nextTabId);
+  }
+};
+
   return (
     <AdminLayout>
       <Box
@@ -1854,7 +1862,7 @@ notifyOnNetworkStatusChange: true,
                 )}
 
                 {/* Job Details */}
-                {tabId == 2 && <ReportsTab jobObject={job} />}
+                {tabId == 2 && <ReportsTab jobObject={reportJob} />}
                 {/* Message Log */}
                 {tabId == 3 && <MessageLogTab jobObject={job} />}
                 {/* Message Invoice */}
