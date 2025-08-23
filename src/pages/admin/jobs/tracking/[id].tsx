@@ -58,13 +58,13 @@ export default function TrackingJob() {
       setCenter(data);
     }, 300);
   }, [setCenter]);
-  
+
   useEffect(() => {
     return () => {
       debouncedCenterChangeHandler.cancel?.(); // if using lodash.debounce
     };
   }, [debouncedCenterChangeHandler]);
-  
+
   const {
     loading: jobLoading,
     data: jobData,
@@ -82,7 +82,8 @@ export default function TrackingJob() {
           first: 20,
           orderByColumn: "id",
           orderByOrder: "ASC",
-          today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
+          // today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
+          today: moment(localDate).utc().format("YYYY-MM-DD") + " 14:00:00",
           driver_id: Number(data?.job?.driver_id),
         },
       });
@@ -332,16 +333,15 @@ export default function TrackingJob() {
                                                     <strong>
                                                       Pick up notes:{" "}
                                                     </strong>
-                                                    {`${
-                                                      routePoint.job_destination
+                                                    {`${routePoint.job_destination
                                                         .pick_up_notes
                                                         ? routePoint
-                                                            .job_destination
-                                                            .pick_up_notes
+                                                          .job_destination
+                                                          .pick_up_notes
                                                         : routePoint
-                                                            .job_destination
-                                                            .notes ?? "N/A"
-                                                    }`}
+                                                          .job_destination
+                                                          .notes ?? "N/A"
+                                                      }`}
                                                   </p>
                                                 </div>
                                               </AccordionPanel>
