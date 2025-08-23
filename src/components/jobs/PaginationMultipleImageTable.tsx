@@ -360,15 +360,7 @@ const PaginationMultipleImageTable = <T extends object>({
                             borderRadius="4px"
                             mr="4"
                           >
-                            <Image
-                              src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
-                              alt=""
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                            />
+                           <Text>No Image</Text>
                           </Flex>
                         )}
                       </Td>
