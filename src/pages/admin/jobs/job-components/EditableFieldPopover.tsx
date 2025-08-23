@@ -1,6 +1,6 @@
 // EditableFieldPopover.tsx
 import { useMutation } from "@apollo/client";
-import { CheckIcon, CloseIcon,EditIcon } from "@chakra-ui/icons";
+import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Flex,
   IconButton,
@@ -21,7 +21,7 @@ import { RootState } from "store/store";
 
 type Props = {
   row: any;
-  field: "admin_notes" | "timeslot";
+  field: "admin_notes" | "timeslot" | "customer_notes";
   multiline?: boolean; // textarea when true, input when false
   triggerAriaLabel: string; // a11y label for button
   onSaved?: (newValue: string) => void; // optional: lift updated display value
