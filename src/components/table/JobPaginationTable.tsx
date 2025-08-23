@@ -54,14 +54,26 @@ const isInteractive = (el: HTMLElement | null): boolean =>
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
+
 const getStatusStyle = (status: string) => {
   const st = status?.toLowerCase();
-  if (["assigned", "in transit"].includes(st))
-    return { background: "#fff3cd", color: "#856404" };
-  if (["completed", "delivered"].includes(st))
-    return { background: "#d4edda", color: "#155724" };
-  if (["rejected", "cancelled"].includes(st))
-    return { background: "#f8d7da", color: "#721c24" };
+
+  if (st === "in transit") {
+    return { background: "#FFD580", color: "#8B4000" }; // brighter orange
+  }
+
+  if (st === "assigned") {
+    return { background: "#FFFACD", color: "#665c00" }; // light lemon yellow
+  }
+
+  if (["completed", "delivered"].includes(st)) {
+    return { background: "#d4edda", color: "#155724" }; // green
+  }
+
+  if (["rejected", "cancelled"].includes(st)) {
+    return { background: "#f8d7da", color: "#721c24" }; // red
+  }
+
   return {};
 };
 

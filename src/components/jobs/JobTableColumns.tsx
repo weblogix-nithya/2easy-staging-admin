@@ -340,42 +340,23 @@ export const ReadyDropByCellExport = ({ row }: any) =>
     D: ${formatTime(row.original.job.drop_at)}`;
 
 export const NotesCell = ({ row }: any) => {
-  const notes = row.original.job.customer_notes ?? null;
+  const [display, setDisplay] = React.useState(
+    row?.original?.job?.customer_notes ?? ""
+  );
+
   return (
-    <>
-      <Text
-        // minWidth={"300px"}
-        maxWidth={"100px"}
-        w={"min-content"}
-        color="black"
-        noOfLines={2}
-      >
-        {notes ?? "-"}
-      </Text>
-      {notes && (
-        <Popover placement="bottom" closeOnBlur={false}>
-          <PopoverTrigger>
-            <Text color="primary.400" cursor="pointer" mt={5}>
-              <strong>View note</strong>
-            </Text>
-          </PopoverTrigger>
-          <PopoverContent color="black" bg="black.100" borderColor="black.100">
-            <PopoverHeader color="black" pt={4} fontWeight="bold" border="0">
-              Notes:
-            </PopoverHeader>
-            <PopoverArrow bg="black.100" />
-            <PopoverCloseButton />
-            <PopoverBody>
-              <Text color="black" mb="5">
-                {notes}
-              </Text>
-            </PopoverBody>
-          </PopoverContent>
-        </Popover>
-      )}
-    </>
+    <Flex gap={2} align="center">
+      <Text maxW="200px" noOfLines={1}>{display || "-"}</Text>
+      <EditableFieldPopover
+        row={row}
+        field="customer_notes"
+        triggerAriaLabel="Edit customer notes"
+        onSaved={setDisplay}
+      />
+    </Flex>
   );
 };
+
 export const ItemsTypeCell = ({ row }: any) => {
   const items = row.original.job.job_items;
   return (
