@@ -503,7 +503,12 @@ export const GET_JOB_QUERY = gql`
           sourceable_id
           updated_at
         }
-
+        media {
+          id
+          name
+          downloadable_url
+          collection_name
+        }
         route_point {
           id
           route_id
