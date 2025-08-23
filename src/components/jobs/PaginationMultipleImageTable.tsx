@@ -70,6 +70,15 @@ const PaginationMultipleImageTable = <T extends object>({
   const textColorLink = useColorModeValue("blue.600", "blue");
   const router = useRouter();
 
+  const tableColumns = React.useMemo<Column<T>[]>(
+    () => columns ?? [],
+    [columns],
+  );
+  const tableData = React.useMemo<T[]>(
+    () => (Array.isArray(data) ? data : []),
+    [data],
+  );
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -82,8 +91,19 @@ const PaginationMultipleImageTable = <T extends object>({
     previousPage,
     // setPageSize,
     state: { pageIndex, pageSize },
-  } = useTable<T>({ ...options, columns, data }, usePagination, ...plugins);
+  } = useTable<T>(
+    {
+      // columns,
+      // data,
+      ...(options ?? {}),
+      columns: tableColumns,
+      data: tableData,
+    } as TableOptions<T>,
+    usePagination,
+    ...(plugins ?? []),
+  );
 
+  console.log("tableData", tableData);
   useEffect(() => {
     if (isServerSide && setQueryPageIndex && setQueryPageSize) {
       setQueryPageIndex(pageIndex);
@@ -371,7 +391,7 @@ const PaginationMultipleImageTable = <T extends object>({
       <HStack w="full" justify="space-between">
         <Text>
           Showing {pageIndex * pageSize + 1} to {(pageIndex + 1) * pageSize} of{" "}
-          {data.length} entries
+          {data?.length} entries
         </Text>
         <ButtonGroup isAttached variant="outline">
           <IconButton
