@@ -99,7 +99,7 @@ export default function ReportsTab(props: { jobObject: any }) {
     setJob(jobObject);
     let _driverIssues: any[] = [];
     let _customerIssues: any[] = [];
-    let _jobDestinationsConfirmed = jobObject.job_destinations.filter(
+    let _jobDestinationsConfirmed = jobObject.job_destinations?.filter(
       (jobDestination: any) => jobDestination.job_destination_status_id === 3,
     );
     // change is_pickup to pickup or delivery
@@ -143,12 +143,12 @@ export default function ReportsTab(props: { jobObject: any }) {
     _jobDestinationsConfirmed = _jobDestinationsConfirmed?.map(
       (destination: any) => {
         // Filter media array for items with collection_name equal to "signatures"
-        const signatureMedia = destination.media.filter(
+        const signatureMedia = destination?.media?.filter(
           (item: any) => item.collection_name === "signatures",
         );
 
-        const normalMedia = destination.media.filter(
-          (item: any) => item.collection_name !== "signatures",
+        const normalMedia = destination?.media?.filter(
+          (item: any) => item?.collection_name !== "signatures",
         );
 
         // Assign the handoutSignatures array to the handout_signature property of the destination object
