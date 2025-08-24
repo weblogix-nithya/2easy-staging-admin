@@ -539,7 +539,8 @@ export const StatusCell = ({ row }: any) => {
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Text maxW="150px" minW="100px">
-      {row?.original?.job?.ready_at || "-"}
+      {row?.original?.job?.drop_at || "-"} 
+       {/* it wa ready_at date initially, as client asked for jobdrop_at, changed it to drop_at */}
     </Text>
   );
 };
