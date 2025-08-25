@@ -78,35 +78,35 @@ export default function SignIn() {
         if (data.login.user.driver?.id == undefined) {
           setCookie(null, "access_token", data.login.access_token, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "user_name", data.login.user.name, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "user_email", data.login.user.email, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "customer_id", data.login.user.customer?.id, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "company_id", data.login.user.customer?.company_id, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "user_id", data.login.user?.id, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "driver_id", data.login.user.driver?.id, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(null, "is_admin", data.login.user.is_admin, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setCookie(
             null,
@@ -114,12 +114,12 @@ export default function SignIn() {
             data.login.user.is_company_admin,
             {
               maxAge: 30 * 24 * 60 * 60,
-              path: "*",
+              path: "/",
             },
           );
           setCookie(null, "state", data.login.user.state, {
             maxAge: 30 * 24 * 60 * 60,
-            path: "*",
+            path: "/",
           });
           setAuthToken();
 

@@ -75,13 +75,14 @@ export default function HeaderLinks(props: { secondary: boolean }) {
       "is_admin",
       "is_company_admin",
       "user_id",
-      "state"
+      "state",
     ];
-  
-    const paths = ["/", "/admin", "/admin/jobs", "*"];
-  
-    cookieNames.forEach(name => {
-      paths.forEach(path => {
+
+    // const paths = ["/", "/admin", "/admin/jobs", "*"];
+    const paths = ["/", "/admin", "/admin/jobs"];
+
+    cookieNames.forEach((name) => {
+      paths.forEach((path) => {
         destroyCookie(null, name, { path });
       });
     });
@@ -90,17 +91,15 @@ export default function HeaderLinks(props: { secondary: boolean }) {
   async function onLogout() {
     // Clear all cookies using the new function
     clearAllCookies();
-    
     // Clear Apollo Client cache
     try {
-        await apolloClient?.clearStore();
+      await apolloClient?.clearStore();
     } catch (error) {
-        console.error('Error clearing Apollo cache:', error);
+      console.error("Error clearing Apollo cache:", error);
     }
-    
     dispatch(logoutUser());
     router.push("/auth/login");
-}
+  }
 
   return (
     <Flex
