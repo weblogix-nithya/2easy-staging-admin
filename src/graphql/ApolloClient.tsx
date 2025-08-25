@@ -53,8 +53,14 @@ const createLink = (opts: HttpOptions = {}) => {
   });
 };
 
-function createApolloClient() {
-  const uploadLink = createLink();
+function createApolloClient(token: string = "") {
+  // const uploadLink = createLink();
+  const uploadLink = createUploadLink({
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
+    credentials: "include",
+    fetchOptions: { credentials: "include" },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
 
 const errorLink = new ApolloLink((operation, forward) => {
   return forward(operation).map((response) => {
@@ -95,7 +101,9 @@ const errorLink = new ApolloLink((operation, forward) => {
 }
 
 export function initializeApollo(initialState = {}) {
-  const _apolloClient = apolloClient ?? createApolloClient();
+  const cookies = parseCookies();
+  const token = cookies.access_token || "";
+  const _apolloClient = apolloClient ?? createApolloClient(token);
 
   // If your page has Next.js data fetching methods that use Apollo Client, the initial state
   // gets hydrated here
