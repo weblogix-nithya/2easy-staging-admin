@@ -129,13 +129,13 @@ function JobEdit() {
   const routeReady = router.isReady && typeof router.query.id === "string";
   const id = routeReady ? (router.query.id as string) : undefined; // use string ID
   // console.log(id, "ids");
-  useEffect(() => {
-    // This effect runs on every [id] change!
-    if (router.query.id) {
-      console.log("Route ID changed to:", id);
+  // useEffect(() => {
+  //   // This effect runs on every [id] change!
+  //   if (router.query.id) {
+  //     console.log("Route ID changed to:", id);
 
-    }
-  }, [router.query.id]);
+  //   }
+  // }, [router.query.id]);
 
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);

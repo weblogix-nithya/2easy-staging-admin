@@ -183,7 +183,7 @@ function JobPage() {
     }, 300);
   }, []);
 
-  const router = useRouter();
+  const _router = useRouter();
 
   const defaultVariables = {
     query: "",
