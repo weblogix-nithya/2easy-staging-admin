@@ -183,8 +183,8 @@ function JobPage() {
     }, 300);
   }, []);
 
-  const router = useRouter();
-  
+  const _router = useRouter();
+
   const defaultVariables = {
     query: "",
     page: 1,
@@ -687,27 +687,36 @@ function JobPage() {
       //   router.reload();
       // }
       // router.push(`/admin/jobs/${data.createJob.id}`);
-     const jobId = String(data.createJob.id);
+      const jobId = String(data.createJob.id);
+      window.location.href = `/admin/jobs/${jobId}`;
+      // router
+      //   .push(
+      //     { pathname: "/admin/jobs/[id]", query: { id: jobId } },
+      //     `/admin/jobs/${jobId}`,
+      //   )
+      //   .then(() => {
+      //     window.location.reload();
+      //   });
 
-await router.push(
-  { pathname: "/admin/jobs/[id]", query: { id: jobId } },
-  `/admin/jobs/${jobId}`
-);
-
-return;
-
- 
       console.log("navigating to after", `/admin/jobs/${data.createJob.id}`);
       // window.location.href = `/admin/jobs/${data.createJob.id}`;
-
-  
-    },  
+    },
     onError: (error) => {
       setIsSaving(false);
       showGraphQLErrorToast(error);
     },
   });
+  // const [pendingJobId, setPendingJobId] = useState<string | null>(null);
 
+  // useEffect(() => {
+  //   if (router.isReady && pendingJobId) {
+  //     router.push(
+  //       { pathname: "/admin/jobs/[id]", query: { id: pendingJobId } },
+  //       `/admin/jobs/${pendingJobId}`,
+  //     );
+  //     setPendingJobId(null);
+  //   }
+  // }, [router.isReady, pendingJobId]);
   //handleCreateMedia
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
@@ -865,7 +874,7 @@ return;
         customer_id: job.customer_id,
       },
       onCompleted: (data) => {
-        console.log(data,"savedaddress")
+        console.log(data, "savedaddress");
         setSavedAddressesSelect([]);
         setSavedAddressesSelect(
           formatToSelect(
@@ -1416,7 +1425,46 @@ return;
                       // console.log(refinedData, "n");
                     }}
                   />
+                  {!isCompany && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={companiesOptions}
+                      label="Company:"
+                      value={companiesOptions.find(
+                        (entity) => entity.value === job.company_id,
+                      )}
+                      placeholder=""
+                      onInputChange={(e) => {
+                        onChangeSearchQuery(e);
+                      }}
+                      onChange={(e) => {
+                        setCustomerSelected(defaultCustomer);
+                        getCustomersByCompanyId({
+                          ...defaultVariables,
+                          company_id: e.value,
+                        });
+                        setJob({
+                          ...job,
+                          company_id: e.value || null,
+                          customer_id: null,
+                        });
+                        setRefinedData({
+                          ...refinedData,
+                          area: null,
+                          cbm_rate: null,
+                          minimum_charge: null,
+                        });
 
+                        if (e.value) {
+                          setCompanyWeight(null); // Reset before fetching
+                          getCompany({ id: String(e.value) }).then((res) => {
+                            setCompanyWeight(res.data.company.weight_per_cubic);
+                          });
+                          getCompanyRates({ company_id: String(e.value) });
+                        }
+                      }}
+                    />
+                  )}
                   {/* Transport Type Select */}
                   {(job.job_category_id == 1 || job.job_category_id == 2) && (
                     <>
@@ -1477,47 +1525,6 @@ return;
                         Note: For LCL and Airfreight Only
                       </Text>
                     </>
-                  )}
-
-                  {!isCompany && (
-                    <CustomInputField
-                      isSelect={true}
-                      optionsArray={companiesOptions}
-                      label="Company:"
-                      value={companiesOptions.find(
-                        (entity) => entity.value === job.company_id,
-                      )}
-                      placeholder=""
-                      onInputChange={(e) => {
-                        onChangeSearchQuery(e);
-                      }}
-                      onChange={(e) => {
-                        setCustomerSelected(defaultCustomer);
-                        getCustomersByCompanyId({
-                          ...defaultVariables,
-                          company_id: e.value,
-                        });
-                        setJob({
-                          ...job,
-                          company_id: e.value || null,
-                          customer_id: null,
-                        });
-                        setRefinedData({
-                          ...refinedData,
-                          area: null,
-                          cbm_rate: null,
-                          minimum_charge: null,
-                        });
-
-                        if (e.value) {
-                          setCompanyWeight(null); // Reset before fetching
-                          getCompany({ id: String(e.value) }).then((res) => {
-                            setCompanyWeight(res.data.company.weight_per_cubic);
-                          });
-                          getCompanyRates({ company_id: String(e.value) });
-                        }
-                      }}
-                    />
                   )}
 
                   <CustomInputField
@@ -1709,39 +1716,6 @@ return;
                         ...job,
                         [e.target.name]: e.target.value,
                       });
-                    }}
-                  />
-
-                  <ColorSelect
-                    label="Type:"
-                    optionsArray={filteredJobTypeOptions}
-                    selectedJobId={job.job_type_id}
-                    value={filteredJobTypeOptions.find(
-                      (jobType) => jobType.value === job.job_type_id,
-                    )}
-                    placeholder="Select type"
-                    onChange={(e) => {
-                      // setJob({
-                      //   ...job,
-                      //   job_type_id: e.value || null,
-                      // });
-                      const selectedCategory = e.value;
-                      const selectedCategoryName = filteredJobTypeOptions.find(
-                        (job_category) =>
-                          job_category.value === selectedCategory,
-                      )?.label;
-
-                      setJob({
-                        ...job,
-                        job_type_id: selectedCategory || null,
-                      });
-
-                      setRefinedData({
-                        ...refinedData,
-                        service_choice: selectedCategoryName || null,
-                      });
-                      // console.log(refinedData, "n");
-                      // console.log(job, "job");
                     }}
                   />
 
@@ -1983,7 +1957,37 @@ return;
                 </Box>
 
                 <Divider className="my-12" />
+                <ColorSelect
+                  label="Type:"
+                  optionsArray={filteredJobTypeOptions}
+                  selectedJobId={job.job_type_id}
+                  value={filteredJobTypeOptions.find(
+                    (jobType) => jobType.value === job.job_type_id,
+                  )}
+                  placeholder="Select type"
+                  onChange={(e) => {
+                    // setJob({
+                    //   ...job,
+                    //   job_type_id: e.value || null,
+                    // });
+                    const selectedCategory = e.value;
+                    const selectedCategoryName = filteredJobTypeOptions.find(
+                      (job_category) => job_category.value === selectedCategory,
+                    )?.label;
 
+                    setJob({
+                      ...job,
+                      job_type_id: selectedCategory || null,
+                    });
+
+                    setRefinedData({
+                      ...refinedData,
+                      service_choice: selectedCategoryName || null,
+                    });
+                    // console.log(refinedData, "n");
+                    // console.log(job, "job");
+                  }}
+                />
                 {/* Items */}
                 <Box mb="16px" mt={4}>
                   <Flex justify="space-between" align="center" className="mb-6">

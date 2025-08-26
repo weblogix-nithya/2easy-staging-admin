@@ -129,6 +129,14 @@ function JobEdit() {
   const routeReady = router.isReady && typeof router.query.id === "string";
   const id = routeReady ? (router.query.id as string) : undefined; // use string ID
   // console.log(id, "ids");
+  // useEffect(() => {
+  //   // This effect runs on every [id] change!
+  //   if (router.query.id) {
+  //     console.log("Route ID changed to:", id);
+
+  //   }
+  // }, [router.query.id]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [updatingMedia, setUpdatingMedia] = useState(false);
   const [tabId, setActiveTab] = useState(1);
@@ -193,6 +201,18 @@ function JobEdit() {
     cbm_rate: 0,
     minimum_charge: 0,
   });
+
+  useEffect(() => {
+    if (id) {
+      setJob(defaultJob);
+      setJobItems([defaultJobItem]);
+      setJobCcEmails([]);
+      setJobCcEmailTags([]);
+      setJobDestinations([]);
+      setPickUpDestination(defaultJobDestination);
+      // Reset other related states as needed
+    }
+  }, [id]);
 
   const tabs = [
     {
@@ -454,8 +474,14 @@ function JobEdit() {
   });
 
   useEffect(() => {
-    if (routeReady && id) getJob({ id });
-  }, [routeReady, id, getJob]);
+    if (id) {
+      getJob();
+    }
+  }, [id, getJob]);
+
+  // useEffect(() => {
+  //   if (routeReady && id) getJob({ id });
+  // }, [routeReady, id, getJob]);
 
   const { data: _depotData } = useQuery(GET_ALL_TIMESLOT_DEPOTS, {
     context: { noAuthRedirect: true },

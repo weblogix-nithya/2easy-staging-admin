@@ -16,7 +16,7 @@ import {
   // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId,useRef, useState } from "react";
 
 import {
   fetchPlaceDetails,
@@ -41,6 +41,8 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
     onSetAddress,
     onModalClose,
   } = props;
+  const inputId = useId();
+
   const prevQueryRef = useRef("");
   const selectedLabelRef = useRef("");
   // const textColor = useColorModeValue("navy.700", "white");
@@ -231,22 +233,30 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
               "lng",
               "lat",
             ].map((name) => (
-              <Input
-                key={name}
-                name={name}
-                placeholder={name
-                  .replaceAll("_", " ")
-                  .replace("address ", "")
-                  .replace(/\b\w/g, (c) => c.toUpperCase())}
-                value={(entityAddress as any)[name] ?? ""}
-                onChange={(e) =>
-                  setEntityAddress({
-                    ...entityAddress,
-                    [e.target.name]: e.target.value,
-                  })
-                }
-                isDisabled={!googleAddress}
-              />
+              <>
+                <FormLabel htmlFor={`${name}-${inputId}`}>
+                  {name
+                    .replaceAll("_", " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                </FormLabel>
+                <Input
+                  key={name}
+                  id={`${name}-${inputId}`}
+                  name={name}
+                  placeholder={name
+                    .replaceAll("_", " ")
+                    .replace("address ", "")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                  value={(entityAddress as any)[name] ?? ""}
+                  onChange={(e) =>
+                    setEntityAddress({
+                      ...entityAddress,
+                      [e.target.name]: e.target.value,
+                    })
+                  }
+                  isDisabled={!googleAddress}
+                />
+              </>
             ))}
           </Flex>
         </ModalBody>

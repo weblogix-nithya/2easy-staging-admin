@@ -21,7 +21,7 @@ import {
   CREATE_CUSTOMER_ADDRESS_MUTATION,
   UPDATE_CUSTOMER_ADDRESS_MUTATION,
 } from "graphql/customerAddress";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId,useState } from "react";
 
 export default function JobAddressesTab(props: {
   savedAddressesSelect?: any[];
@@ -39,6 +39,7 @@ export default function JobAddressesTab(props: {
     onAddressSaved,
     jobDestinationChanged,
   } = props;
+  const uniqueId = useId();
 
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
@@ -46,7 +47,7 @@ export default function JobAddressesTab(props: {
   const [isSavedAddress, setIsSavedAddress] = useState(false);
   const [jobDestination, setJobDestination] = useState(defaultJobDestination);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [randomIdSection, _setRandomIdSection] = useState(
+  const [_randomIdSection, _setRandomIdSection] = useState(
     Math.random().toString(36).substring(7),
   );
   const [randomIdKey, setRandomIdKey] = useState(
@@ -301,7 +302,8 @@ export default function JobAddressesTab(props: {
                               key={randomIdKey}
                               colorScheme="brandScheme"
                               name="is_saved_address"
-                              id={"is_saved_address" + randomIdSection}
+                              // id={"is_saved_address" + randomIdSection}
+                              id={`is_saved_address_${uniqueId}`}
                               onChange={(e) => {
                                 if (e.target.checked) {
                                   if (entityModel?.customer_id) {
@@ -328,7 +330,8 @@ export default function JobAddressesTab(props: {
                               color={textColor}
                               fontSize="sm"
                               fontWeight="700"
-                              htmlFor={"is_saved_address" + randomIdSection}
+                              htmlFor={`is_saved_address_${uniqueId}`}
+                              // htmlFor={"is_saved_address" + randomIdSection}
                             >
                               Add to saved addresses
                             </FormLabel>
