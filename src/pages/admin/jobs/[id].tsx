@@ -69,6 +69,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+// import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
 import {
   SyntheticEvent,
@@ -108,6 +109,7 @@ export function useIsMounted() {
 }
 
 function JobEdit() {
+  // alert("ji")
   const toast = useToast();
   const isMounted = useIsMounted();
   // const textColor = useColorModeValue("navy.700", "white");
@@ -125,14 +127,16 @@ function JobEdit() {
   const [_pricecalculationid, setPricecalculationid] = useState(null);
   const [buttonText, setButtonText] = useState("Get A Quote");
   const router = useRouter();
-  // const { id } = router.query;
-  const routeReady = router.isReady && typeof router.query.id === "string";
-  const id = routeReady ? (router.query.id as string) : undefined; // use string ID
-  // console.log(id, "ids");
+  //   const searchParams = useSearchParams();
+  //  let id = searchParams.get("id");
+  //  console.log(id,'id')
+
+  const { id } = router.query;
+
   // useEffect(() => {
   //   // This effect runs on every [id] change!
   //   if (router.query.id) {
-  //     console.log("Route ID changed to:", id);
+  //  //   console.log("Route ID changed to:", id);
 
   //   }
   // }, [router.query.id]);
@@ -201,18 +205,6 @@ function JobEdit() {
     cbm_rate: 0,
     minimum_charge: 0,
   });
-
-  useEffect(() => {
-    if (id) {
-      setJob(defaultJob);
-      setJobItems([defaultJobItem]);
-      setJobCcEmails([]);
-      setJobCcEmailTags([]);
-      setJobDestinations([]);
-      setPickUpDestination(defaultJobDestination);
-      // Reset other related states as needed
-    }
-  }, [id]);
 
   const tabs = [
     {
@@ -319,7 +311,10 @@ function JobEdit() {
     variables: {
       id: id,
     },
-    skip: !routeReady || !id,
+    // skip: !routeReady || !id,
+    skip: !router.isReady || !id,
+    // enabled: router.isReady && !!id,
+    // skip: !id,
     fetchPolicy: "network-only",
     // notifyOnNetworkStatusChange: true,
     onCompleted: (data) => {
@@ -467,9 +462,9 @@ function JobEdit() {
       // console.log({ jobStatuses, drivers, jobCategories }, "ll");
     },
 
-    onError(error) {
+    onError(_error) {
       // console.log("onError");
-      console.log(error);
+      //   console.log(error);
     },
   });
 
@@ -949,7 +944,7 @@ function JobEdit() {
     },
     onError: (error) => {
       // Handle the error and set data to empty
-      console.log("Error fetching job price calculation detail:", error);
+      //   console.log("Error fetching job price calculation detail:", error);
       setIsUpdateMode(false); // No data found, so we need to create a new entry
       setRefinedData(defaultJobQuoteData);
       setQuoteCalculationRes(defaultJobPriceCalculationDetail);
@@ -1531,7 +1526,8 @@ function JobEdit() {
       state: refinedData.state || selectedstate?.label,
       state_code: refinedData.state_code || selectedstate?.value,
       company_rates:
-        (job.job_category_id == 1 && selectedstate?.value === "QLD") ||
+        ((job.job_category_id == 1 || job.job_category_id == 2) &&
+          selectedstate?.value === "QLD") ||
         selectedstate?.value === "VIC"
           ? filteredCompanyRates.map((rate) => ({
               company_id: rate.company_id,
@@ -1656,8 +1652,8 @@ function JobEdit() {
           stackable: Number(calculationData.stackable),
           total: Number(calculationData.total),
         })
-          .then((data) => {
-            console.log("created successfully:", data);
+          .then((_data) => {
+            //   console.log("created successfully:", data);
             handleUpdateJob();
             toast({
               title: "Quote price created",
@@ -1680,7 +1676,7 @@ function JobEdit() {
     // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
     if (
       job.is_inbound_connect &&
-      job.job_category_id == 1 &&
+      (job.job_category_id == 1 || job.job_category_id == 2) &&
       (!job.timeslot_depots ||
         job.timeslot_depots == null ||
         job.timeslot_depots === "")
