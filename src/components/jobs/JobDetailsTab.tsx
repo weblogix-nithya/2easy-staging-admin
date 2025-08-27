@@ -985,35 +985,36 @@ const JobDetailsTab = ({
                 </SimpleGrid>
               </Flex>
 
-              {job.job_category_id == 1 && job.is_inbound_connect == true && (
-                <Box>
-                  <CustomInputField
-                    isSelect={true}
-                    isDisabled={!isAdmin}
-                    optionsArray={filtereddepotOptions} // Use the state directly
-                    label="Timeslot depots:"
-                    value={
-                      filtereddepotOptions.find(
-                        (option) => option.value === job.timeslot_depots,
-                      ) || null
-                    }
-                    placeholder="Select a depot"
-                    onChange={(e) => {
-                      setSelectedDepot(e.value);
-                      setRefinedData((prevData) => ({
-                        ...prevData,
-                        timeslot_depots: e.value,
-                      })); // Update the selected depot directly
-                      //  console.log("Selected depot: ", e.value)
-                      setJob({
-                        ...job,
-                        timeslot_depots: e.value, // Update job.timeslot_depots
-                      });
-                      sendFreightData();
-                    }}
-                  />
-                </Box>
-              )}
+              {(job.job_category_id == 1 || job.job_category_id == 2) &&
+                job.is_inbound_connect == true && (
+                  <Box>
+                    <CustomInputField
+                      isSelect={true}
+                      isDisabled={!isAdmin}
+                      optionsArray={filtereddepotOptions} // Use the state directly
+                      label="Timeslot depots:"
+                      value={
+                        filtereddepotOptions.find(
+                          (option) => option.value === job.timeslot_depots,
+                        ) || null
+                      }
+                      placeholder="Select a depot"
+                      onChange={(e) => {
+                        setSelectedDepot(e.value);
+                        setRefinedData((prevData) => ({
+                          ...prevData,
+                          timeslot_depots: e.value,
+                        })); // Update the selected depot directly
+                        //  console.log("Selected depot: ", e.value)
+                        setJob({
+                          ...job,
+                          timeslot_depots: e.value, // Update job.timeslot_depots
+                        });
+                        sendFreightData();
+                      }}
+                    />
+                  </Box>
+                )}
 
               <Flex alignItems="center" width="100%" pt={7}>
                 <SimpleGrid columns={{ sm: 1 }} width="100%">

@@ -16,7 +16,7 @@ import {
   // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import React, { useEffect, useId,useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 
 import {
   fetchPlaceDetails,
@@ -233,7 +233,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
               "lng",
               "lat",
             ].map((name) => (
-              <>
+              <React.Fragment key={name}>
                 <FormLabel htmlFor={`${name}-${inputId}`}>
                   {name
                     .replaceAll("_", " ")
@@ -256,7 +256,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
                   }
                   isDisabled={!googleAddress}
                 />
-              </>
+              </React.Fragment>
             ))}
           </Flex>
         </ModalBody>
