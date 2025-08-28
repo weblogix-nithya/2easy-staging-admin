@@ -880,7 +880,7 @@ export const defaultJob: Job = {
   company_area: "",
   // job_category_name: undefined,
   job_status_id: null,
-  job_type_id: 1,
+  job_type_id: null,
 
   customer_id: null,
   company_id: null,

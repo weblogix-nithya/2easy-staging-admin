@@ -117,9 +117,11 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
   }, [query]);
 
   const handleFetchPlaceDetails = async (placeId: string) => {
+    // debugger
     const data = await fetchPlaceDetails(placeId);
     if (!data) return;
-    console.log(data, "data");
+    // console.log(data, "data");
+    let businessname=data.displayName.text
     const components = data.addressComponents || [];
     // console.log("Fetched place details:", data, components);
     setEntityAddress({
@@ -141,12 +143,13 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
       address_postal_code: getAddressComponent(components, "postal_code"),
       lat: data.location?.latitude || 0,
       lng: data.location?.longitude || 0,
+      address_business_name: businessname,
     });
   };
 
   const handleSaveAddress = async () => {
     // debugger
-    console.log("Saving address:", entityAddress);
+    // console.log("Saving address:", entityAddress);
     entityAddress.address =
       (entityAddress.address_line_2 ? entityAddress.address_line_2 + "/" : "") +
       entityAddress.address_line_1 +
@@ -183,7 +186,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
         <ModalBody>
           <Divider mb="24px" />
 
-          <Flex mt={4} direction="column" gap="12px">
+          <Flex mt={4} direction="column" gap="16px">
             <FormLabel>Search Address</FormLabel>
             <Input
               placeholder="Type location"
@@ -192,6 +195,7 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
               size="lg"
             />
             {suggestions.map((sugg) => {
+              // console.log(sugg, "sugg");
               const prediction = sugg.placePrediction;
               const mainText =
                 prediction.structuredFormat?.mainText?.text || "";
@@ -233,14 +237,18 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
               "lng",
               "lat",
             ].map((name) => (
-              <React.Fragment key={name}>
-                <FormLabel htmlFor={`${name}-${inputId}`}>
+              <Flex key={name} align="center" gap={4} w="100%">
+                <FormLabel
+                  htmlFor={`${name}-${inputId}`}
+                  w="30%"
+                  mb="0"
+                  textAlign="left" // ✅ align text right to line up neatly
+                >
                   {name
                     .replaceAll("_", " ")
                     .replace(/\b\w/g, (c) => c.toUpperCase())}
                 </FormLabel>
                 <Input
-                  key={name}
                   id={`${name}-${inputId}`}
                   name={name}
                   placeholder={name
@@ -255,8 +263,9 @@ export default function AddressesModal<T extends GenericAddressType>(props: {
                     })
                   }
                   isDisabled={!googleAddress}
+                  w="70%"
                 />
-              </React.Fragment>
+              </Flex>
             ))}
           </Flex>
         </ModalBody>
