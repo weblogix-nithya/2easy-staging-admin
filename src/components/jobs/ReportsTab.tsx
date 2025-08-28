@@ -2,9 +2,11 @@ import { useMutation } from "@apollo/client";
 import {
   Box,
   Button,
+  Center,
   Divider,
   Flex,
   Link,
+  Spinner,
   // useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
@@ -94,7 +96,7 @@ export default function ReportsTab(props: { jobObject: any }) {
   //   console.log("download pod"); //TODO: download pod
   // };
   useEffect(() => {
-      if (!jobObject) return;
+    // if (!jobObject) return;
 
     setJob(jobObject);
     let _driverIssues: any[] = [];
@@ -223,12 +225,17 @@ export default function ReportsTab(props: { jobObject: any }) {
             </Button>
           )}
         </Flex>
-
-        {true && (
-          <PaginationMultipleImageTable
-            columns={pickupColumns}
-            data={jobDestinationsConfirmed}
-          />
+        {!jobDestinationsConfirmed?.length ? (
+          <Center py={10}>
+            <Spinner size="lg" thickness="4px" speed="0.65s" />
+          </Center>
+        ) : (
+          true && (
+            <PaginationMultipleImageTable
+              columns={pickupColumns}
+              data={jobDestinationsConfirmed}
+            />
+          )
         )}
       </Box>
 
