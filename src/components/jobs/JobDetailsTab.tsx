@@ -995,7 +995,7 @@ const JobDetailsTab = ({
                       label="Timeslot depots:"
                       value={
                         filtereddepotOptions.find(
-                          (option) => option.value === job.timeslot_depots,
+                          (option: any) => option.value === job.timeslot_depots,
                         ) || null
                       }
                       placeholder="Select a depot"
