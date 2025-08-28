@@ -74,7 +74,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import {
   // startTransition,
   SyntheticEvent,
@@ -197,7 +197,7 @@ function JobPage() {
     }, 300);
   }, []);
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const defaultVariables = {
     query: "",

@@ -38,7 +38,7 @@ export async function fetchPlaceDetails(placeId: string) {
 
   try {
     const response = await fetch(
-      `https://places.googleapis.com/v1/places/${placeId}?key=${GOOGLE_API_KEY}&fields=formattedAddress,location,addressComponents`
+      `https://places.googleapis.com/v1/places/${placeId}?key=${GOOGLE_API_KEY}&fields=formattedAddress,location,addressComponents,displayName`
     );
 
     const data = await response.json();
