@@ -74,7 +74,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-// import { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import {
   // startTransition,
   SyntheticEvent,
@@ -155,6 +155,7 @@ function JobPage() {
   const [savedAddressesSelect, setSavedAddressesSelect] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [jobTypeOptions, setJobTypeOptions] = useState([]);
+  // const [isJobTypeSelectedByUser, setIsJobTypeSelectedByUser] = useState(false);
   const [companiesOptions, setCompaniesOptions] = useState([]);
   const [customerOptions, setCustomerOptions] = useState([]);
   const [temporaryMedia, setTemporaryMedia] = useState([]);
@@ -196,7 +197,7 @@ function JobPage() {
     }, 300);
   }, []);
 
-  // const router = useRouter();
+  const router = useRouter();
 
   const defaultVariables = {
     query: "",
@@ -723,247 +724,6 @@ function JobPage() {
         }
       })();
     },
-
-    // onCompleted: async (data) => {
-    //   let _jobCcEmailTags = [...jobCcEmailTags];
-    //   for (let jobCcEmailTag of _jobCcEmailTags) {
-    //     handleCreateJobCcEmail({
-    //       input: {
-    //         id: undefined,
-    //         email: jobCcEmailTag,
-    //         job_id: parseInt(data.createJob.id),
-    //       },
-    //     });
-    //   }
-
-    //   let _jobItems = [...jobItems];
-    //   for (let jobItem of _jobItems) {
-    //     jobItem.job_id = parseInt(data.createJob.id);
-    //     handleCreateJobItem({
-    //       input: {
-    //         ...jobItem,
-    //         is_new: undefined,
-    //         dimension_height_cm: undefined,
-    //         dimension_width_cm: undefined,
-    //         dimension_depth_cm: undefined,
-    //         volume_cm: undefined,
-    //         id: undefined,
-    //         item_type: undefined,
-    //       },
-    //     });
-    //   }
-    //   const today = new Date().toISOString(); // Gets current date and time in ISO format
-
-    //   const jobDestination1 =
-    //     jobDestinations.length > 0
-    //       ? {
-    //           state: jobDestinations[0]?.address_state,
-    //           suburb: jobDestinations[0]?.address_city,
-    //           postcode: jobDestinations[0]?.address_postal_code,
-    //           address: jobDestinations[0]?.address,
-    //         }
-    //       : null;
-
-    //   const filteredCompanyRates = companyRates?.filter(
-    //     (rate) => rate.state === jobDestination1?.state,
-    //   );
-    //   const payload = {
-    //     freight_type: refinedData.freight_type,
-    //     transport_type: job.transport_type,
-    //     state:
-    //       refinedData.state ||
-    //       job.pick_up_state ||
-    //       pickUpDestination.address_state,
-    //     state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-    //     service_choice: refinedData.service_choice,
-    //     company_rates:
-    //       (job.job_category_id == 1 &&
-    //         refinedData.pick_up_stateCode === "QLD") ||
-    //       refinedData.pick_up_stateCode === "VIC"
-    //         ? filteredCompanyRates.map((rate) => ({
-    //             company_id: rate.company_id,
-    //             seafreight_id: rate.seafreight_id,
-    //             area: rate.area,
-    //             cbm_rate: rate.cbm_rate,
-    //             minimum_charge: rate.minimum_charge,
-    //           }))
-    //         : [],
-    //     job_pickup_address: {
-    //       state: pickUpDestination?.address_state,
-    //       suburb: pickUpDestination?.address_city,
-    //       postcode: pickUpDestination?.address_postal_code,
-    //       address: pickUpDestination?.address,
-    //     },
-    //     job_destination_address:
-    //       jobDestinations.length > 0
-    //         ? {
-    //             state: jobDestinations[0]?.address_state,
-    //             suburb: jobDestinations[0]?.address_city,
-    //             postcode: jobDestinations[0]?.address_postal_code,
-    //             address: jobDestinations[0]?.address,
-    //           }
-    //         : {},
-    //     pickup_time: {
-    //       ready_by: readyAt,
-    //     },
-    //     delivery_time: {
-    //       drop_by: dropAt,
-    //     },
-    //     surcharges: {
-    //       hand_unload: job.is_hand_unloading || false,
-    //       dangerous_goods: job.is_dangerous_goods || false,
-    //       time_slot: job.is_inbound_connect || null,
-    //       timeslot_depots: job.is_inbound_connect
-    //         ? refinedData.timeslot_depots
-    //         : null,
-    //       tail_lift: job.is_tailgate_required || null,
-    //       stackable: false, // If applicable, update this
-    //     },
-    //     job_items: jobItems.map((item) => ({
-    //       id: item.id,
-    //       name: item.name || "",
-    //       notes: item.notes || "",
-    //       quantity: item.quantity,
-    //       volume: item.volume,
-    //       weight: item.weight,
-    //       dimension_height: item.dimension_height,
-    //       dimension_width: item.dimension_width,
-    //       dimension_depth: item.dimension_depth,
-    //       job_destination: jobDestination1 || null,
-    //       item_type: {
-    //         id: item.item_type?.id || "",
-    //         name: item.item_type?.name || "",
-    //       },
-    //       created_at: refinedData.created_at || today,
-    //       updated_at: refinedData.updated_at || today,
-    //     })),
-    //   };
-    //   try {
-    //     const response = await axios.post(apiUrl, payload, {
-    //       headers: { "Content-Type": "application/json" },
-    //     });
-    //     const calculationData = response.data as {
-    //       cbm_auto: number;
-    //       total_weight: number;
-    //       freight: number;
-    //       fuel: number;
-    //       hand_unload: number;
-    //       dangerous_goods: number;
-    //       time_slot: number;
-    //       tail_lift: number;
-    //       stackable: number;
-    //       total: number;
-    //     };
-
-    //     await handleCreateJobPriceCalculationDetail({
-    //       job_id: parseInt(data.createJob.id),
-    //       customer_id: Number(job.customer_id),
-    //       cbm_auto: Number(calculationData.cbm_auto ?? 0),
-    //       total_weight: Number(calculationData.total_weight ?? 0),
-    //       freight: Number(calculationData.freight ?? 0),
-    //       fuel: Number(calculationData.fuel ?? 0),
-    //       hand_unload: Number(calculationData.hand_unload ?? 0),
-    //       dangerous_goods: Number(calculationData.dangerous_goods ?? 0),
-    //       time_slot: Number(calculationData.time_slot ?? 0),
-    //       tail_lift: Number(calculationData.tail_lift ?? 0),
-    //       stackable: Number(calculationData.stackable ?? 0),
-    //       total: Number(calculationData.total ?? 0),
-    //     });
-    //   } catch (error) {
-    //     console.error(error, "error in create quote");
-    //   }
-    //   await handleCreateJobDestination({
-    //     input: {
-    //       ...pickUpDestination,
-    //       is_pickup: true,
-    //       customer_id: undefined,
-    //       id: undefined,
-    //       job_id: parseInt(data.createJob.id),
-    //       jobDestination: undefined,
-    //     },
-    //   });
-
-    //   let _jobDestinations = [...jobDestinations];
-    //   for (let jobDestination of _jobDestinations) {
-    //     jobDestination.id = undefined;
-    //     jobDestination.job_id = parseInt(data.createJob.id);
-    //     await handleCreateJobDestination({
-    //       input: {
-    //         ...jobDestination,
-    //         is_pickup: false,
-    //         customer_id: undefined,
-    //         id: undefined,
-    //         jobDestination: undefined,
-    //       },
-    //     });
-    //   }
-    //   await handleSendConsignmentDocket({
-    //     variables: {
-    //       id: parseInt(data.createJob.id),
-    //     },
-    //   });
-    //   toast({
-    //     title: "Job created",
-    //     status: "success",
-    //     duration: 3000,
-    //     isClosable: true,
-    //   });
-
-    //   // ✅ Wait for all media uploads to finish
-    //   for (const media of temporaryMedia) {
-    //     const reader = new FileReader();
-
-    //     await new Promise<void>((resolve, _reject) => {
-    //       reader.onerror = () => {
-    //         // console.log("file reading has failed");
-    //         resolve(); // skip and continue
-    //       };
-    //       reader.onabort = () => {
-    //         // console.log("file reading was aborted");
-    //         resolve(); // skip and continue
-    //       };
-    //       reader.onload = () => {
-    //         handleCreateMedia({
-    //           variables: {
-    //             input: {
-    //               entity: "Job",
-    //               entity_id: data.createJob.id,
-    //             },
-    //             media: media.file,
-    //           },
-    //         });
-    //         setTimeout(resolve, 100); // small delay for stability
-    //       };
-    //       reader.readAsArrayBuffer(media.file);
-    //     });
-    //   }
-    //   console.log("Navigating to:", `/admin/jobs/${data.createJob.id}`);
-
-    //   // if (router.isReady) {
-    //   //   await router.push(`/admin/jobs/${data.createJob.id}`);
-    //   //   console.log("Navigation successful");
-    //   // } else {
-    //   //   console.log("Router is not ready, delaying navigation");
-    //   // }
-    //   // await router.replace(`/admin/jobs/${data.createJob.id}`);
-    //   // if (!router.isReady) {
-    //   //   router.reload();
-    //   // }
-    //   const jobId = String(data.createJob.id);
-    //   router.push(`/admin/jobs/${jobId}`);
-    //   // window.location.href = `/admin/jobs/${jobId}`;
-    //   // router
-    //   //   .push(
-    //   //     { pathname: "/admin/jobs/[id]", query: { id: jobId } },
-    //   //     `/admin/jobs/${jobId}`,
-    //   //   )
-    //   //   .then(() => {
-    //   //     window.location.reload();
-    //   //   });
-
-    //   console.log("navigating to after", `/admin/jobs/${data.createJob.id}`);
-    //   // window.location.href = `/admin/jobs/${data.createJob.id}`;
-    // },
     onError: (error) => {
       setIsSaving(false);
       showGraphQLErrorToast(error);
@@ -1456,20 +1216,14 @@ function JobPage() {
     if (!validateAddresses()) return;
     if (!validateTimeslotDepot()) return;
 
-    if (
-      job.job_type_id === null ||
-      job.job_type_id === undefined ||
-      refinedData.service_choice === ""
-    ) {
-      toast({
-        title: "Job Type Required",
-        description: "Please select the available job type once again.",
-        status: "warning",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    const selectedJobTypeName = filteredJobTypeOptions.find(
+      (opt) => opt.value === job.job_type_id,
+    )?.label;
+
+    setRefinedData({
+      ...refinedData,
+      service_choice: selectedJobTypeName || null,
+    });
 
     if (
       (job.job_category_id == 1 || job.job_category_id == 2) &&
@@ -2238,7 +1992,7 @@ function JobPage() {
                     const selectedCategoryName = filteredJobTypeOptions.find(
                       (job_category) => job_category.value === selectedCategory,
                     )?.label;
-
+                    6;
                     setJob({
                       ...job,
                       job_type_id: selectedCategory || null,
@@ -2248,8 +2002,6 @@ function JobPage() {
                       ...refinedData,
                       service_choice: selectedCategoryName || null,
                     });
-                    // console.log(refinedData, "n");
-                    // console.log(job, "job");
                   }}
                 />
                 {/* Items */}
