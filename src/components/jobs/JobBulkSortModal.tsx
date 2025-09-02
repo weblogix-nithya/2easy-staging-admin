@@ -4,8 +4,6 @@ import {
   Button,
   Divider,
   Flex,
-  FormControl,
-  FormLabel,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -15,7 +13,6 @@ import {
   ModalOverlay,
   Table,
   Tbody,
-  Text,
   Th,
   Thead,
   Tr,
@@ -26,7 +23,7 @@ import {
 import { DndContext, UniqueIdentifier } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { BULK_UPDATE_JOB_MUTATION, BULK_UPDATE_SORT_JOB_MUTATION } from "graphql/job";
+import { BULK_UPDATE_SORT_JOB_MUTATION } from "graphql/job";
 import { reorderArray } from "helpers/helper";
 import moment from "moment";
 import {  useState } from "react";

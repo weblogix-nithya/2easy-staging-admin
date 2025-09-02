@@ -883,7 +883,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 // Update the tags
                 updateTags(selectedFilters, jobFilter);
-
+                console.log(selectedFilters, "selectedFilters");
                 setMainFilterDisplayNames(filterDisplayName);
                 setCookie(
                   null,

@@ -9,6 +9,7 @@ interface ActionBarWrapperProps {
   selectedJobs: any[];
   onSwitch: (checked: boolean) => void;
   onClickBulkAssign: () => void;
+  onClickBulkSort: () => void;
 }
 
 const ActionBarWrapper = ({
@@ -17,6 +18,7 @@ const ActionBarWrapper = ({
   selectedJobs,
   onSwitch,
   onClickBulkAssign,
+  onClickBulkSort,
 }: ActionBarWrapperProps) => {
   if (!isAdmin || loading) return null;
 
@@ -26,6 +28,7 @@ const ActionBarWrapper = ({
         selectedJobs={selectedJobs}
         onSwitch={onSwitch}
         onClickBulkAssign={onClickBulkAssign}
+        onClickBulkSort={onClickBulkSort}
       />
     </Box>
   );
