@@ -1,12 +1,14 @@
 import {
   Box,
   Button,
+  Center,
   Divider,
   Flex,
   GridItem,
   Link,
   SimpleGrid,
   Skeleton,
+  Spinner,
   Table,
   Tbody,
   Td,
@@ -94,7 +96,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
                   Customer
                 </Text>
                 <Text fontWeight="800!" fontSize="sm" color={"blue.500"}>
-                  {job.customer_invoice?.customer?.full_name}
+                  {job?.customer_invoice?.customer?.full_name}
                 </Text>
               </GridItem>
               <GridItem>
@@ -104,7 +106,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
                   mt={1}
                   textColor={textColorSecodary}
                 >
-                  {job.customer_invoice?.customer?.company?.name}
+                  {job?.customer_invoice?.customer?.company?.name}
                 </Text>
               </GridItem>
             </SimpleGrid>
@@ -140,20 +142,28 @@ export default function InvoiceTab(props: { jobObject: any }) {
               </Tr>
             </Thead>
             <Tbody>
-              {job.customer_invoice?.invoice_line_items?.map(
-                (item: any, index: number) => {
-                  console.log(item, "i");
-                  return (
+              {!job?.customer_invoice?.invoice_line_items ? (
+                // Show spinner while data is not loaded
+                <Tr>
+                  <Td colSpan={5}>
+                    <Center py={4}>
+                      <Spinner size="lg" />
+                    </Center>
+                  </Td>
+                </Tr>
+              ) : (
+                job?.customer_invoice?.invoice_line_items?.map(
+                  (item: any, index: number) => (
                     <Tr key={"row-" + index}>
                       <Td>{item.name}</Td>
-                      <Td>{formatCurrency(item.unit_amount, item.currecy)}</Td>
+                      <Td>{formatCurrency(item.unit_amount, item.currency)}</Td>
                       <Td>{item.quantity}</Td>
                       <Td colSpan={2} textAlign="end">
                         {formatCurrency(item.line_amount, item.currency)}
                       </Td>
                     </Tr>
-                  );
-                },
+                  ),
+                )
               )}
             </Tbody>
           </Table>
@@ -204,7 +214,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
                   </Skeleton>
                   <Skeleton isLoaded={job.customer_invoice} w="50%">
                     <p className="text-sm text-right">
-                      {job.customer_invoice?.sub_total
+                      {job?.customer_invoice?.sub_total
                         ? formatCurrency(
                             job.customer_invoice?.sub_total,
                             job.customer_invoice?.currency,

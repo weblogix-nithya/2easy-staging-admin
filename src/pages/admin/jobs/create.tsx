@@ -2599,9 +2599,17 @@ function JobPage() {
                         View Job #{newJobId}
                       </Button>
                     </Link>
-                    <Button variant="ghost" onClick={onClose}>
-                      Close
-                    </Button>
+                    
+                     <Link href={`/admin/jobs`}>
+                      <Button
+                        as="a"
+                        colorScheme="blue"
+                        mr={3}
+                        onClick={onClose}
+                      >
+                       Close
+                      </Button>
+                    </Link>
                   </ModalFooter>
                 </ModalContent>
               </Modal>
