@@ -13,12 +13,14 @@ type ActionBarProps = {
   selectedJobs: any[];
   onSwitch: (state: boolean) => void;
   onClickBulkAssign: () => void;
+  onClickBulkSort: () => void;
 };
 
 const ActionBar = <_P extends object>({
   selectedJobs,
   onSwitch,
   onClickBulkAssign,
+  onClickBulkSort,
 }: ActionBarProps) => {
   const [isSwitched, setIsSwitched] = useState<boolean>(false);
 
@@ -83,6 +85,18 @@ const ActionBar = <_P extends object>({
           {selectedJobs.length > 0 && <>( {selectedJobs.length} )</>}
         </Button>
       </Box>
+      <Box className="w-1/2 ">
+          <Button
+            float="right"
+            px={5}
+            py={1}
+            variant="secondary"
+            onClick={onClickBulkSort}
+          >
+            Sort Jobs {"  "}
+            {selectedJobs.length > 0 && <>( {selectedJobs.length} )</>}
+          </Button>{" "}
+        </Box>
     </HStack>
   );
 };

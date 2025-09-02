@@ -724,6 +724,17 @@ export const BULK_UPDATE_JOB_MUTATION = gql`
   }
 `;
 
+export const BULK_UPDATE_SORT_JOB_MUTATION = gql`
+  mutation bulkUpdateJob($input: [UpdateJobInput]!) {
+    bulkUpdateJob(input: $input) {
+      id
+      name
+      start_at
+      d_sort_id
+    }
+  }
+`;
+
 export const DELETE_JOB_MUTATION = gql`
   mutation deleteJob($id: ID!) {
     deleteJob(id: $id) {

@@ -71,6 +71,9 @@ const FilterJobsModal = React.lazy(
 const JobBulkAssignModal = React.lazy(
   () => import("components/jobs/JobBulkAssignModal"),
 );
+const JobBulkSortModal = React.lazy(
+  () => import("components/jobs/JobBulkSortModal"),
+);
 // const JobTableSettingsModal = React.lazy(
 //   () => import("components/jobs/JobTableSettingsModal"),
 // );
@@ -333,7 +336,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       isCompanyAdmin,
       customerId,
       rangeDate,
-      mainJobFilter?.job_status_ids
+      mainJobFilter?.job_status_ids,
     ],
   );
 
@@ -473,6 +476,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     onOpen: onOpenFilter,
     onClose: onCloseFilter,
   } = useDisclosure();
+
   useEffect(() => {
     getJobStatuses();
     getJobCategories();
@@ -483,6 +487,11 @@ export default function JobIndex({}: // initialLoadOnly = false,
     isOpen: isOpenSetting,
     onOpen: onOpenSetting,
     onClose: onCloseSetting,
+  } = useDisclosure();
+  const {
+    isOpen: isOpenBulkSort,
+    onOpen: onOpenBulkSort,
+    onClose: onCloseBulkSort,
   } = useDisclosure();
 
   const {
@@ -861,6 +870,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
             selectedJobs={selectedJobs}
             onSwitch={setIsShowSelectedOnly}
             onClickBulkAssign={onOpenBulkAssign}
+            onClickBulkSort={onOpenBulkSort}
           />
         )}
         <Suspense fallback={null}>
@@ -913,6 +923,19 @@ export default function JobIndex({}: // initialLoadOnly = false,
               onClose={onCloseBulkAssign}
               driverOptions={driverOptions}
               drivers={drivers}
+              selectedJobs={selectedJobs}
+              columns={bulkAssignColumns}
+              setIsChecked={setIsChecked}
+              setSelectedJobs={setSelectedJobs}
+              refreshPage={() => refetchJobs()}
+            />
+          )}
+        </Suspense>
+        <Suspense fallback={null}>
+          {isOpenBulkSort && (
+            <JobBulkSortModal
+              isOpen={isOpenBulkSort}
+              onClose={onCloseBulkSort}
               selectedJobs={selectedJobs}
               columns={bulkAssignColumns}
               setIsChecked={setIsChecked}
