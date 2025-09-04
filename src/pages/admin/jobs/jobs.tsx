@@ -762,7 +762,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
                   </Tag>
                 );
               }
-            })}
             <Button
               // onClick={clearJobFilters}
               className="!h-[30px] ml-2"
@@ -772,6 +771,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
             >
               Clear all
             </Button>
+            })}
           </Flex>
           {/* <JobFiltersTagRow
             mainFilters={mainFilters}

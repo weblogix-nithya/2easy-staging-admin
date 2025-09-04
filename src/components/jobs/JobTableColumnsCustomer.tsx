@@ -89,7 +89,7 @@ export const StatusCell = ({ row }: any) => {
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Text maxW="150px" minW="100px">
-      {row?.original?.ready_at || "-"}
+      {row?.original?.drop_at || "-"}
     </Text>
   );
 };
