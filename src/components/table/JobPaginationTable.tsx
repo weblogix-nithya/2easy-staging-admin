@@ -323,32 +323,32 @@ PaginationTableProps<T>) => {
                             gap={4}
                             w="full"
                           >
-                            <Text fontWeight="bold" minW="200px">
+                            <Text fontWeight="800" minW="200px" fontSize="xl">
                               Driver: {driver.full_name} — {driver.driver_no}
                             </Text>
 
                             <Flex wrap="wrap" gap={3}>
-                              <Badge colorScheme="purple" variant="subtle">
+                              <Badge colorScheme="purple" variant="subtle" fontSize="md">
                                 First Collection:{" "}
                                 {formatToTimeDate(
                                   driver.first_job_start_at_today,
                                 )}
                               </Badge>
-                              <Badge colorScheme="purple" variant="subtle">
+                              <Badge colorScheme="purple" variant="subtle" fontSize="md" >
                                 Last Delivery:{" "}
                                 {formatToTimeDate(
                                   driver.last_job_drop_at_today,
                                 )}
                               </Badge>
-                              <Badge colorScheme="blue" variant="subtle">
+                              <Badge colorScheme="blue" variant="subtle" fontSize="md">
                                 CBM: {driver.cbm_summary_today ?? 0} /{" "}
                                 {driver.no_max_volume ?? 0}
                               </Badge>
-                              <Badge colorScheme="blue" variant="subtle">
+                              <Badge colorScheme="blue" variant="subtle" fontSize="md">
                                 Weight: {driver.weight_summary_today ?? 0} /{" "}
                                 {driver.no_max_capacity ?? 0}
                               </Badge>
-                              <Badge colorScheme="blue" variant="subtle">
+                              <Badge colorScheme="blue" variant="subtle" fontSize="md">
                                 Pallets: {driver.no_max_pallets ?? 0}
                               </Badge>
                             </Flex>
@@ -360,16 +360,16 @@ PaginationTableProps<T>) => {
                             gap={4}
                             w="full"
                           >
-                            <Badge colorScheme="red" variant="subtle">
+                            <Badge colorScheme="red" variant="subtle" fontSize="md">
                               Current Suburb: WIP
                             </Badge>
-                            <Badge colorScheme="red" variant="subtle">
+                            <Badge colorScheme="red" variant="subtle" fontSize="md">
                               Mobile Number: {driver.phone_no ?? "-"}
                             </Badge>
-                            <Badge colorScheme="red" variant="subtle">
+                            <Badge colorScheme="red" variant="subtle" fontSize="md">
                               Rego: {driver.registration_no ?? "-"}
                             </Badge>
-                            <Badge colorScheme="red" variant="subtle">
+                            <Badge colorScheme="red" variant="subtle" fontSize="md">
                               TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
                             </Badge>
                           </Flex>

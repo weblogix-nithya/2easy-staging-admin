@@ -1819,7 +1819,6 @@ function JobEdit() {
     },
     [tabId, getJob, toast],
   );
-
     const handlePreviewEmail = async (reason: string) => {
     setSelectedReason(reason);
     try {
@@ -1950,26 +1949,28 @@ function JobEdit() {
                         View Quote
                       </Button>
                     )}
-                    <Menu>
-                      <MenuButton
-                        as={Button}
-                        variant="primary"
-                        isDisabled={isEmailSending}
-                        mr="2"
-                      >
-                        {isEmailSending ? "Sending Email..." : "Send Email"}
-                      </MenuButton>
-                      <MenuList>
-                        {emailReasons.map((reason) => (
-                          <MenuItem
-                            key={reason}
-                            onClick={() => handlePreviewEmail(reason)}
-                          >
-                            {reason}
-                          </MenuItem>
-                        ))}
-                      </MenuList>
-                    </Menu>
+                    {isAdmin && (
+                      <Menu>
+                        <MenuButton
+                          as={Button}
+                          variant="primary"
+                          isDisabled={isEmailSending}
+                          mr="2"
+                        >
+                          {isEmailSending ? "Sending Email..." : "Send Email"}
+                        </MenuButton>
+                        <MenuList>
+                          {emailReasons.map((reason) => (
+                            <MenuItem
+                              key={reason}
+                              onClick={() => handlePreviewEmail(reason)}
+                            >
+                              {reason}
+                            </MenuItem>
+                          ))}
+                        </MenuList>
+                      </Menu>
+                    )}
                     <Button
                       hidden={!isAdmin}
                       variant="primary"
@@ -2075,7 +2076,7 @@ function JobEdit() {
       </Box>
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent hidden={!isAdmin}>
           <ModalHeader>Email Preview</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
