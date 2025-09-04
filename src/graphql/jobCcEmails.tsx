@@ -70,6 +70,44 @@ export const DELETE_JOB_CC_EMAIL_MUTATION = gql`
     }
   }
 `;
+export const GET_JOB_EMAIL_TEMPLATE_QUERY = gql`
+  query GetJobEmailTemplate($id: ID!, $reason: String!, $extra_details: String) {
+    getJobEmailTemplate(id: $id, reason: $reason, extra_details: $extra_details) {
+      subject
+      body
+    }
+  }
+`;
+
+export const SEND_JOB_EMAIL = gql`
+  mutation SendJobEmail(
+    $id: ID!
+    $reason: String!
+    $extra_details: String
+    $subject: String
+    $body: String
+  ) {
+    sendJobEmail(
+      id: $id
+      reason: $reason
+      extra_details: $extra_details
+      subject: $subject
+      body: $body
+    ) {
+      success
+      message
+    }
+  }
+`;
+export interface JobEmailTemplate {
+  subject: string;
+  body: string;
+}
+
+export interface SendJobEmailResponse {
+  success: boolean;
+  message: string;
+}
 
 export interface UpdateJobCcEmailInput {
   id: Number;

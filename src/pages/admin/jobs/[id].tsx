@@ -6,8 +6,23 @@ import {
   Flex,
   FormControl,
   Grid,
+  Input,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Textarea,
+  Text,
   useColorModeValue,
   useToast,
+  useDisclosure,
 } from "@chakra-ui/react";
 import axios from "axios";
 import InvoiceTab from "components/jobs/InvoiceTab";
@@ -35,6 +50,8 @@ import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import {
   CREATE_JOB_CC_EMAIL_MUTATION,
   DELETE_JOB_CC_EMAIL_MUTATION,
+  GET_JOB_EMAIL_TEMPLATE_QUERY,
+  SEND_JOB_EMAIL,
 } from "graphql/jobCcEmails";
 import {
   CREATE_JOB_DESTINATION_MUTATION,
@@ -205,6 +222,25 @@ function JobEdit() {
     cbm_rate: 0,
     minimum_charge: 0,
   });
+  const [getEmailTemplate] = useLazyQuery(GET_JOB_EMAIL_TEMPLATE_QUERY);
+  const [sendJobEmail] = useMutation(SEND_JOB_EMAIL);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  // const [previewEmailContent, setPreviewEmailContent] = useState<{
+  //   subject: string;
+  //   body: string;
+  // } | null>(null);
+
+  const emailReasons = [
+    "Futile",
+    "Update CBM / Weight",
+    "Waiting Time",
+    "Late Delivery",
+    "Move Job Date",
+  ];
 
   const tabs = [
     {
@@ -1784,6 +1820,99 @@ function JobEdit() {
     [tabId, getJob, toast],
   );
 
+    const handlePreviewEmail = async (reason: string) => {
+    setSelectedReason(reason);
+    try {
+      const { data } = await getEmailTemplate({
+        variables: {
+          id: job.id,
+          reason,
+          extra_details: "",
+        },
+        fetchPolicy: "no-cache",
+      });
+
+      if (data?.getJobEmailTemplate) {
+        setSubject(data.getJobEmailTemplate.subject || "");
+        setBody(data.getJobEmailTemplate.body || "");
+        onOpen();
+      } else {
+        toast({
+          title: "No email content found",
+          description: "The backend did not return a template.",
+          status: "warning",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error fetching email template",
+        description: error.message,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!selectedReason) {
+      toast({
+        title: "No reason selected",
+        description: "Please select a reason from the Send Email dropdown.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    setIsEmailSending(true);
+    try {
+      console.log("Sending email with:", {
+        id: job.id,
+        reason: selectedReason,
+        extra_details: "",
+      });
+      const res = await sendJobEmail({
+        variables: {
+          id: job.id,
+          reason: selectedReason,
+          extra_details: "",
+          subject: subject,
+          body: body,
+        },
+      });
+      if (res.data.sendJobEmail.success) {
+        toast({
+          title: "Email sent successfully",
+          description: res.data.sendJobEmail.message,
+          status: "success",
+          duration: 4000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Email sending failed",
+          description: res.data.sendJobEmail.message,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error sending email",
+        description: error.message,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsEmailSending(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <Box
@@ -1821,7 +1950,26 @@ function JobEdit() {
                         View Quote
                       </Button>
                     )}
-
+                    <Menu>
+                      <MenuButton
+                        as={Button}
+                        variant="primary"
+                        isDisabled={isEmailSending}
+                        mr="2"
+                      >
+                        {isEmailSending ? "Sending Email..." : "Send Email"}
+                      </MenuButton>
+                      <MenuList>
+                        {emailReasons.map((reason) => (
+                          <MenuItem
+                            key={reason}
+                            onClick={() => handlePreviewEmail(reason)}
+                          >
+                            {reason}
+                          </MenuItem>
+                        ))}
+                      </MenuList>
+                    </Menu>
                     <Button
                       hidden={!isAdmin}
                       variant="primary"
@@ -1925,6 +2073,47 @@ function JobEdit() {
           )}
         </Grid>
       </Box>
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Email Preview</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Text fontWeight="bold" mb={2}>
+              Subject:
+            </Text>
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              mb={4}
+            />
+            <Text fontWeight="bold" mb={2}>
+              Body:
+            </Text>
+            <Textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              minH="300px"
+              whiteSpace="pre-line"
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={() => {
+                handleSendEmail();
+                onClose();
+              }}
+            >
+              Send Email
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </AdminLayout>
   );
 }
