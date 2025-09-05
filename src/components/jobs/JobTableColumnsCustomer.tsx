@@ -1,7 +1,6 @@
 import { Flex, Link, Text } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
-import { DynamicTableUser } from "graphql/dynamicTableUser";
-import { formatAddress, formatDate, outputDynamicTable } from "helpers/helper";
+import { formatAddress, formatDate } from "helpers/helper";
 import Image from "next/image";
 import React from "react";
 import { RootState } from "store/store";
@@ -102,8 +101,6 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
-  const showDeliveryTime =
-    row.original?.job_status.id == 6 || row.original?.job_status.id == 7;
 
   // Only get media if not in status 6 or 7
   const normalMedia =
