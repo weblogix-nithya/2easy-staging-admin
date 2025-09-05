@@ -860,6 +860,7 @@ const JobDetailsTab = ({
 
         {/* foreach jobAttachments */}
         {!jobLoading && Array.isArray(job?.media_admin) && (
+          
           <PaginationTable
             columns={attachmentColumns}
             data={job.media_admin}
