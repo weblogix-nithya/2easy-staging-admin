@@ -24,6 +24,7 @@ export default function ReportsTab(props: { jobObject: any }) {
   const [jobDestinationsConfirmed, setJobDestinationsConfirmed] = useState([]);
   const [driverIssues, setDriverIssues] = useState([]);
   const [customerIssues, setCustomerIssues] = useState([]);
+  const [isLoadingDestinations, setIsLoadingDestinations] = useState(true); // <-- Add loading state
 
   const pickupColumns = useMemo(
     () => [
@@ -97,6 +98,7 @@ export default function ReportsTab(props: { jobObject: any }) {
   // };
   useEffect(() => {
     // if (!jobObject) return;
+    setIsLoadingDestinations(true); // Start loading
 
     setJob(jobObject);
     let _driverIssues: any[] = [];
@@ -165,6 +167,7 @@ export default function ReportsTab(props: { jobObject: any }) {
     setJobDestinationsConfirmed(_jobDestinationsConfirmed);
     setDriverIssues(_driverIssues);
     setCustomerIssues(_customerIssues);
+    setIsLoadingDestinations(false); // Done loading
   }, [jobObject]);
   //handleChangeIssueStatus
   const [handleChangeIssueStatus, {}] = useMutation(
@@ -225,17 +228,19 @@ export default function ReportsTab(props: { jobObject: any }) {
             </Button>
           )}
         </Flex>
-        {!jobDestinationsConfirmed?.length ? (
+        {isLoadingDestinations ? (
           <Center py={10}>
             <Spinner size="lg" thickness="4px" speed="0.65s" />
           </Center>
+        ) : jobDestinationsConfirmed && jobDestinationsConfirmed.length > 0 ? (
+          <PaginationMultipleImageTable
+            columns={pickupColumns}
+            data={jobDestinationsConfirmed}
+          />
         ) : (
-          true && (
-            <PaginationMultipleImageTable
-              columns={pickupColumns}
-              data={jobDestinationsConfirmed}
-            />
-          )
+          <Center py={10} color="gray.500">
+            No data
+          </Center>
         )}
       </Box>
 

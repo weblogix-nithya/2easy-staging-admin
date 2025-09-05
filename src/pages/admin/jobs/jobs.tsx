@@ -26,7 +26,7 @@ import {
 import { getCompanyColumns } from "components/jobs/JobTableColumnsCustomer";
 // import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import JobPaginationTable from "components/table/JobPaginationTable";
-import PaginationTable from "components/table/PaginationTable";
+import PaginationTableCustomer from "components/table/PaginationTableCustomer";
 import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
 import {
   DynamicTableUser,
@@ -252,29 +252,10 @@ export default function JobIndex({}: // initialLoadOnly = false,
     };
   }, [adminColumns]);
 
-  // const companyColumns = getCompanyColumns(isAdmin, isCustomer, withMedia);
   useEffect(() => {
-    // Recalculate the columns whenever withMedia changes
     const columns = getCompanyColumns(isAdmin, isCustomer, withMedia);
-    setCompanyColumns(columns); // Set the new columns for company
-    // console.log("Company Columns:", columns); // Debugging output to track columns
+    setCompanyColumns(columns);
   }, [withMedia, isAdmin, isCustomer]);
-  // const companyColumns = columns.filter((column) =>
-  //   [
-  //     "name",
-  //     "company.name",
-  //     "reference_no",
-  //     "job_category.name",
-  //     "job_type.name",
-  //     "job_status.name",
-  //     "ready_at",
-  //     "pick_up_destination.address_formatted",
-  //     // 'pick_up_destination.address_business_name',
-  //     "job_destinations.address",
-  //     // 'job_destinations.address_business_name',
-  //     "actions",
-  //   ].includes(column.id),
-  // );
 
   const bulkAssignColumns = getBulkAssignColumns(
     isAdmin,
@@ -354,7 +335,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     refetch: refetchGroupedJobs,
   } = useQuery(GROUPED_PAGINATED_JOBS_QUERY, {
     variables: groupedVars,
-    skip: !userId || !isAdmin,
+    skip: !userId || isCustomer || isCompany,
     fetchPolicy: "network-only",
     onCompleted: (_data) => {
       // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
@@ -388,7 +369,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
         : undefined,
       ...mainJobFilter,
     },
-    skip: !isCompany && !isCustomer,
+    skip: isAdmin || !userId,
   });
 
   useEffect(() => {
@@ -693,7 +674,11 @@ export default function JobIndex({}: // initialLoadOnly = false,
   }, [loading]);
 
   useEffect(() => {
-    refetchJobs();
+    if (isAdmin) {
+      refetchJobs();
+    } else if (isCompany || isCustomer) {
+      getCompanyJobs();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeDate, is_filter_ticked]);
 
@@ -826,6 +811,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
                 showManualPages
                 onSortingChange={handleSortingChange}
                 restyleTable
+                
               />
             ) : (
               <Box textAlign="center" py={4} px={10} color="gray.600">
@@ -833,7 +819,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               </Box>
             )
           ) : companyJobs?.jobs?.data?.length > 0 ? (
-            <PaginationTable
+            <PaginationTableCustomer
               columns={companyColumns}
               data={companyJobs?.jobs?.data}
               options={{
@@ -856,6 +842,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               isChecked={isChecked}
               showManualPages
               onSortingChange={handleSortingChange}
+              hideEditForStatuses={[1, 2, 3, 4]}
             />
           ) : (
             <Box textAlign="center" py={4} px={10} color="gray.600">

@@ -39,7 +39,7 @@ export const isCustomer = (state: RootState) => state.user.isCustomer;
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
     <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {formatAddress(row.original.job.pick_up_destinations)}
+      {formatAddress(row?.original?.job?.pick_up_destinations)}
     </Text>
     <Text>
       {row.originaljob.pick_up_destination.address_business_name || "-"}
@@ -47,7 +47,7 @@ export const PickupAddressBusinessNameCell = ({ row }: any) => (
   </>
 );
 export const JobDestinationsCell = ({ row }: any) => {
-  const destinations = row?.original?.job.job_destinations || [];
+  const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
@@ -94,7 +94,7 @@ export const JobDestinationsCell = ({ row }: any) => {
 };
 
 export const JobDestinationsCellExport = ({ row }: any) => {
-  const filteredDestinations = row.original.job.job_destinations.filter(
+  const filteredDestinations = row?.original?.job?.job_destinations.filter(
     (destination: any) => destination.is_pickup === false,
   );
 
@@ -102,7 +102,7 @@ export const JobDestinationsCellExport = ({ row }: any) => {
 };
 export const JobDestinationBusinessNameCell = ({ row }: any) => {
   // Add null check and default empty array
-  const destinations = row?.original?.job.job_destinations || [];
+  const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
@@ -116,7 +116,7 @@ export const JobDestinationBusinessNameCell = ({ row }: any) => {
   );
 };
 export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
-  const filteredDestinations = row.original.job.job_destinations.filter(
+  const filteredDestinations = row?.original?.job?.job_destinations.filter(
     (destination: any) => destination.is_pickup === false,
   );
   return filteredDestinations[0]?.address_business_name || "-";
@@ -127,7 +127,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     (destination: any) => destination?.is_pickup === false,
   );
   const showDeliveryTime =
-    row.original.job.job_status.id == 6 || row.original.job.job_status.id == 7;
+    row?.original?.job?.job_status.id == 6 || row?.original?.job?.job_status.id == 7;
 
   // Only get media if not in status 6 or 7
   const normalMedia =
@@ -173,7 +173,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   );
 };
 export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
-  const filteredDestinations = row.original.job.job_destinations.filter(
+  const filteredDestinations = row?.original?.job?.job_destinations.filter(
     (destination: any) => destination.is_pickup === false,
   );
   const formattedAddress = formatAddress(filteredDestinations[0]);
@@ -181,7 +181,7 @@ export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   return `${formattedAddress}\n${businessName}`;
 };
 export const PickupAddressWithTimebulkCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
+  const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
 
@@ -192,7 +192,7 @@ export const PickupAddressWithTimebulkCell = ({ row }: any) => {
   );
 };
 export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
+  const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === false,
   );
 
@@ -203,14 +203,14 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
   );
 };
 export const PickupAddressWithTimeCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
+  const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
   const showPickupTime =
-    row.original.job.job_status.id == 4 ||
-    row.original.job.job_status.id == 5 ||
-    row.original.job.job_status.id == 6 ||
-    row.original.job.job_status.id == 7;
+    row?.original?.job?.job_status.id == 4 ||
+    row?.original?.job?.job_status.id == 5 ||
+    row?.original?.job?.job_status.id == 6 ||
+    row?.original?.job?.job_status.id == 7;
   const normalMedia =
     pickupDest?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
@@ -251,7 +251,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
   );
 };
 export const PickupAddressWithTimeCellExport = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
+  const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
   const collectionTime = pickupDest?.updated_at
@@ -262,18 +262,18 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
     : "";
 
   return `${collectionTime}${formatAddress(
-    row.original.job.pick_up_destination,
-  )}\n${row.original.job.pick_up_destination?.address_business_name || "-"}`;
+    row?.original?.job?.pick_up_destination,
+  )}\n${row?.original?.job?.pick_up_destination?.address_business_name || "-"}`;
 };
 export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
+  const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
   const showPickupTime =
-    row.original.job.job_status.id == 4 ||
-    row.original.job.job_status.id == 5 ||
-    row.original.job.job_status.id == 6 ||
-    row.original.job.job_status.id == 7;
+    row?.original?.job?.job_status.id == 4 ||
+    row?.original?.job?.job_status.id == 5 ||
+    row?.original?.job?.job_status.id == 6 ||
+    row?.original?.job?.job_status.id == 7;
 
   return (
     <>
@@ -298,7 +298,7 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     (destination: any) => destination?.is_pickup === false,
   );
   const showDeliveryTime =
-    row.original.job.job_status.id == 6 || row.original.job.job_status.id == 7;
+    row?.original?.job?.job_status.id == 6 || row?.original?.job?.job_status.id == 7;
 
   return (
     <>
@@ -322,22 +322,22 @@ export const ReadyDropByCell = ({ row }: any) => {
   return (
     <>
       <Text isTruncated w={"fit-content"}>
-        {row.original.job.job_category?.name ?? "-"}
+        {row?.original?.job?.job_category?.name ?? "-"}
       </Text>
       <Text isTruncated w={"fit-content"}>
-        R: {formatTime(row.original.job.ready_at)}
+        R: {formatTime(row?.original?.job?.ready_at)}
       </Text>
       <Text isTruncated w={"fit-content"}>
-        D: {formatTime(row.original.job.drop_at)}
+        D: {formatTime(row?.original?.job?.drop_at)}
       </Text>
     </>
   );
 };
 
 export const ReadyDropByCellExport = ({ row }: any) =>
-  `${row.original.job.job_category?.name ?? "-"}\n
-    R: ${formatTime(row.original.job.ready_at)}\n
-    D: ${formatTime(row.original.job.drop_at)}`;
+  `${row?.original?.job?.job_category?.name ?? "-"}\n
+    R: ${formatTime(row?.original?.job?.ready_at)}\n
+    D: ${formatTime(row?.original?.job?.drop_at)}`;
 
 export const NotesCell = ({ row }: any) => {
   const [display, setDisplay] = React.useState(
@@ -358,10 +358,10 @@ export const NotesCell = ({ row }: any) => {
 };
 
 export const ItemsTypeCell = ({ row }: any) => {
-  const items = row.original.job.job_items;
+  const items = row?.original?.job?.job_items;
   return (
     <div>
-      {items.map((item: any) => (
+      {items?.map((item: any) => (
         <Text key={`items-type-${item.id}`} mb={2}>
           {item.item_type.name}
         </Text>
@@ -370,16 +370,16 @@ export const ItemsTypeCell = ({ row }: any) => {
   );
 };
 export const ItemsTypeCellExport = ({ row }: any) => {
-  const items = row.original.job.job_items;
-  return items.map((item: any) => {
+  const items = row?.original?.job?.job_items;
+  return items?.map((item: any) => {
     return [`${item.item_type.name}  \n`];
   });
 };
 export const ItemsDimensionCell = ({ row }: any) => {
-  const items = row.original.job.job_items;
+  const items = row?.original?.job?.job_items;
   return (
     <div>
-      {items.map((item: any) => (
+      {items?.map((item: any) => (
         <Text key={`items-dimension-${item.id}`} mb={2} w={"max-content"}>
           {`${(item.dimension_height * 100)?.toFixed(0)}x${(
             item.dimension_width * 100
@@ -390,8 +390,8 @@ export const ItemsDimensionCell = ({ row }: any) => {
   );
 };
 export const ItemsDimensionCellExport = ({ row }: any) => {
-  const items = row.original.job.job_items;
-  return items.map((item: any) => {
+  const items = row?.original?.job?.job_items;
+  return items?.map((item: any) => {
     return [
       `${(item.dimension_height * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_width * 100)?.toFixed(2)}cm x `,
@@ -400,10 +400,10 @@ export const ItemsDimensionCellExport = ({ row }: any) => {
   });
 };
 export const ItemsQuantityCell = ({ row }: any) => {
-  const items = row.original.job.job_items;
+  const items = row?.original?.job?.job_items;
   return (
     <div>
-      {items.map((item: any) => (
+      {items?.map((item: any) => (
         <Text key={`items-quantity-${item.id}`} mb={2}>
           {item?.quantity}
         </Text>
@@ -412,16 +412,16 @@ export const ItemsQuantityCell = ({ row }: any) => {
   );
 };
 export const ItemsQuantityCellExport = ({ row }: any) => {
-  const items = row.original.job.job_items;
-  return items.map((item: any) => {
+  const items = row?.original?.job?.job_items;
+  return items?.map((item: any) => {
     return [`${item?.quantity}  \n`];
   });
 };
 export const ItemsWeightCell = ({ row }: any) => {
-  const items = row.original.job.job_items;
+  const items = row?.original?.job?.job_items;
   return (
     <div>
-      {items.map((item: any) => (
+      {items?.map((item: any) => (
         <Text key={`items-weight-${item.id}`} mb={2}>
           {item?.weight}kg
         </Text>
@@ -430,16 +430,16 @@ export const ItemsWeightCell = ({ row }: any) => {
   );
 };
 export const ItemsWeightCellExport = ({ row }: any) => {
-  const items = row.original.job.job_items;
-  return items.map((item: any) => {
+  const items = row?.original?.job?.job_items;
+  return items?.map((item: any) => {
     return [`${item?.weight}kg  \n`];
   });
 };
 export const ItemsCbmCell = ({ row }: any) => {
-  const items = row.original.job.job_items;
+  const items = row?.original?.job?.job_items;
   return (
     <div>
-      {items.map((item: any) => (
+      {items?.map((item: any) => (
         <Text key={`items-cbm-${item.id}`} mb={2}>
           {item.volume?.toFixed(2)}cbm
         </Text>
@@ -455,8 +455,8 @@ export const DriverCell = ({ row }: any) => {
   return <Text>{row?.original?.job?.driver?.full_name || "-"}</Text>;
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
-  const items = row.original.job.job_items;
-  return items.map((item: any) => {
+  const items = row?.original?.job?.job_items;
+  return items?.map((item: any) => {
     return [`${item.volume?.toFixed(2)}cbm  \n`];
   });
 };
@@ -553,7 +553,7 @@ export const LastFreeAtCell = ({ row }: any) => {
   );
 };
 export const PickupBusinessNameCell = ({ row }: any) => {
-  const pickupDest = row.original.job.job_destinations?.find(
+  const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
   return (
@@ -564,7 +564,7 @@ export const PickupBusinessNameCell = ({ row }: any) => {
 };
 
 export const PickupAddressCell = ({ row }: any) => {
-  const pickup = row.original.job.job_destinations?.find(
+  const pickup = row?.original?.job?.job_destinations?.find(
     (d: any) => d.is_pickup === true,
   );
 
@@ -670,31 +670,7 @@ function uniqueById(cols: any[]): any[] {
   return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 }
 
-// export const columnsWithoutMedia = [
-//   {
-//     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-//     Header: "Pickup Address and Name",
-//     Cell: PickupAddressWithTimewithoutMediaCell, // Cell without media
-//   },
-//   {
-//     id: "job_destinations.address,job_destinations.address_business_name",
-//     Header: "Delivery Address and Names",
-//     Cell: JobDestinationWithBusinessNamewithoutMediaCell, // Cell without media
-//   },
-// ];
 
-// export const columnsWithMedia = [
-//   {
-//     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-//     Header: "Pickup Address and Name",
-//     Cell: PickupAddressWithTimeCell, // Cell with media
-//   },
-//   {
-//     id: "job_destinations.address,job_destinations.address_business_name",
-//     Header: "Delivery Address and Name",
-//     Cell: JobDestinationWithBusinessNameCell, // Cell with media
-//   },
-// ];
 
 export const tableColumn = [
   {

@@ -1140,6 +1140,7 @@ const JobDetailsTab = ({
                     <Button
                       bg="#3b82f6" /* Match the blue color */
                       color="white"
+                      disabled={!isAdmin}
                       _hover={{
                         bg: "#2563eb", // Slightly darker blue for hover
                       }}
