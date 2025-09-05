@@ -155,7 +155,12 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
-
+          media {
+            id
+            name
+            downloadable_url
+            collection_name
+          }
           job_destination_status_id
           route_point {
             id
@@ -381,15 +386,15 @@ export const GET_JOB_QUERY = gql`
       driver_id
       pick_up_state
       company_area
-      # media_admin {
-      #  id
-      #    name
-      #    downloadable_url
-      #    collection_name
-      #    file_name
-      #    uploaded_by
-      #   created_at
-      # }
+      media_admin {
+        id
+        name
+        downloadable_url
+        collection_name
+        file_name
+        uploaded_by
+        created_at
+      }
       driver {
         full_name
         no_max_capacity

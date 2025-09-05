@@ -4,12 +4,14 @@ import { formatAddress, formatDate } from "helpers/helper";
 import Image from "next/image";
 import React from "react";
 import { RootState } from "store/store";
+// import { tableColumn } from "./JobTableColumns";
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
 // mmmm
 export const DeliveryCell = ({ row }: any) => {
+  // console.log("DeliveryCell row:", row); // Log the row prop
   return <Text maxW="100px">{row?.original?.name || "-"}</Text>;
 };
 export const BookedByCell = ({ row }: any) => {
@@ -21,6 +23,7 @@ export const BookedByCell = ({ row }: any) => {
   );
 };
 export const CustomerReferenceCell = ({ row }: any) => {
+  // console.log(row,'row')
   return (
     <Text maxW="100px" noOfLines={2}>
       {" "}
@@ -78,7 +81,7 @@ export const StatusCell = ({ row }: any) => {
 
   return (
     <Text
-      color={getStatusColor(row?.original?.job?.job_status?.name)}
+      color={getStatusColor(row?.original?.job_status?.name)}
       fontWeight="bold"
     >
       {row?.original?.job_status?.name || "-"}
@@ -98,8 +101,6 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
-  const showDeliveryTime =
-    row.original.job_status_id == 6 || row.original.job_status_id == 7;
 
   // Only get media if not in status 6 or 7
   const normalMedia =
@@ -109,7 +110,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
 
   return (
     <>
-      {filteredDestinations[0]?.updated_at && showDeliveryTime && (
+      {filteredDestinations[0]?.updated_at && (
         <Text fontSize="sm" color="red.600" mb={1}>
           Delivery time:{" "}
           {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
@@ -123,10 +124,8 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
-      {normalMedia.length > 0 && (
-        <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
-            <Link key={index} href={media.downloadable_url} isExternal>
+            <Link key={`${index+1}`} href={media.downloadable_url} isExternal>
               <Image
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}
@@ -141,8 +140,6 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
               />
             </Link>
           ))}
-        </Flex>
-      )}
         </Flex>
       )}
     </>
@@ -286,7 +283,7 @@ export const getCompanyColumns = (
           <IndeterminateCheckbox
             {...getToggleAllRowsSelectedProps()}
             onClick={(e) => {
-              console.log("Checkbox clicked in header");
+              // console.log("Checkbox clicked in header");
               e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
             }}
           />
@@ -298,7 +295,7 @@ export const getCompanyColumns = (
           <IndeterminateCheckbox
             {...row.getToggleRowSelectedProps()}
             onClick={(e) => {
-              console.log(`Row ${row.id} checkbox clicked`);
+              // console.log(`Row ${row.id} checkbox clicked`);
               e.stopPropagation(); // Prevent propagation to ensure it only affects the checkbox
             }}
           />
