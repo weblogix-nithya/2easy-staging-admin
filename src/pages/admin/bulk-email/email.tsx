@@ -12,9 +12,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import PrivateAccessModal from "components/access/PrivateAccessModal";
-
 import { TabsComponent } from "components/tabs/TabsComponet";
-
 import { SEND_GROUP_EMAIL } from "graphql/jobCcEmails";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
@@ -24,7 +22,6 @@ import { RootState } from "store/store";
 
 export default function InvoiceIndex() {
   const { isAdmin } = useSelector((state: RootState) => state.user);
-  const [senderName, setSenderName] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const toast = useToast();
@@ -44,9 +41,9 @@ export default function InvoiceIndex() {
     //   hidden: true, // You can use this property to hide/show
     // },
   ];
-  const [tabs, setTabs] = useState(staticTabs);
+  const [tabs, _setTabs] = useState(staticTabs);
 
-  const [tabId, setActiveTab] = useState(isAdmin == true ? 1 : 2);
+  const [_tabId, setActiveTab] = useState(isAdmin == true ? 1 : 2);
 
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -211,7 +208,8 @@ export default function InvoiceIndex() {
           </Flex>
           <Divider className="!my-0 !py-0" />
           <Box
-            maxW="1300px"
+            maxW="1800px"
+            minW="1500px"
             px={6}
             py={4}
             bg="white"
@@ -219,41 +217,119 @@ export default function InvoiceIndex() {
             boxShadow="sm"
             mt={4}
           >
-            {/* <Input
-              placeholder="Your Name"
-              value={senderName}
-              onChange={(e) => setSenderName(e.target.value)}
-              mb={3}
-              size="lg"
-            /> */}
-            <Input
-              placeholder="Subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              mb={3}
-              size="lg"
-            />
-            <Textarea
-              placeholder="Type your email message here..."
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              mb={3}
-              rows={8}
-              size="lg"
-            />
-            <Button
-              colorScheme="blue"
-              onClick={() => sendGroupEmail({ variables: { subject, body } })}
-              isLoading={loading}
-              isDisabled={!subject || !body}
-            >
-              Send Email
-            </Button>
+            <Flex gap={8} align="stretch">
+              {/* Input Column */}
+              <Box
+                flex="1"
+                minW="600px"
+                maxW="900px"
+                display="flex"
+                flexDirection="column"
+              >
+                <Text fontSize="xl" fontWeight="extrabold" mb={2}>
+                  Email Content
+                </Text>
+                <Box
+                  flex="1"
+                  display="flex"
+                  flexDirection="column"
+                  minW="400px"
+                  maxW="700px"
+                >
+                  <Input
+                    placeholder="Subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    mb={3}
+                    size="lg"
+                  />
+                  <Textarea
+                    placeholder="Type your email message here..."
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    mb={3}
+                    rows={12}
+                    size="lg"
+                    flex="1"
+                    resize="none"
+                  />
+                  <Button
+                    colorScheme="blue"
+                    onClick={() => {
+                      const finalBody = `Hello!\n\n\n${body}\n\nRegards, \n2easy`;
+                      sendGroupEmail({
+                        variables: { subject, body: finalBody },
+                      });
+                    }}
+                    isLoading={loading}
+                    isDisabled={!subject || !body}
+                    alignSelf="flex-start"
+                  >
+                    Send Email
+                  </Button>
+                </Box>
+              </Box>
+              {/* Preview Column */}
+              <Box
+                flex="1"
+                minW="600px"
+                maxW="900px"
+                display="flex"
+                flexDirection="column"
+              >
+                <Text fontSize="xl" fontWeight="extrabold" mb={2}>
+                  Preview
+                </Text>
+                <Box
+                  flex="1"
+                  minW="600px"
+                  maxW="900px"
+                  border="1px solid"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  p={4}
+                  bg="gray.50"
+                  display="flex"
+                  flexDirection="column"
+                  height="100%"
+                >
+                  <Input
+                    placeholder="Subject"
+                    value={`Subject : ${subject}`}
+                    mb={3}
+                    size="lg"
+                    isReadOnly
+                  />
+                  <Text color="gray.500" mb={2} fontWeight="bold">
+                    Hello!
+                  </Text>
+                  <Box
+                    flex="1"
+                    whiteSpace="pre-wrap"
+                    color="gray.800"
+                    fontSize="md"
+                    mb={2}
+                    minHeight="200px"
+                  >
+                    {body || (
+                      <Text color="gray.400">
+                        [Your message will appear here]
+                      </Text>
+                    )}
+                  </Box>
+                  <Text color="gray.500" fontWeight="bold">
+                    Regards,
+                  </Text>
+                  <Text color="gray.500" fontWeight="bold">
+                    2easy
+                  </Text>
+                </Box>
+              </Box>
+            </Flex>
           </Box>
         </SimpleGrid>
       </Box>
       <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
-
     </AdminLayout>
   );
 }
