@@ -70,9 +70,18 @@ export const DELETE_JOB_CC_EMAIL_MUTATION = gql`
     }
   }
 `;
+
 export const GET_JOB_EMAIL_TEMPLATE_QUERY = gql`
-  query GetJobEmailTemplate($id: ID!, $reason: String!, $extra_details: String) {
-    getJobEmailTemplate(id: $id, reason: $reason, extra_details: $extra_details) {
+  query GetJobEmailTemplate(
+    $id: ID!
+    $reason: String!
+    $extra_details: String
+  ) {
+    getJobEmailTemplate(
+      id: $id
+      reason: $reason
+      extra_details: $extra_details
+    ) {
       subject
       body
     }
@@ -94,6 +103,15 @@ export const SEND_JOB_EMAIL = gql`
       subject: $subject
       body: $body
     ) {
+      success
+      message
+    }
+  }
+`;
+
+export const SEND_GROUP_EMAIL = gql`
+  mutation SendGroupEmail($subject: String!, $body: String!) {
+    sendGroupEmail(subject: $subject, body: $body) {
       success
       message
     }
