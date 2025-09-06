@@ -10,6 +10,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import dynamic from 'next/dynamic';
+// import Profile from "pages/admin/profile";
+import BulkEmail from "pages/admin/bulk-email/index";
 // Admin Page Imports
 import Clients from "pages/admin/clients/index";
 import Companies from "pages/admin/companies/index";
@@ -19,7 +21,6 @@ import Drivers from "pages/admin/drivers/index";
 import Invoices from "pages/admin/invoices/index";
 import JobAllocationIndex from "pages/admin/job-allocations/index";
 import Jobs from "pages/admin/jobs/index";
-// import Profile from "pages/admin/profile";
 import Quote from "pages/admin/quotes/quotes";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
@@ -173,6 +174,17 @@ const routes: IRoute[] = [
     isAdmin: true,
     isCompany: false,
     isPrivate: false,
+  },
+  {
+    name: "Bulk Email",
+    layout: "/admin",
+    icon: <FontAwesomeIcon icon={faFileInvoiceDollar} className="mr-1" />,
+    path: "/bulk-email",
+    component: BulkEmail,
+    sidebar: true,
+    isAdmin: true,
+    isCompany: false,
+    isPrivate: true,
   },
   // {
   //   name: "Vendors",
