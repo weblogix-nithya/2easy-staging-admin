@@ -1974,7 +1974,7 @@ function JobEdit() {
                     <Button
                       hidden={!isAdmin}
                       variant="primary"
-                      isDisabled={isSaving}
+                      isDisabled={isSaving || ![1,2,3,4,5].includes(job.job_status_id)} 
                       onClick={() => {
                         setIsSaving(true);
                         handleUpdateJobWithValidation();
