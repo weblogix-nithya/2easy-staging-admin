@@ -842,7 +842,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               isChecked={isChecked}
               showManualPages
               onSortingChange={handleSortingChange}
-              hideEditForStatuses={[1, 2, 3, 4]}
+              hideEditForStatuses={[1, 2, 3, 4,5]}
             />
           ) : (
             <Box textAlign="center" py={4} px={10} color="gray.600">
