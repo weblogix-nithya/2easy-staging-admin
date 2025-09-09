@@ -106,7 +106,7 @@ const JobDetailsTab = ({
   return (
     <Box mt={10}>
       {/* Basic fields */}
-      {isAdmin && [1, 2, 3, 4, 5].includes(job.job_status_id) ? (
+      {isAdmin ? (
         <Box mb="16px">
           <CustomInputField
             isSelect={true}
@@ -608,7 +608,7 @@ const JobDetailsTab = ({
             <GridItem colSpan={2}>
               <h4 className="mt-3">Pickup depot</h4>
             </GridItem>
-            {isAdmin && [1, 2, 3, 4, 5].includes(job.job_status_id) ? (
+            {isAdmin ? (
               <JobAddressesSection
                 isAdmin={isAdmin}
                 entityModel={job}
@@ -667,7 +667,7 @@ const JobDetailsTab = ({
                   <GridItem colSpan={2}>
                     <h4 className="mt-3">Delivery Address {index + 1}</h4>
                   </GridItem>
-                  {isAdmin && [1, 2, 3, 4, 5].includes(job.job_status_id) ? (
+                  {isAdmin ? (
                     <JobAddressesSection
                       isAdmin={isAdmin}
                       entityModel={job}
@@ -719,7 +719,7 @@ const JobDetailsTab = ({
           })}
         </Box>
 
-        {isAdmin && [1, 2, 3, 4, 5].includes(job.job_status_id) && (
+        {isAdmin && (
           <Box mb="16px">
             <Flex alignItems="center" mb="16px" mt={5}>
               <Button
@@ -737,20 +737,18 @@ const JobDetailsTab = ({
       </Box>
       {/* Items */}
       <Box mb="16px" mt={4}>
-        {[1, 2, 3, 4, 5].includes(job.job_status_id) && (
-          <Flex justify="space-between" align="center" mb="37px">
-            <h3 className="">Items</h3>
-            <Button
-              hidden={!isAdmin}
-              variant="secondary"
-              onClick={() => {
-                addToJobItems();
-              }}
-            >
-              + Add item
-            </Button>
-          </Flex>
-        )}
+        <Flex justify="space-between" align="center" mb="37px">
+          <h3 className="">Items</h3>
+          <Button
+            hidden={!isAdmin}
+            variant="secondary"
+            onClick={() => {
+              addToJobItems();
+            }}
+          >
+            + Add item
+          </Button>
+        </Flex>
         {isAdmin ? (
           <Box>
             <JobInputTable
@@ -862,6 +860,7 @@ const JobDetailsTab = ({
 
         {/* foreach jobAttachments */}
         {!jobLoading && Array.isArray(job?.media_admin) && (
+          
           <PaginationTable
             columns={attachmentColumns}
             data={job.media_admin}
@@ -992,9 +991,7 @@ const JobDetailsTab = ({
                   <Box>
                     <CustomInputField
                       isSelect={true}
-                      isDisabled={
-                        !isAdmin || ![1, 2, 3, 4, 5].includes(job.job_status_id)
-                      }
+                      isDisabled={!isAdmin}
                       optionsArray={filtereddepotOptions} // Use the state directly
                       label="Timeslot depots:"
                       value={
@@ -1143,9 +1140,7 @@ const JobDetailsTab = ({
                     <Button
                       bg="#3b82f6" /* Match the blue color */
                       color="white"
-                      disabled={
-                        !isAdmin || ![1, 2, 3, 4, 5].includes(job.job_status_id)
-                      }
+                      disabled={!isAdmin}
                       _hover={{
                         bg: "#2563eb", // Slightly darker blue for hover
                       }}
