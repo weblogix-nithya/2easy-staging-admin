@@ -4,7 +4,7 @@ import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Flex,
   IconButton,
-  Input,
+  // Input,
   Popover,
   PopoverArrow,
   PopoverCloseButton,
@@ -118,14 +118,15 @@ export default function EditableFieldPopover({
               defaultValue={current}
               ref={ref as React.RefObject<HTMLTextAreaElement>}
               size="sm"
-              rows={4}
+              rows={8}
               resize="none"
             />
           ) : (
-            <Input
+            <Textarea
               defaultValue={current}
-              ref={ref as React.RefObject<HTMLInputElement>}
+              ref={ref as React.RefObject<HTMLTextAreaElement>}
               size="sm"
+              rows={4}
               placeholder="Enter value"
             />
           )}
