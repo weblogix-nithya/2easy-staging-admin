@@ -346,7 +346,7 @@ export const NotesCell = ({ row }: any) => {
 
   return (
     <Flex gap={2} align="center">
-      <Text maxW="200px" noOfLines={1}>{display || "-"}</Text>
+      <Text maxW="200px" noOfLines={3}>{display || "-"}</Text>
       <EditableFieldPopover
         row={row}
         field="customer_notes"
