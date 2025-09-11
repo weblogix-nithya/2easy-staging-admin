@@ -132,6 +132,7 @@ export const GET_JOBS_QUERY = gql`
         is_hand_unloading
         is_dangerous_goods
         is_tailgate_required
+        is_paperwork_required
         job_pickup_cities
         job_destination_cities
         job_destinations {
@@ -441,6 +442,7 @@ export const GET_JOB_QUERY = gql`
       is_hand_unloading
       is_dangerous_goods
       is_tailgate_required
+      is_paperwork_required
       ready_at
       drop_at
       start_at
@@ -706,6 +708,7 @@ export const UPDATE_JOB_MUTATION = gql`
       is_hand_unloading
       is_dangerous_goods
       is_tailgate_required
+      is_paperwork_required
       timeslot
       last_free_at
       quoted_price

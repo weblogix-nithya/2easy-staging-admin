@@ -2335,6 +2335,39 @@ function JobPage() {
                               </Stack>
                             </RadioGroup>
                           </Flex>
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
+                            <FormLabel
+                              display="flex"
+                              mb={2} // Added margin-bottom for spacing
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Is a Physicalpaper work required?{" "}
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_paperwork_required:
+                                    e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row">
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
                         </GridItem>
 
                         <GridItem
@@ -2599,15 +2632,15 @@ function JobPage() {
                         View Job #{newJobId}
                       </Button>
                     </Link>
-                    
-                     <Link href={`/admin/jobs`}>
+
+                    <Link href={`/admin/jobs`}>
                       <Button
                         as="a"
                         colorScheme="blue"
                         mr={3}
                         onClick={onClose}
                       >
-                       Close
+                        Close
                       </Button>
                     </Link>
                   </ModalFooter>
