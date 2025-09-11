@@ -1121,6 +1121,41 @@ const JobDetailsTab = ({
                   </GridItem>
                 </SimpleGrid>
               </Flex>
+              
+              <Flex alignItems="center" width="100%" pt={7}>
+                <SimpleGrid columns={{ sm: 1 }} width="100%">
+                  <GridItem>
+                    <FormLabel
+                      display="flex"
+                      mb="0"
+                      fontSize="sm"
+                      fontWeight="500"
+                      _hover={{ cursor: "pointer" }}
+                    >
+                      Is a Physicalpaper work required? 
+                    </FormLabel>
+                  </GridItem>
+                  <GridItem>
+                    <RadioGroup
+                      isDisabled={!isAdmin}
+                      value={job.is_paperwork_required ? "1" : "0"}
+                      onChange={(e) => {
+                        setJob({
+                          ...job,
+                          is_paperwork_required: e === "1" ? true : false,
+                        });
+                      }}
+                    >
+                      <Stack direction="row" pt={3}>
+                        <Radio value="0">No</Radio>
+                        <Radio value="1" pl={6}>
+                          Yes
+                        </Radio>
+                      </Stack>
+                    </RadioGroup>
+                  </GridItem>
+                </SimpleGrid>
+              </Flex>
             </Box>
             <Box>
               {/* Right side content goes here */}

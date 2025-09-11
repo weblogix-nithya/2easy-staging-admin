@@ -1095,7 +1095,7 @@ function InvoiceEdit() {
                 <Button
                   mx="5px"
                   variant="secondary"
-                  isLoading={isInvoicePdfgenerate}
+                  // isLoading={isInvoicePdfgenerate}
                   isDisabled={invoiceLoading}
                   // hidden={isCustomer}
                   onClick={async () => {
