@@ -632,29 +632,21 @@ export const AdminNotesCell = ({ row }: any) => {
         triggerAriaLabel="Edit admin notes"
         onSaved={setDisplay}
       />
-    </Flex>  
+    </Flex>
   );
 };
 
-export const TimeslotCell = ({ row }: any) => {
-  const current = row?.original?.job?.timeslot ?? "";
-
-  const [display, setDisplay] = React.useState(current);
-
-  React.useEffect(() => {
-    setDisplay(current);
-  }, [current]);
-
+export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
       <Text maxW="140px" noOfLines={1}>
-        {display || "-"}
+        {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover
         row={row}
         field="timeslot"
         triggerAriaLabel="Edit timeslot"
-        onSaved={setDisplay}
+        refetchJobs={refetchJobs}
       />
     </Flex>
   );
@@ -690,7 +682,7 @@ function uniqueById(cols: any[]): any[] {
   return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 }
 
-export const tableColumn = [
+export const tableColumn = (refetchJobs: () => void) => [
   {
     id: "name",
     Header: "Delivery ID",
@@ -777,8 +769,9 @@ export const tableColumn = [
   {
     id: "timeslot",
     Header: "Timeslot",
-    Cell: TimeslotCell, // Add this line
-    // width: "50px",
+    Cell: ({ row }: any) => (
+      <TimeslotCell row={row} refetchJobs={refetchJobs} />
+    ),
   },
   {
     id: "last_free_at",
@@ -846,7 +839,8 @@ export const getColumns = (
   isAdmin: boolean,
   isCustomer: boolean,
   withMedia: boolean,
-  dynamicTableUsers?: DynamicTableUser[], // required by outputDynamicTable
+  refetchJobs?: () => void,
+  dynamicTableUsers?: DynamicTableUser[],
 ) => {
   // 1) Selection checkbox column
   const base: any[] = [
@@ -875,7 +869,7 @@ export const getColumns = (
   if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
     const cols = uniqueById([
       ...base,
-      ...tableColumn, // your static defaults
+      ...tableColumn(refetchJobs), // your static defaults
       {
         id: "actions",
         Header: "Actions",
@@ -893,7 +887,7 @@ export const getColumns = (
   // NOTE: outputDynamicTable should only include columns that are active:true.
   let columns = [
     ...base,
-    ...outputDynamicTable(dynamicTableUsers, tableColumn),
+    ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs)),
   ];
 
   // 4) Swap only the Cell for the 2 special fields based on withMedia
