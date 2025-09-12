@@ -632,7 +632,7 @@ export const AdminNotesCell = ({ row }: any) => {
         triggerAriaLabel="Edit admin notes"
         onSaved={setDisplay}
       />
-    </Flex>
+    </Flex>  
   );
 };
 
