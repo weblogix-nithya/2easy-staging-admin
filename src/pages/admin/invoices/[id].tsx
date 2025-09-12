@@ -87,7 +87,7 @@ function InvoiceEdit() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isInvoicePdfgenerate, setIsInvoicePdfgenerate] = useState(false);
+  const [_isInvoicePdfgenerate, setIsInvoicePdfgenerate] = useState(false);
 
   // const [paymentTerm, setPaymentTerm] = useState(null);
 
