@@ -25,6 +25,7 @@ type Props = {
   multiline?: boolean; // textarea when true, input when false
   triggerAriaLabel: string; // a11y label for button
   onSaved?: (newValue: string) => void; // optional: lift updated display value
+  refetchJobs?: () => void; // ✅ new
 };
 
 export default function EditableFieldPopover({
@@ -33,6 +34,7 @@ export default function EditableFieldPopover({
   multiline = false,
   triggerAriaLabel,
   onSaved,
+  refetchJobs,
 }: Props) {
   const toast = useToast();
   const isAdmin = useSelector((s: RootState) => s.user.isAdmin);
@@ -51,6 +53,7 @@ export default function EditableFieldPopover({
       toast({ title: "Updated", status: "success", duration: 2000 });
       setIsSaving(false);
       setIsOpen(false);
+      refetchJobs?.();
     },
     onError: (error) => {
       toast({
