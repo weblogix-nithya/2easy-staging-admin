@@ -254,6 +254,13 @@ export const SEND_INVOICE_MUTATION = gql`
   }
 `;
 
+export const SEND_RCTI_INVOICE_MUTATION = gql`
+  mutation send($id: ID!) {
+    sendRcti(id: $id) {
+      id
+    }
+  }
+`;
 export const GENERATE_INVOICE_PDF_MUTATION = gql`
   mutation generateInvoicePdf($id: ID!) {
     generateInvoicePdf(id: $id) {
