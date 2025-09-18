@@ -1132,7 +1132,7 @@ const JobDetailsTab = ({
                       fontWeight="500"
                       _hover={{ cursor: "pointer" }}
                     >
-                      Is a Physicalpaper work required? 
+                      Is hard copy paperwork required?
                     </FormLabel>
                   </GridItem>
                   <GridItem>
