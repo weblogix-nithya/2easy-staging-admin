@@ -49,10 +49,6 @@ import { RootState } from "store/store";
 function InvoiceEdit() {
   let menuBg = useColorModeValue("white", "navy.800");
   const toast = useToast();
-  const generatingRef = useRef(false);
-  const lastUrlRef = useRef<string | null>(null);
-  const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
   const textColor = useColorModeValue("navy.700", "white");
   //  const textColorSecondary = "gray.400";
   const [invoice, setInvoice] = useState(defaultInvoice);
@@ -77,6 +73,8 @@ function InvoiceEdit() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
+  const [DownloadUrl, setdownloadUrl] = useState();
+  const [statusloading, setStatusLoading] = useState(false);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -117,8 +115,7 @@ function InvoiceEdit() {
         router.push("/admin/invoices");
       }
       setInvoice({ ...invoice, ...data?.invoice });
-      lastUrlRef.current = invoice?.job?.invoice_url ?? null; // remember previous URL
-      generatingRef.current = true;
+      setdownloadUrl(data?.invoice?.rcti_url);
     },
     onError(error) {
       console.log("onError");
@@ -187,23 +184,6 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleSendRctiInvoice, {}] = useMutation(SEND_RCTI_INVOICE_MUTATION, {
-    variables: {
-      id: id,
-    },
-    onCompleted: (_data) => {
-      toast({
-        title: "Invoice generating. Please wait 10 seconds to update",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-    },
-    onError: (error) => {
-      showGraphQLErrorToast(error);
-    },
-  });
-
   const [handleUpdateInvoice, {}] = useMutation(UPDATE_INVOICE_MUTATION, {
     variables: {
       input: {
@@ -253,24 +233,11 @@ function InvoiceEdit() {
           });
         }
       });
-      // not great but it works
-      let shouldSendInvoice = invoice.invoice_status_id == "6" ? false : true;
-      shouldSendInvoice =
-        invoice.invoice_status_id == "2" ? false : shouldSendInvoice;
-      setTimeout(() => {
-        getInvoice();
-        if (
-          shouldSendInvoice &&
-          invoice.invoice_status_id != undefined &&
-          (invoice.invoice_status_id == "6" || invoice.invoice_status_id == "2")
-        ) {
-          handleSendRctiInvoice();
-        }
-      }, 10000);
+
       setTimeout(() => {
         getInvoice();
         getInvoiceLineItems();
-        // handleSendRctiInvoice();
+        setStatusLoading(false);
       }, 10000);
     },
     onError: (error) => {
@@ -397,7 +364,7 @@ function InvoiceEdit() {
                     ms="10px"
                     className="!h-[39px]"
                     onClick={() => handleUpdateInvoice()}
-                    isLoading={invoiceLoading}
+                    isLoading={invoiceLoading || statusloading}
                     hidden={isCustomer}
                   >
                     Save Changes
@@ -472,6 +439,8 @@ function InvoiceEdit() {
                       options={invoiceStatuses}
                       onChange={(e) => {
                         setInvoice({ ...invoice, invoice_status_id: e.value });
+                        handleUpdateInvoice();
+                        setStatusLoading(true);
                       }}
                       size="lg"
                       className="select mb-0"
@@ -898,57 +867,33 @@ function InvoiceEdit() {
                       : "Approve Invoice"}
                   </Button>
                 )}
-              {invoice.job && invoice.job.invoice_url != null && (
+              {invoice.invoice_status_id == "6" &&
+              invoice.rcti_url &&
+              invoice.rcti_url != null ? (
                 <Button
                   mx="5px"
                   variant="secondary"
                   // isLoading={isInvoicePdfgenerate}
                   isDisabled={invoiceLoading}
-                  // hidden={isCustomer}  
+                  // hidden={isCustomer}
                   onClick={async () => {
-                    try {
-                      // If a generation just happened, give backend a moment
-                      if (generatingRef.current) {
-                        await sleep(3500); // adjust if needed (2–5s)
-                      }
-
-                      // Always refetch once to get the freshest URL
-                      const { data } = await getInvoice();
-
-                      // Extract URL from the query result
-                      const freshUrl = data?.invoice?.job?.invoice_url ?? null;
-
-                      // Decide which URL to open
-                      const urlToOpen =
-                        freshUrl ||
-                        invoice?.job?.invoice_url || // fallback to prop
-                        lastUrlRef.current || // fallback to cached
-                        null;
-
-                      if (urlToOpen) {
-                        window.open(urlToOpen, "_blank", "noopener,noreferrer");
-                      }
-                    } finally {
-                      // Reset the "generating" flag
-                      generatingRef.current = false;
+                    if (invoice?.rcti_url || DownloadUrl) {
+                      window.open(
+                        invoice?.rcti_url,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
                     }
                   }}
                 >
                   Download PDF
                 </Button>
+              ) : (
+                <Button>No PDF yet</Button>
               )}
-              {invoice.invoice_status_id != undefined &&
-                invoice.invoice_status_id != "1" && (
-                  <Button
-                    variant="primary"
-                    className="w-[49%]"
-                    onClick={() => handleSendRctiInvoice()}
-                    isLoading={invoiceLoading}
-                  >
-                    Send Invoice
-                  </Button>
-                )}
             </Flex>
+            <p> Note: please change the status to approved again</p>
+            <p> to get the download link.</p>
           </Box>
         </Box>
 

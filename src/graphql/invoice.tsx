@@ -160,6 +160,7 @@ export const GET_INVOICE_QUERY = gql`
       id
       name
       job_id
+      rcti_url
       job {
         name
         invoice_url
@@ -314,6 +315,7 @@ type Invoice = {
   id: number | null;
   name: string;
   vehicle_hire_id: number;
+  rcti_url: string;
   driver_id: number;
   customer_id: number;
   company_id: number;
@@ -344,6 +346,7 @@ export const defaultInvoice: Invoice = {
   id: null,
   name: "",
   vehicle_hire_id: null,
+  rcti_url: null,
   driver_id: null,
   customer_id: null,
   company_id: null,
