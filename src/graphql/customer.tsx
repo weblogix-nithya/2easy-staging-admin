@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+// $is_approved: Int
+// is_approved: $is_approved
 export const GET_CUSTOMERS_QUERY = gql`
   query customers(
     $query: String
@@ -8,12 +10,14 @@ export const GET_CUSTOMERS_QUERY = gql`
     $orderByColumn: String!
     $orderByOrder: SortOrder!
     $company_id: ID
+    $is_approved: Boolean
   ) {
     customers(
       query: $query
       page: $page
       first: $first
       company_id: $company_id
+      is_approved: $is_approved
       orderBy: { column: $orderByColumn, order: $orderByOrder }
     ) {
       data {
@@ -27,6 +31,7 @@ export const GET_CUSTOMERS_QUERY = gql`
         abn
         phone_no
         email
+        is_approved
         company_name
         is_company_admin
         is_pod_sendable
@@ -64,6 +69,7 @@ export const GET_CUSTOMER_QUERY = gql`
       is_company_admin
       is_pod_sendable
       is_invoice_sendable
+      is_approved
     }
   }
 `;
@@ -93,6 +99,15 @@ export const MUTATION_CUSTOMER_REGISTER = gql`
   mutation registerCustomer($input: RegisterCustomerInput!) {
     registerCustomer(input: $input) {
       id
+    }
+  }
+`;
+
+export const MUTATION_APPROVE_CUSTOMER = gql`
+  mutation approveCustomer($customerId: ID!) {
+    approveCustomer(customerId: $customerId) {
+      status
+      message
     }
   }
 `;

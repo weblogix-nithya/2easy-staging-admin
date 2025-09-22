@@ -15,7 +15,7 @@ import {
   Tr,
   VStack,
 } from "@chakra-ui/react";
-import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
+import { faTrashAlt, faCheckCircle } from "@fortawesome/pro-light-svg-icons";
 import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
 import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -43,6 +43,8 @@ type PaginationTableProps<T extends object> = {
   path?: string;
   showDelete?: boolean;
   onDelete?: (data: any) => void;
+  isapprove?: boolean;
+  onApprove?: (data: any) => void;
   showPageSizeSelect?: boolean;
   showManualPages?: boolean;
   isChecked?: boolean;
@@ -83,6 +85,8 @@ const PaginationTable = <T extends object>({
   setQueryPageIndex,
   setQueryPageSize,
   onDelete,
+  onApprove,
+  isapprove,
   path,
   showPageSizeSelect = false,
   showManualPages = false,
@@ -174,7 +178,7 @@ const PaginationTable = <T extends object>({
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
-  }, [sortBy,onSortingChange]);
+  }, [sortBy, onSortingChange]);
 
   useEffect(() => {
     if (!isChecked) toggleAllRowsSelected(isChecked);
@@ -374,6 +378,33 @@ const PaginationTable = <T extends object>({
                               />
                             </Button>
                           )
+                        }
+                        {
+                          //@ts-expect-error
+                          cell.column.isApprove &&
+                            // (cell.row.original.is_approved === true ||
+                            //   cell.row.original.is_approved === "true" ||
+                            //   cell.row.original.is_approved === 1 ||
+                            //   cell.row.original.is_approved === "1") &&
+                            (cell.row.original.is_approved === false ||
+                              cell.row.original.is_approved === "false" ||
+                              cell.row.original.is_approved === 0 ||
+                              cell.row.original.is_approved === "0") && (
+                              <Button
+                                bg="white"
+                                fontSize="sm"
+                                className="!text-[var(--chakra-colors-black-400)]"
+                                onClick={() => {
+                                  onApprove(cell.row.original.id);
+                                }}
+                              >
+                                <FontAwesomeIcon
+                                  icon={faCheckCircle} // <-- Use the approval icon here
+                                  className="!text-green-500"
+                                  size="lg"
+                                />
+                              </Button>
+                            )
                         }
                       </Td>
                     );
