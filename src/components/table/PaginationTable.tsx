@@ -15,7 +15,7 @@ import {
   Tr,
   VStack,
 } from "@chakra-ui/react";
-import { faTrashAlt, faCheckCircle } from "@fortawesome/pro-light-svg-icons";
+import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
 import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
 import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -44,6 +44,8 @@ type PaginationTableProps<T extends object> = {
   showDelete?: boolean;
   onDelete?: (data: any) => void;
   isapprove?: boolean;
+  isRestore?:boolean;
+  onRestore?: (data: any) => void;
   onApprove?: (data: any) => void;
   showPageSizeSelect?: boolean;
   showManualPages?: boolean;
@@ -86,7 +88,9 @@ const PaginationTable = <T extends object>({
   setQueryPageSize,
   onDelete,
   onApprove,
-  isapprove,
+  onRestore,
+  // isRestore,
+  // isapprove,
   path,
   showPageSizeSelect = false,
   showManualPages = false,
@@ -382,10 +386,6 @@ const PaginationTable = <T extends object>({
                         {
                           //@ts-expect-error
                           cell.column.isApprove &&
-                            // (cell.row.original.is_approved === true ||
-                            //   cell.row.original.is_approved === "true" ||
-                            //   cell.row.original.is_approved === 1 ||
-                            //   cell.row.original.is_approved === "1") &&
                             (cell.row.original.is_approved === false ||
                               cell.row.original.is_approved === "false" ||
                               cell.row.original.is_approved === 0 ||
@@ -398,13 +398,24 @@ const PaginationTable = <T extends object>({
                                   onApprove(cell.row.original.id);
                                 }}
                               >
-                                <FontAwesomeIcon
-                                  icon={faCheckCircle} // <-- Use the approval icon here
-                                  className="!text-green-500"
-                                  size="lg"
-                                />
+                                Approve
                               </Button>
                             )
+                        }
+                        {
+                          //@ts-expect-error
+                          cell.column.isRestore && (
+                            <Button
+                              bg="white"
+                              fontSize="sm"
+                              className="!text-[var(--chakra-colors-black-400)]"
+                              onClick={() => {
+                                onRestore(cell.row.original.id);
+                              }}
+                            >
+                              Restore
+                            </Button>
+                          )
                         }
                       </Td>
                     );

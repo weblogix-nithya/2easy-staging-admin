@@ -2,24 +2,33 @@ import { useQuery } from "@apollo/client";
 import {
   Box,
   Button,
-  Divider,
+  // Divider,
   Flex,
+  Grid,
   Link,
   SimpleGrid,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
-import PaginationTable from "components/table/PaginationTable";
+import { TabsComponent } from "components/tabs/TabsComponet";
 import { GET_USERS_QUERY } from "graphql/user";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "store/store";
+
+import RestoreUserTab from "./components/restoreUserTab";
+// import PaginationTable from "components/table/PaginationTable"
+import UsersTab from "./components/usersTab";
 
 export default function UserIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
+  const { isAdmin } = useSelector((state: RootState) => state.user);
+  const [tabId, setActiveTab] = useState(1);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -27,6 +36,21 @@ export default function UserIndex() {
       setQueryPageIndex(0);
     }, 300);
   }, []);
+
+  const tabs = [
+    {
+      id: 1,
+      tabName: "Users",
+      hash: "usersList",
+      isVisible: true,
+    },
+    {
+      id: 2,
+      tabName: "Restore Users",
+      hash: "restoreUsers",
+      isVisible: true,
+    },
+  ];
 
   const columns = useMemo(
     () => [
@@ -46,6 +70,26 @@ export default function UserIndex() {
     [],
   );
 
+  const restoreColumns = useMemo(
+    () => [
+      {
+        Header: "Name",
+        accessor: "name" as const,
+      },
+      {
+        Header: "Email",
+        accessor: "email" as const,
+      },
+      {
+        Header: "Actions",
+        accessor: "id" as const,
+        isRestore: isAdmin,
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   const {
     loading,
     error,
@@ -59,17 +103,32 @@ export default function UserIndex() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
+     onCompleted:()=> {
+      // console.log(data.users.data,'data')
+     }     
   });
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
+
+  const handleTabChange = useCallback(
+    async (nextTabId: number) => {
+      if (nextTabId === tabId) return;
+
+      setActiveTab(nextTabId);
+
+      const needsRefresh = nextTabId === 2;
+      if (!needsRefresh) return;
+    },
+    [tabId],
+  );
 
   return (
     <AdminLayout>
       <Box pt={{ base: "130px", md: "97px", xl: "97px" }}>
-        <SimpleGrid mb="20px" pt="32px" px="24px" columns={{ sm: 1 }}>
+        <SimpleGrid mb="20px" pt="32px" px="12px" columns={{ sm: 1 }}>
           <Flex
             minWidth="max-content"
             alignItems="center"
@@ -93,25 +152,31 @@ export default function UserIndex() {
             />
           </Flex>
 
-          <Divider className="mt-6 mb-0" />
 
-          {!loading && !error && users?.users.data.length > 0 && (
-            <PaginationTable
-              columns={columns}
-              data={users?.users.data}
-              options={{
-                initialState: {
-                  pageIndex: queryPageIndex,
-                  pageSize: queryPageSize,
-                },
-                manualPagination: true,
-                pageCount: users?.users.paginatorInfo.lastPage,
-              }}
-              setQueryPageIndex={setQueryPageIndex}
-              setQueryPageSize={setQueryPageSize}
-              isServerSide
-            />
-          )}
+          <Grid backgroundColor="white">
+            <TabsComponent tabs={tabs} onChange={handleTabChange} />
+            {tabId == 1 && (
+              <UsersTab
+                loading={loading}
+                users={users}
+                error={error}
+                columns={columns}
+                queryPageIndex={queryPageIndex}
+                queryPageSize={queryPageSize}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+              />
+            )}
+            {tabId == 2 && (
+              <RestoreUserTab
+                restoreColumns={restoreColumns}
+                queryPageIndex={queryPageIndex}
+                queryPageSize={queryPageSize}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+              />
+            )}{" "}
+          </Grid>
         </SimpleGrid>
       </Box>
     </AdminLayout>

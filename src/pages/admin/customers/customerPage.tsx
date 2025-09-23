@@ -6,14 +6,11 @@ import {
   Grid,
   Link,
   SimpleGrid,
-  Toast,
+  // Toast,
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
 import PrivateAccessModal from "components/access/PrivateAccessModal";
-import ApprovalRequiredTab from "./components/approvalRequiredTab";
-import CustomerTab from "./components/customerTab";
-
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 // import PaginationTable from "components/table/PaginationTable";
 import { TabsComponent } from "components/tabs/TabsComponet";
@@ -24,6 +21,9 @@ import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+
+import ApprovalRequiredTab from "./components/approvalRequiredTab";
+import CustomerTab from "./components/customerTab";
 
 export default function CustomerIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -109,6 +109,7 @@ export default function CustomerIndex() {
         isApprove: isAdmin,
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
   const {
@@ -151,39 +152,12 @@ export default function CustomerIndex() {
 
   const handleTabChange = useCallback(
     async (nextTabId: number) => {
-      // A) If it’s the same tab, do nothing
       if (nextTabId === tabId) return;
 
-      // B) Switch tab immediately to avoid re-firing from TabsComponent
       setActiveTab(nextTabId);
 
-      // C) Only these tabs need a refresh
       const needsRefresh = nextTabId === 2;
       if (!needsRefresh) return;
-
-      // D) Prevent concurrent / repeated refetches
-      // if (refetchingRef.current) return;
-      // refetchingRef.current = true;
-
-      try {
-        // const { data } = await getJob(); // Apollo refetch from useQuery
-        // if (data?.job) {
-        // wherever you store the fresh copy for reports
-        // setReportJob((prev) => ({ ...prev, ...data.job }));
-        // or if you kept defaultReportJob:
-        // setReportJob({ ...defaultReportJob, ...data.job });
-        // }
-      } catch (e) {
-        console.error("Refetch failed:", e);
-        Toast({
-          title: "Couldn’t refresh data",
-          status: "warning",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        // refetchingRef.current = false;
-      }
     },
     [tabId],
   );

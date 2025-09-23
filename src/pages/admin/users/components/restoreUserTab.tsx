@@ -2,35 +2,33 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useToast } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import {
-  GET_CUSTOMERS_QUERY,
-  MUTATION_APPROVE_CUSTOMER,
-} from "graphql/customer";
+import { MUTATION_RESTORE_USER } from "graphql/customer";
+import { GET_TRASHED_USERS_QUERY } from "graphql/user";
 import React from "react";
 
-interface ApprovalRequiredTabProps {
-  approveColumns: any;
+interface RestoreUserTabProps {
+  restoreColumns: any;
   queryPageIndex: number;
   queryPageSize: number;
   setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
   setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
-function ApprovalRequiredTab({
-  approveColumns,
+function RestoreUserTab({
+  restoreColumns,
   queryPageIndex,
   queryPageSize,
   setQueryPageIndex,
   setQueryPageSize,
-}: ApprovalRequiredTabProps) {
+}: RestoreUserTabProps) {
   const toast = useToast();
 
-  const [handleApproveCustomer, {}] = useMutation(MUTATION_APPROVE_CUSTOMER, {
+  const [handleRestoreUser, {}] = useMutation(MUTATION_RESTORE_USER, {
     onCompleted: () => {
       // console.log("APP", _data);
       // Toast()
       toast({
-        title: "Customer is Approved manually",
+        title: "Restored the user successfully",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -45,53 +43,52 @@ function ApprovalRequiredTab({
   const {
     refetch,
     loading,
-    data: approvalCustomers,
-  } = useQuery(GET_CUSTOMERS_QUERY, {
+    data: restoreCustomers,
+  } = useQuery(GET_TRASHED_USERS_QUERY, {
     variables: {
       page: queryPageIndex + 1,
       first: queryPageSize,
       orderByColumn: "id",
       orderByOrder: "ASC",
-      is_approved: false, // 👈 filter for approval required
     },
     fetchPolicy: "network-only", // ensures always fresh data
   });
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
 
-  const handleApprove = (id: any) => {
-    handleApproveCustomer({
+  const handleRestore = (id: any) => {
+    handleRestoreUser({
       variables: {
-        customerId: parseInt(id),
+        id: parseInt(id),
       },
     });
   };
   return (
     <>
-      {approvalCustomers?.customers?.data?.length > 0 ? (
+      {restoreCustomers?.users?.data?.length > 0 ? (
         <PaginationTable
-          columns={approveColumns}
-          data={approvalCustomers?.customers.data}
+          columns={restoreColumns}
+          data={restoreCustomers?.users?.data}
           options={{
             initialState: {
               pageIndex: queryPageIndex,
               pageSize: queryPageSize,
             },
             manualPagination: true,
-            pageCount: approvalCustomers?.customers.paginatorInfo.lastPage,
+            pageCount: restoreCustomers?.users?.paginatorInfo.lastPage,
           }}
-          onApprove={(id: any) => {
-            handleApprove(id);
+          onRestore={(id: any) => {
+            handleRestore(id);
           }}
           setQueryPageIndex={setQueryPageIndex}
           setQueryPageSize={setQueryPageSize}
           isServerSide
         />
       ) : (
-        <div className="text-center mt-20">No Customers for manual approval</div>
+        <div className="text-center mt-20">No User to Restore</div>
       )}
     </>
   );
 }
 
-export default ApprovalRequiredTab;
+export default RestoreUserTab;

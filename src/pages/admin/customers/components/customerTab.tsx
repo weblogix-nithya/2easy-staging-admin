@@ -1,5 +1,5 @@
-import React from "react";
 import PaginationTable from "components/table/PaginationTable";
+import React from "react";
 
 interface CustomerTabProps {
   isAdmin: boolean;

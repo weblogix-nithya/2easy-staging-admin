@@ -112,6 +112,15 @@ export const MUTATION_APPROVE_CUSTOMER = gql`
   }
 `;
 
+export const MUTATION_RESTORE_USER = gql`
+  mutation restoreUser($id: ID!) {
+    restoreUser(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
 export const UPDATE_CUSTOMER_MUTATION = gql`
   mutation updateCustomer($input: UpdateCustomerInput!) {
     updateCustomer(input: $input) {
