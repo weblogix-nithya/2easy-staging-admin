@@ -33,6 +33,39 @@ export const GET_USERS_QUERY = gql`
   }
 `;
 
+export const GET_TRASHED_USERS_QUERY = gql`
+  query trashedUsers(
+    $page: Int!
+    $first: Int!
+    $orderByColumn: String!
+    $orderByOrder: SortOrder!
+  ) {
+    users(
+      trashed: ONLY
+      page: $page
+      first: $first
+      orderBy: { column: $orderByColumn, order: $orderByOrder }
+    ) {
+      data {
+        id
+        email
+        name
+      }
+      paginatorInfo {
+        count
+        currentPage
+        firstItem
+        hasMorePages
+        lastItem
+        lastPage
+        perPage
+        total
+      }
+    }
+  }
+`;
+
+
 export const GET_USER_QUERY = gql`
   query user($id: ID!) {
     user(id: $id) {

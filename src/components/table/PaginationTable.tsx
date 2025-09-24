@@ -43,6 +43,10 @@ type PaginationTableProps<T extends object> = {
   path?: string;
   showDelete?: boolean;
   onDelete?: (data: any) => void;
+  isapprove?: boolean;
+  isRestore?:boolean;
+  onRestore?: (data: any) => void;
+  onApprove?: (data: any) => void;
   showPageSizeSelect?: boolean;
   showManualPages?: boolean;
   isChecked?: boolean;
@@ -83,6 +87,10 @@ const PaginationTable = <T extends object>({
   setQueryPageIndex,
   setQueryPageSize,
   onDelete,
+  onApprove,
+  onRestore,
+  // isRestore,
+  // isapprove,
   path,
   showPageSizeSelect = false,
   showManualPages = false,
@@ -174,7 +182,7 @@ const PaginationTable = <T extends object>({
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
-  }, [sortBy,onSortingChange]);
+  }, [sortBy, onSortingChange]);
 
   useEffect(() => {
     if (!isChecked) toggleAllRowsSelected(isChecked);
@@ -372,6 +380,40 @@ const PaginationTable = <T extends object>({
                                 className="!text-[var(--chakra-colors-black-400)]"
                                 size="lg"
                               />
+                            </Button>
+                          )
+                        }
+                        {
+                          //@ts-expect-error
+                          cell.column.isApprove &&
+                            (cell.row.original.is_approved === false ||
+                              cell.row.original.is_approved === "false" ||
+                              cell.row.original.is_approved === 0 ||
+                              cell.row.original.is_approved === "0") && (
+                              <Button
+                                bg="white"
+                                fontSize="sm"
+                                className="!text-[var(--chakra-colors-black-400)]"
+                                onClick={() => {
+                                  onApprove(cell.row.original.id);
+                                }}
+                              >
+                                Approve
+                              </Button>
+                            )
+                        }
+                        {
+                          //@ts-expect-error
+                          cell.column.isRestore && (
+                            <Button
+                              bg="white"
+                              fontSize="sm"
+                              className="!text-[var(--chakra-colors-black-400)]"
+                              onClick={() => {
+                                onRestore(cell.row.original.id);
+                              }}
+                            >
+                              Restore
                             </Button>
                           )
                         }

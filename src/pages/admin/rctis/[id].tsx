@@ -29,6 +29,7 @@ import {
   defaultInvoice,
   DELETE_INVOICE_MUTATION,
   GET_INVOICE_QUERY,
+  SEND_RCTI_INVOICE_MUTATION,
   UPDATE_INVOICE_MUTATION,
 } from "graphql/invoice";
 import {
@@ -72,6 +73,8 @@ function InvoiceEdit() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
+  const [DownloadUrl, setdownloadUrl] = useState();
+  const [statusloading, setStatusLoading] = useState(false);
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -112,6 +115,7 @@ function InvoiceEdit() {
         router.push("/admin/invoices");
       }
       setInvoice({ ...invoice, ...data?.invoice });
+      setdownloadUrl(data?.invoice?.rcti_url);
     },
     onError(error) {
       console.log("onError");
@@ -152,6 +156,23 @@ function InvoiceEdit() {
       },
     },
   );
+
+  const [handleSendInvoice, {}] = useMutation(SEND_RCTI_INVOICE_MUTATION, {
+    variables: {
+      id: id,
+    },
+    onCompleted: (_data) => {
+      toast({
+        title: "Invoice sent",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+    onError: (error) => {
+      showGraphQLErrorToast(error);
+    },
+  });
 
   const [handleUpdateApproveInvoice, {}] = useMutation(
     UPDATE_INVOICE_MUTATION,
@@ -229,10 +250,11 @@ function InvoiceEdit() {
           });
         }
       });
-      // not great but it works
+
       setTimeout(() => {
         getInvoice();
         getInvoiceLineItems();
+        setStatusLoading(false);
       }, 10000);
     },
     onError: (error) => {
@@ -293,7 +315,7 @@ function InvoiceEdit() {
       sub_total: invoiceTotal,
       total: invoiceTotal * 1.1,
     });
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoiceLineItems]);
 
   return (
@@ -346,6 +368,42 @@ function InvoiceEdit() {
                       Job
                     </Button>
                   )}
+                  {/* {invoice.invoice_status_id != undefined &&
+                    invoice.invoice_status_id != "1" && 
+                    invoice.invoice_status_id == "6" &&(
+                      <Button
+                        variant="primary"
+                        className="w-[49%]"
+                        onClick={() => handleSendInvoice()}
+                        isLoading={invoiceLoading}
+                      >
+                        Send Invoice (To owner in future)
+                      </Button>
+                    )} */}
+                  {invoice.invoice_status_id == "6" &&
+                  invoice.rcti_url &&
+                  invoice.rcti_url != null ? (
+                    <Button
+                      mx="5px"
+                      variant="secondary"
+                      // isLoading={isInvoicePdfgenerate}
+                      isDisabled={invoiceLoading}
+                      // hidden={isCustomer}
+                      onClick={async () => {
+                        if (invoice?.rcti_url || DownloadUrl) {
+                          window.open(
+                            invoice?.rcti_url,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }
+                      }}
+                    >
+                      Download PDF
+                    </Button>
+                  ) : (
+                    <Button>No PDF yet</Button>
+                  )}
                   <Button
                     fontSize="sm"
                     lineHeight="19px"
@@ -359,7 +417,7 @@ function InvoiceEdit() {
                     ms="10px"
                     className="!h-[39px]"
                     onClick={() => handleUpdateInvoice()}
-                    isLoading={invoiceLoading}
+                    isLoading={invoiceLoading || statusloading}
                     hidden={isCustomer}
                   >
                     Save Changes
@@ -434,6 +492,8 @@ function InvoiceEdit() {
                       options={invoiceStatuses}
                       onChange={(e) => {
                         setInvoice({ ...invoice, invoice_status_id: e.value });
+                        handleUpdateInvoice();
+                        setStatusLoading(true);
                       }}
                       size="lg"
                       className="select mb-0"
@@ -861,6 +921,8 @@ function InvoiceEdit() {
                   </Button>
                 )}
             </Flex>
+            <p> Note: please change the status to approved again</p>
+            <p> to get the download link.</p>
           </Box>
         </Box>
 
