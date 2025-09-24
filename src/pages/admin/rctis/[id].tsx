@@ -29,7 +29,7 @@ import {
   defaultInvoice,
   DELETE_INVOICE_MUTATION,
   GET_INVOICE_QUERY,
-  // SEND_RCTI_INVOICE_MUTATION,
+  SEND_RCTI_INVOICE_MUTATION,
   UPDATE_INVOICE_MUTATION,
 } from "graphql/invoice";
 import {
@@ -156,6 +156,23 @@ function InvoiceEdit() {
       },
     },
   );
+
+  const [handleSendInvoice, {}] = useMutation(SEND_RCTI_INVOICE_MUTATION, {
+    variables: {
+      id: id,
+    },
+    onCompleted: (_data) => {
+      toast({
+        title: "Invoice sent",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+    onError: (error) => {
+      showGraphQLErrorToast(error);
+    },
+  });
 
   const [handleUpdateApproveInvoice, {}] = useMutation(
     UPDATE_INVOICE_MUTATION,
@@ -350,6 +367,42 @@ function InvoiceEdit() {
                     >
                       Job
                     </Button>
+                  )}
+                  {/* {invoice.invoice_status_id != undefined &&
+                    invoice.invoice_status_id != "1" && 
+                    invoice.invoice_status_id == "6" &&(
+                      <Button
+                        variant="primary"
+                        className="w-[49%]"
+                        onClick={() => handleSendInvoice()}
+                        isLoading={invoiceLoading}
+                      >
+                        Send Invoice (To owner in future)
+                      </Button>
+                    )} */}
+                  {invoice.invoice_status_id == "6" &&
+                  invoice.rcti_url &&
+                  invoice.rcti_url != null ? (
+                    <Button
+                      mx="5px"
+                      variant="secondary"
+                      // isLoading={isInvoicePdfgenerate}
+                      isDisabled={invoiceLoading}
+                      // hidden={isCustomer}
+                      onClick={async () => {
+                        if (invoice?.rcti_url || DownloadUrl) {
+                          window.open(
+                            invoice?.rcti_url,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }
+                      }}
+                    >
+                      Download PDF
+                    </Button>
+                  ) : (
+                    <Button>No PDF yet</Button>
                   )}
                   <Button
                     fontSize="sm"
@@ -867,30 +920,6 @@ function InvoiceEdit() {
                       : "Approve Invoice"}
                   </Button>
                 )}
-              {invoice.invoice_status_id == "6" &&
-              invoice.rcti_url &&
-              invoice.rcti_url != null ? (
-                <Button
-                  mx="5px"
-                  variant="secondary"
-                  // isLoading={isInvoicePdfgenerate}
-                  isDisabled={invoiceLoading}
-                  // hidden={isCustomer}
-                  onClick={async () => {
-                    if (invoice?.rcti_url || DownloadUrl) {
-                      window.open(
-                        invoice?.rcti_url,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                    }
-                  }}
-                >
-                  Download PDF
-                </Button>
-              ) : (
-                <Button>No PDF yet</Button>
-              )}
             </Flex>
             <p> Note: please change the status to approved again</p>
             <p> to get the download link.</p>
