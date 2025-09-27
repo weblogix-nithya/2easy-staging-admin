@@ -63,17 +63,18 @@ function InvoiceEdit() {
   ]);
   const [invoiceLineItems, setInvoiceLineItems] = useState([]);
   const [deleteInvoiceLineItemId, setDeleteInvoiceLineItemId] = useState(null);
+  const [lineItemsDirty, setLineItemsDirty] = useState(false);
+
   // const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
-  const customerId = useSelector((state: RootState) => state.user.customerId);
+  // const customerId = useSelector((state: RootState) => state.user.customerId);
   const router = useRouter();
   const { id } = router.query;
 
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const [DownloadUrl, setdownloadUrl] = useState();
   const [statusloading, setStatusLoading] = useState(false);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -115,7 +116,6 @@ function InvoiceEdit() {
         router.push("/admin/invoices");
       }
       setInvoice({ ...invoice, ...data?.invoice });
-      setdownloadUrl(data?.invoice?.rcti_url);
     },
     onError(error) {
       console.log("onError");
@@ -174,32 +174,32 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
-    UPDATE_INVOICE_MUTATION,
-    {
-      variables: {
-        input: {
-          id: id,
-          invoice_status_id: 6,
-        },
-      },
-      onCompleted: (_data) => {
-        toast({
-          title: "Invoice Approved",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        // not great but it works
-        setTimeout(() => {
-          getInvoice();
-        }, 10000);
-      },
-      onError: (error) => {
-        showGraphQLErrorToast(error);
-      },
-    },
-  );
+  // const [handleUpdateApproveInvoice, {}] = useMutation(
+  //   UPDATE_INVOICE_MUTATION,
+  //   {
+  //     variables: {
+  //       input: {
+  //         id: id,
+  //         invoice_status_id: 6,
+  //       },
+  //     },
+  //     onCompleted: (_data) => {
+  //       toast({
+  //         title: "Invoice Approved",
+  //         status: "success",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+  //       // not great but it works
+  //       setTimeout(() => {
+  //         getInvoice();
+  //       }, 10000);
+  //     },
+  //     onError: (error) => {
+  //       showGraphQLErrorToast(error);
+  //     },
+  //   },
+  // );
 
   const [handleUpdateInvoice, {}] = useMutation(UPDATE_INVOICE_MUTATION, {
     variables: {
@@ -219,37 +219,42 @@ function InvoiceEdit() {
         duration: 3000,
         isClosable: true,
       });
-      invoiceLineItems.map((invoiceLineItem) => {
-        if (invoiceLineItem.id == null) {
-          handleCreateLineItem({
-            variables: {
-              input: {
-                name: invoiceLineItem.name,
-                invoice_id: invoiceLineItem.invoice_id,
-                is_surcharge: true,
-                is_rate: false,
-                tax_type: "OUTPUT",
-                unit_amount: formatFloat(invoiceLineItem.unit_amount),
-                quantity: formatFloat(invoiceLineItem.quantity),
-                line_amount: formatFloat(invoiceLineItem.line_amount),
+      if (lineItemsDirty) {
+        invoiceLineItems.map((invoiceLineItem) => {
+          if (invoiceLineItem.id == null) {
+            handleCreateLineItem({
+              variables: {
+                input: {
+                  name: invoiceLineItem.name,
+                  invoice_id: invoiceLineItem.invoice_id,
+                  is_surcharge: true,
+                  is_rate: false,
+                  tax_type: "OUTPUT",
+                  unit_amount: formatFloat(invoiceLineItem.unit_amount),
+                  quantity: formatFloat(invoiceLineItem.quantity),
+                  line_amount: formatFloat(invoiceLineItem.line_amount),
+                },
               },
-            },
-          });
-        } else {
-          handleUpdateLineItem({
-            variables: {
-              input: {
-                id: invoiceLineItem.id,
-                name: invoiceLineItem.name,
-                invoice_id: invoiceLineItem.invoice_id,
-                unit_amount: formatFloat(invoiceLineItem.unit_amount),
-                quantity: formatFloat(invoiceLineItem.quantity),
-                line_amount: formatFloat(invoiceLineItem.line_amount),
+            });
+          } else {
+            handleUpdateLineItem({
+              variables: {
+                input: {
+                  id: invoiceLineItem.id,
+                  name: invoiceLineItem.name,
+                  invoice_id: invoiceLineItem.invoice_id,
+                  unit_amount: formatFloat(invoiceLineItem.unit_amount),
+                  quantity: formatFloat(invoiceLineItem.quantity),
+                  line_amount: formatFloat(invoiceLineItem.line_amount),
+                },
               },
-            },
-          });
-        }
-      });
+            });
+          }
+        });
+
+        // ✅ reset after sync so it won’t re-run again
+        setLineItemsDirty(false);
+      }
 
       setTimeout(() => {
         getInvoice();
@@ -368,41 +373,53 @@ function InvoiceEdit() {
                       Job
                     </Button>
                   )}
-                  {/* {invoice.invoice_status_id != undefined &&
-                    invoice.invoice_status_id != "1" && 
-                    invoice.invoice_status_id == "6" &&(
+                  {invoice.invoice_status_id != undefined &&
+                    invoice.invoice_status_id != "1" &&
+                    invoice.invoice_status_id == "6" && (
                       <Button
                         variant="primary"
                         className="w-[49%]"
                         onClick={() => handleSendInvoice()}
                         isLoading={invoiceLoading}
                       >
-                        Send Invoice (To owner in future)
+                        Send Invoice
                       </Button>
-                    )} */}
-                  {invoice.invoice_status_id == "6" &&
-                  invoice.rcti_url &&
-                  invoice.rcti_url != null ? (
+                    )}
+                  {invoice.invoice_status_id == "6" && (
                     <Button
                       mx="5px"
                       variant="secondary"
+                      pl={10}
+                      pr={10}
+                      // variant="primary"
+                      className="w-[49%]"
                       // isLoading={isInvoicePdfgenerate}
                       isDisabled={invoiceLoading}
                       // hidden={isCustomer}
                       onClick={async () => {
-                        if (invoice?.rcti_url || DownloadUrl) {
+                        // 🔄 refetch invoice to get the latest rcti_url
+                        const { data } = await getInvoice();
+
+                        if (data?.invoice?.rcti_url) {
                           window.open(
-                            invoice?.rcti_url,
+                            data.invoice.rcti_url,
                             "_blank",
                             "noopener,noreferrer",
                           );
+                        } else {
+                          toast({
+                            title: "PDF not ready",
+                            description:
+                              "Please wait 10 seconds and try again.",
+                            status: "warning",
+                            duration: 3000,
+                            isClosable: true,
+                          });
                         }
                       }}
                     >
                       Download PDF
                     </Button>
-                  ) : (
-                    <Button>No PDF yet</Button>
                   )}
                   <Button
                     fontSize="sm"
@@ -490,10 +507,29 @@ function InvoiceEdit() {
                           invoiceStatus.value === invoice.invoice_status_id,
                       )}
                       options={invoiceStatuses}
-                      onChange={(e) => {
-                        setInvoice({ ...invoice, invoice_status_id: e.value });
-                        handleUpdateInvoice();
+                      onChange={async (e) => {
+                        const newStatusId = e.value;
+                        // console.log(newStatusId,'n',invoice.invoice_status_id)
+                        setInvoice({
+                          ...invoice,
+                          invoice_status_id: newStatusId,
+                        });
                         setStatusLoading(true);
+
+                        await handleUpdateInvoice({
+                          variables: {
+                            input: {
+                              id,
+                              invoice_status_id: newStatusId,
+                              name: invoice.name,
+                              sub_total: invoice.sub_total,
+                              total_tax: invoice.total_tax,
+                              total: invoice.total,
+                            },
+                          },
+                        });
+                        await getInvoice();
+                        setStatusLoading(false);
                       }}
                       size="lg"
                       className="select mb-0"
@@ -665,6 +701,7 @@ function InvoiceEdit() {
                                   item[e.target.name] = e.target.value;
                                   items[index] = item;
                                   setInvoiceLineItems(items);
+                                  setLineItemsDirty(true);
                                 }}
                                 type="text"
                                 name="name"
@@ -699,6 +736,7 @@ function InvoiceEdit() {
                                   ).toFixed(2);
                                   items[index] = item;
                                   setInvoiceLineItems(items);
+                                  setLineItemsDirty(true);
                                 }}
                                 type="number"
                                 name="unit_amount"
@@ -737,6 +775,7 @@ function InvoiceEdit() {
                                   ).toFixed(2);
                                   items[index] = item;
                                   setInvoiceLineItems(items);
+                                  setLineItemsDirty(true);
                                 }}
                                 type="text"
                                 name="quantity"
@@ -769,6 +808,7 @@ function InvoiceEdit() {
                                   item[e.target.name] = e.target.value;
                                   items[index] = item;
                                   setInvoiceLineItems(items);
+                                  setLineItemsDirty(true);
                                 }}
                                 type="text"
                                 name="line_amount"
@@ -801,6 +841,8 @@ function InvoiceEdit() {
                                         ...invoiceLineItems.slice(0, index),
                                         ...invoiceLineItems.slice(index + 1),
                                       ]);
+                                      setLineItemsDirty(true);
+
                                       return;
                                     }
                                     setDeleteInvoiceLineItemId(
@@ -829,7 +871,7 @@ function InvoiceEdit() {
           lineHeight="19px"
           variant="secondary"
           className=""
-          onClick={() =>
+          onClick={() => {
             setInvoiceLineItems([
               ...invoiceLineItems,
               {
@@ -840,8 +882,9 @@ function InvoiceEdit() {
                 quantity: 0,
                 line_amount: 0,
               },
-            ])
-          }
+            ]);
+            setLineItemsDirty(true);
+          }}
           isLoading={invoiceLoading}
           hidden={isCustomer}
         >
@@ -905,9 +948,10 @@ function InvoiceEdit() {
               </Flex>
             </Flex>
 
-            <Flex justifyContent="space-between" className="mt-8">
+            {/* <Flex justifyContent="space-between" className="mt-8">
               {invoice.invoice_status_id != undefined &&
-                invoice.invoice_status_id == "2" && (
+                (invoice.invoice_status_id == "1" ||
+                invoice.invoice_status_id == 1) && (
                   <Button
                     variant="primary"
                     className="w-[49%]"
@@ -915,14 +959,12 @@ function InvoiceEdit() {
                     isLoading={invoiceLoading}
                     hidden={!isCustomer}
                   >
-                    {invoice.customer_id != customerId
+                    {invoice.driver_id != customerId
                       ? "Manually Approve Invoice"
                       : "Approve Invoice"}
                   </Button>
                 )}
-            </Flex>
-            <p> Note: please change the status to approved again</p>
-            <p> to get the download link.</p>
+            </Flex> */}
           </Box>
         </Box>
 

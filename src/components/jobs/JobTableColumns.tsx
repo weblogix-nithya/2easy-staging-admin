@@ -139,10 +139,22 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
-        <Text fontSize="sm" color="red.600" mb={1}>
-          Delivery time:{" "}
-          {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
-        </Text>
+        <>
+          <Text fontSize="sm" color="blue.600" mb={1}>
+            Arrival time:{" "}
+            {formatDate(
+              filteredDestinations[0].arrived_at,
+              "HH:mm, DD/MM/YYYY",
+            )}
+          </Text>
+          <Text fontSize="sm" color="red.600" mb={1}>
+            Delivery time:{" "}
+            {formatDate(
+              filteredDestinations[0].updated_at,
+              "HH:mm, DD/MM/YYYY",
+            )}
+          </Text>
+        </>
       )}
       <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
@@ -223,10 +235,16 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
   return (
     <>
       {pickupDest?.updated_at && showPickupTime && (
-        <Text fontSize="sm" color="red.600" mb={1}>
-          Collection time:{" "}
-          {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
-        </Text>
+        <>
+          <Text fontSize="sm" color="blue.600" mb={1}>
+            Arrival time:{" "}
+            {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+          <Text fontSize="sm" color="red.600" mb={1}>
+            Collection time:{" "}
+            {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+        </>
       )}
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
@@ -283,10 +301,16 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
   return (
     <>
       {pickupDest?.updated_at && showPickupTime && (
-        <Text fontSize="sm" color="red.600" mb={1}>
-          Collection time:{" "}
-          {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
-        </Text>
+        <>
+          <Text fontSize="sm" color="blue.600" mb={1}>
+            Arrival time:{" "}
+            {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+          <Text fontSize="sm" color="red.600" mb={1}>
+            Collection time:{" "}
+            {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+        </>
       )}
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
@@ -309,10 +333,22 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
-        <Text fontSize="sm" color="red.600" mb={1}>
-          Delivery time:{" "}
-          {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
-        </Text>
+        <>
+          <Text fontSize="sm" color="red.600" mb={1}>
+            Arrival time:{" "}
+            {formatDate(
+              filteredDestinations[0].arrived_at,
+              "HH:mm, DD/MM/YYYY",
+            )}
+          </Text>
+          <Text fontSize="sm" color="red.600" mb={1}>
+            Delivery time:{" "}
+            {formatDate(
+              filteredDestinations[0].updated_at,
+              "HH:mm, DD/MM/YYYY",
+            )}
+          </Text>
+        </>
       )}
       <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0

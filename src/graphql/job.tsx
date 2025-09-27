@@ -152,6 +152,7 @@ export const GET_JOBS_QUERY = gql`
           pick_up_name
           pick_up_notes
           estimated_at
+          arrived_at
           job_id
           lat
           lng
@@ -187,6 +188,7 @@ export const GET_JOBS_QUERY = gql`
           pick_up_name
           pick_up_notes
           estimated_at
+          arrived_at
           job_id
           lat
           lng
@@ -367,6 +369,7 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
             address_postal_code
             address_business_name
             updated_at
+            arrived_at
             media {
               name
               collection_name
