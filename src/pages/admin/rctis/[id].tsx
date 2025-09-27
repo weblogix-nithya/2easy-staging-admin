@@ -75,7 +75,6 @@ function InvoiceEdit() {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const [DownloadUrl, setdownloadUrl] = useState();
   const [statusloading, setStatusLoading] = useState(false);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -117,7 +116,6 @@ function InvoiceEdit() {
         router.push("/admin/invoices");
       }
       setInvoice({ ...invoice, ...data?.invoice });
-      setdownloadUrl(data?.invoice?.rcti_url);
     },
     onError(error) {
       console.log("onError");
@@ -176,32 +174,32 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
-    UPDATE_INVOICE_MUTATION,
-    {
-      variables: {
-        input: {
-          id: id,
-          invoice_status_id: 6,
-        },
-      },
-      onCompleted: (_data) => {
-        toast({
-          title: "Invoice Approved",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        // not great but it works
-        setTimeout(() => {
-          getInvoice();
-        }, 10000);
-      },
-      onError: (error) => {
-        showGraphQLErrorToast(error);
-      },
-    },
-  );
+  // const [handleUpdateApproveInvoice, {}] = useMutation(
+  //   UPDATE_INVOICE_MUTATION,
+  //   {
+  //     variables: {
+  //       input: {
+  //         id: id,
+  //         invoice_status_id: 6,
+  //       },
+  //     },
+  //     onCompleted: (_data) => {
+  //       toast({
+  //         title: "Invoice Approved",
+  //         status: "success",
+  //         duration: 3000,
+  //         isClosable: true,
+  //       });
+  //       // not great but it works
+  //       setTimeout(() => {
+  //         getInvoice();
+  //       }, 10000);
+  //     },
+  //     onError: (error) => {
+  //       showGraphQLErrorToast(error);
+  //     },
+  //   },
+  // );
 
   const [handleUpdateInvoice, {}] = useMutation(UPDATE_INVOICE_MUTATION, {
     variables: {
