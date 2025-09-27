@@ -646,6 +646,37 @@ function DriverEdit() {
                         size="lg"
                       />
                     </Flex>
+                     <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Owner Email address
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="text"
+                        name="rcti_email_id"
+                        value={driver.rcti_email_id}
+                        onChange={(e) =>
+                          setDriver({
+                            ...driver,
+                            [e.target.name]: e.target.value,
+                          })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
                     <Flex alignItems="center" mb="16px">
                       <FormLabel
                         display="flex"

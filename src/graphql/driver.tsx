@@ -29,6 +29,7 @@ export const GET_DRIVERS_QUERY = gql`
         driver_no
         phone_no
         email
+        rcti_email_id
         trading_name
         abn
         color
@@ -123,6 +124,7 @@ export const GET_AVAILABLE_DRIVERS_QUERY = gql`
         driver_no
         phone_no
         email
+        rcti_email_id
         trading_name
         abn
         color
@@ -204,6 +206,7 @@ export const GET_DRIVER_QUERY = gql`
       driver_no
       phone_no
       email
+      rcti_email_id
       trading_name
       abn
       color
@@ -281,6 +284,7 @@ export const CREATE_DRIVER_MUTATION = gql`
       driver_no
       phone_no
       email
+      rcti_email_id
       trading_name
       abn
       color
@@ -344,6 +348,7 @@ export const UPDATE_DRIVER_MUTATION = gql`
       driver_no
       phone_no
       email
+      rcti_email_id
       trading_name
       abn
       color
@@ -412,6 +417,7 @@ export interface UpdateDriverInput {
   driver_no: string;
   phone_no: string;
   email: string;
+  rcti_email_id: string;
   trading_name: string;
   abn: string;
   color: string;
@@ -469,6 +475,7 @@ export interface CreateDriverInput {
   driver_no: string;
   phone_no: string;
   email: string;
+  rcti_email_id: string;
   trading_name: string;
   abn: string;
   color: string;
@@ -527,6 +534,7 @@ export type Driver = {
   driver_no: string | null;
   phone_no: string | null;
   email: string | null;
+  rcti_email_id: string | null;
   trading_name: string | null;
   abn: string | null;
   color: string | null;
@@ -590,6 +598,7 @@ export const defaultDriver: Driver = {
   driver_no: "",
   phone_no: "",
   email: "",
+  rcti_email_id: "",
   trading_name: "",
   abn: "",
   color: "",
