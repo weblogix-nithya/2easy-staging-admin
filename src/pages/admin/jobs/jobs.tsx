@@ -107,11 +107,16 @@ const adminStatusOptions = [
     label: "Completed (Completed/Delivered)",
     statusIds: [6, 7],
   },
-  // {
-  //   value: "Cancelled",
-  //   label: "Cancelled (Cancelled/Declined)",
-  //   statusIds: [8, 9],
-  // },
+  {
+    value: "Cancelled",
+    label: "Cancelled (Cancelled/Declined)",
+    statusIds: [8, 9],
+  },
+  {
+    value: "Futile",
+    label: "Futile",
+    statusIds: [10],
+  },
 ];
 
 const companyStatusOptions = [
@@ -231,7 +236,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       },
     },
   );
-    const baseGroupedVars = React.useCallback(
+  const baseGroupedVars = React.useCallback(
     () => ({
       page: queryPageIndex + 1,
       per_page: queryPageSize,
@@ -268,7 +273,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
         : baseGroupedVars(),
     [is_filter_ticked, mainJobFilter, baseGroupedVars],
   );
-    const {
+  const {
     data: groupedJobs,
     loading: loadingGroupedJobs,
     refetch: refetchGroupedJobs,
@@ -293,7 +298,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       refetchJobs,
       dynamicTableData?.dynamicTableUsers?.data || [],
     );
-  }, [dynamicTableData, isAdmin, isCustomer, withMedia, refetchJobs ]);
+  }, [dynamicTableData, isAdmin, isCustomer, withMedia, refetchJobs]);
 
   useEffect(() => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -344,7 +349,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
       },
     ];
   }, [sorting]);
-
 
   const {
     loading: companyJobsLoading,
