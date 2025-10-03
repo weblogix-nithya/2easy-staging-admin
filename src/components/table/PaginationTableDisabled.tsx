@@ -142,7 +142,7 @@ const PaginationTable = <T extends object>({
     useRowSelect,
   );
 
-  console.log("showD", showDelete)
+  // console.log("showD", showDelete)
   useEffect(() => {
     if (isServerSide && setQueryPageIndex && setQueryPageSize) {
       setQueryPageIndex(pageIndex);
