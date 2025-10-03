@@ -334,7 +334,7 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
         <>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="sm" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(
               filteredDestinations[0].arrived_at,

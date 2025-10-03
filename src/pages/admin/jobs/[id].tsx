@@ -27,6 +27,7 @@ import {
 import axios from "axios";
 import InvoiceTab from "components/jobs/InvoiceTab";
 import JobDetailsTab from "components/jobs/JobDetailsTab";
+import JobDetailsTabDisabled from "components/jobs/JobDetailsTabDisabled";
 import MessageLogTab from "components/jobs/MessageLogTab";
 import ReportsTab from "components/jobs/ReportsTab";
 import { TabsComponent } from "components/tabs/TabsComponet";
@@ -1820,7 +1821,7 @@ function JobEdit() {
     },
     [tabId, getJob, toast],
   );
-    const handlePreviewEmail = async (reason: string) => {
+  const handlePreviewEmail = async (reason: string) => {
     setSelectedReason(reason);
     try {
       const { data } = await getEmailTemplate({
@@ -1996,73 +1997,140 @@ function JobEdit() {
                 />
 
                 {/* Job Details */}
-                {tabId == 1 && (
-                  <JobDetailsTab
-                    isAdmin={isAdmin}
-                    job={job}
-                    setJob={setJob}
-                    jobStatuses={jobStatuses}
-                    jobCategories={jobCategories}
-                    depotOptions={depotOptions}
-                    _setDepotOptions={setDepotOptions}
-                    drivers={drivers}
-                    companiesOptions={companiesOptions}
-                    customerOptions={customerOptions}
-                    customerSelected={customerSelected}
-                    jobCcEmailTags={jobCcEmailTags}
-                    handleJobCcEmailsChange={handleJobCcEmailsChange}
-                    handleJobCcEmailAdd={handleJobCcEmailAdd}
-                    handleJobCcEmailRemove={handleJobCcEmailRemove}
-                    jobDateAt={jobDateAt}
-                    setJobDateAt={setJobDateAt}
-                    readyAt={readyAt}
-                    setReadyAt={setReadyAt}
-                    dropAt={dropAt}
-                    setDropAt={setDropAt}
-                    jobTypeOptions={jobTypeOptions}
-                    refinedData={refinedData}
-                    setRefinedData={setRefinedData}
-                    today={today}
-                    setIsSameDayJob={setIsSameDayJob}
-                    setIsTomorrowJob={setIsTomorrowJob}
-                    savedAddressesSelect={savedAddressesSelect}
-                    pickUpDestination={pickUpDestination}
-                    setPickUpDestination={setPickUpDestination}
-                    getCustomerAddresses={getCustomerAddresses}
-                    jobDestinations={jobDestinations}
-                    handleJobDestinationChanged={handleJobDestinationChanged}
-                    addToJobDestinations={addToJobDestinations}
-                    handleRemoveFromJobDestinations={
-                      handleRemoveFromJobDestinations
-                    }
-                    isCompany={isCompany}
-                    quoteCalculationRes={quoteCalculationRes}
-                    buttonText={buttonText}
-                    handleSaveJobPriceCalculation={
-                      handleSaveJobPriceCalculation
-                    }
-                    filtereddepotOptions={filtereddepotOptions}
-                    setFilteredDepotOptions={setFilteredDepotOptions}
-                    setSelectedDepot={setSelectedDepot}
-                    sendFreightData={sendFreightData}
-                    jobItems={jobItems}
-                    addToJobItems={addToJobItems}
-                    handleRemoveFromJobItems={handleRemoveFromJobItems}
-                    handleJobItemChanged={handleJobItemChanged}
-                    itemsTableColumns={itemsTableColumns}
-                    itemTypes={itemTypes}
-                    getJob={getJob}
-                    handleDeleteMedia={handleDeleteMedia}
-                    jobLoading={jobLoading}
-                    attachmentColumns={attachmentColumns}
-                    handleDeleteJob={handleDeleteJob}
-                    onChangeCustomerSearchQuery={onChangeCustomerSearchQuery}
-                    onChangeSearchQuery={onChangeSearchQuery}
-                    textColorSecodary={textColorSecodary}
-                    _updatingMedia={updatingMedia}
-                    setUpdatingMedia={setUpdatingMedia}
-                  />
-                )}
+                {tabId == 1 &&
+                  ([1, 2, 3, 4, 5].includes(Number(job.job_status_id)) ? (
+                    <JobDetailsTab
+                      isAdmin={isAdmin}
+                      job={job}
+                      setJob={setJob}
+                      jobStatuses={jobStatuses}
+                      jobCategories={jobCategories}
+                      depotOptions={depotOptions}
+                      _setDepotOptions={setDepotOptions}
+                      drivers={drivers}
+                      companiesOptions={companiesOptions}
+                      customerOptions={customerOptions}
+                      customerSelected={customerSelected}
+                      jobCcEmailTags={jobCcEmailTags}
+                      handleJobCcEmailsChange={handleJobCcEmailsChange}
+                      handleJobCcEmailAdd={handleJobCcEmailAdd}
+                      handleJobCcEmailRemove={handleJobCcEmailRemove}
+                      jobDateAt={jobDateAt}
+                      setJobDateAt={setJobDateAt}
+                      readyAt={readyAt}
+                      setReadyAt={setReadyAt}
+                      dropAt={dropAt}
+                      setDropAt={setDropAt}
+                      jobTypeOptions={jobTypeOptions}
+                      refinedData={refinedData}
+                      setRefinedData={setRefinedData}
+                      today={today}
+                      setIsSameDayJob={setIsSameDayJob}
+                      setIsTomorrowJob={setIsTomorrowJob}
+                      savedAddressesSelect={savedAddressesSelect}
+                      pickUpDestination={pickUpDestination}
+                      setPickUpDestination={setPickUpDestination}
+                      getCustomerAddresses={getCustomerAddresses}
+                      jobDestinations={jobDestinations}
+                      handleJobDestinationChanged={handleJobDestinationChanged}
+                      addToJobDestinations={addToJobDestinations}
+                      handleRemoveFromJobDestinations={
+                        handleRemoveFromJobDestinations
+                      }
+                      isCompany={isCompany}
+                      quoteCalculationRes={quoteCalculationRes}
+                      buttonText={buttonText}
+                      handleSaveJobPriceCalculation={
+                        handleSaveJobPriceCalculation
+                      }
+                      filtereddepotOptions={filtereddepotOptions}
+                      setFilteredDepotOptions={setFilteredDepotOptions}
+                      setSelectedDepot={setSelectedDepot}
+                      sendFreightData={sendFreightData}
+                      jobItems={jobItems}
+                      addToJobItems={addToJobItems}
+                      handleRemoveFromJobItems={handleRemoveFromJobItems}
+                      handleJobItemChanged={handleJobItemChanged}
+                      itemsTableColumns={itemsTableColumns}
+                      itemTypes={itemTypes}
+                      getJob={getJob}
+                      handleDeleteMedia={handleDeleteMedia}
+                      jobLoading={jobLoading}
+                      attachmentColumns={attachmentColumns}
+                      handleDeleteJob={handleDeleteJob}
+                      onChangeCustomerSearchQuery={onChangeCustomerSearchQuery}
+                      onChangeSearchQuery={onChangeSearchQuery}
+                      textColorSecodary={textColorSecodary}
+                      _updatingMedia={updatingMedia}
+                      setUpdatingMedia={setUpdatingMedia}
+                    />
+                  ) : (
+                    <JobDetailsTabDisabled
+                      isAdmin={isAdmin}
+                      job={job}
+                      setJob={setJob}
+                      jobStatuses={jobStatuses}
+                      jobCategories={jobCategories}
+                      depotOptions={depotOptions}
+                      _setDepotOptions={setDepotOptions}
+                      drivers={drivers}
+                      companiesOptions={companiesOptions}
+                      customerOptions={customerOptions}
+                      customerSelected={customerSelected}
+                      jobCcEmailTags={jobCcEmailTags}
+                      handleJobCcEmailsChange={handleJobCcEmailsChange}
+                      handleJobCcEmailAdd={handleJobCcEmailAdd}
+                      handleJobCcEmailRemove={handleJobCcEmailRemove}
+                      jobDateAt={jobDateAt}
+                      setJobDateAt={setJobDateAt}
+                      readyAt={readyAt}
+                      setReadyAt={setReadyAt}
+                      dropAt={dropAt}
+                      setDropAt={setDropAt}
+                      jobTypeOptions={jobTypeOptions}
+                      refinedData={refinedData}
+                      setRefinedData={setRefinedData}
+                      today={today}
+                      setIsSameDayJob={setIsSameDayJob}
+                      setIsTomorrowJob={setIsTomorrowJob}
+                      savedAddressesSelect={savedAddressesSelect}
+                      pickUpDestination={pickUpDestination}
+                      setPickUpDestination={setPickUpDestination}
+                      getCustomerAddresses={getCustomerAddresses}
+                      jobDestinations={jobDestinations}
+                      handleJobDestinationChanged={handleJobDestinationChanged}
+                      addToJobDestinations={addToJobDestinations}
+                      handleRemoveFromJobDestinations={
+                        handleRemoveFromJobDestinations
+                      }
+                      isCompany={isCompany}
+                      quoteCalculationRes={quoteCalculationRes}
+                      buttonText={buttonText}
+                      handleSaveJobPriceCalculation={
+                        handleSaveJobPriceCalculation
+                      }
+                      filtereddepotOptions={filtereddepotOptions}
+                      setFilteredDepotOptions={setFilteredDepotOptions}
+                      setSelectedDepot={setSelectedDepot}
+                      sendFreightData={sendFreightData}
+                      jobItems={jobItems}
+                      addToJobItems={addToJobItems}
+                      handleRemoveFromJobItems={handleRemoveFromJobItems}
+                      handleJobItemChanged={handleJobItemChanged}
+                      itemsTableColumns={itemsTableColumns}
+                      itemTypes={itemTypes}
+                      getJob={getJob}
+                      handleDeleteMedia={handleDeleteMedia}
+                      jobLoading={jobLoading}
+                      attachmentColumns={attachmentColumns}
+                      handleDeleteJob={handleDeleteJob}
+                      onChangeCustomerSearchQuery={onChangeCustomerSearchQuery}
+                      onChangeSearchQuery={onChangeSearchQuery}
+                      textColorSecodary={textColorSecodary}
+                      _updatingMedia={updatingMedia}
+                      setUpdatingMedia={setUpdatingMedia}
+                    />
+                  ))}
 
                 {/* Job Details */}
                 {tabId == 2 && <ReportsTab jobObject={reportJob} />}
