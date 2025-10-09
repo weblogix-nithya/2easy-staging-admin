@@ -18,6 +18,7 @@ export const GET_USERS_QUERY = gql`
         id
         name
         email
+        is_approve
       }
       paginatorInfo {
         count
@@ -65,7 +66,6 @@ export const GET_TRASHED_USERS_QUERY = gql`
   }
 `;
 
-
 export const GET_USER_QUERY = gql`
   query user($id: ID!) {
     user(id: $id) {
@@ -104,6 +104,15 @@ export const UPDATE_USER_MUTATION = gql`
   }
 `;
 
+export const UPDATE_USER_ACCESS_MUTATION = gql`
+  mutation updateUser($input: UpdateUserInput!) {
+    updateUser(input: $input) {
+      id
+      reset_approve
+    }
+  }
+`;
+
 export const DELETE_USER_MUTATION = gql`
   mutation deleteUser($id: ID!) {
     deleteUser(id: $id) {
@@ -112,10 +121,39 @@ export const DELETE_USER_MUTATION = gql`
   }
 `;
 
+export const MUTATION_APPROVE_USER = gql`
+  mutation ApproveUser {
+    approveUser(userId: 2233) {
+      id
+      name
+      email
+      is_approve
+    }
+  }
+`;
+export const MUTATION_RESTORE_USER = gql`
+  mutation restoreUser($id: ID!) {
+    restoreUser(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
+// export const MUTATION_RESTORE_USER = gql`
+//   mutation restoreUser($id: ID!) {
+//     restoreUser(id: $id) {
+//       id
+//       name
+//     }
+//   }
+// `;
+
 export interface UpdateUserInput {
   id: Number;
   name: String;
   email: String;
+  is_approve?: true;
 }
 
 export interface CreateUserInput {

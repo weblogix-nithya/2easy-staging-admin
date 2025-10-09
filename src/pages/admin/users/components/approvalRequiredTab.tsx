@@ -4,12 +4,15 @@ import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
   GET_CUSTOMERS_QUERY,
-  MUTATION_APPROVE_CUSTOMER,
 } from "graphql/customer";
-import React from "react";
+import { GET_USERS_QUERY, MUTATION_APPROVE_USER } from "graphql/user";
+import React, { useMemo } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "store/store";
 
 interface ApprovalRequiredTabProps {
-  approveColumns: any;
+  // approveColumns: any;
+  searchQuery: string;
   queryPageIndex: number;
   queryPageSize: number;
   setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -17,20 +20,41 @@ interface ApprovalRequiredTabProps {
 }
 
 function ApprovalRequiredTab({
-  approveColumns,
+  // approveColumns,
+  searchQuery,
   queryPageIndex,
   queryPageSize,
   setQueryPageIndex,
   setQueryPageSize,
 }: ApprovalRequiredTabProps) {
   const toast = useToast();
+  const { isAdmin } = useSelector((state: RootState) => state.user);
+console.log(isAdmin,'re')
+   const approveColumns = useMemo(
+      () => [
+        {
+          Header: "Name",
+          accessor: "name" as const,
+        },
+        {
+          Header: "Email",
+          accessor: "email" as const,
+        },
+        {
+          Header: "Actions",
+          accessor: "id" as const,
+          isApprove: isAdmin,
+        },
+      ],
+      [],
+    );
 
-  const [handleApproveCustomer, {}] = useMutation(MUTATION_APPROVE_CUSTOMER, {
+  const [handleApproveUser, {}] = useMutation(MUTATION_APPROVE_USER, {
     onCompleted: () => {
       // console.log("APP", _data);
       // Toast()
       toast({
-        title: "Customer is Approved manually",
+        title: "user is Approved manually",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -45,14 +69,15 @@ function ApprovalRequiredTab({
   const {
     refetch,
     loading,
-    data: approvalCustomers,
-  } = useQuery(GET_CUSTOMERS_QUERY, {
+    data: approvalUsers,
+  } = useQuery(GET_USERS_QUERY, {
     variables: {
       page: queryPageIndex + 1,
       first: queryPageSize,
       orderByColumn: "id",
       orderByOrder: "ASC",
-      is_approved: false, // 👈 filter for approval required
+      query: searchQuery,
+      is_approve: false, // 👈 filter for approval required
     },
     fetchPolicy: "network-only", // ensures always fresh data
   });
@@ -60,25 +85,25 @@ function ApprovalRequiredTab({
   if (loading) return <div className="text-center mt-20">Loading...</div>;
 
   const handleApprove = (id: any) => {
-    handleApproveCustomer({
+    handleApproveUser({
       variables: {
-        customerId: parseInt(id),
+        userId: parseInt(id),
       },
     });
   };
   return (
     <>
-      {approvalCustomers?.customers?.data?.length > 0 ? (
+      {approvalUsers?.users?.data?.length > 0 ? (
         <PaginationTable
           columns={approveColumns}
-          data={approvalCustomers?.customers.data}
+          data={approvalUsers?.users.data}
           options={{
             initialState: {
               pageIndex: queryPageIndex,
               pageSize: queryPageSize,
             },
             manualPagination: true,
-            pageCount: approvalCustomers?.customers.paginatorInfo.lastPage,
+            pageCount: approvalUsers?.users.paginatorInfo.lastPage,
           }}
           onApprove={(id: any) => {
             handleApprove(id);
@@ -88,7 +113,7 @@ function ApprovalRequiredTab({
           isServerSide
         />
       ) : (
-        <div className="text-center mt-20">No Customers for manual approval</div>
+        <div className="text-center mt-20">No user for manual approval</div>
       )}
     </>
   );

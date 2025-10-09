@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useToast } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { MUTATION_RESTORE_USER } from "graphql/customer";
+import { MUTATION_RESTORE_USER } from "graphql/user";
 import { GET_TRASHED_USERS_QUERY } from "graphql/user";
 import React from "react";
 

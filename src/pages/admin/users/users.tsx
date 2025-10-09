@@ -17,10 +17,12 @@ import debounce from "lodash.debounce";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-
+import ApprovalRequiredTab from "./components/approvalRequiredTab";
+// import './components/approvalRequiredTab'
 import RestoreUserTab from "./components/restoreUserTab";
 // import PaginationTable from "components/table/PaginationTable"
 import UsersTab from "./components/usersTab";
+import ResetPasswordTab from "./components/resetPasswordTab";
 
 export default function UserIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -50,7 +52,39 @@ export default function UserIndex() {
       hash: "restoreUsers",
       isVisible: true,
     },
+    {
+      id: 3,
+      tabName: "Approve Users",
+      hash: "approveUsers",
+      isVisible: true,
+    },
+    {
+      id: 4,
+      tabName: "Reset Password",
+      hash: "resetPassword",
+      isVisible: isAdmin,
+      // isVisible: true,
+    },
   ];
+
+  const resetColumns = useMemo(
+    () => [
+      {
+        Header: "Name",
+        accessor: "name" as const,
+      },
+      {
+        Header: "Email",
+        accessor: "email" as const,
+      },
+      {
+        Header: "Actions",
+        accessor: "id" as const,
+        isReset: isAdmin,
+      },
+    ],
+    [isAdmin],
+  );
 
   const columns = useMemo(
     () => [
@@ -103,9 +137,9 @@ export default function UserIndex() {
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
-     onCompleted:()=> {
+    onCompleted: () => {
       // console.log(data.users.data,'data')
-     }     
+    },
   });
 
   useEffect(() => {
@@ -119,7 +153,7 @@ export default function UserIndex() {
 
       setActiveTab(nextTabId);
 
-      const needsRefresh = nextTabId === 2;
+      const needsRefresh = nextTabId === 3;
       if (!needsRefresh) return;
     },
     [tabId],
@@ -152,7 +186,6 @@ export default function UserIndex() {
             />
           </Flex>
 
-
           <Grid backgroundColor="white">
             <TabsComponent tabs={tabs} onChange={handleTabChange} />
             {tabId == 1 && (
@@ -170,6 +203,30 @@ export default function UserIndex() {
             {tabId == 2 && (
               <RestoreUserTab
                 restoreColumns={restoreColumns}
+                queryPageIndex={queryPageIndex}
+                queryPageSize={queryPageSize}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+              />
+            )}
+            {tabId == 3 && (
+              <ApprovalRequiredTab
+                // loading={loading}
+                // users={users}
+                // error={error}
+                // approveColumns={approveColumns}
+                searchQuery={searchQuery}
+                queryPageIndex={queryPageIndex}
+                queryPageSize={queryPageSize}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+              />
+            )}
+            {tabId == 4 && (
+              <ResetPasswordTab
+                searchQuery={searchQuery}
+                // setSearchQuery={setSearchQuery}
+                resetColumns={resetColumns}
                 queryPageIndex={queryPageIndex}
                 queryPageSize={queryPageSize}
                 setQueryPageIndex={setQueryPageIndex}

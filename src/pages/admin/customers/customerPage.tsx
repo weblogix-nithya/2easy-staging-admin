@@ -3,27 +3,21 @@ import {
   Box,
   Button,
   Flex,
-  Grid,
   Link,
   SimpleGrid,
-  // Toast,
   useColorModeValue,
   useDisclosure,
 } from "@chakra-ui/react";
 import PrivateAccessModal from "components/access/PrivateAccessModal";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
-// import PaginationTable from "components/table/PaginationTable";
-import { TabsComponent } from "components/tabs/TabsComponet";
+import PaginationTable from "components/table/PaginationTable";
 import { GET_CUSTOMERS_QUERY } from "graphql/customer";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import { useRouter } from "next/router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-
-import ApprovalRequiredTab from "./components/approvalRequiredTab";
-import CustomerTab from "./components/customerTab";
 
 export default function CustomerIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
@@ -33,7 +27,7 @@ export default function CustomerIndex() {
   const { companyId, isCompany, isAdmin } = useSelector(
     (state: RootState) => state.user,
   );
-  const [tabId, setActiveTab] = useState(1);
+
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isPrivateRoute =
@@ -51,21 +45,6 @@ export default function CustomerIndex() {
       setQueryPageIndex(0);
     }, 300);
   }, []);
-
-  const tabs = [
-    {
-      id: 1,
-      tabName: "Customers",
-      hash: "CustomersList",
-      isVisible: true,
-    },
-    {
-      id: 2,
-      tabName: "Approval required",
-      hash: "approvalRequired",
-      isVisible: true,
-    },
-  ];
 
   const columns = useMemo(
     () => [
@@ -89,29 +68,6 @@ export default function CustomerIndex() {
     [],
   );
 
-    const approveColumns = useMemo(
-    () => [
-      {
-        Header: "First Name",
-        accessor: "first_name" as const,
-      },
-      {
-        Header: "Last Name",
-        accessor: "last_name" as const,
-      },
-      {
-        Header: "Company Name",
-        accessor: "company_name" as const,
-      },
-      {
-        Header: "Actions",
-        accessor: "id" as const,
-        isApprove: isAdmin,
-      },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
   const {
     loading,
     // error,
@@ -150,18 +106,6 @@ export default function CustomerIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
-  const handleTabChange = useCallback(
-    async (nextTabId: number) => {
-      if (nextTabId === tabId) return;
-
-      setActiveTab(nextTabId);
-
-      const needsRefresh = nextTabId === 2;
-      if (!needsRefresh) return;
-    },
-    [tabId],
-  );
-
   return (
     <AdminLayout>
       <Box
@@ -188,36 +132,49 @@ export default function CustomerIndex() {
               <Button variant="primary">Create New</Button>
             </Link>
           </Flex>
+
+          {isAdmin &&
+            !loading &&
+            customers?.customers &&
+            customers?.customers.data?.length >= 0 && (
+              <PaginationTable
+                columns={columns}
+                data={customers?.customers.data}
+                options={{
+                  initialState: {
+                    pageIndex: queryPageIndex,
+                    pageSize: queryPageSize,
+                  },
+                  manualPagination: true,
+                  pageCount: customers?.customers.paginatorInfo.lastPage,
+                }}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+                isServerSide
+              />
+            )}
+
+          {isCompany &&
+            !companyCustomerLoading &&
+            companyCustomers?.customers.data.length >= 0 && (
+              <PaginationTable
+                columns={columns}
+                data={companyCustomers?.customers.data}
+                options={{
+                  initialState: {
+                    pageIndex: queryPageIndex,
+                    pageSize: queryPageSize,
+                  },
+                  manualPagination: true,
+                  pageCount: companyCustomers?.customers.paginatorInfo.lastPage,
+                }}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+                isServerSide
+              />
+            )}
         </SimpleGrid>
       </Box>
-      <Grid pl="6" backgroundColor="white">
-        <TabsComponent tabs={tabs} onChange={handleTabChange} />
-        {tabId == 1 && (
-          <CustomerTab
-            isAdmin={isAdmin}
-            isCompany={isCompany}
-            loading={loading}
-            customers={customers}
-            companyCustomerLoading={companyCustomerLoading}
-            companyCustomers={companyCustomers}
-            columns={columns}
-            queryPageIndex={queryPageIndex}
-            queryPageSize={queryPageSize}
-            setQueryPageIndex={setQueryPageIndex}
-            setQueryPageSize={setQueryPageSize}
-          />
-        )}
-        {tabId == 2 && (
-          <ApprovalRequiredTab
-            approveColumns={approveColumns}
-            queryPageIndex={queryPageIndex}
-            queryPageSize={queryPageSize}
-            setQueryPageIndex={setQueryPageIndex}
-            setQueryPageSize={setQueryPageSize}
-          />
-        )}{" "}
-      </Grid>
-
       <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
     </AdminLayout>
   );

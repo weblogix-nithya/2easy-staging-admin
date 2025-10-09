@@ -42,9 +42,10 @@ type PaginationTableProps<T extends object> = {
   plugins?: PluginHook<T>[];
   path?: string;
   showDelete?: boolean;
+  onReset?: (data: any) => void;
   onDelete?: (data: any) => void;
   isapprove?: boolean;
-  isRestore?:boolean;
+  isRestore?: boolean;
   onRestore?: (data: any) => void;
   onApprove?: (data: any) => void;
   showPageSizeSelect?: boolean;
@@ -89,6 +90,7 @@ const PaginationTable = <T extends object>({
   onDelete,
   onApprove,
   onRestore,
+  onReset,
   // isRestore,
   // isapprove,
   path,
@@ -386,13 +388,15 @@ const PaginationTable = <T extends object>({
                         {
                           //@ts-expect-error
                           cell.column.isApprove &&
-                            (cell.row.original.is_approved === false ||
-                              cell.row.original.is_approved === "false" ||
-                              cell.row.original.is_approved === 0 ||
-                              cell.row.original.is_approved === "0") && (
+                            (cell.row.original.is_approve === false ||
+                              cell.row.original.is_approve === "false" ||
+                              cell.row.original.is_approve === 0 ||
+                              cell.row.original.is_approve === "0") && (
                               <Button
-                                bg="white"
+                                bg="blue.100"
+                                color="white"
                                 fontSize="sm"
+                                _hover={{ bg: "blue.300" }}
                                 className="!text-[var(--chakra-colors-black-400)]"
                                 onClick={() => {
                                   onApprove(cell.row.original.id);
@@ -414,6 +418,40 @@ const PaginationTable = <T extends object>({
                               }}
                             >
                               Restore
+                            </Button>
+                          )
+                        }
+                        {
+                          // @ts-expect-error
+                          cell.column.isReset && (
+                            <Button
+                              bg={
+                                cell.row.original.reset_approve
+                                  ? "green.100"
+                                  : "blue.100"
+                              } // ✅ background changes
+                              color={
+                                cell.row.original.reset_approve
+                                  ? "green.800"
+                                  : "blue.800"
+                              } // ✅ text color contrast
+                              _hover={{
+                                bg: cell.row.original.reset_approve
+                                  ? "green.200"
+                                  : "blue.200",
+                              }}
+                              fontSize="sm"
+                              className="!text-[var(--chakra-colors-black-400)]"
+                              onClick={() => {
+                                onReset(cell.row.original.id);
+                              }}
+                              isDisabled={
+                                cell.row.original.reset_approve === true
+                              }
+                            >
+                              {cell.row.original.reset_approve
+                                ? "Approved"
+                                : "Reset Access"}
                             </Button>
                           )
                         }
