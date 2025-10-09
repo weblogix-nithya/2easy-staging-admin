@@ -128,7 +128,7 @@ const companyStatusOptions = [
   {
     value: "Open",
     label: "Open",
-    statusIds: [1],
+    statusIds: [1, 2, 3],
   },
   {
     value: "Completed",
@@ -170,10 +170,12 @@ export default function JobIndex({}: // initialLoadOnly = false,
     isCustomer,
     userId,
   } = useSelector((state: RootState) => state.user);
-  const statusOptions = useMemo(
-    () => (isCompany ? companyStatusOptions : adminStatusOptions),
-    [isCompany],
-  );
+
+  // Adjusted logic for choosing correct options
+  const statusOptions = useMemo(() => {
+    if (isAdmin && isCompanyAdmin) return companyStatusOptions;
+    return isCompany ? companyStatusOptions : adminStatusOptions;
+  }, [isAdmin, isCompany, isCompanyAdmin]);
 
   const [selectedStatus, setSelectedStatus] = useState<
     (typeof statusOptions)[number] | null
@@ -241,7 +243,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
       page: queryPageIndex + 1,
       per_page: queryPageSize,
       query: searchQuery || "",
-      job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
+      job_status_ids: mainJobFilter?.job_status_ids || [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+      ],
       company_id: isCompany ? parseInt(companyId) : undefined,
       customer_id:
         isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
@@ -279,7 +283,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     refetch: refetchGroupedJobs,
   } = useQuery(GROUPED_PAGINATED_JOBS_QUERY, {
     variables: groupedVars,
-    skip: !userId || isCustomer || isCompany,
+    skip: !userId || isCompanyAdmin || isCustomer || isCompany,
     fetchPolicy: "network-only",
     onCompleted: (_data) => {
       // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
@@ -361,10 +365,13 @@ export default function JobIndex({}: // initialLoadOnly = false,
       page: queryPageIndex + 1,
       first: queryPageSize,
       orderByRelationship: orderByRelationship,
-      company_id: isCompany ? parseInt(companyId) : undefined,
+      company_id: isCompany || isCompanyAdmin ? parseInt(companyId) : undefined,
+
       customer_id:
         isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
-      job_status_ids: mainJobFilter?.job_status_ids || [1, 2, 3, 4, 5, 6, 7],
+      job_status_ids: mainJobFilter?.job_status_ids || [
+        1, 2, 3, 4, 5, 6, 7, 10,
+      ],
       between_at: rangeDate?.[0]
         ? {
             from_at: formatDate(rangeDate[0], true),
@@ -373,7 +380,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
         : undefined,
       ...mainJobFilter,
     },
-    skip: isAdmin || !userId,
+    skip: isAdmin && !isCompanyAdmin,
   });
 
   useEffect(() => {
@@ -667,7 +674,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
     // Store the status IDs in state or update the existing filter
     const updatedJobFilter = {
       ...mainJobFilter,
-      job_status_ids: statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7],
+      job_status_ids:
+        statusIds.length > 0 ? statusIds : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     };
     setMainJobFilter(updatedJobFilter);
   };
@@ -678,13 +686,13 @@ export default function JobIndex({}: // initialLoadOnly = false,
   }, [loading]);
 
   useEffect(() => {
-    if (isAdmin) {
-      refetchJobs();
-    } else if (isCompany || isCustomer) {
+    if (isAdmin && !isCompanyAdmin) {
+      refetchGroupedJobs(groupedVars);
+    } else if (isCompany || isCustomer || (isAdmin && isCompanyAdmin)) {
       getCompanyJobs();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rangeDate, is_filter_ticked]);
+  }, [groupedVars, isAdmin, isCompany, isCustomer, isCompanyAdmin]);
 
   return (
     <AdminLayout>
@@ -784,11 +792,13 @@ export default function JobIndex({}: // initialLoadOnly = false,
             isMediaBusy={isMediaBusy}
           />
 
-          {(isAdmin && loading) || (!isAdmin && companyJobsLoading) ? (
+          {(isAdmin && !isCompanyAdmin && loading) ||
+          (isCompanyAdmin && companyJobsLoading) ||
+          (!isAdmin && companyJobsLoading) ? (
             <Box textAlign="center" py={4} px={10}>
               Loading <Spinner size="sm" ml={2} />
             </Box>
-          ) : isAdmin ? (
+          ) : isAdmin && !isCompanyAdmin ? (
             _jobs?.data?.length > 0 ? (
               <JobPaginationTable
                 columns={adminColumns}
