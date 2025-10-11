@@ -134,6 +134,8 @@ function JobPage() {
     pick_up_stateCode: "",
     depotOptions: [],
     timeslot_depots: "",
+    total_cbm: 0,
+    total_weight: 0,
   });
 
   const [companyRates, setCompanyRates] = useState([]);
@@ -536,6 +538,8 @@ function JobPage() {
           const payload = {
             freight_type: refinedData.freight_type,
             transport_type: job.transport_type,
+            total_cbm: refinedData.total_cbm,
+            total_weight: refinedData.total_weight,
             state:
               refinedData.state ||
               job.pick_up_state ||
@@ -967,6 +971,11 @@ function JobPage() {
       jobItems,
       companyWeight,
     );
+    setRefinedData({
+      ...refinedData,
+      total_cbm: parseFloat(totalCBM.toFixed(2)),
+      total_weight: parseFloat(totalWeight.toFixed(2)),
+    });
     setQuoteCalculationRes({
       ...quoteCalculationRes,
       total_weight: totalWeight,
@@ -982,7 +991,11 @@ function JobPage() {
         jobItems,
         companyWeight,
       );
-
+      setRefinedData({
+        ...refinedData,
+        total_cbm: parseFloat(totalCBM.toFixed(2)),
+        total_weight: parseFloat(totalWeight.toFixed(2)),
+      });
       setTempcalculation({
         cbm_auto: parseFloat(totalCBM.toFixed(2)), // Rounded to 2 decimal points
         total_weight: parseFloat(totalWeight.toFixed(2)), // Rounded to 2 decimal points
@@ -1304,6 +1317,8 @@ function JobPage() {
     const payload = {
       freight_type: refinedData.freight_type,
       transport_type: job.transport_type,
+      total_cbm: refinedData.total_cbm,
+      total_weight: refinedData.total_weight,
       state:
         refinedData.state ||
         job.pick_up_state ||

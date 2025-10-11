@@ -973,6 +973,8 @@ export type JobItem = {
 };
 
 export type JobQuoteData = {
+  total_cbm: number;
+  total_weight: number;
   freight_type: string;
   transport_type: any;
   service_choice: string;
@@ -994,6 +996,8 @@ export type JobQuoteData = {
 };
 
 const defaultJobQuoteData: JobQuoteData = {
+  total_cbm: 0,
+  total_weight: 0,
   freight_type: "",
   transport_type: "",
   service_choice: "",

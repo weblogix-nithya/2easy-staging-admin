@@ -65,7 +65,9 @@ export const GET_JOB_PRICE_CALCULATION_DETAILS_QUERY = gql`
 `;
 
 export const CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
-  mutation CreateJobPriceCalculationDetail($input: CreateJobPriceCalculationDetailInput!) {
+  mutation CreateJobPriceCalculationDetail(
+    $input: CreateJobPriceCalculationDetailInput!
+  ) {
     createJobPriceCalculationDetail(input: $input) {
       id
       job_id
@@ -86,7 +88,7 @@ export const CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
 
 export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
   mutation updateJobPriceCalculationDetailByJobId(
-    $job_id: ID!,
+    $job_id: ID!
     $input: UpdateJobPriceCalculationDetailInput!
   ) {
     updateJobPriceCalculationDetailByJobId(job_id: $job_id, input: $input) {
@@ -106,7 +108,6 @@ export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
     }
   }
 `;
-
 
 export const DELETE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
   mutation DeleteJobPriceCalculationDetail($id: ID!) {
@@ -130,10 +131,10 @@ export interface JobPriceCalculationDetail {
   dangerous_goods: number | null;
   stackable: number | null;
   total: number | null;
-  tail_lift: number | null,
-  time_slot: number | null,
+  tail_lift: number | null;
+  time_slot: number | null;
+  total_cbm: number | null;
 }
-
 
 export interface CreateJobPriceCalculationDetailInput {
   job_id: number | null;
@@ -144,8 +145,8 @@ export interface CreateJobPriceCalculationDetailInput {
   fuel: number;
   hand_unload: number;
   dangerous_goods: number;
-  tail_lift: number,
-  time_slot: number,
+  tail_lift: number;
+  time_slot: number;
   stackable: number;
   total: number;
 }
@@ -159,8 +160,8 @@ export interface UpdateJobPriceCalculationDetailInput {
   fuel?: number;
   hand_unload?: number;
   dangerous_goods?: number;
-  tail_lift?: number,
-  time_slot?: number,
+  tail_lift?: number;
+  time_slot?: number;
   stackable?: number;
   total?: number;
 }
@@ -180,4 +181,5 @@ export const defaultJobPriceCalculationDetail: JobPriceCalculationDetail = {
   dangerous_goods: null,
   stackable: null,
   total: null,
+  total_cbm: null,
 };
