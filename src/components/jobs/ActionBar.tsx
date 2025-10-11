@@ -26,8 +26,8 @@ const ActionBar = <_P extends object>({
 
   const totals = selectedJobs.reduce(
     (acc, job) => {
-      acc.totalWeights += job.original.job.total_weight;
-      acc.totalCBM += job.original.job.total_volume;
+      acc.totalWeights += job?.original?.job?.total_weight;
+      acc.totalCBM += job?.original?.job?.total_volume;
       return acc;
     },
     { totalWeights: 0, totalCBM: 0 },
