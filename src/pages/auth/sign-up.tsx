@@ -26,7 +26,7 @@ import DefaultAuthLayout from "layouts/auth/Default";
 // Assets
 import Link from "next/link";
 import { useRouter } from "next/router";
-import {  setCookie } from "nookies";
+import { setCookie } from "nookies";
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
@@ -35,7 +35,7 @@ import { RiEyeCloseLine } from "react-icons/ri";
 export default function SignUp() {
   // Chakra color mode
   const textColor = useColorModeValue("navy.700", "white");
-   const textColorSecondary = "black.500";
+  const textColorSecondary = "black.500";
   const textColorDetails = useColorModeValue("navy.700", "secondaryGray.600");
   const textColorBrand = useColorModeValue("brand.500", "white");
   const brandStars = useColorModeValue("brand.500", "brand.400");
@@ -70,8 +70,8 @@ export default function SignUp() {
         password_confirmation: passwordConfirmation,
       },
     },
-    onCompleted: (data) => {
-      console.log("MUTATION_CUSTOMER_REGISTER", data);
+    onCompleted: (_data) => {
+      // console.log("MUTATION_CUSTOMER_REGISTER", data);
       handleLogin();
     },
     onError: (error) => {
@@ -79,7 +79,7 @@ export default function SignUp() {
     },
   });
 
-  const [handleLogin, {  }] = useMutation(MUTATION_LOGIN, {
+  const [handleLogin, {}] = useMutation(MUTATION_LOGIN, {
     variables: {
       input: {
         username: username,
@@ -87,7 +87,7 @@ export default function SignUp() {
       },
     },
     onCompleted: (data) => {
-      console.log("MUTATION_LOGIN", data);
+      // console.log("MUTATION_LOGIN", data);
       setCookie(null, "access_token", data.login.access_token, {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
@@ -128,6 +128,7 @@ export default function SignUp() {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
       });
+
       setAuthToken();
 
       router.push("/admin/dashboard");

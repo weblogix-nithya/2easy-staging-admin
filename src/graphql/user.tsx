@@ -5,6 +5,7 @@ export const GET_USERS_QUERY = gql`
     $query: String
     $page: Int!
     $first: Int!
+    $is_approve: Boolean
     $orderByColumn: String!
     $orderByOrder: SortOrder!
   ) {
@@ -12,13 +13,20 @@ export const GET_USERS_QUERY = gql`
       query: $query
       page: $page
       first: $first
-      orderBy: { column: $orderByColumn, order: $orderByOrder }
+      is_approve: $is_approve
+      orderBy: [{ column: $orderByColumn, order: $orderByOrder }]
     ) {
       data {
         id
         name
         email
         is_approve
+        is_admin
+        reset_approve
+        roles {
+          id
+          name
+        }
       }
       paginatorInfo {
         count
@@ -40,11 +48,13 @@ export const GET_TRASHED_USERS_QUERY = gql`
     $first: Int!
     $orderByColumn: String!
     $orderByOrder: SortOrder!
+    $query: String
   ) {
     users(
       trashed: ONLY
       page: $page
       first: $first
+      query: $query
       orderBy: { column: $orderByColumn, order: $orderByOrder }
     ) {
       data {
@@ -73,6 +83,9 @@ export const GET_USER_QUERY = gql`
       name
       email
       state
+      is_approve
+      is_admin
+      reset_approve
       media_url
       roles {
         id
@@ -117,6 +130,16 @@ export const DELETE_USER_MUTATION = gql`
   mutation deleteUser($id: ID!) {
     deleteUser(id: $id) {
       id
+    }
+  }
+`;
+
+export const RESET_USER_PASSWORD_MUTATION = gql`
+  mutation ResetUserPassword($id: ID!, $new_password: String!) {
+    resetUserPassword(id: $id, new_password: $new_password) {
+      id
+      name
+      email
     }
   }
 `;

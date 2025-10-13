@@ -2,15 +2,14 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useToast } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-// import { MUTATION_RESTORE_USER } from "graphql/customer";
 import { GET_USERS_QUERY, UPDATE_USER_ACCESS_MUTATION } from "graphql/user";
-import React, { useMemo, useState } from "react";
+import { parseCookies } from "nookies";
+import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 interface ResetPasswordTabProps {
   searchQuery: string;
-  // setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   resetColumns: any;
   queryPageIndex: number;
   queryPageSize: number;
@@ -28,13 +27,15 @@ function ResetPasswordTab({
   setQueryPageSize,
 }: ResetPasswordTabProps) {
   const toast = useToast();
+  const cookies = parseCookies();
 
-  // const { isAdmin, isResetAccess } = useSelector((state: RootState) => state.user);
-  // console.log(isResetAccess, "res");
+  const { resetApprove } = useSelector(
+    (state: RootState) => state.user,
+  );
+
+  const canAccessReset = resetApprove === true || cookies.reset_approve === "true";
   const [handleResetUser, {}] = useMutation(UPDATE_USER_ACCESS_MUTATION, {
     onCompleted: (_data) => {
-      console.log("APP", _data);
-      // Toast()
       toast({
         title: " password reset access provided for the user successfully",
         status: "success",
@@ -61,8 +62,7 @@ function ResetPasswordTab({
       orderByColumn: "id",
       orderByOrder: "ASC",
     },
-    onCompleted: (data) => {
-      console.log(data.users.data, "reset data"); //is_approve?
+    onCompleted: (_data) => {
     },
   });
 
@@ -72,7 +72,7 @@ function ResetPasswordTab({
     handleResetUser({
       variables: {
         input: {
-          id: parseInt("813"), // or just id
+          id: parseInt(id), // or just id
           reset_approve: true,
         },
       },
@@ -80,28 +80,34 @@ function ResetPasswordTab({
   };
   return (
     <>
-      {resetCustomers?.users?.data?.length > 0 ? (
-        <PaginationTable
-          columns={resetColumns}
-          data={resetCustomers?.users?.data}
-          options={{
-            initialState: {
-              pageIndex: queryPageIndex,
-              pageSize: queryPageSize,
-            },
-            manualPagination: true,
-            pageCount: resetCustomers?.users?.paginatorInfo.lastPage,
-          }}
-          onReset={(id: any) => {
-            handleReset(id);
-          }}
-          setQueryPageIndex={setQueryPageIndex}
-          setQueryPageSize={setQueryPageSize}
-          isServerSide
-        />
+      {canAccessReset ? (
+        resetCustomers?.users?.data?.length > 0 ? (
+          <PaginationTable
+            columns={resetColumns}
+            data={resetCustomers?.users?.data}
+            options={{
+              initialState: {
+                pageIndex: queryPageIndex,
+                pageSize: queryPageSize,
+              },
+              manualPagination: true,
+              pageCount: resetCustomers?.users?.paginatorInfo.lastPage,
+            }}
+            onReset={(id: any) => handleReset(id)}
+            setQueryPageIndex={setQueryPageIndex}
+            setQueryPageSize={setQueryPageSize}
+            isServerSide
+          />
+        ) : (
+          <div className="text-center mt-20 text-gray-500">
+            No users available for reset.
+          </div>
+        )
       ) : (
-        <div className="text-center mt-20">
-          You are not authorized to reset password for the user
+        <div className="text-center mt-20 text-red-500 font-semibold">
+          You are not authorized to access this page.
+          <br />
+          Please contact your administrator for reset privileges.
         </div>
       )}
     </>

@@ -14,22 +14,29 @@ import { TabsComponent } from "components/tabs/TabsComponet";
 import { GET_USERS_QUERY } from "graphql/user";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+import { parseCookies } from "nookies";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+
 import ApprovalRequiredTab from "./components/approvalRequiredTab";
+import ResetPasswordTab from "./components/resetPasswordTab";
 // import './components/approvalRequiredTab'
 import RestoreUserTab from "./components/restoreUserTab";
 // import PaginationTable from "components/table/PaginationTable"
 import UsersTab from "./components/usersTab";
-import ResetPasswordTab from "./components/resetPasswordTab";
 
 export default function UserIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
-  const { isAdmin } = useSelector((state: RootState) => state.user);
+  const { isAdmin, resetApprove } = useSelector(
+    (state: RootState) => state.user,
+  );
+  const cookies = parseCookies();
+
+  const canAccessReset = resetApprove === false || cookies.reset_approve === "true";
   const [tabId, setActiveTab] = useState(1);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -62,7 +69,7 @@ export default function UserIndex() {
       id: 4,
       tabName: "Reset Password",
       hash: "resetPassword",
-      isVisible: isAdmin,
+      isVisible: canAccessReset,
       // isVisible: true,
     },
   ];
@@ -78,9 +85,21 @@ export default function UserIndex() {
         accessor: "email" as const,
       },
       {
+        Header: "Role",
+        accessor: "roles" as const,
+        Cell: ({ value }: any) => {
+          if (!value) return "-";
+          if (Array.isArray(value)) {
+            return value.map((role: any) => role.name).join(", ");
+          }
+          return value.name || "-";
+        },
+      },
+      {
         Header: "Actions",
         accessor: "id" as const,
         isReset: isAdmin,
+        isEdit:false
       },
     ],
     [isAdmin],
@@ -153,7 +172,7 @@ export default function UserIndex() {
 
       setActiveTab(nextTabId);
 
-      const needsRefresh = nextTabId === 3;
+      const needsRefresh = nextTabId === 4;
       if (!needsRefresh) return;
     },
     [tabId],
@@ -202,6 +221,7 @@ export default function UserIndex() {
             )}
             {tabId == 2 && (
               <RestoreUserTab
+                searchQuery={searchQuery}
                 restoreColumns={restoreColumns}
                 queryPageIndex={queryPageIndex}
                 queryPageSize={queryPageSize}

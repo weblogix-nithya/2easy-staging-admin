@@ -108,6 +108,10 @@ export default function SignIn() {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
+          setCookie(null, "reset_approve", data.login.user.reset_approve, {
+            maxAge: 30 * 24 * 60 * 60,
+            path: "/",
+          });
           setCookie(
             null,
             "is_company_admin",

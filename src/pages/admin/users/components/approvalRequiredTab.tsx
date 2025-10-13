@@ -2,9 +2,6 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useToast } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import {
-  GET_CUSTOMERS_QUERY,
-} from "graphql/customer";
 import { GET_USERS_QUERY, MUTATION_APPROVE_USER } from "graphql/user";
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -46,6 +43,7 @@ console.log(isAdmin,'re')
           isApprove: isAdmin,
         },
       ],
+      //eslint-disable-next-line react-hooks/exhaustive-deps
       [],
     );
 

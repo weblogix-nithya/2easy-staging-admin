@@ -2,6 +2,7 @@
 import {
   Button,
   ButtonGroup,
+  Flex,
   HStack,
   IconButton,
   Link,
@@ -424,35 +425,68 @@ const PaginationTable = <T extends object>({
                         {
                           // @ts-expect-error
                           cell.column.isReset && (
-                            <Button
-                              bg={
-                                cell.row.original.reset_approve
-                                  ? "green.100"
-                                  : "blue.100"
-                              } // ✅ background changes
-                              color={
-                                cell.row.original.reset_approve
-                                  ? "green.800"
-                                  : "blue.800"
-                              } // ✅ text color contrast
-                              _hover={{
-                                bg: cell.row.original.reset_approve
-                                  ? "green.200"
-                                  : "blue.200",
-                              }}
-                              fontSize="sm"
-                              className="!text-[var(--chakra-colors-black-400)]"
-                              onClick={() => {
-                                onReset(cell.row.original.id);
-                              }}
-                              isDisabled={
-                                cell.row.original.reset_approve === true
-                              }
+                            <Flex
+                              align="center"
+                              justify="space-between"
+                              width="100%"
                             >
-                              {cell.row.original.reset_approve
-                                ? "Approved"
-                                : "Reset Access"}
-                            </Button>
+                              <Button
+                                bg={
+                                  cell.row.original.is_admin
+                                    ? cell.row.original.reset_approve
+                                      ? "green.100"
+                                      : "blue.100"
+                                    : "gray.100"
+                                }
+                                color={
+                                  cell.row.original.is_admin
+                                    ? cell.row.original.reset_approve
+                                      ? "green.800"
+                                      : "blue.800"
+                                    : "gray.600"
+                                }
+                                _hover={{
+                                  bg: cell.row.original.is_admin
+                                    ? cell.row.original.reset_approve
+                                      ? "green.200"
+                                      : "blue.200"
+                                    : "gray.200",
+                                }}
+                                fontSize="sm"
+                                className="!text-[var(--chakra-colors-black-400)]"
+                                onClick={() => {
+                                  if (cell.row.original.is_admin) {
+                                    onReset(cell.row.original.id);
+                                  }
+                                }}
+                                isDisabled={
+                                  !cell.row.original.is_admin ||
+                                  cell.row.original.reset_approve === true
+                                }
+                              >
+                                {cell.row.original.is_admin
+                                  ? cell.row.original.reset_approve
+                                    ? "Approved"
+                                    : "Reset Access"
+                                  : "Not Admin"}
+                              </Button>
+                              <Link
+                                href={`${path || router.pathname}/reset/${
+                                  cell.value
+                                }`}
+                                fontWeight="700"
+                                mr="40%"
+                              >
+                                <Button
+                                  bg={"blue.200"}
+                                  color={"blackAlpha.300"}
+                                  ml={4}
+                                  className="!text-[#3B68DB]"
+                                >
+                                  Reset Password
+                                </Button>
+                              </Link>
+                            </Flex>
                           )
                         }
                       </Td>
