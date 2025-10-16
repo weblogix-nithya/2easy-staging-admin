@@ -205,7 +205,7 @@ export default function AdminLayout(props: DashboardLayoutProps) {
 
   return (
     <Wrapper
-      apiKey={process.env.NEXT_PUBLIC_GOOGLE_API_KEY}
+      apiKey={process.env.NEXT_PUBLIC_MAPS_KEY}
       render={render}
   libraries={["places", "marker"]}
     >
