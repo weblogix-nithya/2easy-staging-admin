@@ -42,6 +42,50 @@ export const GET_USERS_QUERY = gql`
   }
 `;
 
+export const GET_APPROVAL_USERS_QUERY = gql`
+  query users(
+    $query: String
+    $page: Int!
+    $first: Int!
+    $is_approve: Boolean
+    $without_drivers: Boolean
+    $orderByColumn: String!
+    $orderByOrder: SortOrder!
+  ) {
+    users(
+      query: $query
+      page: $page
+      first: $first
+      is_approve: $is_approve
+      without_drivers: $without_drivers
+      orderBy: [{ column: $orderByColumn, order: $orderByOrder }]
+    ) {
+      data {
+        id
+        name
+        email
+        is_approve
+        is_admin
+        reset_approve
+        roles {
+          id
+          name
+        }
+      }
+      paginatorInfo {
+        count
+        currentPage
+        firstItem
+        hasMorePages
+        lastItem
+        lastPage
+        perPage
+        total
+      }
+    }
+  }
+`;
+
 export const GET_TRASHED_USERS_QUERY = gql`
   query trashedUsers(
     $page: Int!
