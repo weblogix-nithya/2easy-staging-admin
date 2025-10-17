@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useToast } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { MUTATION_RESTORE_USER } from "graphql/customer";
+import { MUTATION_RESTORE_USER } from "graphql/user";
 import { GET_TRASHED_USERS_QUERY } from "graphql/user";
 import React from "react";
 
@@ -10,12 +10,14 @@ interface RestoreUserTabProps {
   restoreColumns: any;
   queryPageIndex: number;
   queryPageSize: number;
+  searchQuery: string;
   setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
   setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
 function RestoreUserTab({
   restoreColumns,
+  searchQuery,
   queryPageIndex,
   queryPageSize,
   setQueryPageIndex,
@@ -50,6 +52,7 @@ function RestoreUserTab({
       first: queryPageSize,
       orderByColumn: "id",
       orderByOrder: "ASC",
+      query: searchQuery,
     },
     fetchPolicy: "network-only", // ensures always fresh data
   });

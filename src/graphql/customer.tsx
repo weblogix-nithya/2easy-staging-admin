@@ -103,23 +103,23 @@ export const MUTATION_CUSTOMER_REGISTER = gql`
   }
 `;
 
-export const MUTATION_APPROVE_CUSTOMER = gql`
-  mutation approveCustomer($customerId: ID!) {
-    approveCustomer(customerId: $customerId) {
-      status
-      message
-    }
-  }
-`;
+// export const MUTATION_APPROVE_CUSTOMER = gql`
+//   mutation approveCustomer($customerId: ID!) {
+//     approveCustomer(customerId: $customerId) {
+//       status
+//       message
+//     }
+//   }
+// `;
 
-export const MUTATION_RESTORE_USER = gql`
-  mutation restoreUser($id: ID!) {
-    restoreUser(id: $id) {
-      id
-      name
-    }
-  }
-`;
+// export const MUTATION_RESTORE_USER = gql`
+//   mutation restoreUser($id: ID!) {
+//     restoreUser(id: $id) {
+//       id
+//       name
+//     }
+//   }
+// `;
 
 export const UPDATE_CUSTOMER_MUTATION = gql`
   mutation updateCustomer($input: UpdateCustomerInput!) {

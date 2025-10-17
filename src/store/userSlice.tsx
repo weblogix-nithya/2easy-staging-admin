@@ -17,6 +17,7 @@ export const userSlice = createSlice({
     user: null,
     userName: null,
     state: "Queensland",
+    resetApprove: null,
   },
   reducers: {
     setIsAdmin: (state, action: PayloadAction<boolean>) => {
@@ -49,6 +50,10 @@ export const userSlice = createSlice({
     setUserName: (state, action: PayloadAction<string>) => {
       state.userName = action.payload;
     },
+    setResetApprove: (state, action: PayloadAction<boolean | null>) => {
+      // ✅ new reducer
+      state.resetApprove = action.payload;
+    },
     logoutUser: (state) => {
       state.isAdmin = false;
       state.isCustomer = false;
@@ -60,6 +65,7 @@ export const userSlice = createSlice({
       state.driverId = null;
       state.userId = null;
       state.user = null;
+      state.resetApprove = null;
     },
   },
 });
@@ -75,6 +81,7 @@ export const {
   setState,
   logoutUser,
   setUserName,
+  setResetApprove,
 } = userSlice.actions;
 
 export default userSlice.reducer;

@@ -37,6 +37,7 @@ import {
   getActivePath,
   getActiveRoute,
 } from "utils/navigation";
+import { enforceCompanyAccess } from "utils/routeGuard";
 
 const render = (status: Status): ReactElement => {
   if (status === Status.LOADING) {
@@ -63,13 +64,17 @@ export default function AdminLayout(props: DashboardLayoutProps) {
   const [toggleFullSidebar, setToggleFullSidebar] = useState(true);
   // functions for changing the states from components
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
   const _isShowRightSideBar = useSelector(
     (state: RootState) => state.rightSideBar.isShow,
   );
+  useEffect(() => {
+    if (isAuth) enforceCompanyAccess(router, routes, cookies);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router.pathname]);
 
   const dispatch = useDispatch();
 
@@ -104,7 +109,7 @@ export default function AdminLayout(props: DashboardLayoutProps) {
           ),
         ),
       );
-      if (  
+      if (
         cookies.is_admin !== undefined &&
         cookies.is_admin !== "undefined" &&
         cookies.is_admin !== ""
@@ -127,13 +132,23 @@ export default function AdminLayout(props: DashboardLayoutProps) {
       ) {
         dispatch(setCompanyId(cookies.company_id));
         // Company/Customer middleware. badly done.
-        routes.forEach((route) => {
-          if (router.pathname.includes(route.path)) {
-            if (!route.isCompany) {
-              router.push("/admin/dashboard");
-            }
+        if (
+          cookies.is_admin !== "true" && // <-- THIS is the key fix
+          typeof window !== "undefined" &&
+          !window.location.hash
+        ) {
+          const activeRoute = routes.find((r) =>
+            router.pathname.includes(r.path),
+          );
+          if (
+            activeRoute &&
+            !activeRoute.isCompany &&
+            router.pathname !== "/admin/dashboard"
+          ) {
+            // console.warn("🔁 Redirecting restricted route →", router.pathname);
+            router.push("/admin/dashboard");
           }
-        });
+        }
       }
       if (
         cookies.customer_id !== undefined &&
@@ -205,9 +220,9 @@ export default function AdminLayout(props: DashboardLayoutProps) {
 
   return (
     <Wrapper
-      apiKey={process.env.NEXT_PUBLIC_GOOGLE_API_KEY}
+      apiKey={process.env.NEXT_PUBLIC_MAPS_KEY}
       render={render}
-  libraries={["places", "marker"]}
+      libraries={["places", "marker"]}
     >
       {isAuth && (
         <Box className="mk-admin-index">
