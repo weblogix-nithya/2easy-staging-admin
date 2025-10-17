@@ -56,10 +56,10 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
   const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(initJob);
   const [jobStartAtDate, setJobStartAtDate] = useState(
-    formatDate(job.start_at),
+    formatDate(job.ready_at),
   );
   const [jobStartAtTime, setJobStartAtTime] = useState(
-    formatTimeUTCtoInput(job.start_at),
+    formatTimeUTCtoInput(job.ready_at),
   );
   const [jobCategories, setJobCategories] = useState([]);
 
@@ -69,7 +69,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
     },
   }));
 
-  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_RIGHT_MUTATION, {
+  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_RIGHT_MUTATION, {
     variables: {
       input: {
         id: job.id,
@@ -97,7 +97,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
     },
   });
 
-  const [getJob, {}] = useLazyQuery(GET_JOB_QUERY, {
+  const [getJob, { }] = useLazyQuery(GET_JOB_QUERY, {
     variables: {
       id: job.id,
     },
@@ -447,7 +447,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
                 <Flex flexDirection="column" className="w-full">
                   <Text className="text-sm">{`${jobDestination.address_line_1} ${jobDestination.address_city} ${jobDestination.address_postal_code}`}</Text>
                   {jobDestination.pick_up_name ||
-                  jobDestination.pick_up_notes ? (
+                    jobDestination.pick_up_notes ? (
                     <Accordion allowMultiple variant="instructions">
                       <AccordionItem className="mb-3">
                         {({ isExpanded }) => (
@@ -473,19 +473,17 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
                               <div className="p-2 bg-[#f4f4f4] rounded-lg border">
                                 <p className="text-xs mb-2">
                                   <strong>Pick up person: </strong>
-                                  {`${
-                                    jobDestination.pick_up_name
-                                      ? jobDestination.pick_up_name
-                                      : "N/A"
-                                  }`}
+                                  {`${jobDestination.pick_up_name
+                                    ? jobDestination.pick_up_name
+                                    : "N/A"
+                                    }`}
                                 </p>
                                 <p className="text-xs">
                                   <strong>Pick up notes: </strong>
-                                  {`${
-                                    jobDestination.pick_up_notes
-                                      ? jobDestination.pick_up_notes
-                                      : "N/A"
-                                  }`}
+                                  {`${jobDestination.pick_up_notes
+                                    ? jobDestination.pick_up_notes
+                                    : "N/A"
+                                    }`}
                                 </p>
                               </div>
                             </AccordionPanel>
@@ -527,7 +525,7 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
           Base notes
         </FormLabel>
         <Box className="!max-w-md w-full">
-        <p className="text-sm">{job.base_notes ? job.base_notes : "N/A"}</p>
+          <p className="text-sm">{job.base_notes ? job.base_notes : "N/A"}</p>
         </Box>
       </Flex>
 
@@ -567,8 +565,8 @@ const RightSideBarJob = forwardRef((props: any, ref: any) => {
                     {(
                       jobItem.volume ||
                       jobItem.dimension_height *
-                        jobItem.dimension_width *
-                        jobItem.dimension_depth
+                      jobItem.dimension_width *
+                      jobItem.dimension_depth
                     ).toFixed(2)}
                     cbm
                   </Td>
