@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@apollo/client";
 import { useToast } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { GET_USERS_QUERY, MUTATION_APPROVE_USER } from "graphql/user";
+import { GET_APPROVAL_USERS_QUERY, MUTATION_APPROVE_USER } from "graphql/user";
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
@@ -68,7 +68,7 @@ console.log(isAdmin,'re')
     refetch,
     loading,
     data: approvalUsers,
-  } = useQuery(GET_USERS_QUERY, {
+  } = useQuery(GET_APPROVAL_USERS_QUERY, {
     variables: {
       page: queryPageIndex + 1,
       first: queryPageSize,
