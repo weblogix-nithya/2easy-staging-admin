@@ -422,18 +422,14 @@ export function isSameDay(jobDate: string, timeZone: string): boolean {
 }
 
 // Get job destination timezone based on the latitude and longitude using Google Maps API
-// export async function getTimezone(lat: number, lng: number) {
-//   const response = await fetch(
-//     `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${moment().unix()}&key=${
-//       process.env.NEXT_PUBLIC_GOOGLE_API_KEY
-//     }`,
-//   );
-
-//   const data = await response.json();
-//   return data.timeZoneId;
-// }
 export async function getTimezone(lat: number, lng: number) {
-  const res = await fetch(`/api/google?type=timezone&lat=${lat}&lng=${lng}`);
-  const data = await res.json();
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${moment().unix()}&key=${
+      process.env.GOOGLE_API_KEY
+    }`,
+  );
+
+  const data = await response.json();
   return data.timeZoneId;
 }
+
