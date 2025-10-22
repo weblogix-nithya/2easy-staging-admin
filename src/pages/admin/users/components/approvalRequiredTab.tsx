@@ -76,7 +76,7 @@ console.log(isAdmin,'re')
       orderByOrder: "ASC",
       query: searchQuery,
       is_approve: false, // 👈 filter for approval required
-      without_drivers:false
+      without_drivers:true
     },
     fetchPolicy: "network-only", // ensures always fresh data
   });
