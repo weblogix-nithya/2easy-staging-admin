@@ -176,8 +176,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
 
   // Adjusted logic for choosing correct options
   const statusOptions = useMemo(() => {
-    if (isAdmin && isCompanyAdmin) return companyStatusOptions;
-    return isCompany ? companyStatusOptions : adminStatusOptions;
+    if (isAdmin) return adminStatusOptions;
+    if (isCompanyAdmin || isCompany) return companyStatusOptions;
+    return [];
   }, [isAdmin, isCompany, isCompanyAdmin]);
 
   const [selectedStatus, setSelectedStatus] = useState<
@@ -304,7 +305,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
       setInitialJobsData(data.groupedPaginatedJobs.data);
       setInitialJobsDataTotal(data.groupedPaginatedJobs.total);
-      setInitialJobsDataLastPage(data.groupedPaginatedJobs.last_page)
+      setInitialJobsDataLastPage(data.groupedPaginatedJobs.last_page);
     },
   });
 
