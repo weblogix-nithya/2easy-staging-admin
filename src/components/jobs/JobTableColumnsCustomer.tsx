@@ -9,11 +9,18 @@ import { RootState } from "store/store";
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
-// mmmm
 export const DeliveryCell = ({ row }: any) => {
-  // console.log("DeliveryCell row:", row); // Log the row prop
-  return <Text maxW="100px">{row?.original?.name || "-"}</Text>;
+  const job = row?.original;
+
+  return (
+    <Flex align="center" justify="space-between" maxW="150px">
+      <Text mr="2" noOfLines={1}>
+        {job?.name || "-"}
+      </Text>
+    </Flex>
+  );
 };
+
 export const BookedByCell = ({ row }: any) => {
   const name = row?.original?.company?.name || "-";
   return (
@@ -32,9 +39,7 @@ export const CustomerReferenceCell = ({ row }: any) => {
   );
 };
 export const CategoryCell = ({ row }: any) => {
-  return (
-    <Text maxW="100px">{row?.original?.job_category?.name || "-"}</Text>
-  );
+  return <Text maxW="100px">{row?.original?.job_category?.name || "-"}</Text>;
 };
 export const JobTypeCell: React.FC<{
   row: { original: { job_type?: { name: string } } };
@@ -52,10 +57,7 @@ export const JobTypeCell: React.FC<{
     }
   };
   return (
-    <Text
-      color={getTypeColor(row.original.job_type?.name)}
-      fontWeight="bold"
-    >
+    <Text color={getTypeColor(row.original.job_type?.name)} fontWeight="bold">
       {row.original.job_type?.name || "-"}
     </Text>
   );
@@ -91,9 +93,17 @@ export const StatusCell = ({ row }: any) => {
 
 export const ReadyAtCell = ({ row }: any) => {
   return (
-    <Text maxW="150px" minW="100px">
-      {row?.original?.drop_at || "-"}
-    </Text>
+    <Flex direction="column" gap={1} minWidth="200px">
+      <Text fontSize="sm" fontWeight="500">
+        Created Date: {row?.original?.created_at}
+        {/* {formatDate(row?.original?.job?.created_at) || "-"} */}
+      </Text>
+      <Text fontSize="sm">
+        Scheduled Date: {row?.original?.drop_at}
+        {/* {formatDate(row?.original?.job?.drop_at) || "-"} */}
+        {/* It was ready_at initially, changed to drop_at as per client request,now adding both  */}
+      </Text>
+    </Flex>
   );
 };
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
@@ -125,7 +135,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
-            <Link key={`${index+1}`} href={media.downloadable_url} isExternal>
+            <Link key={`${index + 1}`} href={media.downloadable_url} isExternal>
               <Image
                 src={media.downloadable_url}
                 alt={media.name || "Delivery evidence"}
@@ -134,7 +144,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
                 style={{
                   objectFit: "cover",
                   borderRadius: "4px",
-                  width: "50px", 
+                  width: "50px",
                   height: "50px",
                 }}
               />
@@ -217,7 +227,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
                 style={{
                   objectFit: "cover",
                   borderRadius: "4px",
-                  width: "50px", 
+                  width: "50px",
                   height: "50px",
                 }}
               />

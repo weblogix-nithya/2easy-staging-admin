@@ -326,6 +326,7 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           ready_at
           start_at
           drop_at
+          created_at
           pick_up_address
           last_free_at
           timeslot
