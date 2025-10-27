@@ -111,15 +111,17 @@ export const JobDestinationsCell = ({ row }: any) => {
 // };
 
 export const JobDestinationsCellExport = ({ row }: any) => {
-  const pickup = row?.original?.job?.job_destinations?.find(
-    (d: any) => d.is_pickup === false,
-  );
+  const destinations = row?.original?.job?.job_destinations;
 
-  if (!pickup) return "-";
+  // Ensure it's an array before using .find()
+  if (!Array.isArray(destinations)) return "-";
 
-  const line1 = pickup.address_line_1 || "";
-  const line2 = `${pickup.address_city || ""} ${
-    pickup.address_postal_code || ""
+  const drop = destinations.find((d: any) => d.is_pickup === false);
+  if (!drop) return "-";
+
+  const line1 = drop.address_line_1 || "";
+  const line2 = `${drop.address_city || ""} ${
+    drop.address_postal_code || ""
   }, Australia`;
 
   return `${line1}\n${line2}`;
@@ -219,51 +221,105 @@ export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   return `${formattedAddress}\n${businessName}`;
 };
 export const PickupAddressWithTimebulkCell = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+
+  // Check if job_destinations is an array before using .find()
+  if (!Array.isArray(destinations)) {
+    return (
+      <Text mb="2" minWidth="300px">
+        -
+      </Text>
+    );
+  }
+
+  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
+
+  if (!pickupDest) {
+    return (
+      <Text mb="2" minWidth="300px">
+        -
+      </Text>
+    );
+  }
 
   return (
-    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
-        pickupDest?.address_postal_code
-      }\n ${pickupDest?.address_business_name || "-"}`}
+    <Text mb="2" minWidth="300px" flexWrap="nowrap">
+      {`${pickupDest.address_line_1 || ""}, ${pickupDest.address_city || ""}, ${
+        pickupDest.address_postal_code || ""
+      }\n ${pickupDest.address_business_name || "-"}`}
     </Text>
   );
 };
+
 export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
+  const destinations = row?.original?.job?.job_destinations;
+
+  if (!Array.isArray(destinations)) {
+    return (
+      <Text mb="2" minWidth="300px">
+        -
+      </Text>
+    );
+  }
+
+  const deliveryDest = destinations.find(
     (dest: any) => dest.is_pickup === false,
   );
 
+  if (!deliveryDest) {
+    return (
+      <Text mb="2" minWidth="300px">
+        -
+      </Text>
+    );
+  }
+
   return (
-    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
-        pickupDest?.address_postal_code
-      }\n ${pickupDest?.address_business_name || "-"}`}
+    <Text mb="2" minWidth="300px" flexWrap="nowrap">
+      {`${deliveryDest.address_line_1 || ""}, ${
+        deliveryDest.address_city || ""
+      }, ${deliveryDest.address_postal_code || ""}\n ${
+        deliveryDest.address_business_name || "-"
+      }`}
     </Text>
   );
 };
 
 export const DeliveryAddressWithTimeBulkCellExport = ({ row }: any) => {
-  const deliveryDest = row?.original?.job?.job_destinations?.find(
+  const destinations = row?.original?.job?.job_destinations;
+
+  // Ensure it's an array before using .find()
+  if (!Array.isArray(destinations) || destinations.length === 0) {
+    return "-";
+  }
+
+  const deliveryDest = destinations.find(
     (dest: any) => dest.is_pickup === false,
   );
 
-  if (!deliveryDest) return "-";
+  if (!deliveryDest) {
+    return "-";
+  }
 
-  const address = `${deliveryDest?.address_line_1 || ""}, ${
-    deliveryDest?.address_city || ""
-  }, ${deliveryDest?.address_postal_code || ""}`;
-  const businessName = deliveryDest?.address_business_name || "-";
+  const address = [
+    deliveryDest.address_line_1,
+    deliveryDest.address_city,
+    deliveryDest.address_postal_code,
+  ]
+    .filter(Boolean) // removes undefined/empty parts
+    .join(", ");
+
+  const businessName = deliveryDest.address_business_name || "-";
 
   return `${address}\n${businessName}`;
 };
 
 export const PickupAddressWithTimeCell = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+  if (!Array.isArray(destinations) || destinations.length === 0) return "-";
+
+  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
+  if (!pickupDest) return "-";
   const showPickupTime =
     row?.original?.job?.job_status.id == 4 ||
     row?.original?.job?.job_status.id == 5 ||
@@ -315,9 +371,11 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
   );
 };
 export const PickupAddressWithTimeCellExport = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+  if (!Array.isArray(destinations) || destinations.length === 0) return "-";
+
+  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
+  if (!pickupDest) return "-";
 
   const showPickupTime =
     row?.original?.job?.job_status.id == 4 ||
@@ -356,9 +414,12 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
 };
 
 export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+  if (!Array.isArray(destinations) || destinations.length === 0) return "-";
+
+  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
+  if (!pickupDest) return "-";
+
   const showPickupTime =
     row?.original?.job?.job_status.id == 4 ||
     row?.original?.job?.job_status.id == 5 ||
@@ -691,11 +752,17 @@ export const LastFreeAtCell = ({ row }: any) => {
   );
 };
 export const LastFreeAtCellExport = ({ row }: any) =>
-  `${row?.original?.job?.last_free_at ? `${row.original.job.last_free_at}` : "-"}`;
+  `${
+    row?.original?.job?.last_free_at ? `${row.original.job.last_free_at}` : "-"
+  }`;
 export const PickupBusinessNameCell = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+
+  // ✅ Check if destinations is a valid array
+  const pickupDest = Array.isArray(destinations)
+    ? destinations.find((dest: any) => dest.is_pickup === true)
+    : null;
+
   return (
     <Text maxW="150px" minW="100px">
       {pickupDest?.address_business_name || "-"}
@@ -704,22 +771,29 @@ export const PickupBusinessNameCell = ({ row }: any) => {
 };
 
 export const PickupBusinessNameCellExport = ({ row }: any) => {
-  const pickupDest = row?.original?.job?.job_destinations?.find(
-    (dest: any) => dest.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
 
-  return `${pickupDest?.address_business_name || "-"}`;
+  // ✅ Prevent crash if not array or empty
+  if (!Array.isArray(destinations) || destinations.length === 0) return "-";
+
+  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
+  return pickupDest?.address_business_name || "-";
 };
 
 export const PickupAddressCell = ({ row }: any) => {
-  const pickup = row?.original?.job?.job_destinations?.find(
-    (d: any) => d.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+
+  // ✅ Ensure it's an array before using .find()
+  const pickup = Array.isArray(destinations)
+    ? destinations.find((d: any) => d.is_pickup === true)
+    : null;
 
   if (!pickup) return <>-</>;
 
-  const line1 = pickup.address_line_1;
-  const line2 = `${pickup.address_city} ${pickup.address_postal_code}, Australia`;
+  const line1 = pickup.address_line_1 || "";
+  const line2 = `${pickup.address_city || ""} ${
+    pickup.address_postal_code || ""
+  }, Australia`;
 
   return (
     <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
@@ -731,9 +805,12 @@ export const PickupAddressCell = ({ row }: any) => {
 };
 
 export const PickupAddressCellExport = ({ row }: any) => {
-  const pickup = row?.original?.job?.job_destinations?.find(
-    (d: any) => d.is_pickup === true,
-  );
+  const destinations = row?.original?.job?.job_destinations;
+
+  // ✅ Ensure it's an array before using .find()
+  const pickup = Array.isArray(destinations)
+    ? destinations.find((d: any) => d.is_pickup === true)
+    : null;
 
   if (!pickup) return "-";
 
@@ -834,7 +911,9 @@ export const AdminNotesCell = ({ row }: any) => {
 };
 
 export const AdminNotesCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.admin_notes ? `${row.original.job.admin_notes}` : "-"}`;
+  return `${
+    row?.original?.job?.admin_notes ? `${row.original.job.admin_notes}` : "-"
+  }`;
 };
 
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
