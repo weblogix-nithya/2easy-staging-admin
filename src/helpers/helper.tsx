@@ -127,6 +127,8 @@ export function outputDynamicTableBody(
   tableColumn: any,
   rows: any,
 ) {
+  // const columnsArray = Array.isArray(tableColumn) ? tableColumn : [];
+
   return rows?.map((row: any) => {
     return dynamicTableUsers
       .filter(
@@ -432,4 +434,3 @@ export async function getTimezone(lat: number, lng: number) {
   const data = await response.json();
   return data.timeZoneId;
 }
-
