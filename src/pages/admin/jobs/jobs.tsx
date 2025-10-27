@@ -309,9 +309,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
     },
   });
 
-  console.log(initialJobsData, "kk");
-  console.log(initialJobsDataTotal, "tt");
-
   const _jobs = initialJobsData;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
@@ -649,7 +646,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     const header = outputDynamicTableHeader(dynamicTableUsers);
     const body = outputDynamicTableBody(
       dynamicTableUsers,
-      tableColumn,
+      tableColumn(refetchJobs),
       selectedJobs,
     );
     downloadExcel({
@@ -905,7 +902,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 // Update the tags
                 updateTags(selectedFilters, jobFilter);
-                console.log(selectedFilters, "selectedFilters");
                 setMainFilterDisplayNames(filterDisplayName);
                 setCookie(
                   null,

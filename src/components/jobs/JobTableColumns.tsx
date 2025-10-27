@@ -97,13 +97,34 @@ export const JobDestinationsCell = ({ row }: any) => {
   );
 };
 
+// export const JobDestinationsCellExport = ({ row }: any) => {
+//   const destinations = row?.original?.job?.job_destinations || [];
+//   const filteredDestinations = destinations.filter(
+//     (destination: any) => destination?.is_pickup === false
+//   );
+
+//   if (filteredDestinations.length === 0) return "-";
+
+//   // Safely call formatAddress
+//   const address = formatAddress(filteredDestinations[0]);
+//   return address || "-";
+// };
+
 export const JobDestinationsCellExport = ({ row }: any) => {
-  const filteredDestinations = row?.original?.job?.job_destinations.filter(
-    (destination: any) => destination.is_pickup === false,
+  const pickup = row?.original?.job?.job_destinations?.find(
+    (d: any) => d.is_pickup === false,
   );
 
-  return formatAddress(filteredDestinations[0]);
+  if (!pickup) return "-";
+
+  const line1 = pickup.address_line_1 || "";
+  const line2 = `${pickup.address_city || ""} ${
+    pickup.address_postal_code || ""
+  }, Australia`;
+
+  return `${line1}\n${line2}`;
 };
+
 export const JobDestinationBusinessNameCell = ({ row }: any) => {
   // Add null check and default empty array
   const destinations = row?.original?.job?.job_destinations || [];
@@ -223,6 +244,22 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
     </Text>
   );
 };
+
+export const DeliveryAddressWithTimeBulkCellExport = ({ row }: any) => {
+  const deliveryDest = row?.original?.job?.job_destinations?.find(
+    (dest: any) => dest.is_pickup === false,
+  );
+
+  if (!deliveryDest) return "-";
+
+  const address = `${deliveryDest?.address_line_1 || ""}, ${
+    deliveryDest?.address_city || ""
+  }, ${deliveryDest?.address_postal_code || ""}`;
+  const businessName = deliveryDest?.address_business_name || "-";
+
+  return `${address}\n${businessName}`;
+};
+
 export const PickupAddressWithTimeCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
@@ -281,17 +318,43 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
-  const collectionTime = pickupDest?.updated_at
-    ? `Collection time: ${formatDate(
-        pickupDest.updated_at,
-        "HH:mm, DD/MM/YYYY",
-      )}\n`
-    : "";
 
-  return `${collectionTime}${formatAddress(
-    row?.original?.job?.pick_up_destination,
-  )}\n${row?.original?.job?.pick_up_destination?.address_business_name || "-"}`;
+  const showPickupTime =
+    row?.original?.job?.job_status.id == 4 ||
+    row?.original?.job?.job_status.id == 5 ||
+    row?.original?.job?.job_status.id == 6 ||
+    row?.original?.job?.job_status.id == 7;
+
+  if (!pickupDest) return "-";
+
+  const arrivalTime =
+    showPickupTime && pickupDest?.arrived_at
+      ? `Arrival time: ${formatDate(
+          pickupDest.arrived_at,
+          "HH:mm, DD/MM/YYYY",
+        )}`
+      : "";
+
+  const collectionTime =
+    showPickupTime && pickupDest?.updated_at
+      ? `Collection time: ${formatDate(
+          pickupDest.updated_at,
+          "HH:mm, DD/MM/YYYY",
+        )}`
+      : "";
+
+  const address = `${pickupDest?.address_line_1 || ""}, ${
+    pickupDest?.address_city || ""
+  }, ${pickupDest?.address_postal_code || ""}`;
+  const businessName = pickupDest?.address_business_name || "-";
+
+  return `${arrivalTime}${
+    arrivalTime && collectionTime ? "\n" : ""
+  }${collectionTime}${
+    arrivalTime || collectionTime ? "\n" : ""
+  }${address}\n${businessName}`;
 };
+
 export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
@@ -386,7 +449,7 @@ export const ReadyDropByCellExport = ({ row }: any) =>
     D: ${formatTime(row?.original?.job?.drop_at)}`;
 
 export const NotesCell = ({ row }: any) => {
-  const current = row?.original?.job?.customer_notes ?? "";
+  const current = row?.original?.job?.customer_notes ?? "-";
   const [display, setDisplay] = React.useState(current);
 
   React.useEffect(() => {
@@ -408,6 +471,10 @@ export const NotesCell = ({ row }: any) => {
   );
 };
 
+export const NotesCellExport = ({ row }: any) => {
+  const current = row?.original?.job?.customer_notes ?? "-";
+  return current;
+};
 export const ItemsTypeCell = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return (
@@ -502,8 +569,14 @@ export const ItemsExtrasCell = ({ row }: any) => {
   return <Text maxW="100px">{row?.original?.job?.extras || "-"}</Text>;
 };
 
+export const ItemsExtrasCellExport = ({ row }: any) => {
+  return `${row?.original?.job?.extras ? `${row.original.job.extras}` : "-"}`;
+};
 export const DriverCell = ({ row }: any) => {
   return <Text>{row?.original?.job?.driver?.full_name || "-"}</Text>;
+};
+export const DriverCellExport = ({ row }: any) => {
+  return `${row?.original?.job?.driver?.full_name || "-"}`;
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -519,21 +592,10 @@ export const BookedByCell = ({ row }: any) => {
     </Text>
   );
 };
-// export const BookedByCellExport = ({ row }: any) => {
-//   const pickupDest = row.original.job_destinations?.find(
-//     (dest: any) => dest.is_pickup === true,
-//   );
-//   const collectionTime = pickupDest?.updated_at
-//     ? `Collection time: ${formatDate(
-//         pickupDest.updated_at,
-//         "HH:mm, DD/MM/YYYY",
-//       )}\n`
-//     : "";
-
-//   return `${collectionTime}${formatAddress(
-//     row.original.pick_up_destination,
-//   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
-// };
+export const BookedByCellExport = ({ row }: any) => {
+  const name = row?.original?.job?.company?.name || "-";
+  return `${name}`;
+};
 export const JobTypeCell: React.FC<{
   row: { original: { job: { job_type?: { name: string } } } };
 }> = ({ row }) => {
@@ -559,6 +621,13 @@ export const JobTypeCell: React.FC<{
     </Text>
   );
 };
+export const TypeCellExport = ({ row }: any) =>
+  `${
+    row?.original?.job?.job_type?.name
+      ? `${row.original.job.job_type.name}`
+      : "-"
+  }`;
+
 export const StatusCell = ({ row }: any) => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -587,6 +656,13 @@ export const StatusCell = ({ row }: any) => {
   );
 };
 
+export const StatusCellExport = ({ row }: any) =>
+  `${
+    row?.original?.job?.job_status.name
+      ? `${row.original.job.job_status.name}`
+      : "-"
+  }`;
+
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Flex direction="column" gap={1} minWidth="200px">
@@ -601,6 +677,11 @@ export const ReadyAtCell = ({ row }: any) => {
   );
 };
 
+export const ReadyAtCellExport = ({ row }: any) =>
+  `Created Date: ${
+    formatDate(row?.original?.job?.created_at) || "-"
+  } | Scheduled Date: ${formatDate(row?.original?.job?.drop_at) || "-"}`;
+
 export const LastFreeAtCell = ({ row }: any) => {
   // console.log(row.original.job,"sa")
   return (
@@ -609,6 +690,8 @@ export const LastFreeAtCell = ({ row }: any) => {
     </Text>
   );
 };
+export const LastFreeAtCellExport = ({ row }: any) =>
+  `${row?.original?.job?.last_free_at ? `${row.original.job.last_free_at}` : "-"}`;
 export const PickupBusinessNameCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
@@ -618,6 +701,14 @@ export const PickupBusinessNameCell = ({ row }: any) => {
       {pickupDest?.address_business_name || "-"}
     </Text>
   );
+};
+
+export const PickupBusinessNameCellExport = ({ row }: any) => {
+  const pickupDest = row?.original?.job?.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+
+  return `${pickupDest?.address_business_name || "-"}`;
 };
 
 export const PickupAddressCell = ({ row }: any) => {
@@ -639,6 +730,21 @@ export const PickupAddressCell = ({ row }: any) => {
   );
 };
 
+export const PickupAddressCellExport = ({ row }: any) => {
+  const pickup = row?.original?.job?.job_destinations?.find(
+    (d: any) => d.is_pickup === true,
+  );
+
+  if (!pickup) return "-";
+
+  const line1 = pickup.address_line_1 || "";
+  const line2 = `${pickup.address_city || ""} ${
+    pickup.address_postal_code || ""
+  }, Australia`;
+
+  return `${line1}\n${line2}`;
+};
+
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
     <Text maxW="100px" noOfLines={2}>
@@ -648,12 +754,23 @@ export const CustomerReferenceCell = ({ row }: any) => {
   );
 };
 
+export const CustomerReferenceCellExport = ({ row }: any) =>
+  `${
+    row?.original?.job?.reference_no ? `${row.original.job.reference_no}` : "-"
+  }`;
+
 export const CategoryCell = ({ row }: any) => {
   return (
     <Text maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>
   );
 };
 
+export const CategoryCellExport = ({ row }: any) =>
+  `${
+    row?.original?.job?.job_category?.name
+      ? `${row.original.job.job_category?.name}`
+      : "-"
+  }`;
 // export const DeliveryCell = ({ row }: any) => {
 //   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
 // };
@@ -689,6 +806,9 @@ export const DeliveryCell = ({ row }: any) => {
   );
 };
 
+export const DeliveryCellExport = ({ row }: any) =>
+  `${row?.original?.job?.name ? `${row.original.job.name}` : "-"}`;
+
 export const AdminNotesCell = ({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";
   const [display, setDisplay] = React.useState(current);
@@ -713,6 +833,10 @@ export const AdminNotesCell = ({ row }: any) => {
   );
 };
 
+export const AdminNotesCellExport = ({ row }: any) => {
+  return `${row?.original?.job?.admin_notes ? `${row.original.job.admin_notes}` : "-"}`;
+};
+
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
@@ -728,6 +852,9 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
     </Flex>
   );
 };
+
+export const TimeslotCellExport = ({ row }: any) =>
+  `${row?.original?.job?.timeslot ? `${row.original.job.timeslot}` : "-"}`;
 
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
   "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
@@ -764,59 +891,61 @@ export const tableColumn = (refetchJobs: () => void) => [
     id: "name",
     Header: "Delivery ID",
     Cell: DeliveryCell,
+    CellExport: DeliveryCellExport,
+
     // width: "100px",
   },
   {
     id: "company.name",
     Header: "Booked By",
     Cell: BookedByCell, // Use the new cell component
-    // CellExport: BookedByCellExport,
+    CellExport: BookedByCellExport,
   },
   {
     id: "reference_no",
     Header: "Customer Reference",
     Cell: CustomerReferenceCell,
+    CellExport: CustomerReferenceCellExport,
   },
   {
     id: "job_category.name",
     Header: "category",
     Cell: CategoryCell,
+    CellExport: CategoryCellExport,
   },
   {
     id: "job_type.name",
     Header: "Type",
     Cell: JobTypeCell, // Add this line
     // width: "100px",
+    CellExport: TypeCellExport,
   },
   {
     id: "job_status.name",
     Header: "Status",
     Cell: StatusCell, // Add this line
+    CellExport: StatusCellExport,
     // width: "100px",
   },
   {
     id: "ready_at",
     Header: "Date",
     Cell: ReadyAtCell, // Add this line
+    CellExport: ReadyAtCellExport,
     // type: "date",
   },
   {
     id: "pick_up_destination.address_formatted",
     Header: "Pickup From",
     Cell: PickupAddressCell, // Add this line
+    CellExport: PickupAddressCellExport,
     // width: "150px",
   },
-  // {
-  //   id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-  //   Header: "Pickup Address and Name ",
-  //   // width: "200px",
-  //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
-  //   CellExport: PickupAddressWithTimeCellExport,
-  // },
   {
     id: "pick_up_destination.address_business_name",
     Header: "Pickup Business Name",
     Cell: PickupBusinessNameCell, // Add this line
+    CellExport: PickupBusinessNameCellExport,
   },
   {
     id: "job_destinations.address",
@@ -849,6 +978,7 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: ({ row }: any) => (
       <TimeslotCell row={row} refetchJobs={refetchJobs} />
     ),
+    CellExport: TimeslotCellExport,
   },
   {
     id: "last_free_at",
@@ -890,17 +1020,20 @@ export const tableColumn = (refetchJobs: () => void) => [
     id: "extras",
     Header: "Extras",
     Cell: ItemsExtrasCell,
+    CellExport: ItemsExtrasCellExport,
     // width: "100px",
   },
   {
     id: "customer_notes",
     Header: "Client notes",
     Cell: NotesCell,
+    CellExport: NotesCellExport,
   },
   {
     id: "driver.full_name",
     Header: "Drivers",
     Cell: DriverCell,
+    CellExport: DriverCellExport,
     enableSorting: true,
   },
   {
@@ -908,6 +1041,7 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Admin Notes",
     accessor: "admin_notes" as const,
     Cell: AdminNotesCell,
+    CellExport: AdminNotesCellExport,
     // show: isCustomer,
   },
 ];
@@ -991,6 +1125,7 @@ export const bulkassigntableColumn = [
     id: "name",
     Header: "Delivery ID",
     Cell: DeliveryCell,
+
     // width: "100px",
   },
   {
@@ -1038,7 +1173,7 @@ export const bulkassigntableColumn = [
     Header: "Pickup Address and Name ",
     // width: "200px",
     Cell: PickupAddressWithTimebulkCell, // Use the new cell component
-    // CellExport: PickupAddressWithTimeCellExport,
+    CellExport: PickupAddressWithTimeCellExport,
   },
   {
     id: "job_destinations.address,job_destinations.address_business_name",
@@ -1080,6 +1215,7 @@ export const bulkassigntableColumn = [
     id: "last_free_at",
     Header: "Last Free Day",
     Cell: LastFreeAtCell, // Add this line
+    CellExport: LastFreeAtCellExport,
     // type: "date",
   },
   {
