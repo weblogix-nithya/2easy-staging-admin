@@ -178,7 +178,7 @@ function JobEdit() {
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   // const customerId = useSelector((state: RootState) => state.user.customerId);
   // const companyId = useSelector((state: RootState) => state.user.companyId);
-  const isCompany = useSelector((state: RootState) => state.user.isCompany);
+  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
