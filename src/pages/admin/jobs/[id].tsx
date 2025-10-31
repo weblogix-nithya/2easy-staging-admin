@@ -99,18 +99,6 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
-interface _CalculationData {
-  cbm_auto: number;
-  total_weight: number;
-  freight: number;
-  fuel: number;
-  hand_unload: number;
-  dangerous_goods: number;
-  time_slot: number;
-  tail_lift: number;
-  stackable: number;
-  total: number;
-}
 
 export function useIsMounted() {
   const isMounted = useRef(false);
@@ -2036,7 +2024,6 @@ function JobEdit() {
                     handleRemoveFromJobDestinations={
                       handleRemoveFromJobDestinations
                     }
-                    isCompany={isCompany}
                     quoteCalculationRes={quoteCalculationRes}
                     buttonText={buttonText}
                     handleSaveJobPriceCalculation={

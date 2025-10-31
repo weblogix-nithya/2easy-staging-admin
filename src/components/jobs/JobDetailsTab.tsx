@@ -76,7 +76,6 @@ const JobDetailsTab = ({
   handleJobDestinationChanged,
   addToJobDestinations,
   handleRemoveFromJobDestinations,
-  isCompany,
   quoteCalculationRes,
   buttonText,
   handleSaveJobPriceCalculation,
@@ -233,7 +232,7 @@ const JobDetailsTab = ({
               </Text>
             </>
           )}
-          {!isCompany && (
+          {isAdmin && (
             <CustomInputField
               isSelect={true}
               optionsArray={companiesOptions}
