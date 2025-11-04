@@ -176,6 +176,7 @@ function JobPage() {
   );
   const [isJobCreatedOpen, setIsJobCreatedOpen] = useState(false);
   const [newJobId, setNewJobId] = useState<string | null>(null);
+  const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(null);
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -832,13 +833,20 @@ function JobPage() {
     _entityArray: any[],
     valueKeyName: string,
     labelKeyName: string,
+    extraKeyName?: string, // optional 4th argument
   ) => {
     return _entityArray.map((_entityItem) => {
-      return {
+      const baseObject: any = {
         value: _entityItem[valueKeyName],
         label: _entityItem[labelKeyName],
         entity: _entityItem,
       };
+
+      if (extraKeyName && _entityItem[extraKeyName] !== undefined) {
+        baseObject[extraKeyName] = _entityItem[extraKeyName];
+      }
+
+      return baseObject;
     });
   };
   const addToJobDestinations = () => {
@@ -1042,8 +1050,10 @@ function JobPage() {
         data.customers.data,
         "id",
         "full_name",
+        "base_notes",
       );
       setCustomerOptions(_customerOptions);
+      console.log(_customerOptions, "cust");
       if (isCustomer) {
         setJob({ ...job, ...{ customer_id: customerId } });
         const selectedCustomer = _customerOptions.find(
@@ -1051,6 +1061,8 @@ function JobPage() {
         )?.entity;
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
+          console.log(selectedCustomer, "sun");
+          // setselectedCustomernotes()
           // Update refinedData with the new properties
         }
         getCustomerAddresses();
@@ -1566,8 +1578,9 @@ function JobPage() {
                     placeholder=""
                     isDisabled={!isAdmin}
                     onChange={(e) => {
-                      if (isCompany && isCompanyAdmin) return;
-
+                      setCustomerBaseNotes(e.base_notes);
+                      setJob({...job, base_notes: e.base_notes })
+                      if (!isAdmin) return;
                       setJob({
                         ...job,
                         customer_id: e.value || null,
@@ -2162,13 +2175,13 @@ function JobPage() {
                         label="Base notes"
                         placeholder=""
                         name="base_notes"
-                        value={job.base_notes}
-                        onChange={(e) =>
-                          setJob({
-                            ...job,
-                            [e.target.name]: e.target.value,
-                          })
-                        }
+                        value={job.base_notes? job.base_notes : customerBaseNotes}
+                        // onChange={(e) =>
+                        //   setJob({
+                        //     ...job,
+                        //     [e.target.name]: e.target.value,
+                        //   })
+                        // }
                       />
                     )}
                   </Box>

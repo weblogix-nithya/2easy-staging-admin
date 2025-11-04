@@ -900,12 +900,12 @@ const JobDetailsTab = ({
               placeholder=""
               name="base_notes"
               value={job.base_notes}
-              onChange={(e) =>
-                setJob({
-                  ...job,
-                  [e.target.name]: e.target.value,
-                })
-              }
+              // onChange={(e) =>
+              //   setJob({
+              //     ...job,
+              //     [e.target.name]: e.target.value,
+              //   })
+              // }
             />
 
             {/* <Text fontSize="sm" color={textColorSecodary} mt={3}>
