@@ -190,7 +190,7 @@ function JobEdit() {
     { value: "VIC", label: "Victoria" },
     { value: "QLD", label: "Queensland" },
   ]);
-
+  // const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(null);
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
   const [companyWeight, setCompanyWeight] = useState(null);
@@ -364,7 +364,9 @@ function JobEdit() {
           timeslot_depots: data?.job.timeslot_depots,
           is_paperwork_required: data?.job.is_paperwork_required,
           job_status_id: data?.job.job_status_id,
+          base_notes: data?.job.base_notes,
         }));
+
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
             (rate) => rate.area === data.job.company_area,
