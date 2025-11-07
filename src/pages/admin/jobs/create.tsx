@@ -176,7 +176,9 @@ function JobPage() {
   );
   const [isJobCreatedOpen, setIsJobCreatedOpen] = useState(false);
   const [newJobId, setNewJobId] = useState<string | null>(null);
-  const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(null);
+  const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(
+    null,
+  );
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -939,6 +941,16 @@ function JobPage() {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
     setJobItems(_jobItems);
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
+    setQuoteCalculationRes({
+      ...quoteCalculationRes,
+      total_weight: totalWeight,
+      cbm_auto: totalCBM,
+    });
   };
   const handleJobItemChanged = (
     value: any,
@@ -1579,7 +1591,7 @@ function JobPage() {
                     isDisabled={!isAdmin}
                     onChange={(e) => {
                       setCustomerBaseNotes(e.base_notes);
-                      setJob({...job, base_notes: e.base_notes })
+                      setJob({ ...job, base_notes: e.base_notes });
                       if (!isAdmin) return;
                       setJob({
                         ...job,
@@ -2175,7 +2187,9 @@ function JobPage() {
                         label="Base notes"
                         placeholder=""
                         name="base_notes"
-                        value={job.base_notes? job.base_notes : customerBaseNotes}
+                        value={
+                          job.base_notes ? job.base_notes : customerBaseNotes
+                        }
                         // onChange={(e) =>
                         //   setJob({
                         //     ...job,
