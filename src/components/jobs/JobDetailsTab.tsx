@@ -769,8 +769,8 @@ const JobDetailsTab = ({
                 <Th>TYPE</Th>
                 <Th>DIMENSIONS (L,W,H)</Th>
                 <Th>QTY</Th>
-                <Th>WEIGHT</Th>
-                <Th>CBM</Th>
+                <Th>TOTAL WEIGHT</Th>
+                <Th>RAW CBM</Th>
               </Tr>
             </Thead>
             <Tbody
