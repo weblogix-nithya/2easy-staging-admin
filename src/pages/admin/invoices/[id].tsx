@@ -1,5 +1,6 @@
 // Chakra imports
 import { useMutation, useQuery } from "@apollo/client";
+import { InfoOutlineIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -23,10 +24,9 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
-import CustomInputField from "components/fields/CustomInputField";
-import { InfoOutlineIcon } from "@chakra-ui/icons";
 import { Select } from "chakra-react-select";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
+import CustomInputField from "components/fields/CustomInputField";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
@@ -848,7 +848,7 @@ function InvoiceEdit() {
                       >
                         <InfoOutlineIcon mr={2} />
                         <span>
-                          Selected Company's Payment Term: {selectedPaymentTerm}
+                          Selected Company&apos;s Payment Term: {selectedPaymentTerm}
                         </span>
                       </Flex>
                     )}
