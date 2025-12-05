@@ -166,6 +166,7 @@ export const GET_INVOICE_QUERY = gql`
         invoice_url
       }
       vehicle_hire_id
+      manual_inv_url
       vehicle_hire {
         name
       }
@@ -181,6 +182,7 @@ export const GET_INVOICE_QUERY = gql`
       company {
         name
         lcl_rate
+        payment_term
       }
       invoice_status_id
       invoice_status {
@@ -206,6 +208,7 @@ export const GET_INVOICE_QUERY = gql`
 export const CREATE_INVOICE_MUTATION = gql`
   mutation createInvoice($input: CreateInvoiceInput!) {
     createInvoice(input: $input) {
+      id
       name
     }
   }
@@ -340,12 +343,14 @@ type Invoice = {
   vehicle_hire: any;
   invoice_status: any;
   payment_terms: string;
+  manual_inv_url: string;
 };
 
 export const defaultInvoice: Invoice = {
   id: null,
   name: "",
   vehicle_hire_id: null,
+  manual_inv_url: null,
   rcti_url: null,
   driver_id: null,
   customer_id: null,

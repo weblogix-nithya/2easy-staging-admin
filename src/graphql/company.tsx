@@ -17,6 +17,7 @@ export const GET_COMPANYS_QUERY = gql`
       data {
         id
         name
+        payment_term
       }
       paginatorInfo {
         count
