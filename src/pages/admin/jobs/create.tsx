@@ -2235,7 +2235,39 @@ function JobPage() {
                                 />
                               </Box>
                             )}
-
+                          <Flex
+                            flexDirection="column"
+                            alignItems="flex-start"
+                            width="100%"
+                            pt={7}
+                          >
+                            <FormLabel
+                              display="flex"
+                              mb={2} // Added margin-bottom for spacing
+                              fontSize="sm"
+                              fontWeight="500"
+                              _hover={{ cursor: "pointer" }}
+                            >
+                              Is Stackable Freight?
+                            </FormLabel>
+                            <RadioGroup
+                              defaultValue={"0"}
+                              onChange={(e) => {
+                                setJob({
+                                  ...job,
+                                  is_stackable_required:
+                                    e === "1" ? true : false,
+                                });
+                              }}
+                            >
+                              <Stack direction="row">
+                                <Radio value="0">No</Radio>
+                                <Radio value="1" pl={6}>
+                                  Yes
+                                </Radio>
+                              </Stack>
+                            </RadioGroup>
+                          </Flex>
                           <Flex
                             flexDirection="column"
                             alignItems="flex-start"
