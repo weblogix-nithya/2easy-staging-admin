@@ -1,5 +1,6 @@
 // Chakra imports
 import { useMutation, useQuery } from "@apollo/client";
+import { InfoOutlineIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -18,12 +19,14 @@ import {
   Td,
   Th,
   Thead,
+  Tooltip,
   Tr,
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
 import { Select } from "chakra-react-select";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
+import CustomInputField from "components/fields/CustomInputField";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
@@ -51,6 +54,31 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
+function toInputDate(date: Date | string | null) {
+  if (!date) return "";
+  const d = new Date(date);
+  return d.toISOString().slice(0, 10); // "yyyy-mm-dd"
+}
+
+function toAPIDate(date: Date | string | null) {
+  if (!date) return null;
+  return new Date(date).toISOString().slice(0, 10); // "yyyy-MM-dd"
+}
+
+const getDaysFromTerm = (termValue) => {
+  if (!termValue) return 0;
+
+  // Match "14" from "14_days"
+  const match = termValue.match(/^(\d+)_days/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+function addDays(date: Date, days: number) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 function InvoiceEdit() {
   const generatingRef = useRef(false);
   const lastUrlRef = useRef<string | null>(null);
@@ -61,7 +89,11 @@ function InvoiceEdit() {
   const toast = useToast();
   const textColor = useColorModeValue("navy.700", "white");
   //  const textColorSecondary = "gray.400";
-  const [invoice, setInvoice] = useState(defaultInvoice);
+  const [invoice, setInvoice] = useState({
+    ...defaultInvoice,
+    issued_at: new Date(),
+    due_at: new Date(),
+  });
   const [invoiceStatuses, setInvoiceStatuses] = useState([]);
   const [invoiceLineItems, setInvoiceLineItems] = useState([]);
   const [deleteInvoiceLineItemId, setDeleteInvoiceLineItemId] = useState(null);
@@ -88,8 +120,18 @@ function InvoiceEdit() {
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
   const [_isInvoicePdfgenerate, setIsInvoicePdfgenerate] = useState(false);
+  const [selectedPaymentTerm, setSelectedPaymentTerm] = useState(null);
+  const [originalLineItems, setOriginalLineItems] = useState([]);
 
   // const [paymentTerm, setPaymentTerm] = useState(null);
+
+  const updateLineItems = (index, updates) => {
+    setInvoiceLineItems((prev) => {
+      const items = JSON.parse(JSON.stringify(prev)); // deep clone
+      items[index] = { ...items[index], ...updates };
+      return items;
+    });
+  };
 
   const onChangeSearchQuery = useMemo(() => {
     return debounce((e) => {
@@ -115,6 +157,11 @@ function InvoiceEdit() {
     skip: !id,
     onCompleted: (data) => {
       setInvoiceLineItems(data.invoiceLineItems.data);
+      setOriginalLineItems(
+        data.invoiceLineItems.data.map((item) =>
+          JSON.parse(JSON.stringify(item)),
+        ),
+      );
     },
   });
 
@@ -180,7 +227,14 @@ function InvoiceEdit() {
       if (data?.invoice == null) {
         router.push("/admin/invoices");
       }
-      setInvoice({ ...invoice, ...data?.invoice });
+      setInvoice({
+        ...invoice,
+        ...data?.invoice,
+        issued_at: new Date(data.invoice.issued_at),
+        due_at: new Date(data.invoice.due_at),
+        invoice_status_id: String(data.invoice.invoice_status_id),
+      });
+      setSelectedPaymentTerm(data.invoice.company.payment_term);
       setInvoiceStatusId(data?.invoice.invoice_status_id);
     },
     onError(error) {
@@ -229,7 +283,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, { }] = useMutation(
+  const [handleUpdateApproveInvoice, {}] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -266,6 +320,8 @@ function InvoiceEdit() {
           sub_total: invoice.sub_total,
           total_tax: invoice.total_tax,
           total: invoice.total,
+          issued_at: toAPIDate(invoice.issued_at),
+          due_at: toAPIDate(invoice.due_at),
         },
       },
       onCompleted: async (_data) => {
@@ -288,33 +344,43 @@ function InvoiceEdit() {
         setIsInvoicePdfgenerate(true);
         setIsHandleUpdateInvoiceLineItemsLoading(true);
 
-        for (let invoiceLineItem of invoiceLineItems) {
-          if (invoiceLineItem.id == null) {
+        for (let item of invoiceLineItems) {
+          const original = originalLineItems.find(
+            (o) => Number(o.id) === Number(item.id),
+          );
+
+          // NEW ITEM
+          if (!item.id) {
             await handleCreateLineItem({
               input: {
-                name: invoiceLineItem.name,
-                invoice_id: invoiceLineItem.invoice_id,
+                name: item.name,
+                invoice_id: item.invoice_id,
                 is_surcharge: true,
                 is_rate: false,
                 tax_type: "OUTPUT",
-                unit_amount: formatFloat(invoiceLineItem.unit_amount),
-                quantity: formatFloat(invoiceLineItem.quantity),
-                line_amount: formatFloat(invoiceLineItem.line_amount),
+                unit_amount: formatFloat(item.unit_amount),
+                quantity: formatFloat(item.quantity),
+                line_amount: formatFloat(item.line_amount),
               },
             });
-          } else {
+            continue;
+          }
+
+          // EXISTING ITEM — only update when changed
+          if (hasLineItemChanged(original, item)) {
             await handleUpdateLineItem({
               input: {
-                id: invoiceLineItem.id,
-                name: invoiceLineItem.name,
-                invoice_id: invoiceLineItem.invoice_id,
-                unit_amount: formatFloat(invoiceLineItem.unit_amount),
-                quantity: formatFloat(invoiceLineItem.quantity),
-                line_amount: formatFloat(invoiceLineItem.line_amount),
+                id: item.id,
+                name: item.name,
+                invoice_id: item.invoice_id,
+                unit_amount: formatFloat(item.unit_amount),
+                quantity: formatFloat(item.quantity),
+                line_amount: formatFloat(item.line_amount),
               },
             });
           }
         }
+
         // not great but it works
         setTimeout(() => {
           //getInvoice();
@@ -329,7 +395,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [_handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -347,7 +413,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -364,7 +430,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, { }] = useMutation(
+  const [handleGenerateInvoicePdf, {}] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -397,7 +463,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, { }] = useMutation(
+  const [handleDeleteInvoiceLineItem, {}] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -448,6 +514,17 @@ function InvoiceEdit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoice]);
 
+  function hasLineItemChanged(original, updated) {
+    if (!original) return true; // new item
+
+    return (
+      Number(original.unit_amount) !== Number(updated.unit_amount) ||
+      Number(original.quantity) !== Number(updated.quantity) ||
+      Number(original.line_amount) !== Number(updated.line_amount) ||
+      original.name !== updated.name
+    );
+  }
+
   return (
     <AdminLayout>
       <Box
@@ -468,9 +545,9 @@ function InvoiceEdit() {
                 {invoice.is_rcti && (
                   <h1 className="mb-0">
                     Invoice #
-                    {invoice.job
-                      ? invoice.job.name
-                      : invoice.vehicle_hire?.name}
+                    {invoice.job?.name ||
+                      invoice.vehicle_hire?.name ||
+                      "Manual Invoice"}
                   </h1>
                 )}
 
@@ -606,9 +683,10 @@ function InvoiceEdit() {
                   <Box className="!max-w-md w-full">
                     <Select
                       placeholder="Select Status"
-                      defaultValue={invoiceStatuses.find(
+                      value={invoiceStatuses.find(
                         (invoiceStatus) =>
-                          invoiceStatus.value == invoice.invoice_status_id,
+                          String(invoiceStatus.value) ===
+                          String(invoice.invoice_status_id),
                       )}
                       options={invoiceStatuses}
                       onChange={(e) => {
@@ -629,7 +707,11 @@ function InvoiceEdit() {
                   </Skeleton>
                 )}
                 {/* <Box>collection: {invoice?.job?.job_destinations[0].address_city}</Box> */}
-                <Box pl={6}>Collection : {pickUpDestination.address_city}</Box>
+                {(!invoice?.job_id === null || !invoice?.job?.id === null) && (
+                  <Box pl={6}>
+                    Collection : {pickUpDestination.address_city}
+                  </Box>
+                )}
               </Flex>
 
               {invoice.is_rcti && (
@@ -669,15 +751,18 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    <Box pl={6}>
-                      Delivery :
-                      {jobDestinations
-                        .filter(
-                          (destination) => destination.is_pickup === false,
-                        )
-                        .map((destination) => destination.address_city)
-                        .join(", ")}
-                    </Box>
+                    {(!invoice?.job_id === null ||
+                      !invoice?.job?.id === null) && (
+                      <Box pl={6}>
+                        Delivery :
+                        {jobDestinations
+                          .filter(
+                            (destination) => destination.is_pickup === false,
+                          )
+                          .map((destination) => destination.address_city)
+                          .join(", ")}
+                      </Box>
+                    )}
                   </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
@@ -718,6 +803,58 @@ function InvoiceEdit() {
                 </>
               )}
 
+              {(invoice.job_id === null || invoice.job.id === null) && (
+                <Flex alignItems="center" mb="16px">
+                  <Box width="58%" paddingLeft={"30px"}>
+                    <CustomInputField
+                      label="Issued At:"
+                      type="date"
+                      name="issued_at"
+                      value={toInputDate(invoice.issued_at)}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value);
+
+                        const days = getDaysFromTerm(selectedPaymentTerm);
+                        const newDueDate = addDays(newDate, days);
+
+                        setInvoice((prev) => ({
+                          ...prev,
+                          issued_at: newDate,
+                          due_at: newDueDate,
+                        }));
+                      }}
+                    />
+                  </Box>
+                  <Box width="50%">
+                    <CustomInputField
+                      label="Due At:"
+                      type="date"
+                      placeholder=""
+                      name="due_at"
+                      value={toInputDate(invoice.due_at)}
+                      onChange={(e) => {
+                        setInvoice({
+                          ...invoice,
+                          [e.target.name]: e.target.value,
+                        });
+                      }}
+                    />
+                    {invoice.company_id && (
+                      <Flex
+                        alignItems="center"
+                        mt={1}
+                        color="gray.500"
+                        fontSize="sm"
+                      >
+                        <InfoOutlineIcon mr={2} />
+                        <span>
+                          Selected Company&apos;s Payment Term: {selectedPaymentTerm}
+                        </span>
+                      </Flex>
+                    )}
+                  </Box>
+                </Flex>
+              )}
               {!invoice.is_rcti && (
                 <>
                   <Flex alignItems="center" mb="16px">
@@ -793,11 +930,9 @@ function InvoiceEdit() {
                                 variant="main"
                                 value={invoiceLineItem.name}
                                 onChange={(e) => {
-                                  let items = [...invoiceLineItems];
-                                  let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value;
-                                  items[index] = item;
-                                  setInvoiceLineItems(items);
+                                  updateLineItems(index, {
+                                    name: e.target.value,
+                                  });
                                 }}
                                 type="text"
                                 name="name"
@@ -823,17 +958,26 @@ function InvoiceEdit() {
                               <Input
                                 variant="main"
                                 value={invoiceLineItem.unit_amount ?? 0}
+                                // onChange={(e) => {
+                                //   let items = [...invoiceLineItems];
+                                //   let item = { ...invoiceLineItems[index] };
+                                //   item[e.target.name] = e.target.value || 0;
+                                //   item.unit_amount =
+                                //     parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
+                                //   item.line_amount = (
+                                //     (item.quantity || 0) * item.unit_amount
+                                //   ).toFixed(2);
+                                //   items[index] = item;
+                                //   setInvoiceLineItems(items);
+                                // }}
                                 onChange={(e) => {
-                                  let items = [...invoiceLineItems];
-                                  let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value || 0;
-                                  item.unit_amount =
-                                    parseFloat(e.target.value) || 0; // Ensure numeric value or default to 0
-                                  item.line_amount = (
-                                    (item.quantity || 0) * item.unit_amount
-                                  ).toFixed(2);
-                                  items[index] = item;
-                                  setInvoiceLineItems(items);
+                                  const unit = parseFloat(e.target.value) || 0;
+                                  const qty = invoiceLineItem.quantity || 0;
+
+                                  updateLineItems(index, {
+                                    unit_amount: unit,
+                                    line_amount: (unit * qty).toFixed(2),
+                                  });
                                 }}
                                 type="number"
                                 name="unit_amount"
@@ -863,15 +1007,13 @@ function InvoiceEdit() {
                                 variant="main"
                                 value={invoiceLineItem.quantity}
                                 onChange={(e) => {
-                                  let items = [...invoiceLineItems];
-                                  let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value;
-                                  item.line_amount = (
-                                    item.unit_amount *
-                                    parseFloat(e.target.value)
-                                  ).toFixed(2);
-                                  items[index] = item;
-                                  setInvoiceLineItems(items);
+                                  const qty = parseFloat(e.target.value) || 0;
+                                  const unit = invoiceLineItem.unit_amount || 0;
+
+                                  updateLineItems(index, {
+                                    quantity: qty,
+                                    line_amount: (unit * qty).toFixed(2),
+                                  });
                                 }}
                                 type="text"
                                 name="quantity"
@@ -899,11 +1041,9 @@ function InvoiceEdit() {
                                 variant="main"
                                 value={invoiceLineItem.line_amount ?? 0}
                                 onChange={(e) => {
-                                  let items = [...invoiceLineItems];
-                                  let item = { ...invoiceLineItems[index] };
-                                  item[e.target.name] = e.target.value;
-                                  items[index] = item;
-                                  setInvoiceLineItems(items);
+                                  updateLineItems(index, {
+                                    line_amount: e.target.value,
+                                  });
                                 }}
                                 type="text"
                                 name="line_amount"
@@ -1000,20 +1140,28 @@ function InvoiceEdit() {
             <Flex flexDirection="column">
               <Flex justifyContent="space-between" className="py-2">
                 <p className="text-sm ">
-                  <span className="text-sm !font-bold px-1">Total Weight: </span>
-                  {jobData?.job?.job_items?.reduce(
-                    (total: number, item: { weight: number }) => total + (item.weight || 0),
-                    0
-                  ).toFixed(2)}
+                  <span className="text-sm !font-bold px-1">
+                    Total Weight:{" "}
+                  </span>
+                  {jobData?.job?.job_items
+                    ?.reduce(
+                      (total: number, item: { weight: number }) =>
+                        total + (item.weight || 0),
+                      0,
+                    )
+                    .toFixed(2)}
                 </p>
               </Flex>
               <Flex justifyContent="space-between" className="py-2">
                 <p className="text-sm text-left">
                   <span className="text-sm !font-bold px-1">CBM: </span>
-                  {jobData?.job?.job_items?.reduce(
-                    (total: number, item: { volume: number }) => total + (item.volume || 0),
-                    0
-                  ).toFixed(2)}
+                  {jobData?.job?.job_items
+                    ?.reduce(
+                      (total: number, item: { volume: number }) =>
+                        total + (item.volume || 0),
+                      0,
+                    )
+                    .toFixed(2)}
                 </p>
               </Flex>
             </Flex>
@@ -1091,45 +1239,55 @@ function InvoiceEdit() {
                   </Button>
                 )}
 
-              {invoice.job && invoice.job.invoice_url != null && (
-                <Button
-                  mx="5px"
-                  variant="secondary"
-                  // isLoading={isInvoicePdfgenerate}
-                  isDisabled={invoiceLoading}
-                  // hidden={isCustomer}
-                  onClick={async () => {
-                    try {
-                      // If a generation just happened, give backend a moment
-                      if (generatingRef.current) {
-                        await sleep(3500); // adjust if needed (2–5s)
-                      }
-
-                      // Always refetch once to get the freshest URL
-                      const { data } = await getInvoice();
-
-                      // Extract URL from the query result
-                      const freshUrl = data?.invoice?.job?.invoice_url ?? null;
-
-                      // Decide which URL to open
-                      const urlToOpen =
-                        freshUrl ||
-                        invoice?.job?.invoice_url || // fallback to prop
-                        lastUrlRef.current || // fallback to cached
-                        null;
-
-                      if (urlToOpen) {
-                        window.open(urlToOpen, "_blank", "noopener,noreferrer");
-                      }
-                    } finally {
-                      // Reset the "generating" flag
-                      generatingRef.current = false;
-                    }
-                  }}
+              {(invoice?.job?.invoice_url || invoice?.manual_inv_url) && (
+                <Tooltip
+                  label={
+                    invoice?.job?.invoice_url ? "Job Invoice" : "Manual Invoice"
+                  }
+                  hasArrow
+                  placement="top"
                 >
-                  Download PDF
-                </Button>
+                  <Button
+                    mx="5px"
+                    variant="secondary"
+                    isDisabled={invoiceLoading}
+                    onClick={async () => {
+                      try {
+                        if (generatingRef.current) {
+                          await sleep(3500);
+                        }
+
+                        const { data } = await getInvoice();
+
+                        // Prefer job invoice
+                        const freshJobUrl = data?.invoice?.job?.invoice_url;
+                        const freshManualUrl = data?.invoice?.manual_inv_url;
+
+                        const urlToOpen =
+                          freshJobUrl ||
+                          freshManualUrl ||
+                          invoice?.job?.invoice_url ||
+                          invoice?.manual_inv_url ||
+                          lastUrlRef.current ||
+                          null;
+
+                        if (urlToOpen) {
+                          window.open(
+                            urlToOpen,
+                            "_blank",
+                            "noopener,noreferrer",
+                          );
+                        }
+                      } finally {
+                        generatingRef.current = false;
+                      }
+                    }}
+                  >
+                    Download PDF
+                  </Button>
+                </Tooltip>
               )}
+
               {invoice.invoice_status_id != undefined &&
                 invoice.invoice_status_id != "1" && (
                   <Button

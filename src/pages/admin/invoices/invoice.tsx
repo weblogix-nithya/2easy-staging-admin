@@ -25,6 +25,7 @@ import { formatCurrency } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -431,9 +432,9 @@ export default function InvoiceIndex() {
               me="10px"
               borderRadius="30px"
             /> */}
-            {/* <Link href="/admin/invoices/create">
+            <Link href="/admin/invoices/create">
               <Button colorScheme="blue">Create New</Button>
-            </Link> */}
+            </Link>
             <Button
               fontSize="sm"
               lineHeight="19px"
