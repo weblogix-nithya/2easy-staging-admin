@@ -1,8 +1,10 @@
 // import { useMutation } from "@apollo/client";
 // import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
+import { EditIcon } from "@chakra-ui/icons";
 import {
   Flex,
   Icon,
+  IconButton,
   // IconButton,
   Link,
   Popover,
@@ -13,6 +15,7 @@ import {
   PopoverHeader,
   PopoverTrigger,
   Text,
+  Tooltip,
   // Textarea,
   // useToast,
 } from "@chakra-ui/react";
@@ -27,6 +30,7 @@ import {
   outputDynamicTable,
 } from "helpers/helper";
 import Image from "next/image";
+import { useRouter } from "next/router";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
 import React from "react";
 import { MdMenu } from "react-icons/md";
@@ -587,12 +591,11 @@ export const ReadyAtCell = ({ row }: any) => {
   return (
     <Text maxW="150px" minW="100px">
       {row?.original?.job?.drop_at || "-"}
-      {/* it wa ready_at date initially, as client asked for jobdrop_at, changed it to drop_at */}
+      {/* it was ready_at date initially, as client asked for jobdrop_at, changed it to drop_at */}
     </Text>
   );
 };
 export const LastFreeAtCell = ({ row }: any) => {
-  // console.log(row.original.job,"sa")
   return (
     <Text maxW="150px" minW="150px">
       {row?.original?.job?.last_free_at || "-"}
@@ -645,8 +648,38 @@ export const CategoryCell = ({ row }: any) => {
 };
 
 export const DeliveryCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
+  const router = useRouter();
+  const job = row?.original?.job;
+
+  const handleNavigate = () => {
+    if (job?.id) {
+      router.push(`/admin/jobs/${job.id}`);
+    }
+  };
+
+  return (
+    <Flex align="center" justify="space-between" maxW="150px">
+      <Text mr="2" noOfLines={1}>
+        {job?.name || "-"}
+      </Text>
+
+      {job?.id && (
+        <Tooltip label="Edit Job" placement="top">
+          <IconButton
+            aria-label="Edit Job"
+            icon={<EditIcon />}
+            size="xs"
+            variant="ghost"
+            onClick={handleNavigate}
+          />
+        </Tooltip>
+      )}
+    </Flex>
+  );
 };
+
+export const DeliveryCellExport = ({ row }: any) =>
+  `${row?.original?.job?.name ? `${row.original.job.name}` : "-"}`;
 
 export const AdminNotesCell = ({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";
