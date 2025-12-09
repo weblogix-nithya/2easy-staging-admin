@@ -103,7 +103,7 @@ function InvoiceEdit() {
   ] = useState(false);
   // const [job, setJob] = useState(defaultJob);
   const [jobDestinations, setJobDestinations] = useState([]);
-  const [pickUpDestination, setPickUpDestination] = useState(
+  const [_pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
   const [_isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
@@ -214,34 +214,62 @@ function InvoiceEdit() {
     },
   });
 
+  // const {
+  //   loading: invoiceLoading,
+  //   // data: invoiceData,
+  //   refetch: getInvoice,
+  // } = useQuery(GET_INVOICE_QUERY, {
+  //   variables: {
+  //     id: id,
+  //   },
+  //   skip: !id,
+  //   onCompleted: (data) => {
+  //     if (data?.invoice == null) {
+  //       router.push("/admin/invoices");
+  //     }
+  //     setInvoice((prev) => ({
+  //       ...prev,
+  //       ...data.invoice,
+  //       issued_at: new Date(data.invoice.issued_at),
+  //       due_at: new Date(data.invoice.due_at),
+  //       invoice_status_id: String(data.invoice.invoice_status_id),
+  //       invoice_no: data.invoice.invoice_no,
+  //       manual_inv_url: data.invoice.manual_inv_url,
+  //       job: data.invoice.job,
+  //     }));
+  //     setSelectedPaymentTerm(data.invoice.company.payment_term);
+  //     setInvoiceStatusId(data?.invoice.invoice_status_id);
+  //   },
+  //   onError(error) {
+  //     console.log("onError");
+  //     console.log(error);
+  //   },
+  // });
+
   const {
     loading: invoiceLoading,
-    // data: invoiceData,
+    data,
     refetch: getInvoice,
   } = useQuery(GET_INVOICE_QUERY, {
-    variables: {
-      id: id,
-    },
+    variables: { id },
     skip: !id,
-    onCompleted: (data) => {
-      if (data?.invoice == null) {
-        router.push("/admin/invoices");
-      }
-      setInvoice({
-        ...invoice,
-        ...data?.invoice,
-        issued_at: new Date(data.invoice.issued_at),
-        due_at: new Date(data.invoice.due_at),
-        invoice_status_id: String(data.invoice.invoice_status_id),
-      });
-      setSelectedPaymentTerm(data.invoice.company.payment_term);
-      setInvoiceStatusId(data?.invoice.invoice_status_id);
-    },
-    onError(error) {
-      console.log("onError");
-      console.log(error);
-    },
   });
+
+  useEffect(() => {
+    if (!data?.invoice) return;
+
+    setInvoice((prev) => ({
+      ...prev,
+      ...data.invoice,
+      issued_at: new Date(data.invoice.issued_at),
+      due_at: new Date(data.invoice.due_at),
+      invoice_status_id: String(data.invoice.invoice_status_id),
+      manual_inv_url: data.invoice.manual_inv_url,
+    }));
+
+    setSelectedPaymentTerm(data.invoice.company?.payment_term);
+    setInvoiceStatusId(data.invoice.invoice_status_id);
+  }, [data]);
 
   const handleUpdateLineItem = (lineItem: any) => {
     return new Promise((resolve, reject) => {
@@ -382,9 +410,18 @@ function InvoiceEdit() {
         }
 
         // not great but it works
-        setTimeout(() => {
-          //getInvoice();
+        setTimeout(async () => {
+          const { data } = await getInvoice();
+
+          if (data?.invoice) {
+            setInvoice((prev) => ({
+              ...prev,
+              ...data.invoice,
+            }));
+          }
+
           getInvoiceLineItems();
+
           setIsHandleUpdateInvoiceLineItemsLoading(false);
           handleGenerateInvoicePdf();
           setIsInvoicePdfgenerate(false);
@@ -524,6 +561,7 @@ function InvoiceEdit() {
       original.name !== updated.name
     );
   }
+  const hasPdf = !!invoice?.job?.invoice_url || !!invoice?.manual_inv_url;
 
   return (
     <AdminLayout>
@@ -542,12 +580,12 @@ function InvoiceEdit() {
                 mb="24px"
                 className="mt-8"
               >
-                {invoice.is_rcti && (
+                {invoice?.is_rcti && (
                   <h1 className="mb-0">
                     Invoice #
-                    {invoice.job?.name ||
-                      invoice.vehicle_hire?.name ||
-                      "Manual Invoice"}
+                    {invoice?.job_id === null || invoice?.job?.id === null
+                      ? invoice.invoice_no
+                      : invoice.job?.name || invoice.vehicle_hire?.name}
                   </h1>
                 )}
 
@@ -625,91 +663,150 @@ function InvoiceEdit() {
               </Flex>
 
               <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  <Skeleton isLoaded={!invoiceLoading} w="75%">
-                    Name
+                <Box width="50%">
+                  <Flex alignItems="center" gap={3}>
+                    <FormLabel
+                      mb="0"
+                      width="190px"
+                      fontSize="sm"
+                      fontWeight="500"
+                      color={textColor}
+                      whiteSpace="nowrap"
+                    >
+                      <Skeleton isLoaded={!invoiceLoading}>Name / Reference No.</Skeleton>
+                    </FormLabel>
+
+                    <Input
+                      isRequired
+                      variant="main"
+                      value={invoice.name}
+                      onChange={(e) =>
+                        setInvoice({
+                          ...invoice,
+                          [e.target.name]: e.target.value,
+                        })
+                      }
+                      type="text"
+                      name="name"
+                      className="max-w-md"
+                      fontSize="sm"
+                      mb="0"
+                      fontWeight="500"
+                      size="lg"
+                      isDisabled={isCustomer}
+                      hidden={isCustomer}
+                      flex="1"
+                    />
+                  </Flex>
+
+                  <Skeleton
+                    hidden={!isCustomer}
+                    isLoaded={!invoiceLoading}
+                    w="75%"
+                  >
+                    {invoice.name}
                   </Skeleton>
-                </FormLabel>
-                <Input
-                  isRequired={true}
-                  variant="main"
-                  value={invoice.name}
-                  onChange={(e) =>
-                    setInvoice({
-                      ...invoice,
-                      [e.target.name]: e.target.value,
-                    })
-                  }
-                  type="text"
-                  name="name"
-                  className="max-w-md"
-                  fontSize="sm"
-                  ms={{ base: "0px", md: "0px" }}
-                  mb="0"
-                  fontWeight="500"
-                  size="lg"
-                  isDisabled={isCustomer}
-                  hidden={isCustomer}
-                />
-                <Skeleton
-                  hidden={!isCustomer}
-                  isLoaded={!invoiceLoading}
-                  w="75%"
-                >
-                  {invoice.name}
-                </Skeleton>
+                </Box>
+                {(invoice?.job_id === null || invoice?.job?.id === null) && (
+                  <Box width="50%">
+                    <CustomInputField
+                      label="Issued At:"
+                      type="date"
+                      name="issued_at"
+                      value={toInputDate(invoice.issued_at)}
+                      onChange={(e) => {
+                        const newDate = new Date(e.target.value);
+
+                        const days = getDaysFromTerm(selectedPaymentTerm);
+                        const newDueDate = addDays(newDate, days);
+
+                        setInvoice((prev) => ({
+                          ...prev,
+                          issued_at: newDate,
+                          due_at: newDueDate,
+                        }));
+                      }}
+                    />
+                  </Box>
+                )}
               </Flex>
               <Flex alignItems="center" mb="16px">
-                <FormLabel
-                  display="flex"
-                  mb="0"
-                  width="200px"
-                  fontSize="sm"
-                  fontWeight="500"
-                  color={textColor}
-                >
-                  <Skeleton isLoaded={!invoiceLoading} w="75%">
-                    Invoice Status
-                  </Skeleton>
-                </FormLabel>
-                {!isCustomer ? (
-                  <Box className="!max-w-md w-full">
-                    <Select
-                      placeholder="Select Status"
-                      value={invoiceStatuses.find(
-                        (invoiceStatus) =>
-                          String(invoiceStatus.value) ===
-                          String(invoice.invoice_status_id),
-                      )}
-                      options={invoiceStatuses}
+                {/* Left side – Invoice Status */}
+                <Box width="50%" display="flex" alignItems="center" gap="16px">
+                  <FormLabel
+                    mb="0"
+                    width="185px"
+                    fontSize="sm"
+                    fontWeight="500"
+                    color={textColor}
+                  >
+                    <Skeleton isLoaded={!invoiceLoading} w="75%">
+                      Invoice Status
+                    </Skeleton>
+                  </FormLabel>
+
+                  {!isCustomer ? (
+                    <Box className="!max-w-md w-full">
+                      <Select
+                        placeholder="Select Status"
+                        value={invoiceStatuses.find(
+                          (invoiceStatus) =>
+                            String(invoiceStatus.value) ===
+                            String(invoice.invoice_status_id),
+                        )}
+                        options={invoiceStatuses}
+                        onChange={(e) => {
+                          setInvoice({
+                            ...invoice,
+                            invoice_status_id: e.value,
+                          });
+                          setTimeout(() => {
+                            handleUpdateInvoice();
+                          }, 500);
+                        }}
+                        size="lg"
+                        className="select mb-0"
+                        classNamePrefix="two-easy-select"
+                        isDisabled={isCustomer}
+                      />
+                    </Box>
+                  ) : (
+                    <Skeleton isLoaded={!invoiceLoading} w="75%">
+                      {invoice.invoice_status?.name}
+                    </Skeleton>
+                  )}
+                </Box>
+
+                {(invoice?.job_id === null || invoice?.job?.id === null) && (
+                  <Box width="50%">
+                    <CustomInputField
+                      label="Due At:"
+                      type="date"
+                      placeholder=""
+                      name="due_at"
+                      value={toInputDate(invoice.due_at)}
                       onChange={(e) => {
-                        setInvoice({ ...invoice, invoice_status_id: e.value });
-                        setTimeout(() => {
-                          handleUpdateInvoice();
-                        }, 500);
+                        setInvoice({
+                          ...invoice,
+                          [e.target.name]: e.target.value,
+                        });
                       }}
-                      size="lg"
-                      className="select mb-0"
-                      classNamePrefix="two-easy-select"
-                      isDisabled={isCustomer}
-                    ></Select>
-                  </Box>
-                ) : (
-                  <Skeleton isLoaded={!invoiceLoading} w="75%">
-                    {invoice.invoice_status?.name}
-                  </Skeleton>
-                )}
-                {/* <Box>collection: {invoice?.job?.job_destinations[0].address_city}</Box> */}
-                {(!invoice?.job_id === null || !invoice?.job?.id === null) && (
-                  <Box pl={6}>
-                    Collection : {pickUpDestination.address_city}
+                    />
+
+                    {invoice.company_id && (
+                      <Flex
+                        alignItems="center"
+                        mt={1}
+                        color="gray.500"
+                        fontSize="sm"
+                      >
+                        <InfoOutlineIcon mr={2} />
+                        <span>
+                          Selected Company&apos;s Payment Term:{" "}
+                          {selectedPaymentTerm}
+                        </span>
+                      </Flex>
+                    )}
                   </Box>
                 )}
               </Flex>
@@ -801,59 +898,6 @@ function InvoiceEdit() {
                     </Skeleton>
                   </Flex>
                 </>
-              )}
-
-              {(invoice.job_id === null || invoice.job.id === null) && (
-                <Flex alignItems="center" mb="16px">
-                  <Box width="58%" paddingLeft={"30px"}>
-                    <CustomInputField
-                      label="Issued At:"
-                      type="date"
-                      name="issued_at"
-                      value={toInputDate(invoice.issued_at)}
-                      onChange={(e) => {
-                        const newDate = new Date(e.target.value);
-
-                        const days = getDaysFromTerm(selectedPaymentTerm);
-                        const newDueDate = addDays(newDate, days);
-
-                        setInvoice((prev) => ({
-                          ...prev,
-                          issued_at: newDate,
-                          due_at: newDueDate,
-                        }));
-                      }}
-                    />
-                  </Box>
-                  <Box width="50%">
-                    <CustomInputField
-                      label="Due At:"
-                      type="date"
-                      placeholder=""
-                      name="due_at"
-                      value={toInputDate(invoice.due_at)}
-                      onChange={(e) => {
-                        setInvoice({
-                          ...invoice,
-                          [e.target.name]: e.target.value,
-                        });
-                      }}
-                    />
-                    {invoice.company_id && (
-                      <Flex
-                        alignItems="center"
-                        mt={1}
-                        color="gray.500"
-                        fontSize="sm"
-                      >
-                        <InfoOutlineIcon mr={2} />
-                        <span>
-                          Selected Company&apos;s Payment Term: {selectedPaymentTerm}
-                        </span>
-                      </Flex>
-                    )}
-                  </Box>
-                </Flex>
               )}
               {!invoice.is_rcti && (
                 <>
@@ -1168,7 +1212,7 @@ function InvoiceEdit() {
           </Box>
 
           {/* Right Column: Invoice Info */}
-          <Box className="w-1/2 max-w-[400px] ml-auto">
+          <Box className="w-1/2 max-w-[500px] ml-auto">
             <Flex flexDirection="column" className="ml-auto">
               <Flex
                 justifyContent="space-between"
@@ -1229,7 +1273,7 @@ function InvoiceEdit() {
                 invoice.invoice_status_id == "2" && (
                   <Button
                     variant="primary"
-                    className="w-[49%]"
+                    className="w-[59%] mr-2"
                     onClick={() => handleUpdateApproveInvoice()}
                     isLoading={invoiceLoading}
                   >
@@ -1239,7 +1283,7 @@ function InvoiceEdit() {
                   </Button>
                 )}
 
-              {(invoice?.job?.invoice_url || invoice?.manual_inv_url) && (
+             {hasPdf && (
                 <Tooltip
                   label={
                     invoice?.job?.invoice_url ? "Job Invoice" : "Manual Invoice"
@@ -1258,7 +1302,12 @@ function InvoiceEdit() {
                         }
 
                         const { data } = await getInvoice();
-
+                        if (data?.invoice) {
+                          setInvoice((prev) => ({
+                            ...prev,
+                            ...data.invoice,
+                          }));
+                        }
                         // Prefer job invoice
                         const freshJobUrl = data?.invoice?.job?.invoice_url;
                         const freshManualUrl = data?.invoice?.manual_inv_url;
@@ -1292,7 +1341,7 @@ function InvoiceEdit() {
                 invoice.invoice_status_id != "1" && (
                   <Button
                     variant="primary"
-                    className="w-[49%]"
+                    className="w-[49%] ml-2"
                     onClick={() => handleSendInvoice()}
                     isLoading={invoiceLoading}
                   >

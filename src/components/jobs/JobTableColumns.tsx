@@ -744,7 +744,6 @@ export const ReadyAtCellExport = ({ row }: any) =>
   } | Scheduled Date: ${formatDate(row?.original?.job?.drop_at) || "-"}`;
 
 export const LastFreeAtCell = ({ row }: any) => {
-  // console.log(row.original.job,"sa")
   return (
     <Text maxW="150px" minW="150px">
       {row?.original?.job?.last_free_at || "-"}

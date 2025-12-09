@@ -424,7 +424,7 @@ export default function InvoiceIndex() {
           columns={{ sm: 1 }}
           spacing={{ base: "20px", xl: "20px" }}
         >
-          <Flex minWidth="max-content" justifyContent="space-between">
+          <Flex minWidth="max-content" justifyContent="flex-start">
             <h1 className="mb-0">Customer Invoices</h1>
             {/* <SearchBar
               background={menuBg}
@@ -432,8 +432,18 @@ export default function InvoiceIndex() {
               me="10px"
               borderRadius="30px"
             /> */}
+          </Flex>
+          <Flex justifyContent="flex-end" alignItems="center">
             <Link href="/admin/invoices/create">
-              <Button colorScheme="blue">Create New</Button>
+              <Button
+                className="!h-[39px]"
+                fontSize="sm"
+                lineHeight="19px"
+                variant="brand"
+                fontWeight="500"
+              >
+                Create Invoice
+              </Button>
             </Link>
             <Button
               fontSize="sm"

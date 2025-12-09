@@ -362,6 +362,11 @@ function JobEdit() {
           job_type_id: data?.job.job_type_id,
           pick_up_state: data?.job.pick_up_state,
           timeslot_depots: data?.job.timeslot_depots,
+          is_inbound_connect: data?.job.is_inbound_connect,
+          is_hand_unloading: data?.job.is_hand_unloading,
+          is_dangerous_goods: data?.job.is_dangerous_goods,
+          is_tailgate_required: data?.job.is_tailgate_required,
+          is_stackable_required: data?.job.is_stackable_required,
           is_paperwork_required: data?.job.is_paperwork_required,
           job_status_id: data?.job.job_status_id,
           base_notes: data?.job.base_notes,
@@ -663,6 +668,8 @@ function JobEdit() {
         is_hand_unloading: job.is_hand_unloading,
         is_dangerous_goods: job.is_dangerous_goods,
         is_tailgate_required: job.is_tailgate_required,
+        is_stackable_required: job.is_stackable_required,
+        is_paperwork_required: job.is_paperwork_required,
         timeslot: job.timeslot,
         timeslot_depots: job.timeslot_depots,
         last_free_at: job.last_free_at,
@@ -1811,7 +1818,7 @@ function JobEdit() {
     },
     [tabId, getJob, toast],
   );
-    const handlePreviewEmail = async (reason: string) => {
+  const handlePreviewEmail = async (reason: string) => {
     setSelectedReason(reason);
     try {
       const { data } = await getEmailTemplate({

@@ -135,7 +135,6 @@ function InvoiceCreate() {
         label: _entity.name,
         term: _entity.payment_term,
       }));
-      console.log(newCompaniesOptions, "newcomp");
       setCompaniesOptions(newCompaniesOptions);
     },
   });
@@ -194,22 +193,6 @@ function InvoiceCreate() {
     //   (opt) => opt.value === job.job_type_id,
     // )?.label;
 
-    console.log(invoice, "create");
-    console.log(
-      {
-        invoice_status_id: invoice.invoice_status_id,
-        name: invoice.name,
-        company_id: invoice.company_id,
-        customer_id: invoice.customer_id,
-        sub_total: invoice.sub_total,
-        total_tax: invoice.total_tax,
-        total: invoice.total,
-        issued_at: invoice.issued_at,
-        due_at: invoice.due_at,
-      },
-      "ln",
-    );
-
     if (isAdmin && !invoice.company_id) {
       toast({
         title: "Company Required",
@@ -228,7 +211,7 @@ function InvoiceCreate() {
   const [handleCreateInvoice, {}] = useMutation(CREATE_INVOICE_MUTATION, {
     variables: {
       input: {
-        invoice_status_id: 1,
+        invoice_status_id: invoice.invoice_status_id,
         name: invoice.name,
         company_id: invoice.company_id,
         customer_id: invoice.customer_id,
@@ -241,7 +224,6 @@ function InvoiceCreate() {
       },
     },
     onCompleted: async (data) => {
-      console.log(data, "res");
       for (let invoiceLineItem of invoiceLineItems) {
         await handleCreateLineItem({
           input: {
@@ -331,7 +313,7 @@ function InvoiceCreate() {
         <Grid>
           <FormControl>
             <Flex
-              justifyContent="space-between"
+              justifyContent="flex-end"
               alignItems="center"
               mb="24px"
               className="mt-8"
@@ -341,7 +323,7 @@ function InvoiceCreate() {
                 lineHeight="19px"
                 variant="brand"
                 fontWeight="500"
-                w="100%"
+                // w="100%"
                 pl={10}
                 pr={10}
                 h="50"
@@ -351,7 +333,7 @@ function InvoiceCreate() {
                 onClick={() => handleInvoiceCreation()}
                 // hidden={isCustomer}
               >
-                Save Changes
+                Create Invoice
               </Button>
             </Flex>
 
@@ -364,7 +346,7 @@ function InvoiceCreate() {
                 fontWeight="500"
                 color={textColor}
               >
-                Name
+                Name / Reference No.
               </FormLabel>
               <Input
                 isRequired={true}
@@ -464,7 +446,6 @@ function InvoiceCreate() {
                         company_id: e.value || null,
                         customer_id: null,
                       });
-                      console.log(e, "e");
                       setSelectedPaymentTerm(e.term);
                       setInvoice((prev) => ({
                         ...prev,
@@ -479,7 +460,7 @@ function InvoiceCreate() {
                 )}
               </Flex>
 
-              <Box width="50%">
+              <Box width="50%" paddingLeft={"10px"}>
                 <CustomInputField
                   label="Issued At:"
                   type="date"
