@@ -19,7 +19,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
+import { faPen } from "@fortawesome/pro-regular-svg-icons";
 import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
@@ -315,62 +315,105 @@ PaginationTableProps<T>) => {
                         borderRadius="md"
                         w="100%"
                       >
-                        <VStack align="start" spacing={2}>
+                        <VStack align="start" spacing={3} w="full">
+                          {/* --- DRIVER HEADER --- */}
                           <Flex
-                            wrap="wrap"
-                            justify="space-between"
+                            direction="column"
                             align="start"
-                            gap={4}
+                            wrap="wrap"
+                            gap={3}
                             w="full"
                           >
-                            <Text fontWeight="800" minW="200px" fontSize="xl">
-                              Driver: {driver.full_name} — {driver.driver_no}
-                            </Text>
-
-                            <Flex wrap="wrap" gap={3}>
-                              <Badge colorScheme="purple" variant="subtle" fontSize="md">
+                            <Flex wrap="wrap" align="start" gap={3}>
+                              <Badge
+                                colorScheme="Darkblue"
+                                variant="subtle"
+                                fontSize="md"
+                                style={{ marginRight: "10px" }}
+                              >
+                                Driver: {driver.full_name} — {driver.driver_no}
+                              </Badge>
+                              <Badge
+                                colorScheme="purple"
+                                variant="subtle"
+                                fontSize="md"
+                              >
                                 First Collection:{" "}
                                 {formatToTimeDate(
                                   driver.first_job_start_at_today,
                                 )}
                               </Badge>
-                              <Badge colorScheme="purple" variant="subtle" fontSize="md" >
+
+                              <Badge
+                                colorScheme="purple"
+                                variant="subtle"
+                                fontSize="md"
+                              >
                                 Last Delivery:{" "}
                                 {formatToTimeDate(
                                   driver.last_job_drop_at_today,
                                 )}
                               </Badge>
-                              <Badge colorScheme="blue" variant="subtle" fontSize="md">
-                                CBM: {driver.cbm_summary_today ?? 0} /{" "}
-                                {driver.no_max_volume ?? 0}
-                              </Badge>
-                              <Badge colorScheme="blue" variant="subtle" fontSize="md">
-                                Weight: {driver.weight_summary_today ?? 0} /{" "}
-                                {driver.no_max_capacity ?? 0}
-                              </Badge>
-                              <Badge colorScheme="blue" variant="subtle" fontSize="md">
-                                Pallets: {driver.no_max_pallets ?? 0}
-                              </Badge>
                             </Flex>
                           </Flex>
 
-                          <Flex
-                            wrap="wrap"
-                            justify="space-between"
-                            gap={4}
-                            w="full"
-                          >
-                            <Badge colorScheme="red" variant="subtle" fontSize="md">
+                          {/* --- DRIVER DETAILS --- */}
+                          <Flex wrap="wrap" align="start" gap={3} w="full">
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="md"
+                            >
                               Current Suburb: WIP
                             </Badge>
-                            <Badge colorScheme="red" variant="subtle" fontSize="md">
+
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="md"
+                            >
                               Mobile Number: {driver.phone_no ?? "-"}
                             </Badge>
-                            <Badge colorScheme="red" variant="subtle" fontSize="md">
+
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="md"
+                            >
                               Rego: {driver.registration_no ?? "-"}
                             </Badge>
-                            <Badge colorScheme="red" variant="subtle" fontSize="md">
+
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="md"
+                            >
                               TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
+                            </Badge>
+                            <Badge
+                              colorScheme="blue"
+                              variant="subtle"
+                              fontSize="md"
+                            >
+                              CBM: {driver.cbm_summary_today ?? 0} /{" "}
+                              {driver.no_max_volume ?? 0}
+                            </Badge>
+
+                            <Badge
+                              colorScheme="blue"
+                              variant="subtle"
+                              fontSize="md"
+                            >
+                              Weight: {driver.weight_summary_today ?? 0} /{" "}
+                              {driver.no_max_capacity ?? 0}
+                            </Badge>
+
+                            <Badge
+                              colorScheme="blue"
+                              variant="subtle"
+                              fontSize="md"
+                            >
+                              Pallets: {driver.no_max_pallets ?? 0}
                             </Badge>
                           </Flex>
                         </VStack>
@@ -455,34 +498,7 @@ PaginationTableProps<T>) => {
                           // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
-                            {
-                              //@ts-expect-error
-                              cell.column.isDownload && (
-                                <Link
-                                  href={cell.value}
-                                  target="_blank"
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faDownload}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
+                        
                             {
                               //@ts-expect-error
                               (cell.column.isEdit == undefined ||
@@ -513,60 +529,8 @@ PaginationTableProps<T>) => {
                                 </Link>
                               )
                             }
-                            {
-                              //@ts-expect-error
-                              cell.column.isView && (
-                                <Link
-                                  href={`${path || router.pathname}/${
-                                    cell.row.original.job.id
-                                  }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faEye}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              cell.column.isTracking && (
-                                <Link
-                                  href={`${path || router.pathname}/tracking/${
-                                    cell.row.original.job.id
-                                  }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[#3B68DB]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
-                                  >
-                                    Track
-                                  </Button>
-                                </Link>
-                              )
-                            }
+                      
+                      
                             {
                               //@ts-expect-error
                               cell.column.isDelete && (

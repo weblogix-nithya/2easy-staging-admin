@@ -100,14 +100,13 @@ export const CREATE_VENDOR_MUTATION = gql`
       bsb_code
       swift_code
       payment_term
-      vendor_service {  
+      vendor_service {
         id
         service_name
         description
         created_at
         updated_at
       }
-
     }
   }
 `;
@@ -170,13 +169,12 @@ export const GET_VENDOR_SERVICES_QUERY = gql`
 
 // Vendor Service Type
 export interface VendorService {
-  id: string; 
-  service_name: string; 
+  id: string;
+  service_name: string;
   description: string;
   created_at: string; // DateTime represented as a string (e.g., "2018-05-23 13:43:32")
   updated_at: string; // DateTime represented as a string with the same format
 }
-
 
 // UpdateVendorInput Interface
 export interface UpdateVendorInput {
@@ -322,7 +320,7 @@ export const defaultVendor: Vendor = {
   vendor_service: null,
   deleted_at: undefined,
   created_at: undefined,
-  updated_at: undefined
+  updated_at: undefined,
 };
 
 export const paymentTerms = [

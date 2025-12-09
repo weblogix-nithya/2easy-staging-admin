@@ -168,6 +168,7 @@ function JobPage() {
   const [isTomorrowJob, setIsTomorrowJob] = useState(false);
   const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
   const [companyWeight, setCompanyWeight] = useState(null);
+  const [companyStandardStatic, setCompanyStandardStatic] = useState(null);
   const re = useMemo(
     () =>
       /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
@@ -175,6 +176,9 @@ function JobPage() {
   );
   const [isJobCreatedOpen, setIsJobCreatedOpen] = useState(false);
   const [newJobId, setNewJobId] = useState<string | null>(null);
+  const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(
+    null,
+  );
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -276,6 +280,9 @@ function JobPage() {
     onCompleted: (data) => {
       if (data?.company?.weight_per_cubic != null) {
         setCompanyWeight(data.company.weight_per_cubic);
+      }
+      if (data?.company?.standard_static != null) {
+        setCompanyStandardStatic(data.company.standard_static ? 1 : 0);
       }
     },
     onError: (error) => {
@@ -828,13 +835,20 @@ function JobPage() {
     _entityArray: any[],
     valueKeyName: string,
     labelKeyName: string,
+    extraKeyName?: string, // optional 4th argument
   ) => {
     return _entityArray.map((_entityItem) => {
-      return {
+      const baseObject: any = {
         value: _entityItem[valueKeyName],
         label: _entityItem[labelKeyName],
         entity: _entityItem,
       };
+
+      if (extraKeyName && _entityItem[extraKeyName] !== undefined) {
+        baseObject[extraKeyName] = _entityItem[extraKeyName];
+      }
+
+      return baseObject;
     });
   };
   const addToJobDestinations = () => {
@@ -927,6 +941,16 @@ function JobPage() {
     let _jobItems = [...jobItems];
     _jobItems.splice(index, 1);
     setJobItems(_jobItems);
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
+    setQuoteCalculationRes({
+      ...quoteCalculationRes,
+      total_weight: totalWeight,
+      cbm_auto: totalCBM,
+    });
   };
   const handleJobItemChanged = (
     value: any,
@@ -1038,8 +1062,10 @@ function JobPage() {
         data.customers.data,
         "id",
         "full_name",
+        "base_notes",
       );
       setCustomerOptions(_customerOptions);
+      console.log(_customerOptions, "cust");
       if (isCustomer) {
         setJob({ ...job, ...{ customer_id: customerId } });
         const selectedCustomer = _customerOptions.find(
@@ -1047,6 +1073,8 @@ function JobPage() {
         )?.entity;
         if (selectedCustomer) {
           setCustomerSelected(selectedCustomer);
+          console.log(selectedCustomer, "sun");
+          // setselectedCustomernotes()
           // Update refinedData with the new properties
         }
         getCustomerAddresses();
@@ -1443,7 +1471,7 @@ function JobPage() {
                       // console.log(refinedData, "n");
                     }}
                   />
-                  {!isCompany && (
+                  {isAdmin && (
                     <CustomInputField
                       isSelect={true}
                       optionsArray={companiesOptions}
@@ -1476,7 +1504,12 @@ function JobPage() {
                         if (e.value) {
                           setCompanyWeight(null); // Reset before fetching
                           getCompany({ id: String(e.value) }).then((res) => {
-                            setCompanyWeight(res.data.company.weight_per_cubic);
+                            setCompanyWeight(
+                              res.data.company?.weight_per_cubic,
+                            );
+                            setCompanyStandardStatic(
+                              res.data.company?.standard_static ? 1 : 0,
+                            );
                           });
                           getCompanyRates({ company_id: String(e.value) });
                         }
@@ -1548,17 +1581,18 @@ function JobPage() {
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
-                    label={isCompany ? "Booked by" : "Customer:"}
+                    label={isAdmin ? "Customer:" : "Booked by"}
                     value={
                       customerOptions.find(
                         (entity) => entity.value === job.customer_id,
                       ) || { value: 0, label: "" }
                     }
                     placeholder=""
-                    isDisabled={isCompany || isCompanyAdmin}
+                    isDisabled={!isAdmin}
                     onChange={(e) => {
-                      if (isCompany && isCompanyAdmin) return;
-
+                      setCustomerBaseNotes(e.base_notes);
+                      setJob({ ...job, base_notes: e.base_notes });
+                      if (!isAdmin) return;
                       setJob({
                         ...job,
                         customer_id: e.value || null,
@@ -1977,11 +2011,19 @@ function JobPage() {
                 <Divider className="my-12" />
                 <ColorSelect
                   label="Type:"
-                  optionsArray={filteredJobTypeOptions}
+                  optionsArray={
+                    companyStandardStatic
+                      ? jobTypeOptions
+                      : filteredJobTypeOptions
+                  }
                   selectedJobId={job.job_type_id}
-                  value={filteredJobTypeOptions.find(
-                    (jobType) => jobType.value === job.job_type_id,
-                  )}
+                  value={
+                    companyStandardStatic
+                      ? jobTypeOptions
+                      : filteredJobTypeOptions.find(
+                          (jobType) => jobType.value === job.job_type_id,
+                        )
+                  }
                   placeholder="Select type"
                   onChange={(e) => {
                     // setJob({
@@ -1989,9 +2031,12 @@ function JobPage() {
                     //   job_type_id: e.value || null,
                     // });
                     const selectedCategory = e.value;
-                    const selectedCategoryName = filteredJobTypeOptions.find(
-                      (job_category) => job_category.value === selectedCategory,
-                    )?.label;
+                    const selectedCategoryName = companyStandardStatic
+                      ? jobTypeOptions
+                      : filteredJobTypeOptions.find(
+                          (job_category) =>
+                            job_category.value === selectedCategory,
+                        )?.label;
                     6;
                     setJob({
                       ...job,
@@ -2142,13 +2187,15 @@ function JobPage() {
                         label="Base notes"
                         placeholder=""
                         name="base_notes"
-                        value={job.base_notes}
-                        onChange={(e) =>
-                          setJob({
-                            ...job,
-                            [e.target.name]: e.target.value,
-                          })
+                        value={
+                          job.base_notes ? job.base_notes : customerBaseNotes
                         }
+                        // onChange={(e) =>
+                        //   setJob({
+                        //     ...job,
+                        //     [e.target.name]: e.target.value,
+                        //   })
+                        // }
                       />
                     )}
                   </Box>

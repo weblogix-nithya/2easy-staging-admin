@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import CustomFloatInputField from "components/fields/CustomFloatInputField";
 import CustomInputField from "components/fields/CustomInputField";
 import { JobItem } from "graphql/jobItem";
 import React from "react";
@@ -33,12 +34,11 @@ const JobInputTable = <_T extends object>({
   optionsSelect = [],
   plugins = [],
 }: PaginationTableProps<JobItem>) => {
-  const { getTableProps, getTableBodyProps, headerGroups} =
-    useTable<JobItem>(
-      { ...optionsSelect, columns, data },
-      usePagination,
-      ...plugins,
-    );
+  const { getTableProps, getTableBodyProps, headerGroups } = useTable<JobItem>(
+    { ...optionsSelect, columns, data },
+    usePagination,
+    ...plugins,
+  );
 
   function handleInputHighlight(
     event: React.MouseEvent<HTMLInputElement, MouseEvent>,
@@ -229,11 +229,12 @@ const JobInputTable = <_T extends object>({
                 </Td>
 
                 <Td>
-                  <CustomInputField
+                  <CustomFloatInputField
                     showLabel={false}
                     placeholder=""
                     maxWidth="100%"
                     name="weight"
+                    type="number"
                     value={row.weight}
                     suffixText="kg"
                     onChange={(e) => {
@@ -299,5 +300,5 @@ const JobInputTable = <_T extends object>({
       </Table>
     </VStack>
   );
-};    
+};
 export default JobInputTable;

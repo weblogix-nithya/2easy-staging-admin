@@ -181,7 +181,8 @@ export default function InvoiceIndex() {
     onCompleted: (data) => {
       setInvoiceStatuses([]);
       data.invoiceStatuses.data.map((invoiceStatus: any) => {
-        if (!isAdmin && invoiceStatus.id == 1) return;
+        if (!isAdmin && (invoiceStatus.id == 1 || invoiceStatus.id == 5))
+          return;
         setInvoiceStatuses((invoiceStatuses) => [
           ...invoiceStatuses,
           { value: invoiceStatus.id, label: invoiceStatus.name },

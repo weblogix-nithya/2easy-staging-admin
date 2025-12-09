@@ -76,7 +76,6 @@ const JobDetailsTab = ({
   handleJobDestinationChanged,
   addToJobDestinations,
   handleRemoveFromJobDestinations,
-  isCompany,
   quoteCalculationRes,
   buttonText,
   handleSaveJobPriceCalculation,
@@ -233,7 +232,7 @@ const JobDetailsTab = ({
               </Text>
             </>
           )}
-          {!isCompany && (
+          {isAdmin && (
             <CustomInputField
               isSelect={true}
               optionsArray={companiesOptions}
@@ -770,8 +769,8 @@ const JobDetailsTab = ({
                 <Th>TYPE</Th>
                 <Th>DIMENSIONS (L,W,H)</Th>
                 <Th>QTY</Th>
-                <Th>WEIGHT</Th>
-                <Th>CBM</Th>
+                <Th>TOTAL WEIGHT</Th>
+                <Th>RAW CBM</Th>
               </Tr>
             </Thead>
             <Tbody
@@ -900,12 +899,12 @@ const JobDetailsTab = ({
               placeholder=""
               name="base_notes"
               value={job.base_notes}
-              onChange={(e) =>
-                setJob({
-                  ...job,
-                  [e.target.name]: e.target.value,
-                })
-              }
+              // onChange={(e) =>
+              //   setJob({
+              //     ...job,
+              //     [e.target.name]: e.target.value,
+              //   })
+              // }
             />
 
             {/* <Text fontSize="sm" color={textColorSecodary} mt={3}>

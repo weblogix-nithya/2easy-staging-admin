@@ -39,7 +39,6 @@ export const getRowBgColor = (status?: string): string => {
   }
 };
 
-
 export function formatToTimeDate(apiDate: string): string {
   if (!apiDate) return "-";
   return moment.utc(apiDate).local().format("HH:mm, DD/MM/YYYY");
@@ -128,6 +127,8 @@ export function outputDynamicTableBody(
   tableColumn: any,
   rows: any,
 ) {
+  // const columnsArray = Array.isArray(tableColumn) ? tableColumn : [];
+
   return rows?.map((row: any) => {
     return dynamicTableUsers
       .filter(
@@ -426,7 +427,7 @@ export function isSameDay(jobDate: string, timeZone: string): boolean {
 export async function getTimezone(lat: number, lng: number) {
   const response = await fetch(
     `https://maps.googleapis.com/maps/api/timezone/json?location=${lat},${lng}&timestamp=${moment().unix()}&key=${
-      process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+      process.env.GOOGLE_API_KEY
     }`,
   );
 

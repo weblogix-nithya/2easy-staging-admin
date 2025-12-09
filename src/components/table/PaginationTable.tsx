@@ -2,6 +2,7 @@
 import {
   Button,
   ButtonGroup,
+  Flex,
   HStack,
   IconButton,
   Link,
@@ -42,9 +43,10 @@ type PaginationTableProps<T extends object> = {
   plugins?: PluginHook<T>[];
   path?: string;
   showDelete?: boolean;
+  onReset?: (data: any) => void;
   onDelete?: (data: any) => void;
   isapprove?: boolean;
-  isRestore?:boolean;
+  isRestore?: boolean;
   onRestore?: (data: any) => void;
   onApprove?: (data: any) => void;
   showPageSizeSelect?: boolean;
@@ -89,6 +91,7 @@ const PaginationTable = <T extends object>({
   onDelete,
   onApprove,
   onRestore,
+  onReset,
   // isRestore,
   // isapprove,
   path,
@@ -386,13 +389,15 @@ const PaginationTable = <T extends object>({
                         {
                           //@ts-expect-error
                           cell.column.isApprove &&
-                            (cell.row.original.is_approved === false ||
-                              cell.row.original.is_approved === "false" ||
-                              cell.row.original.is_approved === 0 ||
-                              cell.row.original.is_approved === "0") && (
+                            (cell.row.original.is_approve === false ||
+                              cell.row.original.is_approve === "false" ||
+                              cell.row.original.is_approve === 0 ||
+                              cell.row.original.is_approve === "0") && (
                               <Button
-                                bg="white"
+                                bg="blue.100"
+                                color="white"
                                 fontSize="sm"
+                                _hover={{ bg: "blue.300" }}
                                 className="!text-[var(--chakra-colors-black-400)]"
                                 onClick={() => {
                                   onApprove(cell.row.original.id);
@@ -415,6 +420,73 @@ const PaginationTable = <T extends object>({
                             >
                               Restore
                             </Button>
+                          )
+                        }
+                        {
+                          // @ts-expect-error
+                          cell.column.isReset && (
+                            <Flex
+                              align="center"
+                              justify="space-between"
+                              width="100%"
+                            >
+                              <Button
+                                bg={
+                                  cell.row.original.is_admin
+                                    ? cell.row.original.reset_approve
+                                      ? "green.100"
+                                      : "blue.100"
+                                    : "gray.100"
+                                }
+                                color={
+                                  cell.row.original.is_admin
+                                    ? cell.row.original.reset_approve
+                                      ? "green.800"
+                                      : "blue.800"
+                                    : "gray.600"
+                                }
+                                _hover={{
+                                  bg: cell.row.original.is_admin
+                                    ? cell.row.original.reset_approve
+                                      ? "green.200"
+                                      : "blue.200"
+                                    : "gray.200",
+                                }}
+                                fontSize="sm"
+                                className="!text-[var(--chakra-colors-black-400)]"
+                                onClick={() => {
+                                  if (cell.row.original.is_admin) {
+                                    onReset(cell.row.original.id);
+                                  }
+                                }}
+                                isDisabled={
+                                  !cell.row.original.is_admin ||
+                                  cell.row.original.reset_approve === true
+                                }
+                              >
+                                {cell.row.original.is_admin
+                                  ? cell.row.original.reset_approve
+                                    ? "Approved"
+                                    : "Reset Access"
+                                  : "Not Admin"}
+                              </Button>
+                              <Link
+                                href={`${path || router.pathname}/reset/${
+                                  cell.value
+                                }`}
+                                fontWeight="700"
+                                mr="40%"
+                              >
+                                <Button
+                                  bg={"blue.200"}
+                                  color={"blackAlpha.300"}
+                                  ml={4}
+                                  className="!text-[#3B68DB]"
+                                >
+                                  Reset Password
+                                </Button>
+                              </Link>
+                            </Flex>
                           )
                         }
                       </Td>

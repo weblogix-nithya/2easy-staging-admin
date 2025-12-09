@@ -56,6 +56,7 @@ import { RootState } from "store/store";
 export default function JobAllocationIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const state = useSelector((state: RootState) => state.user.state);
+
   const rightSideBarJob = useSelector(
     (state: RootState) => state.rightSideBar.job,
   );
@@ -252,7 +253,7 @@ export default function JobAllocationIndex() {
     return () => debouncedCenterChangeHandler.cancel?.();
   }, [debouncedCenterChangeHandler]);
 
-  const [_getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
+  const [_getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -264,7 +265,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getJob, {}] = useLazyQuery(GET_JOB_QUERY, {
+  const [getJob, { }] = useLazyQuery(GET_JOB_QUERY, {
     variables: {
       id: selectedJobId,
     },
@@ -277,7 +278,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getDriverCurrentRoute, {}] = useLazyQuery(
+  const [getDriverCurrentRoute, { }] = useLazyQuery(
     GET_DRIVER_CURRENT_ROUTE_QUERY,
     {
       variables: {
@@ -392,17 +393,23 @@ export default function JobAllocationIndex() {
     },
   });
 
+  // 1️⃣ Sync local australianState with Redux state
+  useEffect(() => {
+    if (state) setAustralianState(state);
+  }, [state]);
+
+  // 2️⃣ Fetch jobs and set map center when relevant dependencies change
   useEffect(() => {
     onChangeSearchQuery.cancel();
     // if (center == null) {
-    australianStates.forEach((state: any) => {
-      if (state.value == australianState) {
-        setCenter({ lat: state.lat, lng: state.lng });
+    australianStates.forEach((st: any) => {
+      if (st.value === australianState) {
+        setCenter({ lat: st.lat, lng: st.lng });
       }
     });
     // }
     getJobs();
-  }, [onChangeSearchQuery, state, rightSideBarJob, australianState, getJobs]);
+  }, [onChangeSearchQuery, rightSideBarJob, australianState, getJobs]);
 
   return (
     <AdminLayout>
@@ -534,8 +541,8 @@ export default function JobAllocationIndex() {
                     value={
                       hasUserChosenDrivers
                         ? driverOptions.filter((opt) =>
-                            selectedDriverIds.includes(opt.value),
-                          )
+                          selectedDriverIds.includes(opt.value),
+                        )
                         : [] // no chips initially, but map shows all
                     }
                     options={driverOptions
@@ -610,8 +617,8 @@ export default function JobAllocationIndex() {
               overflowY: "auto",
               overflowX: "hidden",
             }}
-            // minW={0}
-            //  height="100vh"
+          // minW={0}
+          //  height="100vh"
           >
             <Flex className=" flex-col" minW={0}>
               <Flex className="relative">
@@ -636,9 +643,9 @@ export default function JobAllocationIndex() {
                 />
               </Flex>
               {customerName ||
-              pickupAddress ||
-              pickupAddress ||
-              australianState ? (
+                pickupAddress ||
+                pickupAddress ||
+                australianState ? (
                 <Flex className="pt-4 flex-wrap align-center">
                   <p className="text-sm mr-1">Filters: </p>
 
@@ -901,9 +908,9 @@ export default function JobAllocationIndex() {
                   ? true
                   : false
               }
-              // options={{
-              //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
-              // }}
+            // options={{
+            //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
+            // }}
             />
           </GridItem>
         </Grid>

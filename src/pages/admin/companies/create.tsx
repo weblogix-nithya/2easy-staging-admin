@@ -11,7 +11,10 @@ import {
   FormLabel,
   Grid,
   Input,
+  Radio,
+  RadioGroup,
   SimpleGrid,
+  Stack,
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
@@ -75,7 +78,7 @@ function CompanyCreate() {
   ]);
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
 
-  const [handleCreateCompany, {}] = useMutation(CREATE_COMPANY_MUTATION, {
+  const [handleCreateCompany, { }] = useMutation(CREATE_COMPANY_MUTATION, {
     variables: {
       input: {
         name: company.name,
@@ -97,7 +100,8 @@ function CompanyCreate() {
         rate_card_url: undefined,
         logo_url: undefined,
         payment_term: company.payment_term ?? "7_days",
-        weight_per_cubic: company.weight_per_cubic ?? 500, // default value
+        weight_per_cubic: company.weight_per_cubic ?? 500,
+        standard_static: company.standard_static ?? false, // default value
       },
     },
     onCompleted: async (data) => {
@@ -480,7 +484,35 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
+            <Flex className="w-full" alignItems="center">
+              <FormLabel
+                display="flex"
+                mb="0"
+                width="200px"
+                fontSize="sm"
+                fontWeight="500"
+                color={textColor}
+              >
+                Job Type (Would you like to display &apos;Standard&apos; for all dates and times?)
+              </FormLabel>
 
+              <RadioGroup
+                value={company.standard_static ? "1" : "0"}
+                onChange={(e) => {
+                  setCompany({
+                    ...company,
+                    standard_static: e === "1" ? true : false,
+                  });
+                }}
+              >
+                <Stack direction="row" pt={3}>
+                  <Radio value="0">No</Radio>
+                  <Radio value="1" pl={6}>
+                    Yes
+                  </Radio>
+                </Stack>
+              </RadioGroup>
+            </Flex>
 
             <Divider />
             <h3 className="mt-6 mb-4">Billing</h3>

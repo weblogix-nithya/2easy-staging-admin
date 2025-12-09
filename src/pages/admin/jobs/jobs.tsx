@@ -151,7 +151,10 @@ export default function JobIndex({}: // initialLoadOnly = false,
   // initialLoadOnly?: boolean;
 }) {
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
-  // const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
+  const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
+  const [initialJobsDataTotal, setInitialJobsDataTotal] = useState(0);
+  const [initialJobsDataLastpage, setInitialJobsDataLastPage] = useState(0);
+
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
 
@@ -173,8 +176,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
 
   // Adjusted logic for choosing correct options
   const statusOptions = useMemo(() => {
-    if (isAdmin && isCompanyAdmin) return companyStatusOptions;
-    return isCompany ? companyStatusOptions : adminStatusOptions;
+    if (isAdmin) return adminStatusOptions;
+    if (isCompanyAdmin || isCompany) return companyStatusOptions;
+    return [];
   }, [isAdmin, isCompany, isCompanyAdmin]);
 
   const [selectedStatus, setSelectedStatus] = useState<
@@ -246,9 +250,20 @@ export default function JobIndex({}: // initialLoadOnly = false,
       job_status_ids: mainJobFilter?.job_status_ids || [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
       ],
-      company_id: isCompany ? parseInt(companyId) : undefined,
-      customer_id:
-        isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
+      // company_id: isCompany ? parseInt(companyId) : undefined,
+      // customer_id:
+      //   isCustomer && !isCompanyAdmin ? parseInt(customerId) : undefined,
+      company_id: isAdmin
+        ? undefined
+        : isCompanyAdmin
+        ? parseInt(companyId)
+        : undefined,
+
+      customer_id: isAdmin
+        ? undefined
+        : isCustomer && !isCompanyAdmin
+        ? parseInt(customerId)
+        : undefined,
       between_at: rangeDate?.[0]
         ? {
             from_at: formatDate(rangeDate[0], true),
@@ -263,6 +278,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       isCompany,
       companyId,
       isCustomer,
+      isAdmin,
       isCompanyAdmin,
       customerId,
       rangeDate,
@@ -285,12 +301,15 @@ export default function JobIndex({}: // initialLoadOnly = false,
     variables: groupedVars,
     skip: !userId || isCompanyAdmin || isCustomer || isCompany,
     fetchPolicy: "network-only",
-    onCompleted: (_data) => {
-      // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
+    onCompleted: (data) => {
+      console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
+      setInitialJobsData(data.groupedPaginatedJobs.data);
+      setInitialJobsDataTotal(data.groupedPaginatedJobs.total);
+      setInitialJobsDataLastPage(data.groupedPaginatedJobs.last_page);
     },
   });
 
-  const _jobs = groupedJobs?.groupedPaginatedJobs;
+  const _jobs = initialJobsData;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
 
@@ -386,7 +405,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   useEffect(() => {
     const hasGroupedJobs = groupedJobs?.groupedPaginatedJobs?.data?.length > 0;
     const hasCompanyJobs = companyJobs?.jobs?.data?.length > 0;
-
+    console.log(hasGroupedJobs, hasCompanyJobs, "g", "c");
     if ((isAdmin && hasGroupedJobs) || (!isAdmin && hasCompanyJobs)) {
       getJobStatuses();
       getJobCategories();
@@ -627,7 +646,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     const header = outputDynamicTableHeader(dynamicTableUsers);
     const body = outputDynamicTableBody(
       dynamicTableUsers,
-      tableColumn,
+      tableColumn(refetchJobs),
       selectedJobs,
     );
     downloadExcel({
@@ -799,11 +818,11 @@ export default function JobIndex({}: // initialLoadOnly = false,
               Loading <Spinner size="sm" ml={2} />
             </Box>
           ) : isAdmin && !isCompanyAdmin ? (
-            _jobs?.data?.length > 0 ? (
+            initialJobsData.length > 0 ? (
               <JobPaginationTable
                 columns={adminColumns}
-                data={_jobs?.data}
-                total={_jobs?.total}
+                data={initialJobsData}
+                total={initialJobsDataTotal}
                 options={{
                   manualSortBy: true,
                   initialState: {
@@ -812,7 +831,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
                     sortBy: [{ id: sorting?.id, desc: sorting?.direction }],
                   },
                   manualPagination: true,
-                  pageCount: _jobs?.last_page,
+                  pageCount: initialJobsDataLastpage,
                 }}
                 setQueryPageIndex={setQueryPageIndex}
                 setQueryPageSize={setQueryPageSize}
@@ -828,7 +847,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
               />
             ) : (
               <Box textAlign="center" py={4} px={10} color="gray.600">
-                No records found.
+                No records found...
               </Box>
             )
           ) : companyJobs?.jobs?.data?.length > 0 ? (
@@ -883,7 +902,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 // Update the tags
                 updateTags(selectedFilters, jobFilter);
-                console.log(selectedFilters, "selectedFilters");
                 setMainFilterDisplayNames(filterDisplayName);
                 setCookie(
                   null,

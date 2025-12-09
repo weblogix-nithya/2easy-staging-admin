@@ -1,6 +1,6 @@
 // utils/autocomplete.ts
 
-const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 export async function fetchSuggestions(input: string, signal?: AbortSignal) {
   if (!GOOGLE_API_KEY || !input) return [];

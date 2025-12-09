@@ -5,6 +5,7 @@ export const GET_USERS_QUERY = gql`
     $query: String
     $page: Int!
     $first: Int!
+    $is_approve: Boolean
     $orderByColumn: String!
     $orderByOrder: SortOrder!
   ) {
@@ -12,12 +13,64 @@ export const GET_USERS_QUERY = gql`
       query: $query
       page: $page
       first: $first
-      orderBy: { column: $orderByColumn, order: $orderByOrder }
+      is_approve: $is_approve
+      orderBy: [{ column: $orderByColumn, order: $orderByOrder }]
     ) {
       data {
         id
         name
         email
+        is_approve
+        is_admin
+        reset_approve
+        roles {
+          id
+          name
+        }
+      }
+      paginatorInfo {
+        count
+        currentPage
+        firstItem
+        hasMorePages
+        lastItem
+        lastPage
+        perPage
+        total
+      }
+    }
+  }
+`;
+
+export const GET_APPROVAL_USERS_QUERY = gql`
+  query users(
+    $query: String
+    $page: Int!
+    $first: Int!
+    $is_approve: Boolean
+    $without_drivers: Boolean
+    $orderByColumn: String!
+    $orderByOrder: SortOrder!
+  ) {
+    users(
+      query: $query
+      page: $page
+      first: $first
+      is_approve: $is_approve
+      without_drivers: $without_drivers
+      orderBy: [{ column: $orderByColumn, order: $orderByOrder }]
+    ) {
+      data {
+        id
+        name
+        email
+        is_approve
+        is_admin
+        reset_approve
+        roles {
+          id
+          name
+        }
       }
       paginatorInfo {
         count
@@ -39,11 +92,13 @@ export const GET_TRASHED_USERS_QUERY = gql`
     $first: Int!
     $orderByColumn: String!
     $orderByOrder: SortOrder!
+    $query: String
   ) {
     users(
       trashed: ONLY
       page: $page
       first: $first
+      query: $query
       orderBy: { column: $orderByColumn, order: $orderByOrder }
     ) {
       data {
@@ -65,7 +120,6 @@ export const GET_TRASHED_USERS_QUERY = gql`
   }
 `;
 
-
 export const GET_USER_QUERY = gql`
   query user($id: ID!) {
     user(id: $id) {
@@ -73,6 +127,9 @@ export const GET_USER_QUERY = gql`
       name
       email
       state
+      is_approve
+      is_admin
+      reset_approve
       media_url
       roles {
         id
@@ -104,6 +161,15 @@ export const UPDATE_USER_MUTATION = gql`
   }
 `;
 
+export const UPDATE_USER_ACCESS_MUTATION = gql`
+  mutation updateUser($input: UpdateUserInput!) {
+    updateUser(input: $input) {
+      id
+      reset_approve
+    }
+  }
+`;
+
 export const DELETE_USER_MUTATION = gql`
   mutation deleteUser($id: ID!) {
     deleteUser(id: $id) {
@@ -112,10 +178,50 @@ export const DELETE_USER_MUTATION = gql`
   }
 `;
 
+export const RESET_USER_PASSWORD_MUTATION = gql`
+  mutation ResetUserPassword($id: ID!, $new_password: String!) {
+    resetUserPassword(id: $id, new_password: $new_password) {
+      id
+      name
+      email
+    }
+  }
+`;
+
+export const MUTATION_APPROVE_USER = gql`
+  mutation ApproveUser($userId: ID!) {
+    approveUser(userId: $userId) {
+      id
+      name
+      email
+      is_approve
+    }
+  }
+`;
+
+export const MUTATION_RESTORE_USER = gql`
+  mutation restoreUser($id: ID!) {
+    restoreUser(id: $id) {
+      id
+      name
+    }
+  }
+`;
+
+// export const MUTATION_RESTORE_USER = gql`
+//   mutation restoreUser($id: ID!) {
+//     restoreUser(id: $id) {
+//       id
+//       name
+//     }
+//   }
+// `;
+
 export interface UpdateUserInput {
   id: Number;
   name: String;
   email: String;
+  is_approve?: true;
 }
 
 export interface CreateUserInput {
