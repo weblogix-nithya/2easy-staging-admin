@@ -103,7 +103,7 @@ function InvoiceEdit() {
   ] = useState(false);
   // const [job, setJob] = useState(defaultJob);
   const [jobDestinations, setJobDestinations] = useState([]);
-  const [_pickUpDestination, setPickUpDestination] = useState(
+  const [pickUpDestination, setPickUpDestination] = useState(
     defaultJobDestination,
   );
   const [_isInvoicePdfUpdating, setIsInvoicePdfUpdating] = useState(false);
@@ -592,6 +592,22 @@ function InvoiceEdit() {
                 {!invoice.is_rcti && (
                   <h1 className="mb-0">RCTI {invoice.name}</h1>
                 )}
+                {invoice?.job_id !== null && (
+                  <Box pl={6}>
+                    <Box pl={6}>
+                      Collection : {pickUpDestination.address_city}
+                    </Box>
+                    <Box pl={6}>
+                      Delivery :
+                      {jobDestinations
+                        .filter(
+                          (destination) => destination.is_pickup === false,
+                        )
+                        .map((destination) => destination.address_city)
+                        .join(", ")}
+                    </Box>
+                  </Box>
+                )}
                 <Flex>
                   {invoice.job_id && (
                     <Button
@@ -673,7 +689,9 @@ function InvoiceEdit() {
                       color={textColor}
                       whiteSpace="nowrap"
                     >
-                      <Skeleton isLoaded={!invoiceLoading}>Name / Reference No.</Skeleton>
+                      <Skeleton isLoaded={!invoiceLoading}>
+                        Name / Reference No.
+                      </Skeleton>
                     </FormLabel>
 
                     <Input
@@ -848,18 +866,6 @@ function InvoiceEdit() {
                     >
                       {invoice.company?.name}
                     </Skeleton>
-                    {(!invoice?.job_id === null ||
-                      !invoice?.job?.id === null) && (
-                      <Box pl={6}>
-                        Delivery :
-                        {jobDestinations
-                          .filter(
-                            (destination) => destination.is_pickup === false,
-                          )
-                          .map((destination) => destination.address_city)
-                          .join(", ")}
-                      </Box>
-                    )}
                   </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
@@ -1283,7 +1289,7 @@ function InvoiceEdit() {
                   </Button>
                 )}
 
-             {hasPdf && (
+              {hasPdf && (
                 <Tooltip
                   label={
                     invoice?.job?.invoice_url ? "Job Invoice" : "Manual Invoice"
