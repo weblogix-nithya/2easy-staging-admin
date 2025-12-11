@@ -4,7 +4,8 @@ import {
   from,
   HttpOptions,
   InMemoryCache,
-  NormalizedCacheObject} from "@apollo/client";
+  NormalizedCacheObject,
+} from "@apollo/client";
 import { createUploadLink } from "apollo-upload-client";
 import { destroyCookie, parseCookies } from "nookies";
 import { useMemo } from "react";
@@ -31,8 +32,6 @@ const clearAllCookies = () => {
   //   paths.forEach(path => {
   //   destroyCookie(null, name, { path });
   // });
-
-  
   cookieNames.forEach((name) => {
     destroyCookie(null, name, { path: "/" });
   });
@@ -62,38 +61,47 @@ function createApolloClient(token: string = "") {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
 
-const errorLink = new ApolloLink((operation, forward) => {
-  return forward(operation).map((response) => {
-    const { errors } = response;
-    const networkError = (response as any).networkError;
-    const graphQLErrors = errors;
+  const errorLink = new ApolloLink((operation, forward) => {
+    return forward(operation).map((response) => {
+      const { errors } = response;
+      const networkError = (response as any).networkError;
+      const graphQLErrors = errors;
 
-    if (
-      networkError?.message?.includes("401") ||
-      graphQLErrors?.some((error: { message: string }) =>
-        error.message.toLowerCase().includes("unauthenticated")
-      )
-    ) {
-      // Redirect to login page and pass the current URL as `redirectTo`
-      const redirectTo = window.location.pathname + window.location.search;
-      
-      clearAllCookies(); // Clear cookies upon unauthentication
+      if (
+        networkError?.message?.includes("401") ||
+        graphQLErrors?.some((error: { message: string }) =>
+          error.message.toLowerCase().includes("unauthenticated"),
+        )
+      ) {
+        // Redirect to login page and pass the current URL as `redirectTo`
+        const redirectTo = window.location.pathname + window.location.search;
 
-      apolloClient?.clearStore().then(() => {
-        window.location.href = `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`;
-      });
-    }
+        clearAllCookies(); // Clear cookies upon unauthentication
 
-    return response;  // Return the response
+        apolloClient?.clearStore().then(() => {
+          window.location.href = `/auth/login?redirectTo=${encodeURIComponent(
+            redirectTo,
+          )}`;
+        });
+      }
+
+      return response; // Return the response
+    });
   });
-});
 
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
     link: from([errorLink, uploadLink]),
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
+        errorPolicy: "all",
+        notifyOnNetworkStatusChange: true,
+      },
+      query: {
+        errorPolicy: "all",
+      },
+      mutate: {
         errorPolicy: "all",
       },
     },
@@ -127,15 +135,31 @@ export function useApollo(initialState: NormalizedCacheObject) {
   return store;
 }
 
+// export const setAuthToken = () => {
+//   const cookies = parseCookies();
+//   const token = cookies.access_token || "";
+
+//   const options: HttpOptions = {
+//     headers: {
+//       Authorization: token ? `Bearer ${token}` : null,
+//     },
+//   };
+
+//   apolloClient.setLink(createLink(options));
+// };
+
 export const setAuthToken = () => {
   const cookies = parseCookies();
   const token = cookies.access_token || "";
 
-  const options: HttpOptions = {
-    headers: {
-      Authorization: token ? `Bearer ${token}` : null,
-    },
-  };
+  if (!apolloClient) return;
 
-  apolloClient.setLink(createLink(options));
+  const httpLink = createUploadLink({
+    uri: process.env.NEXT_PUBLIC_GRAPHQL_API_URL,
+    credentials: "include",
+    fetchOptions: { credentials: "include" },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+
+  apolloClient.setLink(from([httpLink as any]));
 };
