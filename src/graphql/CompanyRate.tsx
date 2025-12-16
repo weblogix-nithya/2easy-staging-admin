@@ -72,6 +72,13 @@ export const GET_COMPANY_RATE_QUERY = gql`
     }
   }
 `;
+export const GET_TIMEZONE_QUERY = gql`
+  query GetTimezone($state: String!) {
+    getTimezone(state: $state) {
+      timeZoneId
+    }
+  }
+`;
 
 export const UPDATE_COMPANY_RATE_MUTATION = gql`
   mutation UpdateCompanyRate(

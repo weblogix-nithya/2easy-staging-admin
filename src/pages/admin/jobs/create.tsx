@@ -40,7 +40,10 @@ import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
-import { GET_COMPANY_RATE_QUERY } from "graphql/CompanyRate";
+import {
+  GET_COMPANY_RATE_QUERY,
+  GET_TIMEZONE_QUERY,
+} from "graphql/CompanyRate";
 import { defaultCustomer, GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
@@ -68,7 +71,7 @@ import { GET_JOB_TYPES_QUERY } from "graphql/jobType";
 import { ADD_MEDIA_MUTATION } from "graphql/media";
 import {
   formatDateTimeToDB,
-  getTimezone,
+  // getTimezone,
   isAfterCutoff,
   today,
 } from "helpers/helper";
@@ -318,6 +321,11 @@ function JobPage() {
     },
   });
 
+  const { refetch: getTimezone } = useQuery(GET_TIMEZONE_QUERY, {
+    skip: true, // important
+    fetchPolicy: "network-only",
+  });
+
   useQuery(GET_ITEM_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: (data) => {
@@ -356,11 +364,11 @@ function JobPage() {
 
       try {
         // If lat/lng exists, calculate timezone and filter
-        if (pickUpDestination?.lat && pickUpDestination?.lng) {
-          const timezone = await getTimezone(
-            pickUpDestination.lat,
-            pickUpDestination.lng,
-          );
+        if (pickUpDestination?.address_state) {
+          const res = await getTimezone({
+            state: pickUpDestination.address_state,
+          });
+          const timezone = res?.data?.getTimezone?.timeZoneId;
 
           let updatedOptions = [...options];
 
@@ -1119,12 +1127,10 @@ function JobPage() {
 
     const checkAndUpdateJobTypes = async () => {
       try {
-        if (!pickUpDestination?.lat || !pickUpDestination?.lng) return;
+        if (!pickUpDestination?.address_state) return;
+        const res = await getTimezone({state: pickUpDestination.address_state});
 
-        const timezone = await getTimezone(
-          pickUpDestination.lat,
-          pickUpDestination.lng,
-        );
+        const timezone = res?.data?.getTimezone?.timeZoneId;
 
         let updatedOptions = [...jobTypeOptions];
 
