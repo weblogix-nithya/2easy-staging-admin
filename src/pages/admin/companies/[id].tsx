@@ -176,7 +176,9 @@ function CompanyEdit() {
   const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
     GET_COMPANY_RATE_QUERY,
     {
-      variables: { company_id: company.id },
+      variables: {
+        company_id: company.id,
+      },
       skip: !company.id,
       fetchPolicy: "network-only", // Add this to ensure fresh data
       onCompleted: (data) => {
@@ -249,7 +251,10 @@ function CompanyEdit() {
 
   useEffect(() => {
     if (company.id) {
-      getCompanyRates();
+      getCompanyRates({
+        company_id: company.id,
+        // fetchPolicy: "network-only",
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [company.id, getCompanyRates]);
@@ -513,8 +518,7 @@ function CompanyEdit() {
 
       // Refresh rates from API
       const { data } = await getCompanyRates({
-        variables: { company_id: company.id },
-        fetchPolicy: "network-only",
+        company_id: Number(company.id),
       });
 
       if (data?.getRatesByCompany) {
@@ -560,7 +564,7 @@ function CompanyEdit() {
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
   const [updateCompanyRate] = useMutation(UPDATE_COMPANY_RATE_MUTATION);
 
-  const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
+  const [handleUpdateCompany, {}] = useMutation(UPDATE_COMPANY_MUTATION, {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
@@ -648,8 +652,7 @@ function CompanyEdit() {
 
       // Refresh rates from API
       const { data } = await getCompanyRates({
-        variables: { company_id: company.id },
-        fetchPolicy: "network-only",
+        company_id: company.id,
       });
 
       if (data?.getRatesByCompany) {
@@ -787,7 +790,7 @@ function CompanyEdit() {
     },
   });
 
-  const [addCustomerToCompany, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
+  const [addCustomerToCompany, {}] = useMutation(UPDATE_CUSTOMER_MUTATION, {
     variables: {
       input: {
         id: selectCustomerId,
@@ -810,7 +813,7 @@ function CompanyEdit() {
     },
   });
 
-  const [removeCustomerFromCompany, { }] = useMutation(
+  const [removeCustomerFromCompany, {}] = useMutation(
     UPDATE_CUSTOMER_MUTATION,
     {
       variables: {
@@ -1132,7 +1135,9 @@ function CompanyEdit() {
                           onChange={(e) =>
                             setCompany({
                               ...company,
-                              [e.target.name]: e.target.value ? parseInt(e.target.value, 10) : ""
+                              [e.target.name]: e.target.value
+                                ? parseInt(e.target.value, 10)
+                                : "",
                             })
                           }
                           placeholder=""
@@ -1155,7 +1160,8 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          Job Type (Would you like to display &apos;Standard&apos; for all dates and times?)
+                          Job Type (Would you like to display
+                          &apos;Standard&apos; for all dates and times?)
                         </FormLabel>
 
                         <RadioGroup
@@ -1816,7 +1822,7 @@ function CompanyEdit() {
                                 )}
                                 options={
                                   (groupedSeafreights as Record<string, any[]>)[
-                                  selectedState
+                                    selectedState
                                   ] || []
                                 }
                                 onChange={handleRegionChange}

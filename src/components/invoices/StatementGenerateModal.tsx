@@ -95,6 +95,11 @@ export default function StatementGenerateModal({
   const { refetch: getCustomersByCompanyId } = useQuery(GET_CUSTOMERS_QUERY, {
     variables: {
       company_id: isAdmin ? undefined : companyId,
+      query: "",
+      page: 1,
+      first: 200,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
     },
     skip: !isAdmin && !isCompanyAdmin,
     onCompleted: (data) => {
@@ -224,7 +229,7 @@ export default function StatementGenerateModal({
                         getCustomersByCompanyId({
                           query: "",
                           page: 1,
-                          first: 100,
+                          first: 200,
                           orderByColumn: "id",
                           orderByOrder: "ASC",
                           company_id: e.value,
