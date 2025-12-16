@@ -302,7 +302,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
     skip: !userId || isCompanyAdmin || isCustomer || isCompany,
     fetchPolicy: "network-only",
     onCompleted: (data) => {
-      console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
+      // console.log("groupedJobs =>", data.groupedPaginatedJobs.data);
       setInitialJobsData(data.groupedPaginatedJobs.data);
       setInitialJobsDataTotal(data.groupedPaginatedJobs.total);
       setInitialJobsDataLastPage(data.groupedPaginatedJobs.last_page);
@@ -405,7 +405,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   useEffect(() => {
     const hasGroupedJobs = groupedJobs?.groupedPaginatedJobs?.data?.length > 0;
     const hasCompanyJobs = companyJobs?.jobs?.data?.length > 0;
-    console.log(hasGroupedJobs, hasCompanyJobs, "g", "c");
+    // console.log(hasGroupedJobs, hasCompanyJobs, "g", "c");
     if ((isAdmin && hasGroupedJobs) || (!isAdmin && hasCompanyJobs)) {
       getJobStatuses();
       getJobCategories();
