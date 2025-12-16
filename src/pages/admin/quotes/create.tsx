@@ -167,6 +167,7 @@ export default function QuoteCreate() {
       first: 1000,
       orderByColumn: "id",
       orderByOrder: "ASC",
+      company_id: undefined
     },
     skip: !isAdmin,
     onCompleted: (data) => {

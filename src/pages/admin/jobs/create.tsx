@@ -459,7 +459,7 @@ function JobPage() {
         getCustomersByCompanyId({ ...defaultVariables, company_id: companyId });
 
         getCompanyRates({
-          company_id: String(companyId),
+          company_id: Number(companyId),
         });
       }
     }, 100);
@@ -1511,7 +1511,7 @@ function JobPage() {
                               res.data.company?.standard_static ? 1 : 0,
                             );
                           });
-                          getCompanyRates({ company_id: String(e.value) });
+                          getCompanyRates({ company_id: Number(e.value) });
                         }
                       }}
                     />
