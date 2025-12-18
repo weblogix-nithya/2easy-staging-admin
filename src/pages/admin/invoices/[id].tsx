@@ -480,12 +480,12 @@ function InvoiceEdit() {
           duration: 3000,
           isClosable: true,
         });
-        let shouldSendInvoice = invoiceStatusId == "6" ? false : true;
-        shouldSendInvoice = invoiceStatusId == "2" ? false : shouldSendInvoice;
+        // let shouldSendInvoice = invoiceStatusId == "6" ? false : true;
+        // shouldSendInvoice = invoiceStatusId == "2" ? false : shouldSendInvoice;
         setTimeout(() => {
           getInvoice();
           if (
-            shouldSendInvoice &&
+            // shouldSendInvoice &&
             invoice.invoice_status_id != undefined &&
             (invoice.invoice_status_id == "6" ||
               invoice.invoice_status_id == "2")
