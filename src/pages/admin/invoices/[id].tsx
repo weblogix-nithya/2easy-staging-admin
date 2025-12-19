@@ -112,7 +112,7 @@ function InvoiceEdit() {
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const customerId = useSelector((state: RootState) => state.user.customerId);
   const companyId = useSelector((state: RootState) => state.user.companyId);
-  const [invoiceStatusId, setInvoiceStatusId] = useState(null);
+  const [_invoiceStatusId, setInvoiceStatusId] = useState(null);
   const router = useRouter();
   const { id } = router.query;
 
