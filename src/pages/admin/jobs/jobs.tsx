@@ -37,6 +37,7 @@ import { GET_JOBS_QUERY, GROUPED_PAGINATED_JOBS_QUERY } from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { JoinOnClause } from "graphql/types/types";
+import { csvColumns, prepareSelectedRowsForCSV } from "helpers/helper";
 import {
   outputDynamicTableBody,
   outputDynamicTableHeader,
@@ -85,6 +86,46 @@ const JobTableSettingsModal = dynamic(
     ssr: false,
   },
 );
+
+export function outputDynamicTableCSVColumns(
+  dynamicTableUsers: DynamicTableUser[],
+) {
+  return dynamicTableUsers
+    .filter((u) => u.is_active)
+    .flatMap((u) => u.dynamic_table.column_name.split(","));
+}
+export function outputDynamicTableCSVHeader(dynamicTableUsers: any[]) {
+  return dynamicTableUsers
+    .filter((u) => u.is_active)
+    .map((u) => u.dynamic_table.name.toUpperCase());
+}
+
+export function outputDynamicTableCSVBody(
+  dynamicTableUsers: any[],
+  rows: any[],
+) {
+  return rows.map((row) => {
+    console.log(row, "one row");
+    console.log(dynamicTableUsers, "dynamicTableUsers");
+
+    return dynamicTableUsers
+      .filter((u) => u.is_active)
+      .map((u) => {
+        const colKey = u.dynamic_table.column_name;
+
+        // If multiple columns ("a,b,c")
+        if (colKey.includes(",")) {
+          const keys = colKey.split(",");
+          return keys
+            .map((k) => (csvColumns[k] ? csvColumns[k](row.original) : "-"))
+            .join(" | ");
+        }
+
+        // Single column
+        return csvColumns[colKey] ? csvColumns[colKey](row.original) : "-";
+      });
+  });
+}
 
 const adminStatusOptions = [
   {
@@ -275,7 +316,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
       queryPageIndex,
       queryPageSize,
       searchQuery,
-      isCompany,
       companyId,
       isCustomer,
       isAdmin,
@@ -642,6 +682,34 @@ export default function JobIndex({}: // initialLoadOnly = false,
     },
   );
 
+  const handleExportCSV = () => {
+    const finalRows = prepareSelectedRowsForCSV(selectedJobs);
+    const header = outputDynamicTableCSVHeader(dynamicTableUsers);
+    const body = outputDynamicTableCSVBody(dynamicTableUsers, finalRows);
+    downloadCSV("jobs.csv", header, body);
+  };
+
+  function downloadCSV(filename: string, headers: string[], body: any[][]) {
+    const csvRows = [];
+
+    csvRows.push(headers.join(","));
+
+    body.forEach((row) => {
+      csvRows.push(
+        row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","),
+      );
+    });
+
+    const blob = new Blob([csvRows.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+  }
+
   const handleExport = () => {
     const header = outputDynamicTableHeader(dynamicTableUsers);
     const body = outputDynamicTableBody(
@@ -730,6 +798,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
             onOpenFilter={onOpenFilter}
             isFilterTicked={is_filter_ticked}
             handleExport={handleExport}
+            handleExportcsv={handleExportCSV}
             debouncedSearch={debouncedSearch}
             onToggleFilterCheckbox={(checked) => {
               if (!checked) {

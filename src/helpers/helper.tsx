@@ -172,6 +172,143 @@ export function getValueFromRow(row: any, columnName: string): any {
   return currentData;
 }
 
+export function normalizeCellExport(value: any): string {
+  if (value === undefined || value === null) return "-";
+
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => (typeof v === "object" ? JSON.stringify(v) : v))
+      .join(" | ");
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
+export function prepareSelectedRowsForCSV(selectedJobs: any[]) {
+  const unique = Array.from(
+    new Map(selectedJobs.map((r) => [r.id, r])).values(),
+  );
+
+  console.log("Preparing CSV. Final unique rows count:", unique.length, unique);
+  return unique;
+}
+
+export function getValueFromRowCsv(obj: any, path: string) {
+  if (!obj) return "-";
+
+  return path.split(".").reduce((acc, key) => {
+    if (acc === undefined || acc === null) return undefined;
+    return acc[key];
+  }, obj);
+}
+
+const getPickupDestination = (row: any) =>
+  row?.job?.job_destinations?.find((d: any) => d.is_pickup);
+
+const getDeliveryDestinations = (row: any) =>
+  row?.job?.job_destinations?.filter((d: any) => !d.is_pickup);
+
+export const csvColumns: Record<string, (row: any) => any> = {
+  // DRIVER
+  "driver.full_name": (row) => row?.driver?.full_name ?? "-",
+
+  // JOB CORE
+  name: (row) => row?.job?.name ?? "-",
+  reference_no: (row) => row?.job?.reference_no ?? "-",
+
+  // COMPANY
+  "company.name": (row) => row?.job?.company?.name ?? "-",
+
+  // STATUS / CATEGORY / TYPE
+  "job_status.name": (row) => row?.job?.job_status?.name ?? "-",
+  "job_type.name": (row) => row?.job?.job_type?.name ?? "-",
+  "job_category.name": (row) => row?.job?.job_category?.name ?? "-",
+
+  // DATE/TIME FIELDS
+  ready_at: (row) => row?.job?.ready_at ?? "-",
+  drop_at: (row) => row?.job?.drop_at ?? "-",
+  last_free_at: (row) => row?.job?.last_free_at ?? "-",
+  timeslot: (row) => row?.job?.timeslot ?? "-",
+
+  // PICKUP
+  "pick_up_destination.address_formatted": (row) => {
+    const pickup = getPickupDestination(row);
+    if (!pickup) return "-";
+
+    return [
+      pickup.address_line_1,
+      pickup.address_city,
+      pickup.address_state,
+      pickup.address_postal_code,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  },
+
+  "pick_up_destination.address_business_name": (row) =>
+    getPickupDestination(row)?.address_business_name ?? "-",
+
+  // DELIVERY DESTINATIONS
+  "job_destinations.address": (row) => {
+    const deliveries = getDeliveryDestinations(row);
+    if (!deliveries?.length) return "-";
+
+    return deliveries
+      .map((d: any) =>
+        [
+          d.address_line_1,
+          d.address_city,
+          d.address_state,
+          d.address_postal_code,
+        ]
+          .filter(Boolean)
+          .join(", "),
+      )
+      .join("\n"); // new line per delivery
+  },
+
+  "job_destinations.address_business_name": (row) => {
+    const deliveries = getDeliveryDestinations(row);
+    if (!deliveries?.length) return "-";
+
+    return deliveries
+      .map((d: any) => d.address_business_name ?? "-")
+      .join("\n"); // new line per delivery
+  },
+
+  // NOTES & EXTRAS
+  extras: (row) => row?.job?.extras ?? "-",
+  customer_notes: (row) => row?.job?.customer_notes ?? "-",
+  admin_notes: (row) => row?.job?.admin_notes ?? "-",
+
+  // ITEMS
+  "job_items.item_type": (row) =>
+    row?.job?.job_items?.map((i) => i.item_type.name).join(", ") ?? "-",
+
+  "job_items.dimensions": (row) =>
+    row?.job?.job_items?.length
+      ? row.job.job_items
+          .map(
+            (i: any) =>
+              `${i.dimension_width} x ${i.dimension_height} x ${i.dimension_depth}`,
+          )
+          .join("\n")
+      : "-",
+
+  "job_items.quantity": (row) =>
+    row?.job?.job_items?.map((i) => i.quantity).join(", ") ?? "-",
+
+  "job_items.weight": (row) =>
+    row?.job?.job_items?.map((i) => i.weight).join(", ") ?? "-",
+
+  "job_items.volume": (row) =>
+    row?.job?.job_items?.map((i) => i.volume).join(", ") ?? "-",
+};
+
 export function formatCurrency(
   amount: number,
   currency: string = "AUD",

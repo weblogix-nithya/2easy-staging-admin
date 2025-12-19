@@ -19,6 +19,7 @@ interface JobHeaderProps {
   onOpenFilter: () => void;
   isFilterTicked: string;
   handleExport: () => void;
+  handleExportcsv: () => void;
   debouncedSearch: (query: string) => void;
   onToggleFilterCheckbox: (checked: boolean) => void;
 }
@@ -30,6 +31,7 @@ const JobHeader = ({
   onOpenFilter,
   isFilterTicked,
   handleExport,
+  handleExportcsv,
   debouncedSearch,
   onToggleFilterCheckbox,
 }: JobHeaderProps) => {
@@ -93,8 +95,16 @@ const JobHeader = ({
             leftIcon={<FaFileExcel />}
             variant="primary"
             onClick={handleExport}
+            className="mr-2"
           >
             Export Xls
+          </Button>
+          <Button
+            leftIcon={<FaFileExcel />}
+            variant="primary"
+            onClick={handleExportcsv}
+          >
+            Export CSV
           </Button>
         </Flex>
       </Flex>
