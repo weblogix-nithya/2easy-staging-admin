@@ -123,6 +123,8 @@ export default function EditableFieldPopover({
               size="sm"
               rows={8}
               resize="none"
+              name={field}
+              id={field}
             />
           ) : (
             <Textarea
@@ -130,7 +132,9 @@ export default function EditableFieldPopover({
               ref={ref as React.RefObject<HTMLTextAreaElement>}
               size="sm"
               rows={4}
-              placeholder="Enter value"
+              placeholder="Enter value"              
+              name={field}
+              id={field}
             />
           )}
           <Flex gap={2} justify="flex-end">
