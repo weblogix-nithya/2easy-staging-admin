@@ -77,6 +77,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+import { parseCookies } from "nookies";
 // import { useRouter } from "next/router";
 import {
   // startTransition,
@@ -97,6 +98,7 @@ function JobPage() {
   const isMounted = useRef(false);
   useEffect(() => {
     isMounted.current = true;
+    
     return () => {
       isMounted.current = false;
     };
@@ -109,6 +111,8 @@ function JobPage() {
     isCompanyAdmin,
     isCustomer,
   } = useSelector((state: RootState) => state.user);
+    const cookies = parseCookies();
+  
   console.log(
     isAdmin,
     companyId,
@@ -468,6 +472,7 @@ function JobPage() {
 
   useEffect(() => {
     if ((!isCompany && !isCompanyAdmin) || !companyId) return;
+
 
     const timeout = setTimeout(() => {
       if (job.company_id !== companyId) {
@@ -1492,7 +1497,7 @@ function JobPage() {
                       optionsArray={companiesOptions}
                       label="Company:"
                       value={companiesOptions.find(
-                        (entity) => entity.value === job.company_id,
+                        (entity) => entity.value === job.company_id || cookies.company_id,
                       )}
                       placeholder=""
                       onInputChange={(e) => {
@@ -1599,7 +1604,7 @@ function JobPage() {
                     label={isAdmin ? "Customer:" : "Booked by"}
                     value={
                       customerOptions.find(
-                        (entity) => entity.value === job.customer_id,
+                        (entity) => entity.value === job.customer_id || cookies.customer_id,
                       ) || { value: 0, label: "" }
                     }
                     placeholder=""
