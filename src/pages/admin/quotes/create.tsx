@@ -40,8 +40,18 @@ export default function QuoteCreate() {
     [],
   );
 
-  const { isAdmin, isCustomer, isCompany, userName, customerId, companyId } =
+  const { isAdmin, isCustomer, isCompany, userName, customerId, companyId,isCompanyAdmin,userId } =
     useSelector((state: RootState) => state.user);
+  console.log(
+    isAdmin,
+    companyId,
+    customerId,
+    isCompany,
+    isCompanyAdmin,
+    isCustomer,
+    userId,
+    "isCompanyAdmin",
+  );
   const [categories, setCategories] = useState([]);
   const [serviceTypes, setServiceTypes] = useState([]);
   const [quoteTypes, setQuoteTypes] = useState([]);
@@ -167,7 +177,7 @@ export default function QuoteCreate() {
       first: 1000,
       orderByColumn: "id",
       orderByOrder: "ASC",
-      company_id: undefined
+      company_id: undefined,
     },
     skip: !isAdmin,
     onCompleted: (data) => {
@@ -179,22 +189,24 @@ export default function QuoteCreate() {
   useEffect(() => {
     if (quote.company_id) {
       setCustomerOptions([]); // Clear previous options
-      getCustomers({ query: "", company_id: quote.company_id }).then(({ data }) => {
-        if (data?.customers?.data) {
-          setCustomerOptions(
-            formatToSelect(
-              data.customers.data.filter((customer: { company_id: number }) => 
-                customer.company_id === quote.company_id
+      getCustomers({ query: "", company_id: quote.company_id }).then(
+        ({ data }) => {
+          if (data?.customers?.data) {
+            setCustomerOptions(
+              formatToSelect(
+                data.customers.data.filter(
+                  (customer: { company_id: number }) =>
+                    customer.company_id === quote.company_id,
+                ),
+                "id",
+                "full_name",
               ),
-              "id",
-              "full_name"
-            )
-          );
-        }
-      });
-      
+            );
+          }
+        },
+      );
     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.company_id, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
@@ -218,17 +230,18 @@ export default function QuoteCreate() {
       });
     },
   });
-  
   useEffect(() => {
     if (quote.customer_id && isAdmin) {
-      const customer = customers.find((customer) => customer.id === quote.customer_id);
+      const customer = customers.find(
+        (customer) => customer.id === quote.customer_id,
+      );
       if (customer) {
-        setRateCardUrl(customer.rate_card_url || '');
+        setRateCardUrl(customer.rate_card_url || "");
       } else {
-        setRateCardUrl('');
+        setRateCardUrl("");
       }
     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.customer_id]);
 
   const [handleCreateQuote, { loading: saving }] = useMutation(

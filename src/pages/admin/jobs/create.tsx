@@ -109,6 +109,15 @@ function JobPage() {
     isCompanyAdmin,
     isCustomer,
   } = useSelector((state: RootState) => state.user);
+  console.log(
+    isAdmin,
+    companyId,
+    customerId,
+    isCompany,
+    isCompanyAdmin,
+    isCustomer,
+    "page job ",
+  );
   // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
