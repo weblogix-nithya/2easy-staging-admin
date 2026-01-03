@@ -77,7 +77,6 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
-import { parseCookies } from "nookies";
 // import { useRouter } from "next/router";
 import {
   // startTransition,
@@ -98,7 +97,6 @@ function JobPage() {
   const isMounted = useRef(false);
   useEffect(() => {
     isMounted.current = true;
-    
     return () => {
       isMounted.current = false;
     };
@@ -111,17 +109,7 @@ function JobPage() {
     isCompanyAdmin,
     isCustomer,
   } = useSelector((state: RootState) => state.user);
-    const cookies = parseCookies();
-  
-  console.log(
-    isAdmin,
-    companyId,
-    customerId,
-    isCompany,
-    isCompanyAdmin,
-    isCustomer,
-    "page job ",
-  );
+
   // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
@@ -473,7 +461,6 @@ function JobPage() {
   useEffect(() => {
     if ((!isCompany && !isCompanyAdmin) || !companyId) return;
 
-
     const timeout = setTimeout(() => {
       if (job.company_id !== companyId) {
         setJob((prev) => ({ ...prev, company_id: companyId }));
@@ -495,16 +482,7 @@ function JobPage() {
       input: {
         ...job,
         id: undefined,
-        company_id: isAdmin
-          ? Number(job.company_id)
-          : companyId
-          ? Number(companyId)
-          : cookies.company_id,
-        customer_id: isAdmin
-          ? Number(job.customer_id)
-          : customerId
-          ? Number(customerId)
-          : cookies.customer_id,
+        company_id: isAdmin ? Number(job.company_id) : Number(companyId),
         job_status_id: 1,
         job_type_id: job.job_type_id,
         transport_type: job.transport_type,
@@ -1151,9 +1129,7 @@ function JobPage() {
     const checkAndUpdateJobTypes = async () => {
       try {
         if (!pickUpDestination?.address_state) return;
-        const res = await getTimezone({
-          state: pickUpDestination.address_state,
-        });
+        const res = await getTimezone({state: pickUpDestination.address_state});
 
         const timezone = res?.data?.getTimezone?.timeZoneId;
 
@@ -1508,7 +1484,7 @@ function JobPage() {
                       optionsArray={companiesOptions}
                       label="Company:"
                       value={companiesOptions.find(
-                        (entity) => entity.value === job.company_id || cookies.company_id,
+                        (entity) => entity.value === job.company_id,
                       )}
                       placeholder=""
                       onInputChange={(e) => {
@@ -1615,7 +1591,7 @@ function JobPage() {
                     label={isAdmin ? "Customer:" : "Booked by"}
                     value={
                       customerOptions.find(
-                        (entity) => entity.value === job.customer_id || cookies.customer_id,
+                        (entity) => entity.value === job.customer_id,
                       ) || { value: 0, label: "" }
                     }
                     placeholder=""
