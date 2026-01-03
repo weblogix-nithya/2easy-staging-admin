@@ -130,7 +130,7 @@ export default function AdminLayout(props: DashboardLayoutProps) {
         cookies.company_id !== "undefined" &&
         cookies.company_id !== ""
       ) {
-        console.log(cookies.company_id,'in')
+        // console.log(cookies.company_id,'in')
         dispatch(setCompanyId(cookies.company_id));
         // Company/Customer middleware. badly done.
         if (
@@ -215,7 +215,7 @@ export default function AdminLayout(props: DashboardLayoutProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuth, cookies.access_token, router]);
 
-  console.log(cookies.company_id,'out')
+  // console.log(cookies.company_id,'out')
 
   const { onOpen } = useDisclosure();
 
