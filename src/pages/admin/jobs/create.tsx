@@ -95,7 +95,7 @@ function JobPage() {
   const toast = useToast();
   const freightCalculatedRef = useRef(false);
   const isMounted = useRef(false);
-  useEffect(() => {
+    useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -1076,7 +1076,7 @@ function JobPage() {
       setCustomerOptions(_customerOptions);
       console.log(_customerOptions, "cust");
       if (isCustomer) {
-        setJob({ ...job, ...{ customer_id: customerId } });
+        setJob({ ...job, ...{ customer_id: customerId} });
         const selectedCustomer = _customerOptions.find(
           (_e) => _e.value === customerId,
         )?.entity;
@@ -1129,7 +1129,9 @@ function JobPage() {
     const checkAndUpdateJobTypes = async () => {
       try {
         if (!pickUpDestination?.address_state) return;
-        const res = await getTimezone({state: pickUpDestination.address_state});
+        const res = await getTimezone({
+          state: pickUpDestination.address_state,
+        });
 
         const timezone = res?.data?.getTimezone?.timeZoneId;
 
@@ -1584,35 +1586,50 @@ function JobPage() {
                       </Text>
                     </>
                   )}
-
-                  <CustomInputField
-                    isSelect={true}
-                    optionsArray={customerOptions}
-                    label={isAdmin ? "Customer:" : "Booked by"}
-                    value={
-                      customerOptions.find(
-                        (entity) => entity.value === job.customer_id,
-                      ) || { value: 0, label: "" }
-                    }
-                    placeholder=""
-                    isDisabled={!isAdmin}
-                    onChange={(e) => {
-                      setCustomerBaseNotes(e.base_notes);
-                      setJob({ ...job, base_notes: e.base_notes });
-                      if (!isAdmin) return;
-                      setJob({
-                        ...job,
-                        customer_id: e.value || null,
-                      });
-                      const selectedCustomer = customerOptions.find(
-                        (_e) => _e.value === e.value,
-                      )?.entity;
-                      if (selectedCustomer) {
-                        setCustomerSelected(selectedCustomer);
+                  {isAdmin && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={customerOptions}
+                      label={"Customer:" }
+                      value={
+                        customerOptions.find(
+                          (entity) => entity.value === job.customer_id,
+                        ) || { value: 0, label: "" }
                       }
-                    }}
-                  />
-
+                      placeholder=""
+                      isDisabled={!isAdmin}
+                      onChange={(e) => {
+                        setCustomerBaseNotes(e.base_notes);
+                        setJob({ ...job, base_notes: e.base_notes });
+                        if (!isAdmin) return;
+                        setJob({
+                          ...job,
+                          customer_id: e.value || null,
+                        });
+                        const selectedCustomer = customerOptions.find(
+                          (_e) => _e.value === e.value,
+                        )?.entity;
+                        if (selectedCustomer) {
+                          setCustomerSelected(selectedCustomer);
+                        }
+                      }}
+                    />
+                  )}
+                   {!isAdmin && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={customerOptions}
+                      label={"Booked by"}
+                      value={
+                        customerOptions.find(
+                          (entity) => entity.value === job.customer_id,
+                        ) || { value: 0, label: "" }
+                      }
+                      placeholder=""
+                      isDisabled={!isAdmin}
+                     
+                    />
+                  )}
                   <CustomInputField
                     label="Operator phone:"
                     placeholder=""
@@ -2495,6 +2512,15 @@ function JobPage() {
                                   >
                                     Get A Quote
                                   </Button>
+                                  {/* <Button
+                                    variant="outline"
+                                    ms={4}
+                                    onClick={() => {
+
+                                    }}
+                                  >
+                                    download Quote
+                                  </Button> */}
                                 </Flex>
                                 {quoteCalculationRes && (
                                   <Box mt={4}>
