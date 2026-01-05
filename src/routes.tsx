@@ -21,6 +21,7 @@ import Drivers from "pages/admin/drivers/index";
 import Invoices from "pages/admin/invoices/index";
 import JobAllocationIndex from "pages/admin/job-allocations/index";
 import Jobs from "pages/admin/jobs/index";
+import PreAllocation from "pages/admin/pre-allocation/index";
 import Quote from "pages/admin/quotes/quotes";
 import Rctis from "pages/admin/rctis/index";
 import Users from "pages/admin/users/index";
@@ -56,6 +57,18 @@ const routes: IRoute[] = [
     path: "/job-allocations",
     icon: <FontAwesomeIcon icon={faTruckRampBox} className="mr-1" />,
     component: JobAllocationIndex,
+    sidebar: true,
+    isAdmin: true,
+    isCompany: false,
+    isPrivate: false,
+  },
+    {
+    name: "Pre-Allocation",
+    title: "Pre-Allocation",
+    layout: "/admin",
+    path: "/pre-allocation",
+    icon: <FontAwesomeIcon icon={faTruckRampBox} className="mr-1" />,
+    component: PreAllocation,
     sidebar: true,
     isAdmin: true,
     isCompany: false,

@@ -31,7 +31,8 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
-import SortableJobTableSetting from "./SortableJobTableSetting";
+import SortableJobTableSetting from '../jobs/SortableJobTableSetting';
+
 
 export default function JobTableSettingsModal(props: UseDisclosureProps) {
   const { isOpen, onClose } = props;
@@ -66,7 +67,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         orderByColumn: "sort_id",
         orderByOrder: "ASC",
         user_id: userId,
-        table_name: "jobs",
+        table_name: "pre-allocation-jobs",
       },
       skip: !userId && !isOpen,
       notifyOnNetworkStatusChange: true,

@@ -19,8 +19,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
-import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
+import { faDownload, faEye, faMessageLines, faPen } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
@@ -76,7 +75,6 @@ const getStatusStyle = (status: string) => {
 
   return {};
 };
-
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
   data: T[];
@@ -90,8 +88,10 @@ type PaginationTableProps<T extends object> = {
   showManualPages?: boolean;
   isChecked?: boolean;
   onSortingChange?: any;
+  onAssignClick?: (driver: any) => void;
   restyleTable?: boolean;
-  onContextMenu?: (event: React.MouseEvent, rowData: any) => void;
+  refetchJobs?: () => void;
+  onContextMenu?: (e: React.MouseEvent, job: any) => void;
 } & (
     | {
       isServerSide?: false;
@@ -135,6 +135,7 @@ const PaginationTable = <T extends object>({
   setSelectedRow,
   isChecked,
   onSortingChange,
+  onAssignClick,
   restyleTable = false,
   onContextMenu,
 }: // restyleTable = false,
@@ -175,6 +176,8 @@ const PaginationTable = <T extends object>({
       columns,
       data,
       autoResetSelectedRows: false,
+      autoResetSortBy: false,
+      disableSortRemove: true,
     },
     useSortBy,
     usePagination,
@@ -192,6 +195,15 @@ const PaginationTable = <T extends object>({
       // no need to force here; next render will show real state anyway
     }
   }, [selectedFlatRows]);
+
+  useEffect(() => {
+    if (!setSelectedRow || setSelectedRow.length === 0) {
+      optimisticSelRef.current.clear();
+      toggleAllRowsSelected(false);
+      forceUpdate();
+    }
+  }, [setSelectedRow, toggleAllRowsSelected]);
+
   function getOptimisticSelected(row: any) {
     const v = optimisticSelRef.current.get(row.id);
     return typeof v === "boolean" ? v : row.isSelected;
@@ -201,11 +213,12 @@ const PaginationTable = <T extends object>({
     const next = !getOptimisticSelected(row);
     optimisticSelRef.current.set(row.id, next); // flip instantly
     forceUpdate(); // paint now
+    triggerForceUpdate();
     row.toggleRowSelected(next); // real react-table state
   }
 
   // useEffect(() => {
-  //   console.log("Page rows changed:", pageRows.map((r) => r.original?.job?.name));
+  // console.log("Page rows changed:", pageRows.map((r) => r.original?.job?.name));
   // }, [pageRows]);
 
   useEffect(() => {
@@ -224,14 +237,33 @@ const PaginationTable = <T extends object>({
   }, [page, showRowSelection, setSelectedRow, selectedFlatRows]);
 
   // const pageRows = useMemo(() => {
-  //   return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
-  //   //eslint-disable-next-line react-hooks/exhaustive-deps
+  // return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
+  // //eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [page, isFilterRowSelected]);
-
-  const pageRows = isFilterRowSelected
-    ? page.filter((row) => row.isSelected)
-    : page;
-
+  // const pageRows = isFilterRowSelected
+  // ? page.filter((row) => row.isSelected)
+  // : page;
+  // === MOVE SELECTED ROWS TO TOP ===
+  // Force update counter
+  const [forceCounter, setForceCounter] = React.useState(0);
+  // Rename function to avoid duplicate
+  const triggerForceUpdate = () => setForceCounter((x) => x + 1);
+  // Memoized rows
+  const pageRows = React.useMemo(() => {
+    let rows = [...page];
+    // 1. Sort selected rows first
+    // rows.sort((a, b) => {
+    //   const aSel = getOptimisticSelected(a) ? 1 : 0;
+    //   const bSel = getOptimisticSelected(b) ? 1 : 0;
+    //   return bSel - aSel;
+    // });
+    // 2. Only selected rows filter
+    if (isFilterRowSelected) {
+      rows = rows.filter((r) => getOptimisticSelected(r));
+    }
+    return rows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, isFilterRowSelected, forceCounter]);
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -241,7 +273,7 @@ const PaginationTable = <T extends object>({
     if (!isChecked) toggleAllRowsSelected(isChecked);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
-
+  // console.log("Rendering PaginationTable", pageRows.map((r) => r.original?.job?.name));
   return (
     <VStack w="full" align="start" spacing={4}>
       <Table colorScheme="white" {...getTableProps()}>
@@ -252,13 +284,14 @@ const PaginationTable = <T extends object>({
               key={`header-row-${index}`}
             >
               {headerGroup.headers.map((column) => (
+
                 <Th
                   {...column.getHeaderProps(
                     column.enableSorting
                       ? column.getSortByToggleProps()
                       : undefined,
                   )}
-                  {...column.getHeaderProps()}
+                  // {...column.getHeaderProps()}
                   key={`row-header-${column.id}`}
                   paddingLeft={restyleTable && 1}
                   paddingInlineStart={restyleTable && 1}
@@ -290,30 +323,38 @@ const PaginationTable = <T extends object>({
         </Thead>
         <Tbody {...getTableBodyProps()}>
           {pageRows.map((row, index) => {
-            // console.log(row, "row one");
+            // console.log(row.original?.job?.name, "row before prepare");
             prepareRow(row);
+
             const status = row.original?.job?.job_status?.name;
 
             const driver = row.original.driver;
             const prevDriver = pageRows[index - 1]?.original?.driver;
 
+            // ✅ NEW: Check driver header based on BOTH id AND bgcolor
             const shouldShowDriverHeader =
               !!driver?.full_name &&
-              (!prevDriver?.full_name || driver?.id !== prevDriver?.id);
+              (!prevDriver?.full_name ||
+                driver?.id !== prevDriver?.id ||
+                driver?.bgcolor !== prevDriver?.bgcolor); // ✅ Added bgcolor check
 
             return (
               <React.Fragment key={`driver-header-${index}`}>
                 {shouldShowDriverHeader && (
-                  <Tr>
-                    <Td fontSize="sm" colSpan={columns.length} p={0}>
+                  <Tr key={index}>
+                    <Td colSpan={columns.length} p={0}>
                       <Box
-                        bg="#1d2d53"
-                        color="#fff"
+                        bg={driver.bgcolor === 'blue' ? 'rgb(29, 45, 83)' : 'rgb(250, 220, 82)'} // ✅ Use bgcolor from backend
+                        color={driver.bgcolor === "yellow" ? "#000" : "#fff"} // ✅ Black text for yellow, white for blue
                         px={6}
                         py={3}
                         borderTop="4px solid"
                         borderLeft="4px solid"
-                        borderColor="#2F80ED"
+                        borderColor={
+                          driver.bgcolor === "yellow"
+                            ? "#2F80ED"  // Orange border for yellow (pre-allocated) #F59E0B
+                            : "#2F80ED"  // Blue border for blue (assigned)
+                        }
                         borderRadius="md"
                         w="100%"
                       >
@@ -356,13 +397,34 @@ const PaginationTable = <T extends object>({
                                   driver.last_job_drop_at_today,
                                 )}
                               </Badge>
-                              <Badge
-                                colorScheme="red"
-                                variant="subtle"
-                                fontSize="sm"
-                              >
-                                Driver price: {driver.total_jobs_today_price ?? "-"}
-                              </Badge>
+
+
+                              {/* ✅ Show "Assign Jobs" button ONLY for pre-allocated (yellow) */}
+                              {driver.bgcolor === "yellow" && (
+                                <Button
+                                  type="button"
+                                  px={5}
+                                  py={1}
+                                  colorScheme="blue"
+                                  fontSize="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAssignClick && onAssignClick(driver);
+                                  }}
+                                >
+                                  Assign Jobs
+                                </Button>
+
+                              )}
+                              {driver.bgcolor === "blue" && (
+                                <Badge
+                                  colorScheme="red"
+                                  variant="subtle"
+                                  fontSize="sm"
+                                >
+                                  Driver price: {driver.total_jobs_today_price ?? "-"}
+                                </Badge>
+                              )}
                             </Flex>
                           </Flex>
 
@@ -371,38 +433,36 @@ const PaginationTable = <T extends object>({
                             <Badge
                               colorScheme="red"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
-                              Current Suburb:  {driver.current_suburb ?? "-"}
+                              Current Suburb: {driver.current_suburb || "-"}
                             </Badge>
 
                             <Badge
                               colorScheme="red"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
-                              Mobile Number: {driver.phone_no ?? "-"}
+                              Mobile Number: {driver.phone_no || "-"}
                             </Badge>
-
                             <Badge
                               colorScheme="red"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
                               Rego: {driver.registration_no ?? "-"}
                             </Badge>
-
                             <Badge
                               colorScheme="red"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
                               TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
                             </Badge>
                             <Badge
                               colorScheme="blue"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
                               CBM: {driver.cbm_summary_today ?? 0} /{" "}
                               {driver.no_max_volume ?? 0}
@@ -411,7 +471,7 @@ const PaginationTable = <T extends object>({
                             <Badge
                               colorScheme="blue"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
                               Weight: {driver.weight_summary_today ?? 0} /{" "}
                               {driver.no_max_capacity ?? 0}
@@ -420,7 +480,7 @@ const PaginationTable = <T extends object>({
                             <Badge
                               colorScheme="blue"
                               variant="subtle"
-                              fontSize="md"
+                              fontSize="sm"
                             >
                               Pallets: {driver.no_max_pallets ?? 0}
                             </Badge>
@@ -432,7 +492,7 @@ const PaginationTable = <T extends object>({
                 )}
                 <Tr
                   {...row.getRowProps()}
-                  key={`data-row-${row.id || idx}`}
+                  key={`data-row-${index}`}  // ✅ Fix: Use 'index' instead of undefined 'idx'
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
                   onContextMenu={(e) => {
@@ -451,24 +511,25 @@ const PaginationTable = <T extends object>({
                   }}
                 // className="css-en-xlrwr4"
                 // onClick={
-                //   isChecked ? () => row.toggleRowSelected() : undefined
+                // isChecked ? () => row.toggleRowSelected() : undefined
                 // }
                 >
-                  {row?.cells?.map((cell, index) => {
+                  {row?.cells?.map((cell, cellIndex) => {  // ✅ Renamed inner index to 'cellIndex' for clarity
                     let data;
                     if (cell.column.id === "selection") {
                       return (
-                        <Td fontSize="sm"
+                        <Td
                           {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
-                          key={`selection-${index}`}
+                          key={`selection-${cellIndex}`}  // ✅ Use cellIndex for unique key
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!showRowSelection) return;
                             toggleOptimisticRow(row);
                           }}
                           cursor="pointer"
+                          fontSize="xx-small"
                         >
                           <Box pointerEvents="none">
                             {/* Render a visual checkbox using optimistic selected state */}
@@ -503,8 +564,8 @@ const PaginationTable = <T extends object>({
 
                     if (cell.column.Header === "Actions") {
                       data = (
-                        <Td fontSize="sm"
-                          key={`action-${index}`}
+                        <Td
+                          key={`action-${cellIndex}`}  // ✅ Use cellIndex
                           data-column-id="actions"
                         // paddingLeft={restyleTable && 1}
                         // paddingInlineStart={restyleTable && 1}
@@ -653,11 +714,11 @@ const PaginationTable = <T extends object>({
                       );
                     } else if (cell.column.Header === "Instructions") {
                       data = (
-                        <Td fontSize="sm"
+                        <Td
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
-                          key={`instructions-${index}`}
+                          key={`instructions-${cellIndex}`}  // ✅ Use cellIndex
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
                           paddingRight={restyleTable && 2}
@@ -698,16 +759,23 @@ const PaginationTable = <T extends object>({
                       );
                     } else {
                       data = (
-                        <Td fontSize="sm"
+                        <Td
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
-                          key={`default-${index}`}
+                          key={`default-${cellIndex}`}  // ✅ Use cellIndex
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
                           paddingRight={restyleTable && 2}
                           paddingInlineEnd={restyleTable && 2}
                           pr="20px"
+                          bg={
+                            cell.column.id === "total_weight"
+                              ? row.original?.job?.weight_color ?? "transparent"
+                              : cell.column.id === "total_volume"
+                                ? row.original?.job?.volume_color ?? "transparent"
+                                : undefined
+                          }
                         >
                           {
                             // @ts-expect-error
@@ -789,5 +857,6 @@ const PaginationTable = <T extends object>({
     </VStack>
   );
 };
+
 
 export default PaginationTable;

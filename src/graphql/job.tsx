@@ -119,6 +119,7 @@ export const GET_JOBS_QUERY = gql`
         ready_at
         drop_at
         start_at
+        created_at
         timeslot
         last_free_at
         pick_up_notes
@@ -194,6 +195,12 @@ export const GET_JOBS_QUERY = gql`
           lat
           lng
           updated_at
+        }
+        meta {
+          id
+          type
+          name
+          color
         }
         job_items {
           id
@@ -308,6 +315,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           no_max_volume
           no_max_capacity
           no_max_pallets
+          current_suburb
+          total_jobs_today_price
         }
         job {
           id
@@ -327,7 +336,12 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           ready_at
           start_at
           drop_at
-          created_at
+          meta {
+            id
+            type
+            name
+            color
+          }
           pick_up_address
           last_free_at
           timeslot
@@ -366,9 +380,11 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           job_destinations {
             id
             is_pickup
+            is_saved_address
             address_line_1
             address_city
             address_postal_code
+            address_state
             address_business_name
             updated_at
             arrived_at
@@ -378,11 +394,146 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
               downloadable_url
             }
           }
+          job_price_calculation_detail { 
+            job_id
+            total      
+          }
         }
       }
     }
   }
 `;
+
+export const PRE_ALLOCATION_JOBS_QUERY = gql`
+  query preAllocationJobs(
+    $page: Int!
+    $per_page: Int
+    $orderBy: [OrderByClause!]
+    $states: [String]
+    $suburbs: [String]
+    $weight_from: Float
+    $weight_to: Float
+    $volume_from: Float
+    $volume_to: Float
+    $between_at: JobBetweenInput
+    $preallocation_driver_id: ID
+    $query: String
+    $has_company_ids: [ID]
+    $sort_by: String
+    $sort_order: String
+  ) {
+    preAllocationJobs(
+      page: $page
+      per_page: $per_page
+      orderBy: $orderBy
+      states: $states
+      suburbs: $suburbs
+      weight_from: $weight_from
+      weight_to: $weight_to
+      volume_from: $volume_from
+      volume_to: $volume_to
+      between_at: $between_at
+      preallocation_driver_id: $preallocation_driver_id
+      query: $query
+      has_company_ids: $has_company_ids
+      sort_by: $sort_by
+      sort_order: $sort_order
+    ) {
+      current_page
+      last_page
+      total
+      per_page
+      data {
+        driver {
+          id
+          full_name
+          driver_no
+          phone_no
+          registration_no
+          is_tailgated
+          no_max_volume
+          no_max_capacity
+          no_max_pallets
+          weight_summary_today
+          cbm_summary_today
+          first_job_start_at_today
+          last_job_drop_at_today
+          bgcolor
+          current_suburb
+          total_jobs_today_price
+        }
+        job {
+          id
+          reference_no
+          name
+          driver_id
+          preallocation_driver_id
+          suburb_area
+          weight_color
+          volume_color
+          area_color
+          total_quantity
+          total_weight
+          total_volume
+          is_inbound_connect
+          is_hand_unloading
+          is_dangerous_goods
+          is_tailgate_required
+          is_paperwork_required
+          job_type { id name }
+          job_status { id name }
+          ready_at
+          start_at
+          drop_at
+          pick_up_address
+          last_free_at
+          timeslot
+          extras
+          admin_notes
+          customer_notes
+          driver { id full_name }
+          company { id name }
+          job_category { id name }
+          customer { id full_name }
+          job_items {
+            id
+            quantity
+            weight
+            volume
+            dimension_height
+            dimension_depth
+            dimension_width
+            item_type { id name }
+          }
+          meta {
+            id
+            type
+            name
+            color
+          }
+          job_destinations {
+            id
+            is_pickup
+            is_saved_address
+            address_line_1
+            address_city
+            address_state
+            address_postal_code
+            address_business_name
+            updated_at
+            arrived_at
+            media { name collection_name downloadable_url }
+          }
+          job_price_calculation_detail { 
+            job_id
+            total      
+          }
+        }
+      }
+    }
+  }
+`;
+
 
 export const GET_JOB_QUERY = gql`
   query job($id: ID!) {
@@ -445,10 +596,10 @@ export const GET_JOB_QUERY = gql`
       invoice_url
       is_inbound_connect
       is_hand_unloading
+      is_stackable_required
       is_dangerous_goods
       is_tailgate_required
       is_paperwork_required
-      is_stackable_required
       ready_at
       drop_at
       start_at
@@ -712,10 +863,10 @@ export const UPDATE_JOB_MUTATION = gql`
       minutes_waited
       is_inbound_connect
       is_hand_unloading
+      is_stackable_required
       is_dangerous_goods
       is_tailgate_required
       is_paperwork_required
-      is_stackable_required
       timeslot
       last_free_at
       quoted_price
@@ -733,11 +884,26 @@ export const BULK_UPDATE_JOB_MUTATION = gql`
       id
       name
       driver_id
+      preallocation_driver_id
       start_at
       d_sort_id
     }
   }
 `;
+
+export const PREALLOCATE_JOBS_MUTATION = gql`
+  mutation bulkUpdateJob($input: [UpdateJobInput]!) {
+    bulkUpdateJob(input: $input) {
+      id
+      name
+      preallocation_driver_id
+      start_at
+      d_sort_id
+    }
+  }
+`;
+
+
 
 export const BULK_UPDATE_SORT_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
@@ -779,11 +945,23 @@ export const GET_ALL_TIMESLOT_DEPOTS = gql`
   }
 `;
 
+export const REMOVE_PRE_ALLOCATE_DRIVER = gql`
+  mutation RemovePreallocationDriver($input: UpdateJobInput!) {
+    updateJob(input: $input) {
+      id
+      preallocation_driver_id
+    }
+  }
+`;
+
+
+
 export interface UpdateJobInput {
   id: number;
   name?: string;
   d_sort_id?: number;
   driver_id?: number;
+  preallocation_driver_id?: number;
   job_type_id?: number;
   job_status_id?: number;
   job_category_id?: number;
@@ -886,14 +1064,14 @@ export type Job = {
   media_admin?: any[] | null;
 
   [key: string]:
-    | string
-    | number
-    | null
-    | boolean
-    | undefined
-    | Date
-    | any[]
-    | any;
+  | string
+  | number
+  | null
+  | boolean
+  | undefined
+  | Date
+  | any[]
+  | any;
 };
 
 export const defaultJob: Job = {
@@ -977,6 +1155,8 @@ export type JobItem = {
 };
 
 export type JobQuoteData = {
+  total_cbm: number;
+  total_weight: number;
   freight_type: string;
   transport_type: any;
   service_choice: string;
@@ -998,6 +1178,8 @@ export type JobQuoteData = {
 };
 
 const defaultJobQuoteData: JobQuoteData = {
+  total_cbm: 0,
+  total_weight: 0,
   freight_type: "",
   transport_type: "",
   service_choice: "",
