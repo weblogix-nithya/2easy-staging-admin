@@ -143,11 +143,13 @@ export const JobDestinationBusinessNameCell = ({ row }: any) => {
   );
 };
 export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
-  const filteredDestinations = row?.original?.job?.job_destinations.filter(
-    (destination: any) => destination.is_pickup === false,
+  const destination = row?.original?.job?.job_destinations?.find(
+    (d: any) => d.is_pickup === false,
   );
-  return filteredDestinations[0]?.address_business_name || "-";
+
+  return destination?.address_business_name ?? "-";
 };
+
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(

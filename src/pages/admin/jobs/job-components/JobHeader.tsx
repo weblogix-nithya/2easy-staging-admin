@@ -99,13 +99,15 @@ const JobHeader = ({
           >
             Export Xls
           </Button>
-          <Button
-            leftIcon={<FaFileExcel />}
-            variant="primary"
-            onClick={handleExportcsv}
-          >
-            Export CSV
-          </Button>
+          {isAdmin && (
+            <Button
+              leftIcon={<FaFileExcel />}
+              variant="primary"
+              onClick={handleExportcsv}
+            >
+              Export CSV
+            </Button>
+          )}
         </Flex>
       </Flex>
     </>
