@@ -23,7 +23,7 @@ import { faDownload, faEye, faMessageLines, faPen } from "@fortawesome/pro-regul
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
-import { formatCurrency, formatDate } from "helpers/helper";
+import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
@@ -325,15 +325,18 @@ const PaginationTable = <T extends object>({
           {pageRows.map((row, index) => {
             // console.log(row.original?.job?.name, "row before prepare");
             prepareRow(row);
-            // console.log(row.original?.job?.name, "row after prepare");
+
             const status = row.original?.job?.job_status?.name;
 
             const driver = row.original.driver;
             const prevDriver = pageRows[index - 1]?.original?.driver;
 
+            // ✅ NEW: Check driver header based on BOTH id AND bgcolor
             const shouldShowDriverHeader =
               !!driver?.full_name &&
-              (!prevDriver?.full_name || driver?.id !== prevDriver?.id);
+              (!prevDriver?.full_name ||
+                driver?.id !== prevDriver?.id ||
+                driver?.bgcolor !== prevDriver?.bgcolor); // ✅ Added bgcolor check
 
             return (
               <React.Fragment key={`driver-header-${index}`}>
@@ -341,13 +344,17 @@ const PaginationTable = <T extends object>({
                   <Tr key={index}>
                     <Td colSpan={columns.length} p={0}>
                       <Box
-                        bg="#1d2d53"
-                        color="#fff"
+                        bg={driver.bgcolor === 'blue' ? 'rgb(29, 45, 83)' : 'rgb(250, 220, 82)'} // ✅ Use bgcolor from backend
+                        color={driver.bgcolor === "yellow" ? "#000" : "#fff"} // ✅ Black text for yellow, white for blue
                         px={6}
                         py={3}
                         borderTop="4px solid"
                         borderLeft="4px solid"
-                        borderColor="#2F80ED"
+                        borderColor={
+                          driver.bgcolor === "yellow"
+                            ? "#2F80ED"  // Orange border for yellow (pre-allocated) #F59E0B
+                            : "#2F80ED"  // Blue border for blue (assigned)
+                        }
                         borderRadius="md"
                         w="100%"
                       >
@@ -370,41 +377,74 @@ const PaginationTable = <T extends object>({
                                 Driver: {driver.full_name} — {driver.driver_no}
                               </Badge>
                               <Badge
-                                colorScheme="red"
+                                colorScheme="purple"
                                 variant="subtle"
-                                fontSize="sm"
+                                fontSize="md"
                               >
-                                Current Suburb: WIP
+                                First Collection:{" "}
+                                {formatToTimeDate(
+                                  driver.first_job_start_at_today,
+                                )}
                               </Badge>
 
                               <Badge
-                                colorScheme="red"
+                                colorScheme="purple"
                                 variant="subtle"
-                                fontSize="sm"
+                                fontSize="md"
                               >
-                                Mobile Number:
+                                Last Delivery:{" "}
+                                {formatToTimeDate(
+                                  driver.last_job_drop_at_today,
+                                )}
                               </Badge>
 
-                              <Button
-                                type="button"
-                                px={5}
-                                py={1}
-                                colorScheme="blue"
-                                fontSize="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // prevent row click
-                                  onAssignClick && onAssignClick(driver); // ✅ trigger modal
-                                }}
-                              >
-                                Assign Jobs
-                              </Button>
 
+                              {/* ✅ Show "Assign Jobs" button ONLY for pre-allocated (yellow) */}
+                              {driver.bgcolor === "yellow" && (
+                                <Button
+                                  type="button"
+                                  px={5}
+                                  py={1}
+                                  colorScheme="blue"
+                                  fontSize="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAssignClick && onAssignClick(driver);
+                                  }}
+                                >
+                                  Assign Jobs
+                                </Button>
+
+                              )}
+                              {driver.bgcolor === "blue" && (
+                                <Badge
+                                  colorScheme="red"
+                                  variant="subtle"
+                                  fontSize="sm"
+                                >
+                                  Driver price: {driver.total_jobs_today_price ?? "-"}
+                                </Badge>
+                              )}
                             </Flex>
                           </Flex>
 
                           {/* --- DRIVER DETAILS --- */}
                           <Flex wrap="wrap" align="start" gap={3} w="full">
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="sm"
+                            >
+                              Current Suburb: {driver.current_suburb || "-"}
+                            </Badge>
 
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="sm"
+                            >
+                              Mobile Number: {driver.phone_no || "-"}
+                            </Badge>
                             <Badge
                               colorScheme="red"
                               variant="subtle"

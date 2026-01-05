@@ -66,10 +66,11 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         orderByColumn: "sort_id",
         orderByOrder: "ASC",
         user_id: userId,
+        table_name: "jobs",
       },
       skip: !userId && !isOpen,
       notifyOnNetworkStatusChange: true,
-      fetchPolicy:  "network-only",
+      fetchPolicy: "network-only",
       onCompleted: (data) => {
         setDynamicTableUsers(
           data.dynamicTableUsers.data.map((item: DynamicTableUser) => item));
@@ -77,21 +78,21 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
       },
     },
   );
-  
-    // // Prefetch data when component mounts
-    // useEffect(() => {
-    //   getDynamicTableUsers();
-    //   // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, []);
-  
-    // // Refresh data when modal opens if needed
-    // useEffect(() => {
-    //   if (isOpen) {
-    //     setIsLoading(true);
-    //     getDynamicTableUsers();
-    //   }
-    //   // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [isOpen]);
+
+  // // Prefetch data when component mounts
+  // useEffect(() => {
+  //   getDynamicTableUsers();
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
+
+  // // Refresh data when modal opens if needed
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     setIsLoading(true);
+  //     getDynamicTableUsers();
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [isOpen]);
 
   const sortedDynamicTableUsers = dynamicTableUsers.map((item, index) => {
     return {
@@ -101,7 +102,7 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
     };
   });
 
-  const [handleBulkUpdateDynamicTableUsers, {}] = useMutation(
+  const [handleBulkUpdateDynamicTableUsers, { }] = useMutation(
     BULK_UPDATE_DYNAMIC_TABLE_USERS_MUTATION,
     {
       variables: {
@@ -137,104 +138,104 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         <ModalCloseButton />
         <ModalBody>
           <VStack w="full" align="start" spacing={3}>
-          {isLoading ? (
+            {isLoading ? (
               <Spinner size="xl" />
             ) : (
               <>
-            <Divider mb="2" />
-            <DndContext
-              onDragStart={({ active }) => {
-                if (!active) {
-                  return;
-                }
-                setActiveId(active.id);
-              }}
-              onDragEnd={({ over }) => {
-                setActiveId(null);
-                if (over) {
-                  const overIndex = getIndex(over.id);
-                  if (activeIndex !== overIndex) {
-                    let newArray = reorderArray(
-                      dynamicTableUsers,
-                      activeIndex,
-                      overIndex,
-                    );
-                    setDynamicTableUsers(newArray);
-                  }
-                }
-              }}
-              onDragCancel={() => setActiveId(null)}
-            >
-              <SortableContext
-                items={dynamicTableUsers.filter((item: DynamicTableUser) => {
-                  return item.is_active;
-                })}
-              >
+                <Divider mb="2" />
+                <DndContext
+                  onDragStart={({ active }) => {
+                    if (!active) {
+                      return;
+                    }
+                    setActiveId(active.id);
+                  }}
+                  onDragEnd={({ over }) => {
+                    setActiveId(null);
+                    if (over) {
+                      const overIndex = getIndex(over.id);
+                      if (activeIndex !== overIndex) {
+                        let newArray = reorderArray(
+                          dynamicTableUsers,
+                          activeIndex,
+                          overIndex,
+                        );
+                        setDynamicTableUsers(newArray);
+                      }
+                    }
+                  }}
+                  onDragCancel={() => setActiveId(null)}
+                >
+                  <SortableContext
+                    items={dynamicTableUsers.filter((item: DynamicTableUser) => {
+                      return item.is_active;
+                    })}
+                  >
+                    {dynamicTableUsers
+                      .filter((item: DynamicTableUser) => {
+                        return item.is_active;
+                      })
+                      .map((item: DynamicTableUser) => (
+                        <SortableJobTableSetting
+                          key={item.id}
+                          dynamicTableUser={item}
+                          onActiveToggle={() => {
+                            setDynamicTableUsers(
+                              [...dynamicTableUsers].map((dynamicTableUser) => {
+                                if (dynamicTableUser.id === item.id) {
+                                  return {
+                                    ...dynamicTableUser,
+                                    is_active: !dynamicTableUser.is_active,
+                                  };
+                                } else return dynamicTableUser;
+                              }),
+                            );
+                          }}
+                        />
+                      ))}
+                  </SortableContext>
+                </DndContext>
+
                 {dynamicTableUsers
                   .filter((item: DynamicTableUser) => {
-                    return item.is_active;
+                    return !item.is_active;
                   })
                   .map((item: DynamicTableUser) => (
-                    <SortableJobTableSetting
-                      key={item.id}
-                      dynamicTableUser={item}
-                      onActiveToggle={() => {
-                        setDynamicTableUsers(
-                          [...dynamicTableUsers].map((dynamicTableUser) => {
-                            if (dynamicTableUser.id === item.id) {
-                              return {
-                                ...dynamicTableUser,
-                                is_active: !dynamicTableUser.is_active,
-                              };
-                            } else return dynamicTableUser;
-                          }),
-                        );
-                      }}
-                    />
-                  ))}
-              </SortableContext>
-            </DndContext>
-
-            {dynamicTableUsers
-              .filter((item: DynamicTableUser) => {
-                return !item.is_active;
-              })
-              .map((item: DynamicTableUser) => (
-                <Box key={"disabled-" + item.id} w={"full"}>
-                  <div className="flex justify-between">
-                    <div className="flex flex-col">
-                      <p>{item.name}</p>
-                      <Text
-                        className="text-sm text-slate-600"
-                        variant="black.500"
-                      >
-                        {item.dynamic_table?.column_description}
-                      </Text>
-                    </div>
-                    <Switch
-                      mt="auto"
-                      mb="auto"
-                      isChecked={item.is_active}
-                      onChange={(e) => {
-                        setDynamicTableUsers(
-                          [...dynamicTableUsers].map((dynamicTableUser) => {
-                            if (dynamicTableUser.id === item.id) {
-                              return {
-                                ...dynamicTableUser,
-                                is_active: e.target.checked,
-                              };
-                            } else return dynamicTableUser;
-                          }),
-                        );
-                      }}
-                    />
-                  </div>
-                  <Divider mt="1" />
-                </Box>
-                ))
-              }
-               </>
-              )} 
+                    <Box key={"disabled-" + item.id} w={"full"}>
+                      <div className="flex justify-between">
+                        <div className="flex flex-col">
+                          <p>{item.name}</p>
+                          <Text
+                            className="text-sm text-slate-600"
+                            variant="black.500"
+                          >
+                            {item.dynamic_table?.column_description}
+                          </Text>
+                        </div>
+                        <Switch
+                          mt="auto"
+                          mb="auto"
+                          isChecked={item.is_active}
+                          onChange={(e) => {
+                            setDynamicTableUsers(
+                              [...dynamicTableUsers].map((dynamicTableUser) => {
+                                if (dynamicTableUser.id === item.id) {
+                                  return {
+                                    ...dynamicTableUser,
+                                    is_active: e.target.checked,
+                                  };
+                                } else return dynamicTableUser;
+                              }),
+                            );
+                          }}
+                        />
+                      </div>
+                      <Divider mt="1" />
+                    </Box>
+                  ))
+                }
+              </>
+            )}
           </VStack>
         </ModalBody>
         <ModalFooter justifyContent={"center"}>

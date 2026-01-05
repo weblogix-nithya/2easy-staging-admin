@@ -410,9 +410,9 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
 export const ReadyDropByCell = ({ row }: any) => {
   return (
     <>
-      {/* <Text isTruncated w={"fit-content"}>
+      <Text fontSize="sm" isTruncated w={"fit-content"}>
         {row?.original?.job?.job_category?.name ?? "-"}
-      </Text> */}
+      </Text>
       <Text isTruncated fontSize="sm" w={"fit-content"}>
         R: {formatTime(row?.original?.job?.ready_at)}
       </Text>
@@ -1013,6 +1013,10 @@ export const TotalVolumeCell = ({ row }: any) => {
   return <Text fontSize="sm" maxW="120px">{row?.original?.job?.total_volume || "-"}</Text>;
 };
 
+export const TotalPrice = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+};
+
 export const SuburbAreaCell = ({ row }: any) => {
   const area = row?.original?.job?.suburb_area || "";
   const bgColor = row?.original?.job?.area_color || "#751010"; // fallback color
@@ -1147,6 +1151,11 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     id: "total_volume",
     Header: "CBM",
     Cell: TotalVolumeCell,
+  },
+  {
+    id: "job_price_calculation_detail.total",
+    Header: "Total Price",
+    Cell: TotalPrice,
   },
   {
     id: "job_destinations.address,job_destinations.address_business_name",
@@ -1386,6 +1395,12 @@ export const bulkassigntableColumn = [
     Header: "CBM",
     Cell: TotalVolumeCell,
   },
+  {
+    id: "job_price_calculation_detail.total",
+    Header: "Total Price",
+    Cell: TotalPrice,
+  },
+
   {
     id: "job_destinations.address,job_destinations.address_business_name",
     Header: "Delivery Address and Name",

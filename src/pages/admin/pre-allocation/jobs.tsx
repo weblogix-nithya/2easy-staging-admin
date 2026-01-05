@@ -77,9 +77,9 @@ const PreAllocateModal = React.lazy(
 const AssignJobsModal = React.lazy(
   () => import("components/preAllocation/AssignJobsModal"),
 );
-const JobBulkSortModal = React.lazy(
-  () => import("components/preAllocation/PreJobBulkSortModal"),
-);
+// const JobBulkSortModal = React.lazy(
+//   () => import("components/preAllocation/PreJobBulkSortModal"),
+// );
 // Inside Job Index
 const JobTableSettingsModal = dynamic(
   () => import("components/preAllocation/JobTableSettingsModal"),
@@ -432,11 +432,11 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     onOpen: onOpenSetting,
     onClose: onCloseSetting,
   } = useDisclosure();
-  const {
-    isOpen: isOpenBulkSort,
-    onOpen: onOpenBulkSort,
-    onClose: onCloseBulkSort,
-  } = useDisclosure();
+  // const {
+  //   isOpen: isOpenBulkSort,
+  //   onOpen: onOpenBulkSort,
+  //   onClose: onCloseBulkSort,
+  // } = useDisclosure();
 
   const {
     isOpen: isOpenBulkAssign,
@@ -552,18 +552,38 @@ export default function JobIndex({ }: // initialLoadOnly = false,
 
   const openAssignModal = (driver) => {
     if (!driver) return;
+
     setAssignDriver(driver);
-    // Pre-select jobs for this driver
-    const filteredJobs =
-      _jobs?.data?.filter((j) => j.driver?.id === driver.id) || [];
-    const driverJobs = filteredJobs.map((item) => ({
-      id: item.job.id,
-      original: { job: item.job },
-    }));
-    console.log(driverJobs, "driverJobs");
-    setSelectedJobs(driverJobs || []);
+    _jobs?.data?.forEach((j) => {
+      console.log({
+        preallocation: j?.job?.preallocation_driver_id,
+        actualDriver: j?.job?.driver,
+        currentDriver: driver.id,
+      });
+    });
+
+    const driverJobs =
+      _jobs?.data
+        ?.filter((j) => {
+          const preallocId = Number(j?.job?.preallocation_driver_id);
+          const driverId = Number(driver?.id);
+
+          return (
+            preallocId === driverId &&
+            j?.job?.driver === null
+          );
+        })
+        .map((item) => ({
+          id: item.job.id,
+          original: { job: item.job },
+        })) || [];
+
+    console.log('Filtered driverJobs:', driverJobs);
+
+    setSelectedJobs(driverJobs);
     setIsAssignOpen(true);
   };
+
 
   // ✅ ADD: Context menu state
   const [contextMenu, setContextMenu] = React.useState<{
@@ -801,7 +821,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
               onSwitch: setIsShowSelectedOnly,
               // hasChanges: hasChanges, // enable Save button
               onSaveChanges: onOpenBulkAssign,
-              onClickBulkSort: onOpenBulkSort,
+              // onClickBulkSort: onOpenBulkSort,
             } as any)}
           />
         )}
@@ -871,7 +891,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
             />
           )}
         </Suspense>
-        <Suspense fallback={null}>
+        {/* <Suspense fallback={null}>
           {isOpenBulkSort && (
             <JobBulkSortModal
               isOpen={isOpenBulkSort}
@@ -883,7 +903,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
             // refreshPage={() => refetchJobs()}
             />
           )}
-        </Suspense>
+        </Suspense> */}
         <Suspense fallback={null}>
           {isAssignOpen && (
             <AssignJobsModal

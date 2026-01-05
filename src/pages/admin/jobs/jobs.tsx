@@ -37,10 +37,11 @@ import { GET_JOBS_QUERY, GROUPED_PAGINATED_JOBS_QUERY } from "graphql/job";
 import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { JoinOnClause } from "graphql/types/types";
-import { csvColumns, prepareSelectedRowsForCSV } from "helpers/helper";
 import {
+  csvColumns,
   outputDynamicTableBody,
   outputDynamicTableHeader,
+  prepareSelectedRowsForCSV,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
@@ -57,9 +58,13 @@ import {
 } from "store/jobFilterSlice";
 import { RootState } from "store/store";
 
+import { useSubscriptionService } from "../../../utils/subscriptionService";
 // import JobFiltersTagRow from "./job-components/JobFiltersTagRow";
 import JobHeader from "./job-components/JobHeader";
 
+const JobContextMenu = React.lazy(
+  () => import("components/preAllocation/JobContextMenu"),
+);
 const JobStatusDateFilter = dynamic(
   () => import("./job-components/JobStatusDateFilter"),
   {
@@ -187,10 +192,10 @@ function formatDate(date: Date, isStart: boolean): string {
 }
 
 // export default function JobIndex() {
-export default function JobIndex({}: // initialLoadOnly = false,
-{
-  // initialLoadOnly?: boolean;
-}) {
+export default function JobIndex({ }: // initialLoadOnly = false,
+  {
+    // initialLoadOnly?: boolean;
+  }) {
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
   const [initialJobsDataTotal, setInitialJobsDataTotal] = useState(0);
@@ -270,6 +275,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
         orderByColumn: "sort_id",
         orderByOrder: "ASC",
         user_id: userId,
+        table_name: "jobs",
       },
       skip: !userId,
       notifyOnNetworkStatusChange: true,
@@ -283,6 +289,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       },
     },
   );
+
   const baseGroupedVars = React.useCallback(
     () => ({
       page: queryPageIndex + 1,
@@ -297,19 +304,19 @@ export default function JobIndex({}: // initialLoadOnly = false,
       company_id: isAdmin
         ? undefined
         : isCompanyAdmin
-        ? parseInt(companyId)
-        : undefined,
+          ? parseInt(companyId)
+          : undefined,
 
       customer_id: isAdmin
         ? undefined
         : isCustomer && !isCompanyAdmin
-        ? parseInt(customerId)
-        : undefined,
+          ? parseInt(customerId)
+          : undefined,
       between_at: rangeDate?.[0]
         ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
+          from_at: formatDate(rangeDate[0], true),
+          to_at: formatDate(rangeDate[1], false),
+        }
         : undefined,
     }), // eslint-disable-line react-hooks/exhaustive-deps
     [
@@ -352,6 +359,47 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const _jobs = initialJobsData;
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
+
+  useSubscriptionService({
+    jobUpdated: {
+      channel: "jobs",
+      event: ".job.updated",
+      callback: () => refetchJobs(),
+    },
+  });
+  const [contextMenu, setContextMenu] = React.useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    job: any;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    job: null,
+  });
+
+  const handleContextMenu = (e: React.MouseEvent, job: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      job: job,
+    });
+  };
+
+  // ✅ ADD: Close context menu
+  const closeContextMenu = () => {
+    setContextMenu({
+      visible: false,
+      x: 0,
+      y: 0,
+      job: null,
+    });
+  };
 
   const adminColumns = useMemo(() => {
     return getColumns(
@@ -433,9 +481,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
       ],
       between_at: rangeDate?.[0]
         ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
+          from_at: formatDate(rangeDate[0], true),
+          to_at: formatDate(rangeDate[1], false),
+        }
         : undefined,
       ...mainJobFilter,
     },
@@ -881,8 +929,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
           />
 
           {(isAdmin && !isCompanyAdmin && loading) ||
-          (isCompanyAdmin && companyJobsLoading) ||
-          (!isAdmin && companyJobsLoading) ? (
+            (isCompanyAdmin && companyJobsLoading) ||
+            (!isAdmin && companyJobsLoading) ? (
             <Box textAlign="center" py={4} px={10}>
               Loading <Spinner size="sm" ml={2} />
             </Box>
@@ -913,6 +961,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
                 showManualPages
                 onSortingChange={handleSortingChange}
                 restyleTable
+                onContextMenu={handleContextMenu}
               />
             ) : (
               <Box textAlign="center" py={4} px={10} color="gray.600">
@@ -952,6 +1001,17 @@ export default function JobIndex({}: // initialLoadOnly = false,
           )}
         </SimpleGrid>
 
+        <Suspense fallback={null}>
+          {contextMenu.visible && contextMenu.job && (
+            <JobContextMenu
+              job={contextMenu.job}
+              position={{ x: contextMenu.x, y: contextMenu.y }}
+              onClose={closeContextMenu}
+              // onSave={handleSaveTagsLabels}
+              drivers={driverOptions}
+            />
+          )}
+        </Suspense>
         {/* Floating Action Bar */}
         {isAdmin && !loading && (
           <ActionBar
