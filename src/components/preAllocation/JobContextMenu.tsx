@@ -124,12 +124,12 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                         id: job.id,
                         driver_id: selectedDriver?.value || null,
                         job_status_id: selectedStatus?.value || null,
-                        customer_id: job.customer.id,
-                        company_id: job.company.id,
-                        job_type_id: job.job_type.id,
+                        customer_id: job?.customer?.id,
+                        company_id: job?.company?.id,
+                        job_type_id: job?.job_type?.id,
                         // Add date/time fields
-                        ready_at: jobDateAt && readyAt ? formatDateTimeToDB(jobDateAt, readyAt) : job.ready_at,
-                        drop_at: jobDateAt && dropAt ? formatDateTimeToDB(jobDateAt, dropAt) : job.drop_at,
+                        ready_at: jobDateAt && readyAt ? formatDateTimeToDB(jobDateAt, readyAt) : job?.ready_at,
+                        drop_at: jobDateAt && dropAt ? formatDateTimeToDB(jobDateAt, dropAt) : job?.drop_at,
                     },
                 },
             });

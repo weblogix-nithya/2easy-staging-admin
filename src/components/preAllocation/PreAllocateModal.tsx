@@ -63,14 +63,14 @@ export default function PreAllocateModal({
     if (!selectedDriver?.id) return null; // skip if no driver
     // console.log(item, "te");
     return {
-      id: item.original.job.id,
-      customer_id: item.original.job.customer.id,
-      company_id: item.original.job.company.id,
-      preallocation_driver_id: selectedDriver.id,
-      name: item.original.job.name,
+      id: item?.original?.job?.id,
+      customer_id: item?.original?.job?.customer.id,
+      company_id: item?.original?.job?.company.id,
+      preallocation_driver_id: selectedDriver?.id,
+      name: item?.original?.job?.name,
       d_sort_id: Number(index + 1),
       sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"), // ⬅️ NEW
-      job_type_id: item.original.job.job_type.id,
+      job_type_id: item?.original?.job?.job_type?.id,
     };
   });
   // console.log(sortedBulkAssignJobs,'sortedBulkAssignJobs')
