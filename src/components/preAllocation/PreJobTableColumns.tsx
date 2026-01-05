@@ -1,6 +1,7 @@
 // import { useMutation } from "@apollo/client";
 // import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
-import { EditIcon } from "@chakra-ui/icons";
+import { useMutation } from "@apollo/client";
+import { CloseIcon } from "@chakra-ui/icons";
 import {
   Badge,
   Button,
@@ -19,13 +20,23 @@ import {
   PopoverTrigger,
   Text,
   Tooltip,
+  useToast,
+  // Tooltip,
   // Textarea,
   // useToast,
   VStack
 } from "@chakra-ui/react";
+import {
+  faHandHolding,
+  faInfinity,
+  faPager,
+  faTruckRampBox,
+  faWarning,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
-// import { UPDATE_JOB_MUTATION } from "graphql/job";
+import { PRE_ALLOCATION_JOBS_QUERY, REMOVE_PRE_ALLOCATE_DRIVER } from "graphql/job";
 import {
   formatAddress,
   formatDate,
@@ -34,9 +45,10 @@ import {
   outputDynamicTable,
 } from "helpers/helper";
 import Image from "next/image";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
 import React from "react";
+import { useState } from "react";
 import { MdMenu } from "react-icons/md";
 // import { useSelector } from "react-redux";
 import { RootState } from "store/store";
@@ -51,55 +63,47 @@ type JobLabel = {
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
-function formatAddressLines(dest: any) {
-  // console.log(dest);
-  if (!dest) {
-    return {
-      firstLine: "-",
-      secondLine: "-",
-    };
-  }
-  const firstLine =
-    dest.address_business_name || dest.address_line_1 || "-";
-
-  const addressParts = [
-    dest?.address_line_1 || null,
-    dest?.address_city || null,
-    dest?.address_postal_code || null,
-  ].filter(Boolean);
-
-  const secondLine = dest.address_business_name
-    ? `${dest.address_business_name}\n${addressParts.join(", ")}`
-    : addressParts.join(", ");
-
-  return { firstLine, secondLine };
-}
-
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
-    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+    <Text fontSize="sm" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
       {formatAddress(row?.original?.job?.pick_up_destinations)}
     </Text>
-    <Text>
+    <Text fontSize="sm">
       {row.originaljob.pick_up_destination.address_business_name || "-"}
     </Text>
   </>
 );
 export const JobDestinationsCell = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
+
   const filteredDestinations = destinations.filter(
-    (destination: any) => destination?.is_pickup === false,
+    (destination: any) => destination?.is_pickup === false
   );
 
   const first = filteredDestinations[0];
 
+  const renderAddress = (destination: any) => {
+    // if (destination?.is_saved_address) {
+    //   // Only show business name if saved address
+    //   return destination.address_business_name || "-";
+    // } else {
+    return (
+      <>
+        {/* {destination.address_business_name ? `${destination.address_business_name}\n` : ""}
+        {destination.address_line_1 ? `${destination.address_line_1}\n` : ""} */}
+        {destination.address_city}
+        {"\n"}
+        {destination.address_postal_code}, {destination.address_state}
+      </>
+    );
+    // }
+  };
+
   return (
     <>
       {first ? (
-        <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
-          {first.address_line_1}
-          {"\n"}
-          {first.address_city} {first.address_postal_code}
+        <Text whiteSpace="pre-line" fontSize="sm" minWidth={"170px"}>
+          {renderAddress(first)}
         </Text>
       ) : (
         <Text>-</Text>
@@ -120,8 +124,8 @@ export const JobDestinationsCell = ({ row }: any) => {
             <PopoverCloseButton />
             <PopoverBody>
               {filteredDestinations.map((destination: any, index: number) => (
-                <Text color="black" mb="5" key={`dest-${index}`}>
-                  Address {index + 1}: {formatAddressLines(destination).secondLine}
+                <Text color="black" mb="5" key={`dest-${index}`} whiteSpace="pre-line">
+                  Address {index + 1}: {renderAddress(destination)}
                 </Text>
               ))}
             </PopoverBody>
@@ -132,18 +136,6 @@ export const JobDestinationsCell = ({ row }: any) => {
   );
 };
 
-// export const JobDestinationsCellExport = ({ row }: any) => {
-//   const destinations = row?.original?.job?.job_destinations || [];
-//   const filteredDestinations = destinations.filter(
-//     (destination: any) => destination?.is_pickup === false
-//   );
-
-//   if (filteredDestinations.length === 0) return "-";
-
-//   // Safely call formatAddress
-//   const address = formatAddress(filteredDestinations[0]);
-//   return address || "-";
-// };
 
 export const JobDestinationsCellExport = ({ row }: any) => {
   const filteredDestinations = row?.original?.job?.job_destinations.filter(
@@ -153,31 +145,33 @@ export const JobDestinationsCellExport = ({ row }: any) => {
   return formatAddress(filteredDestinations[0]);
 };
 export const JobDestinationBusinessNameCell = ({ row }: any) => {
-  // Add null check and default empty array
   const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
 
+  const businessName = filteredDestinations[0]?.address_business_name || "-";
+
   return (
-    <>
-      <Text minW="130px" maxW="170px">
-        {filteredDestinations[0]?.address_business_name || "-"}
-      </Text>
-    </>
+    <Text
+      fontSize="sm"
+      textTransform="capitalize"
+      minW="130px"
+      maxW="170px"
+    >
+      {businessName?.toLowerCase()}
+    </Text>
   );
 };
+
 export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
-  const destination = row?.original?.job?.job_destinations?.find(
-    (d: any) => d.is_pickup === false,
+  const filteredDestinations = row?.original?.job?.job_destinations.filter(
+    (destination: any) => destination.is_pickup === false,
   );
-
-  return destination?.address_business_name ?? "-";
+  return filteredDestinations[0]?.address_business_name || "-";
 };
-
 export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
-  // console.log(destinations);
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
@@ -191,7 +185,6 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       (item: any) => item.collection_name !== "signatures",
     ) || [];
 
-  const dest = filteredDestinations[0];
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
@@ -212,16 +205,12 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      {/* <Text isTruncated w={"fit-content"}>
+      <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text> */}
-      {/* ⭐ Address with View More / View Less */}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"} whiteSpace="pre-wrap" w={"fit-content"}>
-        {dest?.is_saved_address ? formatAddressLines(dest).firstLine : formatAddressLines(dest).secondLine}
-      </Text>
+      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -271,42 +260,12 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
   );
 
   return (
-    <Text mb="2" whiteSpace="pre-wrap" minWidth={"300px"} flexWrap={"nowrap"}>
+    <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
       {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code
         }\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
 };
-
-export const DeliveryAddressWithTimeBulkCellExport = ({ row }: any) => {
-  const destinations = row?.original?.job?.job_destinations;
-
-  // Ensure it's an array before using .find()
-  if (!Array.isArray(destinations) || destinations.length === 0) {
-    return "-";
-  }
-
-  const deliveryDest = destinations.find(
-    (dest: any) => dest.is_pickup === false,
-  );
-
-  if (!deliveryDest) {
-    return "-";
-  }
-
-  const address = [
-    deliveryDest.address_line_1,
-    deliveryDest.address_city,
-    deliveryDest.address_postal_code,
-  ]
-    .filter(Boolean) // removes undefined/empty parts
-    .join(", ");
-
-  const businessName = deliveryDest.address_business_name || "-";
-
-  return `${address}\n${businessName}`;
-};
-
 export const PickupAddressWithTimeCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
@@ -334,9 +293,10 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      <Text mb="2" whiteSpace="pre-wrap" minWidth={"300px"} flexWrap={"nowrap"}>
-        {pickupDest?.is_saved_address ? formatAddressLines(pickupDest).firstLine : formatAddressLines(pickupDest).secondLine}
+      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
+      <Text>{pickupDest?.address_business_name || "-"}</Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -361,43 +321,19 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
   );
 };
 export const PickupAddressWithTimeCellExport = ({ row }: any) => {
-  const destinations = row?.original?.job?.job_destinations;
-  if (!Array.isArray(destinations) || destinations.length === 0) return "-";
+  const pickupDest = row?.original?.job?.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const collectionTime = pickupDest?.updated_at
+    ? `Collection time: ${formatDate(
+      pickupDest.updated_at,
+      "HH:mm, DD/MM/YYYY",
+    )}\n`
+    : "";
 
-  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
-  if (!pickupDest) return "-";
-
-  const showPickupTime =
-    row?.original?.job?.job_status.id == 4 ||
-    row?.original?.job?.job_status.id == 5 ||
-    row?.original?.job?.job_status.id == 6 ||
-    row?.original?.job?.job_status.id == 7;
-
-  if (!pickupDest) return "-";
-
-  const arrivalTime =
-    showPickupTime && pickupDest?.arrived_at
-      ? `Arrival time: ${formatDate(
-        pickupDest.arrived_at,
-        "HH:mm, DD/MM/YYYY",
-      )}`
-      : "";
-
-  const collectionTime =
-    showPickupTime && pickupDest?.updated_at
-      ? `Collection time: ${formatDate(
-        pickupDest.updated_at,
-        "HH:mm, DD/MM/YYYY",
-      )}`
-      : "";
-
-  const address = `${pickupDest?.address_line_1 || ""}, ${pickupDest?.address_city || ""
-    }, ${pickupDest?.address_postal_code || ""}`;
-  const businessName = pickupDest?.address_business_name || "-";
-
-  return `${arrivalTime}${arrivalTime && collectionTime ? "\n" : ""
-    }${collectionTime}${arrivalTime || collectionTime ? "\n" : ""
-    }${address}\n${businessName}`;
+  return `${collectionTime}${formatAddress(
+    row?.original?.job?.pick_up_destination,
+  )}\n${row?.original?.job?.pick_up_destination?.address_business_name || "-"}`;
 };
 export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
@@ -423,9 +359,10 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
           </Text>
         </>
       )}
-      <Text whiteSpace="pre-wrap" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {pickupDest?.is_saved_address ? formatAddressLines(pickupDest).firstLine : formatAddressLines(pickupDest).secondLine}
+      <Text mb="2" fontSize="sm" minWidth={"300px"} flexWrap={"nowrap"}>
+        {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
+      <Text fontSize="sm">{pickupDest?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -440,8 +377,6 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     row?.original?.job?.job_status.id == 6 ||
     row?.original?.job?.job_status.id == 7;
 
-  // ⭐ Address formatting logic (same as your other component)
-  const dest = filteredDestinations[0];
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
@@ -462,15 +397,12 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
           </Text>
         </>
       )}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {dest?.is_saved_address ? formatAddressLines(dest).firstLine : formatAddressLines(dest).secondLine}
-      </Text>
-      {/* <Text isTruncated w={"fit-content"}>
+      <Text fontSize="sm" isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text> */}
+      <Text fontSize="sm">{filteredDestinations[0]?.address_business_name || "-"}</Text>
     </>
   );
 };
@@ -478,13 +410,13 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
 export const ReadyDropByCell = ({ row }: any) => {
   return (
     <>
-      <Text isTruncated w={"fit-content"}>
+      <Text fontSize="sm" isTruncated w={"fit-content"}>
         {row?.original?.job?.job_category?.name ?? "-"}
       </Text>
-      <Text isTruncated w={"fit-content"}>
+      <Text isTruncated fontSize="sm" w={"fit-content"}>
         R: {formatTime(row?.original?.job?.ready_at)}
       </Text>
-      <Text isTruncated w={"fit-content"}>
+      <Text isTruncated fontSize="sm" w={"fit-content"}>
         D: {formatTime(row?.original?.job?.drop_at)}
       </Text>
     </>
@@ -497,7 +429,7 @@ export const ReadyDropByCellExport = ({ row }: any) =>
     D: ${formatTime(row?.original?.job?.drop_at)}`;
 
 export const NotesCell = ({ row }: any) => {
-  const current = row?.original?.job?.customer_notes ?? "-";
+  const current = row?.original?.job?.customer_notes ?? "";
   const [display, setDisplay] = React.useState(current);
 
   React.useEffect(() => {
@@ -506,7 +438,7 @@ export const NotesCell = ({ row }: any) => {
 
   return (
     <Flex gap={2} align="center">
-      <Text maxW="200px" noOfLines={3}>
+      <Text fontSize="sm" maxW="200px" noOfLines={3}>
         {display || "-"}
       </Text>
       <EditableFieldPopover
@@ -519,16 +451,12 @@ export const NotesCell = ({ row }: any) => {
   );
 };
 
-export const NotesCellExport = ({ row }: any) => {
-  const current = row?.original?.job?.customer_notes ?? "-";
-  return current;
-};
 export const ItemsTypeCell = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return (
     <div>
       {items?.map((item: any) => (
-        <Text key={`items-type-${item.id}`} mb={2}>
+        <Text fontSize="sm" key={`items-type-${item.id}`} mb={2}>
           {item.item_type.name}
         </Text>
       ))}
@@ -543,7 +471,7 @@ export const ItemsTypeCellExport = ({ row }: any) => {
 };
 export const ItemsDimensionCell = ({ row }: any) => {
   const items = row?.original?.job?.job_items || [];
-  const [showAll, setShowAll] = React.useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const visibleItems = showAll ? items : items.slice(0, 2);
 
@@ -633,20 +561,11 @@ export const ItemsCbmCell = ({ row }: any) => {
   );
 };
 export const ItemsExtrasCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.extras || "-"}</Text>;
+  return <Text fontSize="sm" maxW="100px">{row?.original?.job?.extras || "-"}</Text>;
 };
 
-export const ItemsExtrasCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.extras ? `${row.original.job.extras}` : "-"}`;
-};
 export const DriverCell = ({ row }: any) => {
-  return <Text>{row?.original?.job?.driver?.full_name || "-"}</Text>;
-};
-export const DriverCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.driver?.full_name || "-"}`;
-};
-export const TotalPrice = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+  return <Text fontSize="sm">{row?.original?.job?.driver?.full_name || "-"}</Text>;
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -657,46 +576,61 @@ export const ItemsCbmCellExport = ({ row }: any) => {
 export const BookedByCell = ({ row }: any) => {
   const name = row?.original?.job?.company?.name || "-";
   return (
-    <Text maxW="150px" minW="100px">
+    <Text fontSize="sm" maxW="150px" minW="100px">
       {name}
     </Text>
   );
 };
-export const BookedByCellExport = ({ row }: any) => {
-  const name = row?.original?.job?.company?.name || "-";
-  return `${name}`;
-};
+// export const BookedByCellExport = ({ row }: any) => {
+//   const pickupDest = row.original.job_destinations?.find(
+//     (dest: any) => dest.is_pickup === true,
+//   );
+//   const collectionTime = pickupDest?.updated_at
+//     ? `Collection time: ${formatDate(
+//         pickupDest.updated_at,
+//         "HH:mm, DD/MM/YYYY",
+//       )}\n`
+//     : "";
+
+//   return `${collectionTime}${formatAddress(
+//     row.original.pick_up_destination,
+//   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
+// };
+
 export const JobTypeCell: React.FC<{
   row: { original: { job: { job_type?: { name: string } } } };
 }> = ({ row }) => {
-  const getTypeColor = (type: string) => {
-    switch (type?.toLowerCase()) {
+  const type = row.original.job?.job_type?.name || "-";
+
+  const getTypeColors = (type: string) => {
+    switch (type.toLowerCase()) {
       case "standard":
-        return "purple.500";
+        return { color: "white", bg: "purple.500" };
       case "urgent":
-        return "red.500";
+        return { color: "white", bg: "red.500" };
       case "express":
-        return "orange.500";
+        return { color: "white", bg: "orange.500" };
       default:
-        return "purple.500";
+        return { color: "black", bg: "gray.200" };
     }
   };
 
+  const { color, bg } = getTypeColors(type);
+
   return (
-    <Text
-      color={getTypeColor(row.original.job?.job_type?.name)}
+    <Badge
+      color={color}
+      bg={bg}
       fontWeight="bold"
+      px={2}
+      py={1}
+      borderRadius="md"
+      textTransform="capitalize"
     >
-      {row.original.job?.job_type?.name || "-"}
-    </Text>
+      {type}
+    </Badge>
   );
 };
-export const TypeCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_type?.name
-    ? `${row.original.job.job_type.name}`
-    : "-"
-  }`;
-
 export const StatusCell = ({ row }: any) => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -725,130 +659,90 @@ export const StatusCell = ({ row }: any) => {
   );
 };
 
-export const StatusCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_status.name
-    ? `${row.original.job.job_status.name}`
-    : "-"
-  }`;
-
 export const ReadyAtCell = ({ row }: any) => {
   return (
-    <Flex direction="column" gap={1} minWidth="200px">
+    <Flex direction="column" gap={1} minWidth="150px">
       <Text fontSize="sm" fontWeight="500">
-        Created Date: {formatDate(row?.original?.job?.created_at) || "-"}
+        Created:
+        {formatDate(row?.original?.job?.created_at) || "-"}
       </Text>
       <Text fontSize="sm">
-        Scheduled Date: {formatDate(row?.original?.job?.drop_at) || "-"}
+        Scheduled:
+        {formatDate(row?.original?.job?.drop_at) || "-"}
         {/* It was ready_at initially, changed to drop_at as per client request,now adding both  */}
       </Text>
     </Flex>
   );
 };
 
-export const ReadyAtCellExport = ({ row }: any) =>
-  `Created Date: ${formatDate(row?.original?.job?.created_at) || "-"
-  } | Scheduled Date: ${formatDate(row?.original?.job?.drop_at) || "-"}`;
-
 export const LastFreeAtCell = ({ row }: any) => {
-  // console.log(row.original.job,"sa")
   return (
-    <Text maxW="150px" minW="150px">
+    <Text fontSize="sm" maxW="150px" minW="150px">
       {row?.original?.job?.last_free_at || "-"}
     </Text>
   );
 };
-export const LastFreeAtCellExport = ({ row }: any) =>
-  `${row?.original?.job?.last_free_at ? `${row.original.job.last_free_at}` : "-"
-  }`;
 export const PickupBusinessNameCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
   return (
-    <Text maxW="150px" minW="100px">
+    <Text fontSize="sm" maxW="150px" minW="100px">
       {pickupDest?.address_business_name || "-"}
     </Text>
   );
 };
 
-export const PickupBusinessNameCellExport = ({ row }: any) => {
-  const destinations = row?.original?.job?.job_destinations;
-
-  // ✅ Prevent crash if not array or empty
-  if (!Array.isArray(destinations) || destinations.length === 0) return "-";
-
-  const pickupDest = destinations.find((dest: any) => dest.is_pickup === true);
-  return pickupDest?.address_business_name || "-";
-};
-
 export const PickupAddressCell = ({ row }: any) => {
   const pickup = row?.original?.job?.job_destinations?.find(
-    (d: any) => d.is_pickup === true,
+    (d: any) => d.is_pickup === true
   );
 
   if (!pickup) return <>-</>;
 
-  const line1 = pickup.address_line_1;
-  const line2 = `${pickup.address_city} ${pickup.address_postal_code} ${pickup.address_state}`;
+  const renderPickupAddress = (pickup: any) => {
+    // if (pickup?.is_saved_address) {
+    //   // Only show business name
+    //   return pickup.address_business_name || "-";
+    // }
+
+    // Show full address
+    return (
+      <>
+        {/* {pickup.address_business_name ? `${pickup.address_business_name}\n` : ""}
+        {pickup.address_line_1 ? `${pickup.address_line_1}\n` : ""} */}
+        {pickup.address_city}, {pickup.address_postal_code} {pickup.address_state}
+      </>
+    );
+  };
 
   return (
-    <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
-      {line1}
-      {"\n"}
-      {line2}
+    <Text whiteSpace="pre-line" textTransform="capitalize" fontSize="sm" minWidth={"170px"}>
+      {renderPickupAddress(pickup)}
     </Text>
   );
 };
 
-export const PickupAddressCellExport = ({ row }: any) => {
-  const destinations = row?.original?.job?.job_destinations;
 
-  // ✅ Ensure it's an array before using .find()
-  const pickup = Array.isArray(destinations)
-    ? destinations.find((d: any) => d.is_pickup === true)
-    : null;
-
-  if (!pickup) return "-";
-
-  const line1 = pickup.address_line_1 || "";
-  const line2 = `${pickup.address_city || ""} ${pickup.address_postal_code || ""
-    }, Australia`;
-
-  return `${line1}\n${line2}`;
-};
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
-    <Text maxW="100px" w="120px" noOfLines={2}>
+    <Text fontSize="sm" maxW="150px" noOfLines={2}>
       {" "}
       {row?.original?.job?.reference_no || "-"}
     </Text>
   );
 };
 
-export const CustomerReferenceCellExport = ({ row }: any) =>
-  `${row?.original?.job?.reference_no ? `${row.original.job.reference_no}` : "-"
-  }`;
-
 export const CategoryCell = ({ row }: any) => {
   return (
-    <Text maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>
+    <Text fontSize="sm" maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>
   );
 };
 
-export const CategoryCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_category?.name
-    ? `${row.original.job.job_category?.name}`
-    : "-"
-  }`;
-// export const DeliveryCell = ({ row }: any) => {
-//   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
-// };
-
-export const DeliveryCell = ({ row }: any) => {
-  const router = useRouter();
+export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   const job = row?.original?.job;
-
+  const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
     if (!color) return { bg: "gray.100", color: "gray.700" };
@@ -857,8 +751,63 @@ export const DeliveryCell = ({ row }: any) => {
     }
     return { bg: `${color}.100`, color: `${color}.700`, };
   };
-  const handleNavigate = () => {
-    if (job?.id) router.push(`/admin/jobs/${job.id}`);
+  const canRemove = !!job?.preallocation_driver_id;
+
+  const [removeDriver, { loading }] = useMutation(REMOVE_PRE_ALLOCATE_DRIVER, {
+    update: (cache, { data: { updateJob } }) => {
+      // Update cached jobs for preallocation table
+      const existingJobs: any = cache.readQuery({ query: PRE_ALLOCATION_JOBS_QUERY });
+      if (existingJobs) {
+        const newJobs = existingJobs.jobs.map((j) =>
+          j.id === updateJob.id
+            ? { ...j, preallocation_driver_id: null, driver_id: null }
+            : j
+        );
+        cache.writeQuery({
+          query: PRE_ALLOCATION_JOBS_QUERY,
+          data: { jobs: newJobs },
+        });
+      }
+
+      // Remove job from AssignJobsModal selection
+      setSelectedJobs?.((prev) =>
+        prev.filter((jobItem) => jobItem.original.job.id !== job.id)
+      );
+    },
+    onCompleted: () => {
+      toast({
+        title: "Removed job from driver",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      refetchTable?.(); // optional full refetch
+    },
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err.message,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    },
+  });
+
+  const handleRemove = () => {
+    const input = {
+      id: job.id,
+      customer_id: job.customer.id,
+      company_id: job.company.id,
+      job_type_id: job.job_type.id,
+      name: job.name,
+      preallocation_driver_id: null,
+      driver_id: job.driver_id || null,
+      d_sort_id: job.d_sort_id || null,
+      sort_datetime: job.sort_datetime || null,
+    };
+
+    removeDriver({ variables: { input } });
   };
 
   return (
@@ -881,36 +830,136 @@ export const DeliveryCell = ({ row }: any) => {
         </VStack>
       )}
 
-      <Flex
-        align="center"
-        justify="space-between"
-        gap="8px"
-        maxW="260px"
-      >
-        {/* RIGHT SIDE */}
-        {job?.id && (
-          <>
-            <Text fontSize="sm" noOfLines={1}>
-              {job?.name || "-"}
-            </Text>
-            <Tooltip label="Edit Job" placement="top">
+      <Flex direction="column" w="100%" maxW="150px">
+
+        {/* ROW 1: Remove Left, Job Name Right */}
+        <Flex align="center" justify="space-between" w="100%">
+
+          {/* Remove Button LEFT */}
+          {canRemove && (
+            <Tooltip label="Remove Job from Driver" placement="top">
               <IconButton
-                aria-label="Edit Job"
-                icon={<EditIcon />}
+                aria-label="Remove Job from Driver"
+                icon={<CloseIcon />}
                 size="xs"
+                color="red.500"
                 variant="ghost"
-                onClick={handleNavigate}
+                isLoading={loading}
+                onClick={handleRemove}
               />
             </Tooltip>
-          </>
-        )}
-      </Flex >
+          )}
+
+          {/* Job Name RIGHT */}
+          <Text fontSize="sm" ml="2" noOfLines={1}>
+            {job?.name || "-"}
+          </Text>
+        </Flex>
+
+        {/* ROW 2: Icons under job name (RIGHT aligned) */}
+        <Flex justify={canRemove ? "flex-end" : "flex-start"} gap={1} mt="1" ml="2">
+          {job.is_inbound_connect && (
+            <React.Fragment key="inbound-connect">  {/* ✅ Key for conditional */}
+              <Tooltip label="Inbound Connect">
+                <FontAwesomeIcon
+                  icon={faInfinity}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_paperwork_required && (
+            <React.Fragment key="paperwork-required">  {/* ✅ Key for conditional */}
+              <Tooltip label="Paperwork Required">
+                <FontAwesomeIcon
+                  icon={faPager}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_hand_unloading && (
+            <React.Fragment key="hand-unloading">  {/* ✅ Key for conditional */}
+              <Tooltip label="Handling">
+                <FontAwesomeIcon
+                  icon={faHandHolding}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_dangerous_goods && (
+            <React.Fragment key="dangerous-goods">  {/* ✅ Key for conditional */}
+              <Tooltip label="Dangerous goods">
+                <FontAwesomeIcon
+                  icon={faWarning}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+          {job.is_tailgate_required && (
+            <React.Fragment key="tailgate-required">  {/* ✅ Key for conditional */}
+              <Tooltip label="Tail lift">
+                <FontAwesomeIcon
+                  icon={faTruckRampBox}
+                  className="!text-[var(--chakra-colors-red-400)] p-1"
+                  size="sm"
+                />
+              </Tooltip>
+            </React.Fragment>
+          )}
+        </Flex>
+
+      </Flex>
     </>
   );
 };
 
-export const DeliveryCellExport = ({ row }: any) =>
-  `${row?.original?.job?.name ? `${row.original.job.name}` : "-"}`;
+export const DeliveryCellBulkAssign = ({ row }: any) => {
+  const job = row?.original?.job;
+  return (
+    <Flex align="center" justify="space-between" maxW="150px">
+      <Text mr="2" noOfLines={1}>
+        {job?.name || "-"}
+      </Text>
+    </Flex>
+  );
+};
+
+// export const DeliveryCell = ({ row }: any) => {
+//   // const router = useRouter();
+//   const job = row?.original?.job;
+//   // const handleNavigate = () => {
+//   //   if (job?.id) {
+//   //     router.push(`/admin/jobs/${job.id}`);
+//   //   }
+//   // };
+
+//   return (
+//     <Flex align="center" justify="space-between" maxW="150px">
+//       <Text mr="2" noOfLines={1}>
+//         {job?.name || "-"}
+//       </Text>
+
+//       {/* {job?.id && (
+//         <Tooltip label="Edit Job" placement="top">
+//           <IconButton
+//             aria-label="Edit Job"
+//             icon={<EditIcon />}
+//             size="xs"
+//             variant="ghost"
+//             onClick={handleNavigate}
+//           />
+//         </Tooltip>
+//       )} */}
+//     </Flex>
+//   );
+// };
 
 export const AdminNotesCell = ({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";
@@ -922,7 +971,7 @@ export const AdminNotesCell = ({ row }: any) => {
 
   return (
     <Flex gap={2} align="center">
-      <Text maxW="200px" noOfLines={2}>
+      <Text fontSize="sm" maxW="200px" noOfLines={2}>
         {display || "-"}
       </Text>
       <EditableFieldPopover
@@ -936,15 +985,10 @@ export const AdminNotesCell = ({ row }: any) => {
   );
 };
 
-export const AdminNotesCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.admin_notes ? `${row.original.job.admin_notes}` : "-"
-    }`;
-};
-
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text maxW="140px" noOfLines={1}>
+      <Text fontSize="sm" maxW="140px" noOfLines={1}>
         {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover
@@ -957,8 +1001,43 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
   );
 };
 
-export const TimeslotCellExport = ({ row }: any) =>
-  `${row?.original?.job?.timeslot ? `${row.original.job.timeslot}` : "-"}`;
+export const TotalQuantityCell = ({ row }: any) => {
+  return (
+    <Text fontSize="sm" maxW="100px">{row?.original?.job?.total_quantity || "-"}</Text>
+  );
+};
+export const TotalWeightCell = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="120px">{row?.original?.job?.total_weight || "-"}</Text>;
+};
+export const TotalVolumeCell = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="120px">{row?.original?.job?.total_volume || "-"}</Text>;
+};
+
+export const TotalPrice = ({ row }: any) => {
+  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+};
+
+export const SuburbAreaCell = ({ row }: any) => {
+  const area = row?.original?.job?.suburb_area || "";
+  const bgColor = row?.original?.job?.area_color || "#751010"; // fallback color
+
+  return (
+    <>
+      <Badge
+        bg={bgColor}
+        color="white"
+        maxW="100px"
+        px={2}
+        py={1}
+        borderRadius="md"
+        textTransform="capitalize"
+      >
+        {area}
+      </Badge>
+      <Text fontSize="xs" mt={1}>{row?.original?.job?.driver?.full_name || ""}</Text>
+    </>
+  );
+};
 
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
   "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
@@ -990,93 +1069,127 @@ function uniqueById(cols: any[]): any[] {
   return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 }
 
-export const tableColumn = (refetchJobs: () => void) => [
+export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
   {
     id: "name",
     Header: "Delivery ID",
-    Cell: DeliveryCell,
-    CellExport: DeliveryCellExport,
-
-    // width: "100px",
+    Cell: ({ row }) => (
+      <DeliveryCell
+        row={row}
+        refetchTable={refetchJobs}
+        setSelectedJobs={setSelectedJobs}
+      />
+    ),
+    // ✅ Sort by job ID directly
+    accessor: (row: any) => row?.job?.id || 0,
+    enableSorting: true,
+    sortType: 'basic',
   },
   {
-    id: "company.name",
-    Header: "Booked By",
-    Cell: BookedByCell, // Use the new cell component
-    CellExport: BookedByCellExport,
-  },
-  {
-    id: "reference_no",
-    Header: "Customer Reference",
-    Cell: CustomerReferenceCell,
-    CellExport: CustomerReferenceCellExport,
-  },
-  {
-    id: "job_category.name",
-    Header: "category",
-    Cell: CategoryCell,
-    CellExport: CategoryCellExport,
+    id: "suburb_area,area_color",
+    Header: "Quad",
+    Cell: SuburbAreaCell,
+    // ✅ Accessor for suburb_area sorting
+    accessor: (row: any) => row?.job?.suburb_area || '',
+    enableSorting: true,
   },
   {
     id: "job_type.name",
     Header: "Type",
     Cell: JobTypeCell, // Add this line
     // width: "100px",
-    CellExport: TypeCellExport,
   },
-  {
-    id: "job_status.name",
-    Header: "Status",
-    Cell: StatusCell, // Add this line
-    CellExport: StatusCellExport,
-    // width: "100px",
-  },
-  {
-    id: "ready_at",
-    Header: "Date",
-    Cell: ReadyAtCell, // Add this line
-    CellExport: ReadyAtCellExport,
-    // type: "date",
-  },
+  // {
+  //   id: "job_status.name",
+  //   Header: "Status",
+  //   Cell: StatusCell, // Add this line
+  //   // width: "100px",
+  // },
   {
     id: "pick_up_destination.address_formatted",
     Header: "Pickup From",
     Cell: PickupAddressCell, // Add this line
-    CellExport: PickupAddressCellExport,
     // width: "150px",
   },
-  // {
-  //   id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-  //   Header: "Pickup Address and Name ",
-  //   // width: "200px",
-  //   Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
-  //   CellExport: PickupAddressWithTimeCellExport,
-  // },
+  {
+    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+    Header: "Pickup Address and Name ",
+    // width: "200px",
+    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
+    CellExport: PickupAddressWithTimeCellExport,
+  },
   {
     id: "pick_up_destination.address_business_name",
-    Header: "Pickup Business Name",
+    Header: "Pickup Company",
     Cell: PickupBusinessNameCell, // Add this line
-    CellExport: PickupBusinessNameCellExport,
   },
   {
     id: "job_destinations.address",
-    Header: "Delivery Address",
+    Header: "Delivery To",
     width: "100px",
     Cell: JobDestinationsCell,
     CellExport: JobDestinationsCellExport,
   },
   {
     id: "job_destinations.address_business_name",
-    Header: "Delivery Business Name",
+    Header: "Del. Company ",
     Cell: JobDestinationBusinessNameCell,
     CellExport: JobDestinationBusinessNameCellExport,
   },
+  {
+    id: "total_quantity",
+    Header: "Pcs/Qty",
+    Cell: TotalQuantityCell,
+  },
+
+  {
+    id: "total_weight",
+    Header: "Weight",
+    Cell: TotalWeightCell,
+  },
+  {
+    id: "total_volume",
+    Header: "CBM",
+    Cell: TotalVolumeCell,
+  },
+  {
+    id: "job_price_calculation_detail.total",
+    Header: "Total Price",
+    Cell: TotalPrice,
+  },
+  {
+    id: "job_destinations.address,job_destinations.address_business_name",
+    Header: "Delivery Address and Name",
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
+    CellExport: JobDestinationWithBusinessNameCellExport,
+  },
+  {
+    id: "reference_no",
+    Header: "Customer Ref.",
+    Cell: CustomerReferenceCell,
+  },
+  {
+    id: "job_category.name",
+    Header: "category",
+    Cell: CategoryCell,
+  },
   // {
-  //   id: "job_destinations.address,job_destinations.address_business_name",
-  //   Header: "Delivery Address and Name",
-  //   Cell: JobDestinationWithBusinessNamewithoutMediaCell,
-  //   CellExport: JobDestinationWithBusinessNameCellExport,
+  //   id: "suburb_area,area_color",
+  //   Header: "Quad",
+  //   Cell: SuburbAreaCell,
   // },
+  {
+    id: "company.name",
+    Header: "Company",
+    Cell: BookedByCell, // Use the new cell component
+    // CellExport: BookedByCellExport,
+  },
+  {
+    id: "ready_at",
+    Header: "Date",
+    Cell: ReadyAtCell, // Add this line
+    // type: "date",
+  },
   {
     id: "job_category.name,ready_at,drop_at",
     Header: "Ready By / Drop by",
@@ -1089,7 +1202,6 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: ({ row }: any) => (
       <TimeslotCell row={row} refetchJobs={refetchJobs} />
     ),
-    CellExport: TimeslotCellExport,
   },
   {
     id: "last_free_at",
@@ -1097,97 +1209,79 @@ export const tableColumn = (refetchJobs: () => void) => [
     Cell: LastFreeAtCell, // Add this line
     // type: "date",
   },
-  {
-    id: "job_items.item_type",
-    Header: "Item Type",
-    Cell: ItemsTypeCell,
-    CellExport: ItemsTypeCellExport,
-  },
+  // {
+  //   id: "job_items.item_type",
+  //   Header: "Item Type",
+  //   Cell: ItemsTypeCell,
+  //   CellExport: ItemsTypeCellExport,
+  // },
   {
     id: "job_items.dimensions",
     Header: "Dimensions",
     Cell: ItemsDimensionCell,
     CellExport: ItemsDimensionCellExport,
   },
-  {
-    id: "job_items.quantity",
-    Header: "Quantity",
-    Cell: ItemsQuantityCell,
-    CellExport: ItemsQuantityCellExport,
-  },
-  {
-    id: "job_items.weight",
-    Header: "Weight",
-    Cell: ItemsWeightCell,
-    CellExport: ItemsWeightCellExport,
-  },
-  {
-    id: "job_items.volume",
-    Header: "CBM",
-    Cell: ItemsCbmCell,
-    CellExport: ItemsCbmCellExport,
-  },
-  {
-    id: "extras",
-    Header: "Extras",
-    Cell: ItemsExtrasCell,
-    CellExport: ItemsExtrasCellExport,
-    // width: "100px",
-  },
+  // {
+  //   id: "job_items.quantity",
+  //   Header: "Quantity",
+  //   Cell: ItemsQuantityCell,
+  //   CellExport: ItemsQuantityCellExport,
+  // },
+  // {
+  //   id: "job_items.weight",
+  //   Header: "Weight",
+  //   Cell: ItemsWeightCell,
+  //   CellExport: ItemsWeightCellExport,
+  // },
+  // {
+  //   id: "job_items.volume",
+  //   Header: "CBM",
+  //   Cell: ItemsCbmCell,
+  //   CellExport: ItemsCbmCellExport,
+  // },
+  // {
+  //   id: "extras",
+  //   Header: "Extras",
+  //   Cell: ItemsExtrasCell,
+  //   // width: "100px",
+  // },
   {
     id: "customer_notes",
     Header: "Client notes",
     Cell: NotesCell,
-    CellExport: NotesCellExport,
   },
-  {
-    id: "job_price_calculation_detail.total",
-    Header: "Total Price",
-    Cell: TotalPrice,
-  },
-  {
-    id: "driver.full_name",
-    Header: "Drivers",
-    Cell: DriverCell,
-    CellExport: DriverCellExport,
-    enableSorting: true,
-  },
+  // {
+  //   id: "driver.full_name",
+  //   Header: "Drivers",
+  //   Cell: DriverCell,
+  //   enableSorting: true,
+  // },
   {
     id: "admin_notes",
     Header: "Admin Notes",
     accessor: "admin_notes" as const,
     Cell: AdminNotesCell,
-    CellExport: AdminNotesCellExport,
     // show: isCustomer,
   },
 ];
 
-export const getColumns = (
+export const getColumnsPre = (
   isAdmin: boolean,
-  isCustomer: boolean,
+  // isCustomer: boolean,
   withMedia: boolean,
   refetchJobs?: () => void,
   dynamicTableUsers?: DynamicTableUser[],
+  setSelectedJobs?: any,
 ) => {
   // 1) Selection checkbox column
   const base: any[] = [
     {
       id: "selection",
-      Header: ({ getToggleAllRowsSelectedProps }: any) => (
-        <div>
-          <IndeterminateCheckbox
-            {...getToggleAllRowsSelectedProps()}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+      Header: ({ getToggleAllRowsSelectedProps }) => (
+        <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
       ),
-      Cell: ({ row }: any) => (
-        <div>
-          <IndeterminateCheckbox
-            {...row.getToggleRowSelectedProps()}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
+      Cell: ({ row }) => (
+        <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
       ),
     },
   ];
@@ -1196,25 +1290,24 @@ export const getColumns = (
   if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
     const cols = uniqueById([
       ...base,
-      ...tableColumn(refetchJobs), // your static defaults
-      {
-        id: "actions",
-        Header: "Actions",
-        accessor: "id" as const,
-        isView: isCustomer,
-        isEdit: isAdmin,
-        isTracking: isCustomer,
-      },
+      ...tableColumn(refetchJobs, setSelectedJobs), // your static defaults
+      // {
+      //   id: "actions",
+      //   Header: "Actions",
+      //   accessor: "id" as const,
+      //   isView: isCustomer,
+      //   isEdit: isAdmin,
+      //   isTracking: isCustomer,
+      // },
     ]);
     // Swap Cells for the special two if they exist in tableColumn
     return applyMediaCells(cols, withMedia);
   }
-
   // 3) Build from dynamic selection
   // NOTE: outputDynamicTable should only include columns that are active:true.
   let columns = [
     ...base,
-    ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs)),
+    ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs, setSelectedJobs)),
   ];
 
   // 4) Swap only the Cell for the 2 special fields based on withMedia
@@ -1223,14 +1316,14 @@ export const getColumns = (
   // 5) Ensure Actions at the end and de-dupe
   columns = uniqueById([
     ...columns,
-    {
-      id: "actions",
-      Header: "Actions",
-      accessor: "id" as const,
-      isView: isCustomer,
-      isEdit: isAdmin,
-      isTracking: isCustomer,
-    },
+    // {
+    //   id: "actions",
+    //   Header: "Actions",
+    //   accessor: "id" as const,
+    //   isView: isCustomer,
+    //   isEdit: isAdmin,
+    //   isTracking: isCustomer,
+    // },
   ]);
 
   return columns;
@@ -1240,25 +1333,8 @@ export const bulkassigntableColumn = [
   {
     id: "name",
     Header: "Delivery ID",
-    Cell: DeliveryCell,
-
+    Cell: DeliveryCellBulkAssign,
     // width: "100px",
-  },
-  {
-    id: "company.name",
-    Header: "Booked By",
-    Cell: BookedByCell, // Use the new cell component
-    // CellExport: BookedByCellExport,
-  },
-  {
-    id: "reference_no",
-    Header: "Customer Reference",
-    Cell: CustomerReferenceCell,
-  },
-  {
-    id: "job_category.name",
-    Header: "category",
-    Cell: CategoryCell,
   },
   {
     id: "job_type.name",
@@ -1266,18 +1342,12 @@ export const bulkassigntableColumn = [
     Cell: JobTypeCell, // Add this line
     // width: "100px",
   },
-  {
-    id: "job_status.name",
-    Header: "Status",
-    Cell: StatusCell, // Add this line
-    // width: "100px",
-  },
-  {
-    id: "ready_at",
-    Header: "Date",
-    Cell: ReadyAtCell, // Add this line
-    // type: "date",
-  },
+  // {
+  //   id: "job_status.name",
+  //   Header: "Status",
+  //   Cell: StatusCell, // Add this line
+  //   // width: "100px",
+  // },
   {
     id: "pick_up_destination.address_formatted",
     Header: "Pickup From",
@@ -1288,32 +1358,81 @@ export const bulkassigntableColumn = [
     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
     Header: "Pickup Address and Name ",
     // width: "200px",
-    Cell: PickupAddressWithTimebulkCell, // Use the new cell component
+    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
     CellExport: PickupAddressWithTimeCellExport,
   },
   {
-    id: "job_destinations.address,job_destinations.address_business_name",
-    Header: "Delivery Address and Name",
-    Cell: deliveryAddressWithTimebulkCell,
-    // CellExport: JobDestinationWithBusinessNameCellExport,
-  },
-  {
     id: "pick_up_destination.address_business_name",
-    Header: "Pickup Business Name",
+    Header: "Pickup Company",
     Cell: PickupBusinessNameCell, // Add this line
   },
   {
     id: "job_destinations.address",
-    Header: "Delivery Address",
+    Header: "Delivery To",
     width: "100px",
     Cell: JobDestinationsCell,
     CellExport: JobDestinationsCellExport,
   },
   {
     id: "job_destinations.address_business_name",
-    Header: "Delivery Business Name",
+    Header: "Del. Company ",
     Cell: JobDestinationBusinessNameCell,
     CellExport: JobDestinationBusinessNameCellExport,
+  },
+  {
+    id: "total_quantity",
+    Header: "Pcs/Qty",
+    Cell: TotalQuantityCell,
+  },
+
+  {
+    id: "total_weight",
+    Header: "Weight",
+    Cell: TotalWeightCell,
+  },
+  {
+    id: "total_volume",
+    Header: "CBM",
+    Cell: TotalVolumeCell,
+  },
+  {
+    id: "job_price_calculation_detail.total",
+    Header: "Total Price",
+    Cell: TotalPrice,
+  },
+
+  {
+    id: "job_destinations.address,job_destinations.address_business_name",
+    Header: "Delivery Address and Name",
+    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
+    CellExport: JobDestinationWithBusinessNameCellExport,
+  },
+  {
+    id: "reference_no",
+    Header: "Customer Ref.",
+    Cell: CustomerReferenceCell,
+  },
+  {
+    id: "job_category.name",
+    Header: "category",
+    Cell: CategoryCell,
+  },
+  {
+    id: "suburb_area,area_color",
+    Header: "Quad",
+    Cell: SuburbAreaCell,
+  },
+  {
+    id: "company.name",
+    Header: "Company",
+    Cell: BookedByCell, // Use the new cell component
+    // CellExport: BookedByCellExport,
+  },
+  {
+    id: "ready_at",
+    Header: "Date",
+    Cell: ReadyAtCell, // Add this line
+    // type: "date",
   },
   {
     id: "job_category.name,ready_at,drop_at",
@@ -1324,68 +1443,63 @@ export const bulkassigntableColumn = [
   {
     id: "timeslot",
     Header: "Timeslot",
-    Cell: TimeslotCell, // Add this line
-    // width: "50px",
+    Cell: ({ row }: any) => (
+      <TimeslotCell row={row} />
+    ),
   },
   {
     id: "last_free_at",
     Header: "Last Free Day",
     Cell: LastFreeAtCell, // Add this line
-    CellExport: LastFreeAtCellExport,
     // type: "date",
   },
-  {
-    id: "job_items.item_type",
-    Header: "Item Type",
-    Cell: ItemsTypeCell,
-    CellExport: ItemsTypeCellExport,
-  },
+  // {
+  //   id: "job_items.item_type",
+  //   Header: "Item Type",
+  //   Cell: ItemsTypeCell,
+  //   CellExport: ItemsTypeCellExport,
+  // },
   {
     id: "job_items.dimensions",
     Header: "Dimensions",
     Cell: ItemsDimensionCell,
     CellExport: ItemsDimensionCellExport,
   },
-  {
-    id: "job_items.quantity",
-    Header: "Quantity",
-    Cell: ItemsQuantityCell,
-    CellExport: ItemsQuantityCellExport,
-  },
-  {
-    id: "job_items.weight",
-    Header: "Weight",
-    Cell: ItemsWeightCell,
-    CellExport: ItemsWeightCellExport,
-  },
-  {
-    id: "job_items.volume",
-    Header: "CBM",
-    Cell: ItemsCbmCell,
-    CellExport: ItemsCbmCellExport,
-  },
-  {
-    id: "extras",
-    Header: "Extras",
-    Cell: ItemsExtrasCell,
-    // width: "100px",
-  },
+  // {
+  //   id: "job_items.quantity",
+  //   Header: "Quantity",
+  //   Cell: ItemsQuantityCell,
+  //   CellExport: ItemsQuantityCellExport,
+  // },
+  // {
+  //   id: "job_items.weight",
+  //   Header: "Weight",
+  //   Cell: ItemsWeightCell,
+  //   CellExport: ItemsWeightCellExport,
+  // },
+  // {
+  //   id: "job_items.volume",
+  //   Header: "CBM",
+  //   Cell: ItemsCbmCell,
+  //   CellExport: ItemsCbmCellExport,
+  // },
+  // {
+  //   id: "extras",
+  //   Header: "Extras",
+  //   Cell: ItemsExtrasCell,
+  //   // width: "100px",
+  // },
   {
     id: "customer_notes",
     Header: "Client notes",
     Cell: NotesCell,
   },
-  {
-    id: "driver.full_name",
-    Header: "Drivers",
-    Cell: DriverCell,
-    enableSorting: true,
-  },
-  {
-    id: "job_price_calculation_detail.total",
-    Header: "Total Price",
-    Cell: TotalPrice,
-  },
+  // {
+  //   id: "driver.full_name",
+  //   Header: "Drivers",
+  //   Cell: DriverCell,
+  //   enableSorting: true,
+  // },
   {
     id: "admin_notes",
     Header: "Admin Notes",
@@ -1394,6 +1508,7 @@ export const bulkassigntableColumn = [
     // show: isCustomer,
   },
 ];
+
 
 export const getBulkAssignColumns = (
   isAdmin: boolean,
@@ -1412,14 +1527,14 @@ export const getBulkAssignColumns = (
         ),
       },
       ...bulkassigntableColumn,
-      {
-        id: "actions",
-        Header: "Actions",
-        accessor: "id" as const,
-        isView: isCustomer,
-        isEdit: isAdmin,
-        isTracking: isCustomer,
-      },
+      // {
+      //   id: "actions",
+      //   Header: "Actions",
+      //   accessor: "id" as const,
+      //   isView: isCustomer,
+      //   isEdit: isAdmin,
+      //   isTracking: isCustomer,
+      // },
     ];
   }
 
