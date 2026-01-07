@@ -77,6 +77,7 @@ import {
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
+import { parseCookies } from "nookies";
 // import { useRouter } from "next/router";
 import {
   // startTransition,
@@ -95,7 +96,7 @@ function JobPage() {
   const toast = useToast();
   const freightCalculatedRef = useRef(false);
   const isMounted = useRef(false);
-    useEffect(() => {
+  useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -109,6 +110,7 @@ function JobPage() {
     isCompanyAdmin,
     isCustomer,
   } = useSelector((state: RootState) => state.user);
+  const cookies = parseCookies();
 
   // console.log(isAdmin, customerId, companyId, isCompany, isCustomer, "isAdmin, customerId, companyId, isCompany, isCustomer");
   // const textColor = useColorModeValue("navy.700", "white");
@@ -1076,7 +1078,12 @@ function JobPage() {
       setCustomerOptions(_customerOptions);
       console.log(_customerOptions, "cust");
       if (isCustomer) {
-        setJob({ ...job, ...{ customer_id: customerId} });
+        // setJob({ ...job, ...{ customer_id: customerId} });
+        setJob((prevJob) => ({
+          ...prevJob,
+          customer_id: customerId || Number(cookies.customer_id),
+        }));
+
         const selectedCustomer = _customerOptions.find(
           (_e) => _e.value === customerId,
         )?.entity;
@@ -1590,7 +1597,7 @@ function JobPage() {
                     <CustomInputField
                       isSelect={true}
                       optionsArray={customerOptions}
-                      label={"Customer:" }
+                      label={"Customer:"}
                       value={
                         customerOptions.find(
                           (entity) => entity.value === job.customer_id,
@@ -1615,7 +1622,7 @@ function JobPage() {
                       }}
                     />
                   )}
-                   {!isAdmin && (
+                  {!isAdmin && (
                     <CustomInputField
                       isSelect={true}
                       optionsArray={customerOptions}
@@ -1627,7 +1634,6 @@ function JobPage() {
                       }
                       placeholder=""
                       isDisabled={!isAdmin}
-                     
                     />
                   )}
                   <CustomInputField
