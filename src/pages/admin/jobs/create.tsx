@@ -1038,11 +1038,11 @@ function JobPage() {
 
   const dateChanged = useCallback(() => {
     try {
-      setJob({
-        ...job,
+      setJob((prev) => ({
+        ...prev,
         ready_at: formatDateTimeToDB(jobDateAt, readyAt),
         drop_at: formatDateTimeToDB(jobDateAt, dropAt),
-      });
+      }));
     } catch (e) {
       // console.log(e);
     }
@@ -1475,10 +1475,10 @@ function JobPage() {
                           job_category.value === selectedCategory,
                       )?.label;
 
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         job_category_id: selectedCategory || null,
-                      });
+                      }));
 
                       setRefinedData({
                         ...refinedData,
@@ -1505,11 +1505,11 @@ function JobPage() {
                           ...defaultVariables,
                           company_id: e.value,
                         });
-                        setJob({
-                          ...job,
+                        setJob((prev) => ({
+                          ...prev,
                           company_id: e.value || null,
                           customer_id: null,
-                        });
+                        }));
                         setRefinedData({
                           ...refinedData,
                           area: null,
@@ -1550,7 +1550,10 @@ function JobPage() {
                         ].find((_e) => _e.value === job.transport_type)}
                         placeholder=""
                         onChange={(e) => {
-                          setJob({ ...job, transport_type: e.value });
+                          setJob((prev) => ({
+                            ...prev,
+                            transport_type: e.value,
+                          }));
                           setRefinedData({
                             ...refinedData,
                             transport_type: e.value,
@@ -1577,7 +1580,10 @@ function JobPage() {
                             state_code: e.value,
                             state: e.label,
                           };
-                          setJob({ ...job, transport_location: e.value });
+                          setJob((prev) => ({
+                            ...prev,
+                            transport_location: e.value,
+                          }));
                           setRefinedData(newState);
                         }}
                       />
@@ -1607,12 +1613,17 @@ function JobPage() {
                       isDisabled={!isAdmin}
                       onChange={(e) => {
                         setCustomerBaseNotes(e.base_notes);
-                        setJob({ ...job, base_notes: e.base_notes });
-                        if (!isAdmin) return;
-                        setJob({
-                          ...job,
-                          customer_id: e.value || null,
-                        });
+                        // setJob({ ...job, base_notes: e.base_notes });
+                        // if (!isAdmin) return;
+                        // setJob({
+                        //   ...job,
+                        //   customer_id: e.value || null,
+                        // });
+                        setJob((prev) => ({
+                          ...prev,
+                          base_notes: e.base_notes,
+                          ...(isAdmin ? { customer_id: e.value || null } : {}),
+                        }));
                         const selectedCustomer = customerOptions.find(
                           (_e) => _e.value === e.value,
                         )?.entity;
@@ -1742,15 +1753,15 @@ function JobPage() {
                     value={readyAt}
                     onChange={(e) => {
                       setReadyAt(e.target.value);
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         ready_at: new Date(
                           `${jobDateAt} ${e.target.value}`,
                         ).toISOString(),
                         drop_at: new Date(
                           `${jobDateAt} ${dropAt}`,
                         ).toISOString(),
-                      });
+                      }));
                     }}
                   />
 
@@ -1762,15 +1773,17 @@ function JobPage() {
                     value={dropAt}
                     onChange={(e) => {
                       setDropAt(e.target.value);
-                      setJob({
-                        ...job,
-                        ready_at: new Date(
-                          `${jobDateAt} ${readyAt}`,
-                        ).toISOString(),
+                      setJob((prev) => ({
+                        ...prev,
+                        ...(readyAt && {
+                          ready_at: new Date(
+                            `${jobDateAt} ${readyAt}`,
+                          ).toISOString(),
+                        }),
                         drop_at: new Date(
                           `${jobDateAt} ${e.target.value}`,
                         ).toISOString(),
-                      });
+                      }));
                     }}
                   />
 
@@ -1780,10 +1793,10 @@ function JobPage() {
                     name="timeslot"
                     value={job.timeslot}
                     onChange={(e) =>
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      })
+                      }))
                     }
                   />
 
@@ -1794,10 +1807,10 @@ function JobPage() {
                     name="last_free_at"
                     value={job.last_free_at}
                     onChange={(e) => {
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      });
+                      }));
                     }}
                   />
 
@@ -1807,10 +1820,10 @@ function JobPage() {
                     name="reference_no"
                     value={job.reference_no}
                     onChange={(e) =>
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      })
+                      }))
                     }
                   />
 
@@ -1820,10 +1833,10 @@ function JobPage() {
                     name="booked_by"
                     value={job.booked_by}
                     onChange={(e) =>
-                      setJob({
-                        ...job,
+                      setJob((prev) => ({
+                        ...prev,
                         [e.target.name]: e.target.value,
-                      })
+                      }))
                     }
                   />
 
@@ -1835,10 +1848,10 @@ function JobPage() {
                         placeholder=""
                         name="quoted_price"
                         onChange={(e) =>
-                          setJob({
-                            ...job,
+                          setJob((prev) => ({
+                            ...prev,
                             [e.target.name]: e.target.value,
-                          })
+                          }))
                         }
                       />
                       <CustomInputField
@@ -1848,10 +1861,10 @@ function JobPage() {
                         name="admin_notes"
                         value={job.admin_notes}
                         onChange={(e) =>
-                          setJob({
-                            ...job,
+                          setJob((prev) => ({
+                            ...prev,
                             [e.target.name]: e.target.value,
-                          })
+                          }))
                         }
                       />
                     </>
@@ -1942,18 +1955,16 @@ function JobPage() {
                           //   filtereddepotOption,
                           //   "filtereddepotOptions",
                           // );
-                          setJob({
-                            ...job,
-                            ...{
-                              pick_up_lng: jobDestination.lng,
-                              pick_up_lat: jobDestination.lat,
-                              pick_up_address: jobDestination.address,
-                              pick_up_notes: jobDestination.notes,
-                              pick_up_name: jobDestination.name,
-                              pick_up_report: jobDestination.report,
-                              pick_up_state: jobDestination.state,
-                            },
-                          });
+                          setJob((prev) => ({
+                            ...prev,
+                            pick_up_lng: jobDestination.lng,
+                            pick_up_lat: jobDestination.lat,
+                            pick_up_address: jobDestination.address,
+                            pick_up_notes: jobDestination.notes,
+                            pick_up_name: jobDestination.name,
+                            pick_up_report: jobDestination.report,
+                            pick_up_state: jobDestination.state,
+                          }));
 
                           setRefinedData({
                             ...refinedData,
@@ -2067,11 +2078,10 @@ function JobPage() {
                           (job_category) =>
                             job_category.value === selectedCategory,
                         )?.label;
-                    6;
-                    setJob({
-                      ...job,
+                    setJob((prev) => ({
+                      ...prev,
                       job_type_id: selectedCategory || null,
-                    });
+                    }));
 
                     setRefinedData({
                       ...refinedData,
@@ -2205,10 +2215,10 @@ function JobPage() {
                       name="customer_notes"
                       value={job.customer_notes}
                       onChange={(e) =>
-                        setJob({
-                          ...job,
+                        setJob((prev) => ({
+                          ...prev,
                           [e.target.name]: e.target.value,
-                        })
+                        }))
                       }
                     />
                     {isAdmin && (
@@ -2257,10 +2267,10 @@ function JobPage() {
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_inbound_connect: e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_inbound_connect: e === "1",
+                                }));
                                 let curretstatecode =
                                   jobDestinations[0].address_state == "Victoria"
                                     ? "VIC"
@@ -2304,10 +2314,10 @@ function JobPage() {
                                       ...refinedData,
                                       timeslot_depots: e.value,
                                     });
-                                    setJob({
-                                      ...job,
-                                      timeslot_depots: e.value, // Update job.timeslot_depots
-                                    });
+                                    setJob((prev) => ({
+                                      ...prev,
+                                      timeslot_depots: e.value,
+                                    }));
                                   }}
                                 />
                               </Box>
@@ -2330,11 +2340,10 @@ function JobPage() {
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_stackable_required:
-                                    e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_stackable_required: e === "1",
+                                }));
                               }}
                             >
                               <Stack direction="row">
@@ -2363,10 +2372,10 @@ function JobPage() {
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_hand_unloading: e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_hand_unloading: e === "1",
+                                }));
                               }}
                             >
                               <Stack direction="row">
@@ -2396,10 +2405,10 @@ function JobPage() {
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_dangerous_goods: e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_dangerous_goods: e === "1",
+                                }));
                               }}
                             >
                               <Stack direction="row">
@@ -2462,11 +2471,10 @@ function JobPage() {
                             <RadioGroup
                               defaultValue={"0"}
                               onChange={(e) => {
-                                setJob({
-                                  ...job,
-                                  is_paperwork_required:
-                                    e === "1" ? true : false,
-                                });
+                                setJob((prev) => ({
+                                  ...prev,
+                                  is_paperwork_required: e === "1",
+                                }));
                               }}
                             >
                               <Stack direction="row">
