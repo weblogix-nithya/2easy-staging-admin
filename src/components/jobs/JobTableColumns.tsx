@@ -633,7 +633,7 @@ export const ItemsCbmCell = ({ row }: any) => {
   );
 };
 export const ItemsExtrasCell = ({ row }: any) => {
-  return <Text maxW="100px">{row?.original?.job?.extras || "-"}</Text>;
+  return <Text maxW="100px" fontWeight="bold">{row?.original?.job?.extras || "-"}</Text>;
 };
 
 export const ItemsExtrasCellExport = ({ row }: any) => {
@@ -851,11 +851,11 @@ export const DeliveryCell = ({ row }: any) => {
 
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "gray.100", color: "gray.700" };
+    if (!color) return { bg: "#fff", color: "gray", boxShadow: `0 0 0 1px ${color}` };
     if (color.startsWith("#")) {
-      return { bg: color + "20", color: color };
+      return { bg: "#fff", color: color, boxShadow: `0 0 0 1px ${color}` };
     }
-    return { bg: `${color}.100`, color: `${color}.700`, };
+    return { bg: `#fff`, color: `${color}`, boxShadow: `0 0 0 1px ${color}` };
   };
   const handleNavigate = () => {
     if (job?.id) router.push(`/admin/jobs/${job.id}`);
@@ -868,8 +868,8 @@ export const DeliveryCell = ({ row }: any) => {
           {labels.map((label) => (
             <Badge
               key={label.id}
-              fontSize="10px"
-              px="6px"
+              fontSize="11px"
+              px="8px"
               py="2px"
               borderRadius="full"
               whiteSpace="nowrap"
@@ -890,7 +890,7 @@ export const DeliveryCell = ({ row }: any) => {
         {/* RIGHT SIDE */}
         {job?.id && (
           <>
-            <Text fontSize="sm" noOfLines={1}>
+            <Text noOfLines={1}>
               {job?.name || "-"}
             </Text>
             <Tooltip label="Edit Job" placement="top">
@@ -944,7 +944,7 @@ export const AdminNotesCellExport = ({ row }: any) => {
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text maxW="140px" noOfLines={1}>
+      <Text maxW="140px" fontWeight="bold" noOfLines={1}>
         {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover

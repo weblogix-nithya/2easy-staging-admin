@@ -458,7 +458,7 @@ const PaginationTable = <T extends object>({
                     let data;
                     if (cell.column.id === "selection") {
                       return (
-                        <Td fontSize="sm"
+                        <Td
                           {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
@@ -698,7 +698,7 @@ const PaginationTable = <T extends object>({
                       );
                     } else {
                       data = (
-                        <Td fontSize="sm"
+                        <Td
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}

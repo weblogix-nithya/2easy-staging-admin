@@ -745,11 +745,11 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "gray.100", color: "gray.700" };
+    if (!color) return { bg: "#fff", color: "gray", boxShadow: `0 0 0 1px ${color}` };
     if (color.startsWith("#")) {
-      return { bg: color + "20", color: color };
+      return { bg: "#fff", color: color, boxShadow: `0 0 0 1px ${color}` };
     }
-    return { bg: `${color}.100`, color: `${color}.700`, };
+    return { bg: `#fff`, color: `${color}`, boxShadow: `0 0 0 1px ${color}` };
   };
   const canRemove = !!job?.preallocation_driver_id;
 
@@ -817,8 +817,8 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
           {labels.map((label) => (
             <Badge
               key={label.id}
-              fontSize="10px"
-              px="6px"
+              fontSize="11px"
+              px="8px"
               py="2px"
               borderRadius="full"
               whiteSpace="nowrap"
@@ -851,7 +851,7 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
           )}
 
           {/* Job Name RIGHT */}
-          <Text fontSize="sm" ml="2" noOfLines={1}>
+          <Text ml="2" noOfLines={1}>
             {job?.name || "-"}
           </Text>
         </Flex>
@@ -988,7 +988,7 @@ export const AdminNotesCell = ({ row }: any) => {
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text fontSize="sm" maxW="140px" noOfLines={1}>
+      <Text fontSize="md" fontWeight="bold" maxW="140px" noOfLines={1}>
         {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover
