@@ -851,11 +851,11 @@ export const DeliveryCell = ({ row }: any) => {
 
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "#fff", color: "gray", boxShadow: `0 0 0 1px ${color}` };
+    if (!color) return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
     if (color.startsWith("#")) {
-      return { bg: "#fff", color: color, boxShadow: `0 0 0 1px ${color}` };
+      return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
     }
-    return { bg: `#fff`, color: `${color}`, boxShadow: `0 0 0 1px ${color}` };
+    return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
   };
   const handleNavigate = () => {
     if (job?.id) router.push(`/admin/jobs/${job.id}`);
@@ -868,10 +868,10 @@ export const DeliveryCell = ({ row }: any) => {
           {labels.map((label) => (
             <Badge
               key={label.id}
-              fontSize="11px"
+              fontSize="12px"
               px="8px"
               py="2px"
-              borderRadius="full"
+              borderRadius="4px"
               whiteSpace="nowrap"
               {...getBadgeStyle(label.color)}
             >
