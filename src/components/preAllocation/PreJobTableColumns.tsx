@@ -745,11 +745,11 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "#fff", color: "gray", boxShadow: `0 0 0 1px ${color}` };
+    if (!color) return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
     if (color.startsWith("#")) {
-      return { bg: "#fff", color: color, boxShadow: `0 0 0 1px ${color}` };
+      return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
     }
-    return { bg: `#fff`, color: `${color}`, boxShadow: `0 0 0 1px ${color}` };
+    return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
   };
   const canRemove = !!job?.preallocation_driver_id;
 
