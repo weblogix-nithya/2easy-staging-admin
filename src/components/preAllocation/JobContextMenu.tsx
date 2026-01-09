@@ -1,4 +1,4 @@
-import { ApolloError, useMutation, useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { CloseIcon, ExternalLinkIcon } from "@chakra-ui/icons";
 import {
     Box,
@@ -26,25 +26,11 @@ import {
     JobMeta,
 } from "graphql/jobMeta";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
-import {
-    formatDate,
-    formatDateTimeToDB,
-    formatTimeUTCtoInput,
-    today,
-} from "helpers/helper";
+import { formatDate, formatDateTimeToDB, formatTimeUTCtoInput, today } from "helpers/helper";
 import React, { useEffect, useRef, useState } from "react";
 
-/* ---------------- TYPES ---------------- */
-
-type DriverOption = {
-    value: string | number;
-    label: string;
-};
-
-type StatusOption = {
-    value: string;
-    label: string;
-};
+type DriverOption = { value: string | number; label: string };
+type StatusOption = { value: string; label: string };
 
 interface JobContextMenuProps {
     job: any;
@@ -53,88 +39,78 @@ interface JobContextMenuProps {
     drivers: DriverOption[];
 }
 
-/* ---------------- COMPONENT ---------------- */
-
-const JobContextMenu: React.FC<JobContextMenuProps> = ({
-    job,
-    position,
-    onClose,
-    drivers,
-}) => {
+const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose, drivers }) => {
     const toast = useToast();
     const menuRef = useRef<HTMLDivElement>(null);
-
-    /* ---------------- STATE ---------------- */
 
     const [selectedDriver, setSelectedDriver] = useState<DriverOption | null>(null);
     const [selectedStatus, setSelectedStatus] = useState<StatusOption | null>(null);
     const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
     const [jobStatuses, setJobStatuses] = useState<StatusOption[]>([]);
 
-    // Date/Time states
     const [jobDateAt, setJobDateAt] = useState(today);
     const [readyAt, setReadyAt] = useState("06:00");
     const [dropAt, setDropAt] = useState("17:00");
 
-    /* ---------------- QUERIES ---------------- */
-
+    // Queries
     const { data: metaData } = useQuery(GET_JOB_META_LIST_QUERY);
-
     const { data: statusData } = useQuery(GET_JOB_STATUSES_QUERY, {
-        variables: {
-            query: "",
-            page: 1,
-            first: 100,
-            orderByColumn: "id",
-            orderByOrder: "ASC",
-        },
+        variables: { query: "", page: 1, first: 100, orderByColumn: "id", orderByOrder: "ASC" },
     });
 
+    // Mutations
     const [assignMetaToJob] = useMutation(ASSIGN_META_TO_JOB_MUTATION);
-    const [updateJobRight] = useMutation(UPDATE_JOB_MUTATION, {
-        onError: (error) => {
-            showGraphQLErrorToast(error);
-        },
-    });
+    const [updateJobRight] = useMutation(UPDATE_JOB_MUTATION, { onError: showGraphQLErrorToast });
 
-    /* ---------------- SAVE HANDLER ---------------- */
+    // Toggle labels
+    const toggleLabel = (labelId: string) => {
+        setSelectedLabels(prev =>
+            prev.includes(labelId) ? prev.filter(id => id !== labelId) : [...prev, labelId]
+        );
+    };
 
     const handleSave = async () => {
         try {
-            /* ---------------- 1️⃣ ASSIGN LABELS ---------------- */
-            if (selectedLabels.length > 0) {
-                await Promise.all(
-                    selectedLabels.map((labelId) =>
-                        assignMetaToJob({
-                            variables: {
-                                input: {
-                                    job_id: job.id,
-                                    job_meta_id: labelId,
-                                },
-                            },
-                        })
-                    )
-                );
-            }
-
-            /* ---------------- 2️⃣ UPDATE JOB (SINGLE) ---------------- */
-            await updateJobRight({
+            // ------------------- 1️⃣ Assign labels as before -------------------
+            await assignMetaToJob({
                 variables: {
                     input: {
-                        id: job.id,
-                        driver_id: selectedDriver?.value || null,
-                        job_status_id: selectedStatus?.value || null,
-                        customer_id: job?.customer?.id,
-                        company_id: job?.company?.id,
-                        job_type_id: job?.job_type?.id,
-                        // Add date/time fields
-                        ready_at: jobDateAt && readyAt ? formatDateTimeToDB(jobDateAt, readyAt) : job?.ready_at,
-                        drop_at: jobDateAt && dropAt ? formatDateTimeToDB(jobDateAt, dropAt) : job?.drop_at,
+                        job_id: job.id,
+                        job_meta_ids: selectedLabels,
                     },
                 },
             });
 
-            /* ---------------- 3️⃣ SUCCESS ---------------- */
+            // ------------------- 2️⃣ Prepare fields to update -------------------
+            const fieldsToUpdate: any = {};
+            if (String(selectedDriver?.value) !== String(job.driver_id)) {
+                fieldsToUpdate.driver_id = selectedDriver?.value || null;
+            }
+            if (String(selectedStatus?.value) !== String(job.job_status?.id)) {
+                fieldsToUpdate.job_status_id = selectedStatus?.value || null;
+            }
+            if (jobDateAt && readyAt && formatDateTimeToDB(jobDateAt, readyAt) !== job.ready_at) {
+                fieldsToUpdate.ready_at = formatDateTimeToDB(jobDateAt, readyAt);
+            }
+            if (jobDateAt && dropAt && formatDateTimeToDB(jobDateAt, dropAt) !== job.drop_at) {
+                fieldsToUpdate.drop_at = formatDateTimeToDB(jobDateAt, dropAt);
+            }
+
+            // ------------------- 3️⃣ Call updateJobRight only if fields changed -------------------
+            if (Object.keys(fieldsToUpdate).length > 0) {
+                await updateJobRight({
+                    variables: {
+                        input: {
+                            id: job.id,
+                            customer_id: job?.customer?.id,
+                            company_id: job?.company?.id,
+                            job_type_id: job?.job_type?.id,
+                            ...fieldsToUpdate,
+                        },
+                    },
+                });
+            }
+
             toast({
                 title: "Job updated successfully",
                 status: "success",
@@ -143,96 +119,45 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
             });
 
             onClose();
-        } catch (e: unknown) {
-            console.error("Save failed", e);
-
-            if (e && typeof e === "object" && "graphQLErrors" in e) {
-                showGraphQLErrorToast(e as ApolloError);
-            } else {
-                showGraphQLErrorToast({
-                    graphQLErrors: [],
-                    networkError: null,
-                    message: "An unknown error occurred",
-                    extraInfo: null,
-                    name: "UnknownApolloError",
-                    clientErrors: [],
-                } as ApolloError);
-            }
+        } catch (e: any) {
+            showGraphQLErrorToast(e);
         }
     };
 
-    /* ---------------- HELPERS ---------------- */
 
-    const availableLabels: JobMeta[] =
-        metaData?.jobMetaList?.filter(
-            (m: JobMeta) => m.type?.toLowerCase() === "label"
-        ) || [];
-
-    const toggleLabel = (labelId: string) => {
-        setSelectedLabels((prev) =>
-            prev.includes(labelId)
-                ? prev.filter((id) => id !== labelId)
-                : [...prev, labelId]
-        );
-    };
-
+    // Initialize state from job
     useEffect(() => {
-        if (job?.driver_id) {
-            setSelectedDriver(
-                drivers.find((d) => String(d.value) === String(job.driver_id)) || null
-            );
-        }
+        if (job?.driver_id) setSelectedDriver(drivers.find(d => String(d.value) === String(job.driver_id)) || null);
+        if (job?.job_status) setSelectedStatus({ value: String(job.job_status.id), label: job.job_status.name });
+        if (job?.meta) setSelectedLabels(job.meta.map((m: any) => String(m.id)));
 
-        if (job?.job_status) {
-            setSelectedStatus({
-                value: String(job.job_status.id),
-                label: job.job_status.name,
-            });
-        }
-
-        if (job?.meta) {
-            setSelectedLabels(job.meta.map((l: any) => String(l.id)));
-        }
-
-        // Initialize date/time from job
         if (job?.ready_at) {
             setJobDateAt(formatDate(job.ready_at));
             setReadyAt(formatTimeUTCtoInput(job.ready_at));
         }
-        if (job?.drop_at) {
-            setDropAt(formatTimeUTCtoInput(job.drop_at));
-        }
+        if (job?.drop_at) setDropAt(formatTimeUTCtoInput(job.drop_at));
     }, [job, drivers]);
 
     useEffect(() => {
         if (statusData?.jobStatuses?.data) {
-            setJobStatuses(
-                statusData.jobStatuses.data.map((s: any) => ({
-                    value: String(s.id),
-                    label: s.name,
-                }))
-            );
+            setJobStatuses(statusData.jobStatuses.data.map((s: any) => ({ value: String(s.id), label: s.name })));
         }
     }, [statusData]);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-                onClose();
-            }
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
         };
         document.addEventListener("click", handleClickOutside);
         return () => document.removeEventListener("click", handleClickOutside);
     }, [onClose]);
-
-    /* ---------------- POSITION ---------------- */
 
     const adjustedPosition = {
         left: Math.min(position.x, window.innerWidth - 380),
         top: Math.min(position.y, window.innerHeight - 650),
     };
 
-    /* ---------------- UI ---------------- */
+    const availableLabels: JobMeta[] = metaData?.jobMetaList?.filter(m => m.type?.toLowerCase() === "label") || [];
 
     return (
         <Box
@@ -248,38 +173,26 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
             width="360px"
             zIndex={9999}
             p={4}
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
         >
-            {/* HEADER */}
             <Flex justify="space-between" align="center" mb={3}>
                 <Text fontWeight="semibold">
                     Job #{job.name}
-                    <Link
-                        href={`/admin/jobs/${job.id}`}
-                        isExternal
-                        ml={1}
-                        color="blue.500"
-                    >
+                    <Link href={`/admin/jobs/${job.id}`} isExternal ml={1} color="blue.500">
                         <ExternalLinkIcon />
                     </Link>
                 </Text>
-                <IconButton
-                    aria-label="Close"
-                    icon={<CloseIcon />}
-                    size="xs"
-                    onClick={onClose}
-                />
+                <IconButton aria-label="Close" icon={<CloseIcon />} size="xs" onClick={onClose} />
             </Flex>
 
             <Divider mb={3} />
-
             <VStack spacing={4} align="stretch">
-                {/* LABELS */}
+                {/* Labels */}
                 <FormControl>
                     <FormLabel fontSize="sm">Labels</FormLabel>
                     <SimpleGrid columns={2} spacing={1}>
-                        {availableLabels.map((label) => (
+                        {availableLabels.map(label => (
                             <Checkbox
                                 key={label.id}
                                 size="sm"
@@ -287,12 +200,7 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                                 onChange={() => toggleLabel(String(label.id))}
                             >
                                 <HStack spacing={2}>
-                                    <Box
-                                        w="12px"
-                                        h="12px"
-                                        borderRadius="full"
-                                        bg={label.color || "gray.300"}
-                                    />
+                                    <Box w="12px" h="12px" borderRadius="full" bg={label.color || "gray.300"} />
                                     <Text fontSize="sm">{label.name}</Text>
                                 </HStack>
                             </Checkbox>
@@ -300,78 +208,42 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({
                     </SimpleGrid>
                 </FormControl>
 
+                {/* Date/Time */}
                 <Divider />
-
-                {/* DATE & TIME */}
                 <FormControl>
                     <FormLabel fontSize="sm">Job Date</FormLabel>
-                    <Input
-                        type="date"
-                        size="sm"
-                        value={jobDateAt}
-                        onChange={(e) => setJobDateAt(e.target.value)}
-                    />
+                    <Input type="date" size="sm" value={jobDateAt} onChange={e => setJobDateAt(e.target.value)} />
                 </FormControl>
-
                 <HStack spacing={2}>
                     <FormControl flex={1}>
                         <FormLabel fontSize="sm">Ready By</FormLabel>
-                        <Input
-                            type="time"
-                            size="sm"
-                            value={readyAt}
-                            onChange={(e) => setReadyAt(e.target.value)}
-                        />
+                        <Input type="time" size="sm" value={readyAt} onChange={e => setReadyAt(e.target.value)} />
                     </FormControl>
                     <FormControl flex={1}>
                         <FormLabel fontSize="sm">Drop By</FormLabel>
-                        <Input
-                            type="time"
-                            size="sm"
-                            value={dropAt}
-                            onChange={(e) => setDropAt(e.target.value)}
-                        />
+                        <Input type="time" size="sm" value={dropAt} onChange={e => setDropAt(e.target.value)} />
                     </FormControl>
                 </HStack>
 
+                {/* Driver & Status */}
                 <Divider />
-
-                {/* DRIVER & STATUS IN 2 COLUMNS */}
                 <HStack spacing={2}>
                     <FormControl flex={1}>
                         <FormLabel fontSize="sm">Driver</FormLabel>
-                        <Select
-                            options={drivers}
-                            value={selectedDriver}
-                            onChange={(opt) => setSelectedDriver(opt)}
-                            placeholder="Select Driver"
-                            isClearable
-                            size="sm"
-                        />
+                        <Select options={drivers} value={selectedDriver} onChange={setSelectedDriver} placeholder="Select Driver" isClearable size="sm" />
                     </FormControl>
                     <FormControl flex={1}>
                         <FormLabel fontSize="sm">Status</FormLabel>
-                        <Select
-                            options={jobStatuses}
-                            value={selectedStatus}
-                            onChange={(opt) => setSelectedStatus(opt)}
-                            placeholder="Select Status"
-                            isClearable
-                            size="sm"
-                        />
+                        <Select options={jobStatuses} value={selectedStatus} onChange={setSelectedStatus} placeholder="Select Status" isClearable size="sm" />
                     </FormControl>
                 </HStack>
 
                 <Divider />
 
-                {/* ACTIONS */}
+                {/* Actions */}
                 <HStack>
-                    <Button size="sm" variant="outline" flex={1} onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button size="sm" colorScheme="blue" flex={1} onClick={handleSave}>
-                        Save
-                    </Button>
+                    <Button size="sm" variant="outline" flex={1} onClick={onClose}>Cancel</Button>
+                    <Button size="sm" colorScheme="blue" flex={1} onClick={handleSave}>Save</Button>
                 </HStack>
             </VStack>
         </Box>

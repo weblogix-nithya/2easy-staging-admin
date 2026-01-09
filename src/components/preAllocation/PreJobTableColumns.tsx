@@ -817,10 +817,10 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
           {labels.map((label) => (
             <Badge
               key={label.id}
-              fontSize="11px"
+              fontSize="12px"
               px="8px"
               py="2px"
-              borderRadius="full"
+              borderRadius="4px"
               whiteSpace="nowrap"
               {...getBadgeStyle(label.color)}
             >
