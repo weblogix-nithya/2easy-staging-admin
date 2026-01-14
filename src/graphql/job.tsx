@@ -150,6 +150,7 @@ export const GET_JOBS_QUERY = gql`
           address_country
           address_city
           is_pickup
+          pickup_at
           notes
           pick_up_name
           pick_up_notes
@@ -186,6 +187,7 @@ export const GET_JOBS_QUERY = gql`
           address_city
           address_formatted
           is_pickup
+          pickup_at
           notes
           pick_up_name
           pick_up_notes
@@ -380,6 +382,7 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           job_destinations {
             id
             is_pickup
+            pickup_at
             is_saved_address
             address_line_1
             address_city
@@ -514,6 +517,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           job_destinations {
             id
             is_pickup
+            pickup_at
             is_saved_address
             address_line_1
             address_city
@@ -626,6 +630,7 @@ export const GET_JOB_QUERY = gql`
         address_country
         address_city
         is_pickup
+        pickup_at
         pick_up_name
         pick_up_notes
         pick_up_condition
@@ -691,6 +696,7 @@ export const GET_JOB_QUERY = gql`
         address_country
         address_city
         is_pickup
+        pickup_at
         job_destination_status_id
         pick_up_name
         pick_up_notes
