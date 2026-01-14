@@ -281,7 +281,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     ) || [];
   return (
     <>
-      {pickupDest?.updated_at && showPickupTime && (
+      {pickupDest?.pickup_at && showPickupTime && (
         <>
           <Text fontSize="sm" color="blue.600" mb={1}>
             Arrival time:{" "}
@@ -289,7 +289,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
           </Text>
           <Text fontSize="sm" color="red.600" mb={1}>
             Collection time:{" "}
-            {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
@@ -324,9 +324,9 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
-  const collectionTime = pickupDest?.updated_at
+  const collectionTime = pickupDest?.pickup_at
     ? `Collection time: ${formatDate(
-      pickupDest.updated_at,
+      pickupDest.pickup_at,
       "HH:mm, DD/MM/YYYY",
     )}\n`
     : "";
@@ -347,7 +347,7 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
 
   return (
     <>
-      {pickupDest?.updated_at && showPickupTime && (
+      {pickupDest?.pickup_at && showPickupTime && (
         <>
           <Text fontSize="sm" color="blue.600" mb={1}>
             Arrival time:{" "}
@@ -355,7 +355,7 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
           </Text>
           <Text fontSize="sm" color="red.600" mb={1}>
             Collection time:{" "}
-            {formatDate(pickupDest.updated_at, "HH:mm, DD/MM/YYYY")}
+            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
