@@ -163,7 +163,7 @@ function InvoiceEdit() {
     },
     onCompleted: (_data) => {
       toast({
-        title: "Invoice sent",
+        title: "RCTI Invoice sent",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -528,7 +528,18 @@ function InvoiceEdit() {
                             },
                           },
                         });
-                        await getInvoice();
+                        // await getInvoice();
+                        setTimeout(() => {
+                          getInvoice();
+                          if (
+                            // shouldSendInvoice &&
+                            invoice.invoice_status_id != undefined &&
+                            (invoice.invoice_status_id == "6" ||
+                              invoice.invoice_status_id == "2")
+                          ) {
+                            handleSendInvoice();
+                          }
+                        }, 10000);
                         setStatusLoading(false);
                       }}
                       size="lg"
