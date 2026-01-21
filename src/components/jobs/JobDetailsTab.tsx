@@ -33,14 +33,6 @@ import React from "react";
 
 import JobInputTable from "./JobInputTable";
 
-interface _JobDetailsTabProps {
-  depotOptions: any[];
-  setDepotOptions: React.Dispatch<React.SetStateAction<any[]>>;
-  filtereddepotOptions: any[];
-  setFilteredDepotOptions: React.Dispatch<React.SetStateAction<any[]>>;
-  updatingMedia: boolean;
-  setUpdatingMedia: React.Dispatch<React.SetStateAction<boolean>>;
-}
 
 const JobDetailsTab = ({
   isAdmin,
@@ -78,6 +70,8 @@ const JobDetailsTab = ({
   handleRemoveFromJobDestinations,
   quoteCalculationRes,
   buttonText,
+  downloadQuotePdf,
+  isDownloading,
   handleSaveJobPriceCalculation,
   filtereddepotOptions,
   setFilteredDepotOptions,
@@ -961,8 +955,8 @@ const JobDetailsTab = ({
                           job.pick_up_state == "Victoria"
                             ? "VIC"
                             : job.pick_up_state == "Queensland"
-                            ? "QLD"
-                            : "";
+                              ? "QLD"
+                              : "";
                         const filtereddepotOption = depotOptions.filter(
                           (option) => option.state_code == selectedStateCode,
                         );
@@ -1223,6 +1217,17 @@ const JobDetailsTab = ({
                       }}
                     >
                       {buttonText}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      ms={4}
+                      colorScheme="blue"
+                      onClick={downloadQuotePdf}
+                      isLoading={isDownloading}
+                      loadingText="Downloading"
+                      isDisabled={isDownloading}
+                    >
+                      Download Quote
                     </Button>
                   </Flex>
 
