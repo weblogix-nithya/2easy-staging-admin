@@ -91,6 +91,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
+// import { buildQuotePayload } from "utils/buildQuotePayload";
 
 function JobPage() {
   const toast = useToast();
@@ -185,6 +186,7 @@ function JobPage() {
   const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(
     null,
   );
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -884,8 +886,8 @@ function JobPage() {
       _jobDestinations[0]?.address_state == "Victoria"
         ? "VIC"
         : jobDestinations[0]?.address_state == "Queensland"
-        ? "QLD"
-        : "";
+          ? "QLD"
+          : "";
     const filtereddepotOption = depotOptions.filter(
       (option) => option.state_code == currentstate,
     );
@@ -1046,6 +1048,7 @@ function JobPage() {
     } catch (e) {
       // console.log(e);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job, jobDateAt, readyAt, dropAt]);
 
   useEffect(() => {
@@ -1432,7 +1435,151 @@ function JobPage() {
       console.error("Error:", error);
     }
   };
+  const downloadPDFapiUrl = process.env.NEXT_PUBLIC_PRICE_BREAKDOWN_API_URL;
 
+  const downloadQuotePdf = async () => {
+    if (!validateAddresses()) return;
+    if (!validateTimeslotDepot()) return;
+    if (
+      job.job_type_id === null ||
+      job.job_type_id === undefined ||
+      refinedData.service_choice === ""
+    ) {
+      toast({
+        title: "Job Type Required",
+        description: "Please select the available job type once again.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (
+      (job.job_category_id == 1 || job.job_category_id == 2) &&
+      (!job.transport_type || job.transport_type === "")
+    ) {
+      toast({
+        title: "Transport Type Required",
+        description: "Please select Import or Export as the transport type.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    setIsDownloading(true);
+
+    const jobDestination1 =
+      jobDestinations.length > 0
+        ? {
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
+        : null;
+
+    const filteredCompanyRates = companyRates?.filter(
+      (rate) => rate.state === jobDestination1?.state,
+    );
+
+    const payload = {
+      pickup: {
+        state: pickUpDestination?.address_state,
+        suburb: pickUpDestination?.address_city,
+        postcode: pickUpDestination?.address_postal_code,
+        address: pickUpDestination?.address,
+      },
+
+      destination: jobDestination1
+        ? {
+            state: jobDestination1.state,
+            suburb: jobDestination1.suburb,
+            postcode: jobDestination1.postcode,
+            address: jobDestination1.address,
+          }
+        : {},
+
+      items: jobItems.map((item) => ({
+        id: item.id,
+        name: item.name || "",
+        quantity: item.quantity,
+        volume: item.volume,
+        weight: item.weight,
+        dimension_height: item.dimension_height,
+        dimension_depth: item.dimension_depth,
+        dimension_width: item.dimension_width,
+      })),
+
+      transport_type: job.transport_type,
+      service_choice: refinedData.service_choice,
+      state:
+        refinedData.state ||
+        job.pick_up_state ||
+        pickUpDestination?.address_state,
+      state_code: refinedData.state_code || refinedData.pick_up_stateCode,
+      ready_by: readyAt,
+      drop_by: dropAt,
+      freight_type: refinedData.freight_type,
+
+      company_rates:
+        ((job.job_category_id == 1 || job.job_category_id == 2) &&
+          refinedData.pick_up_stateCode === "QLD") ||
+        refinedData.pick_up_stateCode === "VIC"
+          ? filteredCompanyRates.map((rate) => ({
+              company_id: rate.company_id,
+              area: rate.area,
+              seafreight_id: rate.seafreight_id,
+              cbm_rate: rate.cbm_rate,
+              minimum_charge: rate.minimum_charge,
+            }))
+          : [],
+
+      surcharges: {
+        hand_unload: job.is_hand_unloading || false,
+        dangerous_goods: job.is_dangerous_goods || false,
+        time_slot: job.is_inbound_connect || false,
+        timeslot_depots: job.is_inbound_connect
+          ? refinedData.timeslot_depots
+          : null,
+        tail_lift: job.is_tailgate_required || false,
+        stackable: true,
+      },
+    };
+
+    try {
+      const response = await axios.post(downloadPDFapiUrl, payload, {
+        headers: { "Content-Type": "application/json" },
+        responseType: "blob", // IMPORTANT for PDF
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Quote_Price_Breakdown.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast({
+        title: "Download started",
+        description: "Your quote PDF is being downloaded.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error downloading quote PDF:", error);
+      toast({
+        title: "Download failed",
+        description: "Unable to download the quote PDF. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
   return (
     <AdminLayout>
       <Box
@@ -2526,15 +2673,20 @@ function JobPage() {
                                   >
                                     Get A Quote
                                   </Button>
-                                  {/* <Button
+                                  <Button
                                     variant="outline"
                                     ms={4}
-                                    onClick={() => {
-
-                                    }}
+                                    colorScheme="blue"
+                                    onClick={downloadQuotePdf}
+                                    isLoading={isDownloading}
+                                    loadingText="Downloading"
+                                    isDisabled={isDownloading}
+                                    //                                     onClick={() => {
+                                    // downloadQuotePdf()
+                                    //                                     }}
                                   >
-                                    download Quote
-                                  </Button> */}
+                                    Download Quote
+                                  </Button>
                                 </Flex>
                                 {quoteCalculationRes && (
                                   <Box mt={4}>

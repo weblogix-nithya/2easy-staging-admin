@@ -217,6 +217,7 @@ function JobEdit() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
   // const [previewEmailContent, setPreviewEmailContent] = useState<{
   //   subject: string;
   //   body: string;
@@ -399,8 +400,8 @@ function JobEdit() {
           data.job.pick_up_state == "Victoria"
             ? "VIC"
             : data.job.pick_up_state == "Queensland"
-            ? "QLD"
-            : "";
+              ? "QLD"
+              : "";
         const selectedLocation = locationOptions.find(
           (location) => location.label == data.job.pick_up_state,
         );
@@ -1706,6 +1707,160 @@ function JobEdit() {
     }
   };
 
+
+  const downloadPDFapiUrl = process.env.NEXT_PUBLIC_PRICE_BREAKDOWN_API_URL;
+
+  const downloadQuotePdf = async () => {
+    if (!validateAddresses()) return;
+    if (!validateTimeslotDepot()) return;
+    if (
+      job.job_type_id === null ||
+      job.job_type_id === undefined ||
+      refinedData.service_choice === ""
+    ) {
+      toast({
+        title: "Job Type Required",
+        description: "Please select the available job type once again.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    if (
+      (job.job_category_id == 1 || job.job_category_id == 2) &&
+      (!job.transport_type || job.transport_type === "")
+    ) {
+      toast({
+        title: "Transport Type Required",
+        description: "Please select Import or Export as the transport type.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    setIsDownloading(true);
+
+    const jobDestination1 =
+      jobDestinations.length > 0
+        ? {
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
+        : null;
+
+    const filteredCompanyRates = companyRates?.filter(
+      (rate) => rate.state === jobDestination1?.state,
+    );
+    const selectedstate = locationOptions.find(
+      (location) =>
+        location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
+    );
+    const selectedDepot = depotOptions.find(
+      (depot) => depot.value === job.timeslot_depots,
+    )?.label;
+    const payload = {
+      pickup: {
+        state: pickUpDestination?.address_state,
+        suburb: pickUpDestination?.address_city,
+        postcode: pickUpDestination?.address_postal_code,
+        address: pickUpDestination?.address,
+      },
+
+      destination: jobDestination1
+        ? {
+            state: jobDestination1.state,
+            suburb: jobDestination1.suburb,
+            postcode: jobDestination1.postcode,
+            address: jobDestination1.address,
+          }
+        : {},
+
+      items: jobItems.map((item) => ({
+        id: item.id,
+        name: item.name || "",
+        quantity: item.quantity,
+        volume: item.volume,
+        weight: item.weight,
+        dimension_height: item.dimension_height,
+        dimension_depth: item.dimension_depth,
+        dimension_width: item.dimension_width,
+      })),
+
+      transport_type: job.transport_type,
+      service_choice: refinedData.service_choice,
+      state:
+        refinedData.state ||
+        job.pick_up_state ||
+        pickUpDestination?.address_state,
+      state_code: refinedData.state_code || selectedstate?.value,
+      ready_by: readyAt,
+      drop_by: dropAt,
+      freight_type: refinedData.freight_type,
+
+      company_rates:
+        ((job.job_category_id == 1 || job.job_category_id == 2) &&
+          selectedstate?.value === "QLD") ||
+        selectedstate?.value === "VIC"
+          ? filteredCompanyRates.map((rate) => ({
+              company_id: rate.company_id,
+              seafreight_id: rate.seafreight_id,
+              area: rate.area,
+              cbm_rate: rate.cbm_rate,
+              state: rate.state,
+              minimum_charge: rate.minimum_charge,
+            }))
+          : [],
+
+      surcharges: {
+        hand_unload: job.is_hand_unloading || false,
+        dangerous_goods: job.is_dangerous_goods || false,
+        time_slot: job.is_inbound_connect || false,
+        timeslot_depots: job.is_inbound_connect
+          ? job.timeslot_depots || selectedDepot
+          : "", // Pass selectedDepot here
+        tail_lift: job.is_tailgate_required || false,
+        stackable: true,
+      },
+    };
+
+    try {
+      const response = await axios.post(downloadPDFapiUrl, payload, {
+        headers: { "Content-Type": "application/json" },
+        responseType: "blob", // IMPORTANT for PDF
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "Quote_Price_Breakdown.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast({
+        title: "Download started",
+        description: "Your quote PDF is being downloaded.",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error downloading quote PDF:", error);
+      toast({
+        title: "Download failed",
+        description: "Unable to download the quote PDF. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   // Add this validation function near the other validation helpers
   const validateTimeslotDepot = () => {
     // Only required for LCL (job_category_id == 1) and Inbound Connect is Yes
@@ -2038,6 +2193,8 @@ function JobEdit() {
                     handleSaveJobPriceCalculation={
                       handleSaveJobPriceCalculation
                     }
+                    downloadQuotePdf={downloadQuotePdf}
+                    isDownloading={isDownloading}
                     filtereddepotOptions={filtereddepotOptions}
                     setFilteredDepotOptions={setFilteredDepotOptions}
                     setSelectedDepot={setSelectedDepot}
