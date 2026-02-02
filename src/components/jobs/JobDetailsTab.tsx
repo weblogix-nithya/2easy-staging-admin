@@ -181,11 +181,11 @@ const JobDetailsTab = ({
                 ].find((_e) => _e.value == job.transport_type)}
                 placeholder=""
                 onChange={(e) => {
-                  setJob({ ...job, transport_type: e.value });
-                  setRefinedData({
-                    ...refinedData,
+                  setJob(prev => ({ ...prev, transport_type: e.value }));
+                  setRefinedData(prev => ({
+                    ...prev,
                     transport_type: e.value,
-                  });
+                  }));
                 }}
               />
 
@@ -269,10 +269,10 @@ const JobDetailsTab = ({
             placeholder=""
             onChange={(e) => {
               // Update job with the selected customer ID
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 customer_id: e.value || null,
-              });
+              }));
 
               // Fetch the selected customer details
               const selectedCustomer = customerOptions.find(
@@ -370,13 +370,13 @@ const JobDetailsTab = ({
             value={readyAt ?? ""}
             onChange={(e) => {
               setReadyAt(e.target.value);
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 ready_at: new Date(
                   `${jobDateAt} ${e.target.value}`,
                 ).toISOString(),
                 drop_at: new Date(`${jobDateAt} ${dropAt}`).toISOString(),
-              });
+              }));
             }}
           />
 
@@ -388,13 +388,13 @@ const JobDetailsTab = ({
             value={dropAt ?? ""}
             onChange={(e) => {
               setDropAt(e.target.value);
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 ready_at: new Date(`${jobDateAt} ${readyAt}`).toISOString(),
                 drop_at: new Date(
                   `${jobDateAt} ${e.target.value}`,
                 ).toISOString(),
-              });
+              }));
             }}
           />
 
@@ -404,10 +404,10 @@ const JobDetailsTab = ({
             name="timeslot"
             value={job.timeslot ?? ""}
             onChange={(e) =>
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 [e.target.name]: e.target.value,
-              })
+              }))
             }
           />
 
@@ -419,10 +419,10 @@ const JobDetailsTab = ({
             value={job.last_free_at ?? ""}
             onChange={(e) => {
               const value = e.target.value == "" ? null : e.target.value;
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 [e.target.name]: value,
-              });
+              }));
             }}
           />
 
@@ -444,15 +444,15 @@ const JobDetailsTab = ({
                 (jobType) => jobType.value === selectedType,
               )?.label;
 
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 job_type_id: selectedType || null,
-              });
+              }));
 
-              setRefinedData({
-                ...refinedData,
+              setRefinedData(prev => ({
+                ...prev,
                 service_choice: selectedTypeName || null,
-              });
+              }));
             }}
           />
 
@@ -462,10 +462,10 @@ const JobDetailsTab = ({
             name="reference_no"
             value={job.reference_no ?? ""}
             onChange={(e) =>
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 [e.target.name]: e.target.value,
-              })
+              }))
             }
           />
 
@@ -475,10 +475,10 @@ const JobDetailsTab = ({
             name="booked_by"
             value={job.booked_by ?? ""}
             onChange={(e) =>
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 [e.target.name]: e.target.value,
-              })
+              }))
             }
           />
 
@@ -489,10 +489,10 @@ const JobDetailsTab = ({
             name="quoted_price"
             value={job.quoted_price ?? ""}
             onChange={(e) =>
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 [e.target.name]: e.target.value,
-              })
+              }))
             }
           />
 
@@ -503,10 +503,10 @@ const JobDetailsTab = ({
             name="admin_notes"
             value={job.admin_notes ?? ""}
             onChange={(e) =>
-              setJob({
-                ...job,
+              setJob(prev => ({
+                ...prev,
                 [e.target.name]: e.target.value,
-              })
+              }))
             }
           />
         </Box>
@@ -619,8 +619,8 @@ const JobDetailsTab = ({
                   // const selectedStateCode= jobDestination?.address_state=="Victoria"? "VIC" : jobDestination?.address_state=="Queensland"? "QLD" :"";
                   // setFilteredDepotOptions(depotOptions.filter((option) => option.label === selectedStateCode));
                   // console.log(depotOptions.filter((option) => option.label === selectedStateCode))
-                  setJob({
-                    ...job,
+                  setJob(prev => ({
+                    ...prev,
                     ...{
                       pick_up_lng: jobDestination.lng,
                       pick_up_lat: jobDestination.lat,
@@ -629,7 +629,7 @@ const JobDetailsTab = ({
                       pick_up_name: jobDestination.name,
                       pick_up_report: jobDestination.report,
                     },
-                  });
+                  }));
                 }}
               />
             ) : (
@@ -881,10 +881,10 @@ const JobDetailsTab = ({
               name="customer_notes"
               value={job.customer_notes}
               onChange={(e) =>
-                setJob({
-                  ...job,
+                setJob(prev => ({
+                  ...prev,
                   [e.target.name]: e.target.value,
-                })
+                }))
               }
             />
             <CustomInputField
@@ -947,10 +947,10 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_inbound_connect ? "1" : "0"}
                       onChange={(e) => {
-                        setJob({
-                          ...job,
+                        setJob(prev => ({
+                          ...prev,
                           is_inbound_connect: e === "1" ? true : false,
-                        });
+                        }));
                         const selectedStateCode =
                           job.pick_up_state == "Victoria"
                             ? "VIC"
@@ -999,10 +999,10 @@ const JobDetailsTab = ({
                           timeslot_depots: e.value,
                         })); // Update the selected depot directly
                         //  console.log("Selected depot: ", e.value)
-                        setJob({
-                          ...job,
+                        setJob((prev) => ({
+                          ...prev,
                           timeslot_depots: e.value, // Update job.timeslot_depots
-                        });
+                        }));
                         sendFreightData();
                       }}
                     />
@@ -1027,10 +1027,10 @@ const JobDetailsTab = ({
                   // defaultValue={"0"}
                   value={job.is_stackable_required ? "1" : "0"}
                   onChange={(e) => {
-                    setJob({
-                      ...job,
+                    setJob(prev => ({
+                      ...prev,
                       is_stackable_required: e === "1" ? true : false,
-                    });
+                    }));
                   }}
                 >
                   <Stack direction="row">
@@ -1059,10 +1059,10 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_hand_unloading ? "1" : "0"}
                       onChange={(e) => {
-                        setJob({
-                          ...job,
+                        setJob(prev => ({
+                          ...prev,
                           is_hand_unloading: e === "1" ? true : false,
-                        });
+                        }));
                       }}
                     >
                       <Stack direction="row" pt={3}>
@@ -1094,10 +1094,10 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_dangerous_goods ? "1" : "0"}
                       onChange={(e) => {
-                        setJob({
-                          ...job,
+                        setJob(prev => ({
+                          ...prev,
                           is_dangerous_goods: e === "1" ? true : false,
-                        });
+                        }));
                       }}
                     >
                       <Stack direction="row" pt={3}>
@@ -1129,10 +1129,10 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_tailgate_required ? "1" : "0"}
                       onChange={(e) => {
-                        setJob({
-                          ...job,
+                        setJob(prev => ({
+                          ...prev,
                           is_tailgate_required: e === "1" ? true : false,
-                        });
+                        }));
                       }}
                     >
                       <Stack direction="row" pt={3}>
@@ -1164,10 +1164,10 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_paperwork_required ? "1" : "0"}
                       onChange={(e) => {
-                        setJob({
-                          ...job,
+                        setJob((prev) => ({
+                          ...prev,
                           is_paperwork_required: e === "1" ? true : false,
-                        });
+                        }));
                       }}
                     >
                       <Stack direction="row" pt={3}>
