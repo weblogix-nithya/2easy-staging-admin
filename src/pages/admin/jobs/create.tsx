@@ -126,11 +126,6 @@ function JobPage() {
     ...defaultJobDestination,
     ...{ id: 1, address_line_1: "" },
   });
-  // const [refinedData, setRefinedData] = useState({
-  //   ...defaultJobQuoteData,
-  //   freight_type: "LCL",
-  // });
-
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
 
@@ -360,7 +355,7 @@ function JobPage() {
   useQuery(GET_JOB_TYPES_QUERY, {
     variables: defaultVariables,
     onCompleted: async (data) => {
-      const options = data.jobTypes.data.map((_entity: any) => ({
+      const options = data?.jobTypes?.data?.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
       }));
@@ -436,28 +431,28 @@ function JobPage() {
       setCompaniesOptions(newCompaniesOptions);
 
       // If a company is already selected, update refinedData with its properties
-      const selectedCompany = newCompaniesOptions.find(
+      const _selectedCompany = newCompaniesOptions.find(
         (entity: { value: number }) => entity.value == job.company_id,
         // (entity: { value: number }) => entity.value == job.company_id,
       );
 
-      if (selectedCompany) {
-        setRefinedData({
-          ...refinedData,
-        });
-        // console.log(selectedCompany.min_rate, "selected company min rate")
-      }
+      // if (selectedCompany) {
+      //   setRefinedData({
+      //     ...refinedData,
+      //   });
+      //   // console.log(selectedCompany.min_rate, "selected company min rate")
+      // }
 
       if (!isAdmin) {
-        const companyWithId = newCompaniesOptions.find(
+        const _companyWithId = newCompaniesOptions.find(
           (entity: { value: number }) => entity.value == companyId,
         );
-        if (companyWithId) {
-          setRefinedData({
-            ...refinedData,
-          });
-          // console.log(companyWithId,'companywithid min rate')
-        }
+        // if (companyWithId) {
+        //   setRefinedData({
+        //     ...refinedData,
+        //   });
+        //   // console.log(companyWithId,'companywithid min rate')
+        // }
       }
     },
   });
@@ -873,9 +868,11 @@ function JobPage() {
   };
 
   const handleRemoveFromJobDestinations = (index: number) => {
-    let _jobDestinations = [...jobDestinations];
-    _jobDestinations.splice(index, 1);
-    setJobDestinations(_jobDestinations);
+    setJobDestinations((prev) => {
+      const next = [...prev];
+      next.splice(index, 1);
+      return next;
+    });
   };
   //handleJobDestinationChanged
   const handleJobDestinationChanged = async (value: any, index: number) => {
@@ -956,7 +953,7 @@ function JobPage() {
     setJobItems(_jobItems);
     const { totalCBM, totalWeight } = calculateFinalWeightCBM(
       job.job_category_id,
-      jobItems,
+      _jobItems,
       companyWeight,
     );
     setQuoteCalculationRes({
@@ -1001,7 +998,7 @@ function JobPage() {
     // );
     const { totalCBM, totalWeight } = calculateFinalWeightCBM(
       job.job_category_id,
-      jobItems,
+      _jobItems,
       companyWeight,
     );
     setQuoteCalculationRes({
@@ -1049,7 +1046,7 @@ function JobPage() {
       // console.log(e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job, jobDateAt, readyAt, dropAt]);
+  }, [jobDateAt, readyAt, dropAt]);
 
   useEffect(() => {
     dateChanged();
@@ -1122,7 +1119,11 @@ function JobPage() {
   );
 
   const resetJobTypeAndShowToast = () => {
-    job.job_type_id = null;
+    // job.job_type_id = null;
+    setJob((prev) => ({
+      ...prev,
+      job_type_id: null,
+    }));
     toast({
       title: "Job Type Required",
       description:
@@ -1267,10 +1268,10 @@ function JobPage() {
       (opt) => opt.value === job.job_type_id,
     )?.label;
 
-    setRefinedData({
-      ...refinedData,
+    setRefinedData((prev) => ({
+      ...prev,
       service_choice: selectedJobTypeName || null,
-    });
+    }));
 
     if (
       (job.job_category_id == 1 || job.job_category_id == 2) &&
@@ -1627,10 +1628,10 @@ function JobPage() {
                         job_category_id: selectedCategory || null,
                       }));
 
-                      setRefinedData({
-                        ...refinedData,
+                      setRefinedData((prev) => ({
+                        ...prev,
                         freight_type: selectedCategoryName || null,
-                      });
+                      }));
                       // console.log(refinedData, "n");
                     }}
                   />
@@ -1657,12 +1658,12 @@ function JobPage() {
                           company_id: e.value || null,
                           customer_id: null,
                         }));
-                        setRefinedData({
-                          ...refinedData,
+                        setRefinedData((prev) => ({
+                          ...prev,
                           area: null,
                           cbm_rate: null,
                           minimum_charge: null,
-                        });
+                        }));
 
                         if (e.value) {
                           setCompanyWeight(null); // Reset before fetching
@@ -1701,10 +1702,10 @@ function JobPage() {
                             ...prev,
                             transport_type: e.value,
                           }));
-                          setRefinedData({
-                            ...refinedData,
+                          setRefinedData((prev) => ({
+                            ...prev,
                             transport_type: e.value,
-                          });
+                          }));
                         }}
                       />
                       <CustomInputField
@@ -1722,16 +1723,15 @@ function JobPage() {
                         ].find((_e) => _e.value === job.transport_location)}
                         placeholder=""
                         onChange={(e) => {
-                          const newState = {
-                            ...refinedData,
-                            state_code: e.value,
-                            state: e.label,
-                          };
                           setJob((prev) => ({
                             ...prev,
                             transport_location: e.value,
                           }));
-                          setRefinedData(newState);
+                          setRefinedData((prev) => ({
+                            ...prev,
+                            state_code: e.value,
+                            state: e.label,
+                          }));
                         }}
                       />
                       <Text
@@ -2092,8 +2092,8 @@ function JobPage() {
                             pickUpDestination.address_state == "Victoria"
                               ? "VIC"
                               : pickUpDestination.address_state == "Queensland"
-                              ? "QLD"
-                              : "";
+                                ? "QLD"
+                                : "";
                           const filtereddepotOption = depotOptions.filter(
                             (option) => option.state_code == currentPickupstate,
                           );
@@ -2113,13 +2113,14 @@ function JobPage() {
                             pick_up_state: jobDestination.state,
                           }));
 
-                          setRefinedData({
-                            ...refinedData,
+                          setRefinedData((prev) => ({
+                            ...prev,
                             ...{
                               pick_up_state: jobDestination.state,
                               pick_up_stateCode: stateCode,
                             },
-                          });
+                          }));
+                          console.log(refinedData, "rr");
                         }}
                       />
                     </Grid>
@@ -2230,10 +2231,10 @@ function JobPage() {
                       job_type_id: selectedCategory || null,
                     }));
 
-                    setRefinedData({
-                      ...refinedData,
+                    setRefinedData((prev) => ({
+                      ...prev,
                       service_choice: selectedCategoryName || null,
-                    });
+                    }));
                   }}
                 />
                 {/* Items */}
@@ -2422,9 +2423,9 @@ function JobPage() {
                                   jobDestinations[0].address_state == "Victoria"
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
-                                      "Queensland"
-                                    ? "QLD"
-                                    : "";
+                                        "Queensland"
+                                      ? "QLD"
+                                      : "";
                                 const filtereddepotOp = depotOptions.filter(
                                   (option) =>
                                     option.state_code == curretstatecode,
@@ -2457,10 +2458,10 @@ function JobPage() {
                                   }
                                   placeholder="Select a depot"
                                   onChange={(e) => {
-                                    setRefinedData({
-                                      ...refinedData,
+                                    setRefinedData((prev) => ({
+                                      ...prev,
                                       timeslot_depots: e.value,
-                                    });
+                                    }));
                                     setJob((prev) => ({
                                       ...prev,
                                       timeslot_depots: e.value,
