@@ -431,7 +431,7 @@ function JobPage() {
       setCompaniesOptions(newCompaniesOptions);
 
       // If a company is already selected, update refinedData with its properties
-      const selectedCompany = newCompaniesOptions.find(
+      const _selectedCompany = newCompaniesOptions.find(
         (entity: { value: number }) => entity.value == job.company_id,
         // (entity: { value: number }) => entity.value == job.company_id,
       );
@@ -444,7 +444,7 @@ function JobPage() {
       // }
 
       if (!isAdmin) {
-        const companyWithId = newCompaniesOptions.find(
+        const _companyWithId = newCompaniesOptions.find(
           (entity: { value: number }) => entity.value == companyId,
         );
         // if (companyWithId) {

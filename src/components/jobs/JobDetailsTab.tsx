@@ -55,7 +55,7 @@ const JobDetailsTab = ({
   dropAt,
   setDropAt,
   jobTypeOptions,
-  refinedData,
+  _refinedData,
   setRefinedData,
   today,
   setIsSameDayJob,
