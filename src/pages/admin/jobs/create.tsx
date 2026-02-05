@@ -373,12 +373,14 @@ function JobPage() {
           let updatedOptions = [...options];
 
           if (job.job_category_id === 1) {
+            const cutoffTime = job.company_id == 361 ? "17:00" : "16:00";
+            console.log(job.company_id, "comp", cutoffTime, "co");
             if (isSameDayJob) {
               updatedOptions = updatedOptions.filter(
                 (opt) => opt.label !== "Standard",
               );
               resetJobTypeAndShowToast();
-            } else if (isTomorrowJob && isAfterCutoff("16:00", timezone)) {
+            } else if (isTomorrowJob && isAfterCutoff(cutoffTime, timezone)) {
               updatedOptions = updatedOptions.filter(
                 (opt) => opt.label !== "Standard",
               );
@@ -1159,7 +1161,10 @@ function JobPage() {
               hasShownToast = true;
             }
           } else if (isTomorrowJob) {
-            const isAfterCut = isAfterCutoff("16:00", timezone);
+            const cutoffTime = job.company_id == 361 ? "17:00" : "16:00";
+            console.log(job.company_id, "comp", cutoffTime, "co2");
+
+            const isAfterCut = isAfterCutoff(cutoffTime, timezone);
             if (isAfterCut) {
               updatedOptions = updatedOptions.filter(
                 (opt) => opt.label !== "Standard",
