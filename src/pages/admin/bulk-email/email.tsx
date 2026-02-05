@@ -12,6 +12,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import PrivateAccessModal from "components/access/PrivateAccessModal";
+// import FileInput from "components/fileInput/FileInput";
+// import PaginationTable from "components/table/PaginationTable";
 import { TabsComponent } from "components/tabs/TabsComponet";
 import { SEND_GROUP_EMAIL } from "graphql/jobCcEmails";
 import AdminLayout from "layouts/admin";
@@ -25,6 +27,7 @@ export default function InvoiceIndex() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const toast = useToast();
+  // const [temporaryMedia, setTemporaryMedia] = useState([]);
   const staticTabs = [
     {
       id: 1,
@@ -58,6 +61,36 @@ export default function InvoiceIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
+  // const attachmentColumns = useMemo(
+  //   () => [
+  //     {
+  //       Header: "Document",
+  //       accessor: "path" as const,
+  //     },
+  //     {
+  //       Header: "uploaded by",
+  //       accessor: "uploaded_by" as const,
+  //     },
+  //     {
+  //       Header: "date uploaded",
+  //       accessor: "created_at" as const,
+  //     },
+  //     {
+  //       Header: "Actions",
+  //       accessor: "downloadable_url" as const,
+  //       isDelete: true,
+  //       isEdit: false,
+  //       isDownload: true,
+  //     },
+  //   ],
+  //   [],
+  // );
+
+  // const handleRemoveFromTemporaryMedia = (id: number) => {
+  //   let _temporaryMedia = [...temporaryMedia];
+  //   _temporaryMedia = _temporaryMedia.filter((e) => e.id !== id);
+  //   setTemporaryMedia(_temporaryMedia);
+  // };
   // useQuery(GET_COMPANYS_QUERY, {
   //   variables: {
   //     query: debouncedCompanySearch,
@@ -326,6 +359,37 @@ export default function InvoiceIndex() {
                 </Box>
               </Box>
             </Flex>
+          </Box>
+          <Box>
+            {/* Attachments */}
+            {/* <Box mb="16px">
+              <h3 className="mb-5 mt-3">Attachments</h3>
+              <Flex width="100%" className="mb-6">
+                <FileInput
+                  entity="Job"
+                  entityId={job.id}
+                  onTemporaryUpload={(_temporaryMedia) => {
+                    setTemporaryMedia(_temporaryMedia);
+                  }}
+                  isTemporary={true}
+                  defaulTemporaryFiles={temporaryMedia}
+                  description="Browse or drop your files here to upload"
+                  height="80px"
+                  bg="primary.100"
+                ></FileInput>
+              </Flex> */}
+
+              {/* foreach jobAttachments */}
+              {/* {temporaryMedia.length >= 0 && (
+                <PaginationTable
+                  columns={attachmentColumns}
+                  data={temporaryMedia}
+                  onDelete={(mediaId) => {
+                    handleRemoveFromTemporaryMedia(mediaId);
+                  }}
+                />
+              )}  https://chatgpt.com/share/6981d6a9-902c-8013-b310-a5940b51600e
+            </Box> */}
           </Box>
         </SimpleGrid>
       </Box>
