@@ -1,6 +1,6 @@
 "use client";
 // Chakra imports
-import { useMutation, useQuery } from "@apollo/client";
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -62,6 +62,7 @@ import {
 } from "graphql/jobDestination";
 import { CREATE_JOB_ITEM_MUTATION, defaultJobItem } from "graphql/jobItem";
 import {
+  CALCULATE_SEA_FREIGHT_QUERY,
   CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION,
   CreateJobPriceCalculationDetailInput,
   defaultJobPriceCalculationDetail,
@@ -136,6 +137,7 @@ function JobPage() {
     pick_up_stateCode: "",
     depotOptions: [],
     timeslot_depots: "",
+    toll_enabled: false,
   });
 
   const [companyRates, setCompanyRates] = useState([]);
@@ -181,7 +183,7 @@ function JobPage() {
   const [customerBaseNotes, setCustomerBaseNotes] = useState<string | null>(
     null,
   );
-  const [isDownloading, setIsDownloading] = useState(false);
+  // const [isDownloading, setIsDownloading] = useState(false);
 
   const onClose = () => setIsJobCreatedOpen(false);
 
@@ -428,33 +430,46 @@ function JobPage() {
       const newCompaniesOptions = data.companys.data.map((_entity: any) => ({
         value: parseInt(_entity.id),
         label: _entity.name,
+        toll: _entity.toll_enabled,
       }));
 
       setCompaniesOptions(newCompaniesOptions);
 
       // If a company is already selected, update refinedData with its properties
-      const _selectedCompany = newCompaniesOptions.find(
+      const selectedCompany = newCompaniesOptions.find(
         (entity: { value: number }) => entity.value == job.company_id,
         // (entity: { value: number }) => entity.value == job.company_id,
       );
 
-      // if (selectedCompany) {
-      //   setRefinedData({
-      //     ...refinedData,
-      //   });
-      //   // console.log(selectedCompany.min_rate, "selected company min rate")
-      // }
+      if (selectedCompany) {
+        // setRefinedData({
+        //   ...refinedData,
+        //   toll_enabled: selectedCompany.toll,
+        // });
+        setRefinedData((prev) => ({
+          ...prev,
+          toll_enabled: selectedCompany.toll,
+        }));
+
+        // console.log(selectedCompany.min_rate, "selected company min rate")
+      }
 
       if (!isAdmin) {
-        const _companyWithId = newCompaniesOptions.find(
+        const companyWithId = newCompaniesOptions.find(
           (entity: { value: number }) => entity.value == companyId,
         );
-        // if (companyWithId) {
-        //   setRefinedData({
-        //     ...refinedData,
-        //   });
-        //   // console.log(companyWithId,'companywithid min rate')
-        // }
+        if (companyWithId) {
+          // setRefinedData({
+          //   ...refinedData,
+          //   toll_enabled: companyWithId.toll,
+          // });
+          setRefinedData((prev) => ({
+            ...prev,
+            toll_enabled: companyWithId.toll,
+          }));
+
+          // console.log(companyWithId,'companywithid min rate')
+        }
       }
     },
   });
@@ -477,6 +492,23 @@ function JobPage() {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
+
+  useEffect(() => {
+    if (job.company_id) {
+      const selectedCompany = companiesOptions.find(
+        (company) => company.value === Number(job.company_id),
+      );
+
+      // ✅ Get toll value
+      const tollEnabled = selectedCompany?.toll ?? false;
+
+      setRefinedData((prev) => ({
+        ...prev,
+        toll_enabled: tollEnabled,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [job.job_type_id]);
 
   const [handleCreateJob] = useMutation(CREATE_JOB_MUTATION, {
     variables: {
@@ -535,7 +567,7 @@ function JobPage() {
           }
 
           // Price Calculation
-          const today = new Date().toISOString();
+          // const today = new Date().toISOString();
           const jobDestination1 =
             jobDestinations.length > 0
               ? {
@@ -550,77 +582,164 @@ function JobPage() {
             (rate) => rate.state === jobDestination1?.state,
           );
 
-          const payload = {
-            freight_type: refinedData.freight_type,
-            transport_type: job.transport_type,
-            state:
-              refinedData.state ||
-              job.pick_up_state ||
-              pickUpDestination.address_state,
-            state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-            service_choice: refinedData.service_choice,
-            company_rates:
-              ((job.job_category_id == 1 || job.job_category_id == 2) &&
-                refinedData.pick_up_stateCode === "QLD") ||
-              refinedData.pick_up_stateCode === "VIC"
-                ? filteredCompanyRates.map((rate) => ({
-                    company_id: rate.company_id,
-                    seafreight_id: rate.seafreight_id,
-                    area: rate.area,
-                    cbm_rate: rate.cbm_rate,
-                    minimum_charge: rate.minimum_charge,
-                  }))
-                : [],
-            job_pickup_address: {
-              state: pickUpDestination?.address_state,
-              suburb: pickUpDestination?.address_city,
-              postcode: pickUpDestination?.address_postal_code,
-              address: pickUpDestination?.address,
-            },
-            job_destination_address:
-              jobDestinations.length > 0
-                ? {
-                    state: jobDestinations[0]?.address_state,
-                    suburb: jobDestinations[0]?.address_city,
-                    postcode: jobDestinations[0]?.address_postal_code,
-                    address: jobDestinations[0]?.address,
-                  }
-                : {},
-            pickup_time: { ready_by: readyAt },
-            delivery_time: { drop_by: dropAt },
-            surcharges: {
-              hand_unload: job.is_hand_unloading || false,
-              dangerous_goods: job.is_dangerous_goods || false,
-              time_slot: job.is_inbound_connect || null,
-              timeslot_depots: job.is_inbound_connect
-                ? refinedData.timeslot_depots
-                : null,
-              tail_lift: job.is_tailgate_required || null,
-              stackable: false,
-            },
-            job_items: jobItems.map((item) => ({
-              id: item.id,
-              name: item.name || "",
-              notes: item.notes || "",
-              quantity: item.quantity,
-              volume: item.volume,
-              weight: item.weight,
-              dimension_height: item.dimension_height,
-              dimension_width: item.dimension_width,
-              dimension_depth: item.dimension_depth,
-              job_destination: jobDestination1 || null,
-              item_type: {
-                id: item.item_type?.id || "",
-                name: item.item_type?.name || "",
-              },
-              created_at: refinedData.created_at || today,
-              updated_at: refinedData.updated_at || today,
-            })),
-          };
+          const selectedCompany = companiesOptions.find(
+            (company) => company.value === Number(companyId),
+          );
+
+          // ✅ Get toll value
+          const tollEnabled = selectedCompany?.toll ?? false;
+
+          console.log("Selected Company ID:", companyId);
+          console.log("Toll Enabled:", tollEnabled);
+
+          setRefinedData((prev) => ({
+            ...prev,
+            toll_enabled: tollEnabled,
+          }));
+          // const payload = {
+          //   freight_type: refinedData.freight_type,
+          //   transport_type: job.transport_type,
+          //   state:
+          //     refinedData.state ||
+          //     job.pick_up_state ||
+          //     pickUpDestination.address_state,
+          //   state_code: refinedData.state_code || refinedData.pick_up_stateCode,
+          //   service_choice: refinedData.service_choice,
+          //   company_rates:
+          //     ((job.job_category_id == 1 || job.job_category_id == 2) &&
+          //       refinedData.pick_up_stateCode === "QLD") ||
+          //     refinedData.pick_up_stateCode === "VIC"
+          //       ? filteredCompanyRates.map((rate) => ({
+          //           company_id: rate.company_id,
+          //           seafreight_id: rate.seafreight_id,
+          //           area: rate.area,
+          //           cbm_rate: rate.cbm_rate,
+          //           minimum_charge: rate.minimum_charge,
+          //         }))
+          //       : [],
+          //   job_pickup_address: {
+          //     state: pickUpDestination?.address_state,
+          //     suburb: pickUpDestination?.address_city,
+          //     postcode: pickUpDestination?.address_postal_code,
+          //     address: pickUpDestination?.address,
+          //   },
+          //   job_destination_address:
+          //     jobDestinations.length > 0
+          //       ? {
+          //           state: jobDestinations[0]?.address_state,
+          //           suburb: jobDestinations[0]?.address_city,
+          //           postcode: jobDestinations[0]?.address_postal_code,
+          //           address: jobDestinations[0]?.address,
+          //         }
+          //       : {},
+          //   pickup_time: { ready_by: readyAt },
+          //   delivery_time: { drop_by: dropAt },
+          //   surcharges: {
+          //     hand_unload: job.is_hand_unloading || false,
+          //     dangerous_goods: job.is_dangerous_goods || false,
+          //     time_slot: job.is_inbound_connect || null,
+          //     timeslot_depots: job.is_inbound_connect
+          //       ? refinedData.timeslot_depots
+          //       : null,
+          //     tail_lift: job.is_tailgate_required || null,
+          //     stackable: false,
+          //   },
+          //   job_items: jobItems.map((item) => ({
+          //     id: item.id,
+          //     name: item.name || "",
+          //     notes: item.notes || "",
+          //     quantity: item.quantity,
+          //     volume: item.volume,
+          //     weight: item.weight,
+          //     dimension_height: item.dimension_height,
+          //     dimension_width: item.dimension_width,
+          //     dimension_depth: item.dimension_depth,
+          //     job_destination: jobDestination1 || null,
+          //     item_type: {
+          //       id: item.item_type?.id || "",
+          //       name: item.item_type?.name || "",
+          //     },
+          //     created_at: refinedData.created_at || today,
+          //     updated_at: refinedData.updated_at || today,
+          //   })),
+          // };
           try {
-            const response = await axios.post(apiUrl, payload, {
-              headers: { "Content-Type": "application/json" },
+            const response = await handleCalculateSeaFreight({
+              variables: {
+                input: {
+                  transport_type: job.transport_type,
+                  service_choice: refinedData.service_choice,
+                  state:
+                    refinedData.state ||
+                    job.pick_up_state ||
+                    pickUpDestination.address_state,
+                  state_code:
+                    refinedData.state_code || refinedData.pick_up_stateCode,
+
+                  freight_type: refinedData.freight_type,
+
+                  pickup_time: {
+                    ready_by: readyAt,
+                  },
+                  delivery_time: {
+                    drop_by: dropAt,
+                  },
+
+                  ready_by: readyAt,
+                  drop_by: dropAt,
+
+                  job_pickup_address: {
+                    suburb: pickUpDestination?.address_city,
+                    postcode: pickUpDestination?.address_postal_code,
+                    state: pickUpDestination?.address_state,
+                  },
+
+                  job_destination_address:
+                    jobDestinations.length > 0
+                      ? {
+                          suburb: jobDestinations[0]?.address_city,
+                          postcode: jobDestinations[0]?.address_postal_code,
+                          state: jobDestinations[0]?.address_state,
+                        }
+                      : null,
+
+                  job_items: jobItems.map((item) => ({
+                    id: item.id,
+                    name: item.name || "",
+                    quantity: item.quantity,
+                    volume: item.volume,
+                    weight: item.weight,
+                    dimension_height: item.dimension_height,
+                    dimension_width: item.dimension_width,
+                    dimension_depth: item.dimension_depth,
+                  })),
+
+                  company_rates:
+                    filteredCompanyRates?.map((rate) => ({
+                      company_id: rate.company_id,
+                      seafreight_id: rate.seafreight_id,
+                      area: rate.area,
+                      cbm_rate: rate.cbm_rate,
+                      minimum_charge: rate.minimum_charge,
+                    })) || [],
+                  toll_enabled: tollEnabled,
+                  surcharges: {
+                    hand_unload: job.is_hand_unloading || false,
+                    dangerous_goods: job.is_dangerous_goods || false,
+                    time_slot: job.is_inbound_connect || false,
+                    timeslot_depots: job.is_inbound_connect
+                      ? refinedData.timeslot_depots
+                      : [],
+                    tail_lift: job.is_tailgate_required || false,
+                    stackable: false,
+                  },
+
+                  total_weight: job.totalWeight,
+                  total_cbm: job.totalCbm,
+                },
+              },
             });
+
             const calculationData = response.data as {
               cbm_auto: number;
               total_weight: number;
@@ -758,6 +877,7 @@ function JobPage() {
   //   }
   // }, [router.isReady, pendingJobId]);
   //handleCreateMedia
+
   const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
       /*toast({
@@ -958,11 +1078,11 @@ function JobPage() {
       _jobItems,
       companyWeight,
     );
-    setQuoteCalculationRes({
-      ...quoteCalculationRes,
+    setQuoteCalculationRes((prev) => ({
+      ...prev,
       total_weight: totalWeight,
       cbm_auto: totalCBM,
-    });
+    }));
   };
   const handleJobItemChanged = (
     value: any,
@@ -1003,11 +1123,11 @@ function JobPage() {
       _jobItems,
       companyWeight,
     );
-    setQuoteCalculationRes({
-      ...quoteCalculationRes,
+    setQuoteCalculationRes((prev) => ({
+      ...prev,
       total_weight: totalWeight,
       cbm_auto: totalCBM,
-    });
+    }));
   };
 
   useEffect(() => {
@@ -1308,7 +1428,24 @@ function JobPage() {
     handleCreateJob();
   };
 
-  const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+  // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
+  const [handleCalculateSeaFreight] = useLazyQuery(
+    CALCULATE_SEA_FREIGHT_QUERY,
+    {
+      fetchPolicy: "no-cache",
+      onCompleted: (data) => {
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          ...data.calculateSeaFreight,
+        }));
+        freightCalculatedRef.current = true;
+        setIsQuotePrice(true);
+      },
+      onError: (error) => {
+        showGraphQLErrorToast(error);
+      },
+    },
+  );
   const sendFreightData = async () => {
     if (!validateAddresses()) return;
     if (!validateTimeslotDepot()) return;
@@ -1339,7 +1476,7 @@ function JobPage() {
       });
       return;
     }
-    const today = new Date().toISOString(); // Gets current date and time in ISO format
+    // const today = new Date().toISOString(); // Gets current date and time in ISO format
 
     const jobDestination1 =
       jobDestinations.length > 0
@@ -1354,80 +1491,176 @@ function JobPage() {
     const filteredCompanyRates = companyRates?.filter(
       (rate) => rate.state === jobDestination1?.state,
     );
-    const payload = {
-      freight_type: refinedData.freight_type,
-      transport_type: job.transport_type,
-      state:
-        refinedData.state ||
-        job.pick_up_state ||
-        pickUpDestination.address_state,
-      state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-      service_choice: refinedData.service_choice,
-      company_rates:
-        ((job.job_category_id == 1 || job.job_category_id == 2) &&
-          refinedData.pick_up_stateCode === "QLD") ||
-        refinedData.pick_up_stateCode === "VIC"
-          ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              minimum_charge: rate.minimum_charge,
-            }))
-          : [],
-      job_pickup_address: {
-        state: pickUpDestination?.address_state,
-        suburb: pickUpDestination?.address_city,
-        postcode: pickUpDestination?.address_postal_code,
-        address: pickUpDestination?.address,
-      },
-      job_destination_address:
-        jobDestinations.length > 0
-          ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
-          : {},
-      pickup_time: {
-        ready_by: readyAt,
-      },
-      delivery_time: {
-        drop_by: dropAt,
-      },
-      surcharges: {
-        hand_unload: job.is_hand_unloading || false,
-        dangerous_goods: job.is_dangerous_goods || false,
-        time_slot: job.is_inbound_connect || null,
-        timeslot_depots: job.is_inbound_connect
-          ? refinedData.timeslot_depots
-          : null,
-        tail_lift: job.is_tailgate_required || null,
-        stackable: false, // If applicable, update this
-      },
-      job_items: jobItems.map((item) => ({
-        id: item.id,
-        name: item.name || "",
-        notes: item.notes || "",
-        quantity: item.quantity,
-        volume: item.volume,
-        weight: item.weight,
-        dimension_height: item.dimension_height,
-        dimension_width: item.dimension_width,
-        dimension_depth: item.dimension_depth,
-        job_destination: jobDestination1 || null,
-        item_type: {
-          id: item.item_type?.id || "",
-          name: item.item_type?.name || "",
-        },
-        created_at: refinedData.created_at || today,
-        updated_at: refinedData.updated_at || today,
-      })),
-    };
+    const selectedCompany = companiesOptions.find(
+      (company) => company.value === Number(companyId),
+    );
+
+    // ✅ Get toll value
+    const tollEnabled = selectedCompany?.toll ?? false;
+
+    console.log("Selected Company ID:", companyId);
+    console.log("Toll Enabled:", tollEnabled);
+
+    setRefinedData((prev) => ({
+      ...prev,
+      toll_enabled: tollEnabled,
+    }));
+    // const payload = {
+    //   freight_type: refinedData.freight_type,
+    //   transport_type: job.transport_type,
+    //   state:
+    //     refinedData.state ||
+    //     job.pick_up_state ||
+    //     pickUpDestination.address_state,
+    //   state_code: refinedData.state_code || refinedData.pick_up_stateCode,
+    //   service_choice: refinedData.service_choice,
+    //   company_rates:
+    //     ((job.job_category_id == 1 || job.job_category_id == 2) &&
+    //       refinedData.pick_up_stateCode === "QLD") ||
+    //     refinedData.pick_up_stateCode === "VIC"
+    //       ? filteredCompanyRates.map((rate) => ({
+    //           company_id: rate.company_id,
+    //           seafreight_id: rate.seafreight_id,
+    //           area: rate.area,
+    //           cbm_rate: rate.cbm_rate,
+    //           minimum_charge: rate.minimum_charge,
+    //         }))
+    //       : [],
+    //   job_pickup_address: {
+    //     state: pickUpDestination?.address_state,
+    //     suburb: pickUpDestination?.address_city,
+    //     postcode: pickUpDestination?.address_postal_code,
+    //     address: pickUpDestination?.address,
+    //   },
+    //   job_destination_address:
+    //     jobDestinations.length > 0
+    //       ? {
+    //           state: jobDestinations[0]?.address_state,
+    //           suburb: jobDestinations[0]?.address_city,
+    //           postcode: jobDestinations[0]?.address_postal_code,
+    //           address: jobDestinations[0]?.address,
+    //         }
+    //       : {},
+    //   pickup_time: {
+    //     ready_by: readyAt,
+    //   },
+    //   delivery_time: {
+    //     drop_by: dropAt,
+    //   },
+    //   surcharges: {
+    //     hand_unload: job.is_hand_unloading || false,
+    //     dangerous_goods: job.is_dangerous_goods || false,
+    //     time_slot: job.is_inbound_connect || null,
+    //     timeslot_depots: job.is_inbound_connect
+    //       ? refinedData.timeslot_depots
+    //       : null,
+    //     tail_lift: job.is_tailgate_required || null,
+    //     stackable: false, // If applicable, update this
+    //   },
+    //   job_items: jobItems.map((item) => ({
+    //     id: item.id,
+    //     name: item.name || "",
+    //     notes: item.notes || "",
+    //     quantity: item.quantity,
+    //     volume: item.volume,
+    //     weight: item.weight,
+    //     dimension_height: item.dimension_height,
+    //     dimension_width: item.dimension_width,
+    //     dimension_depth: item.dimension_depth,
+    //     job_destination: jobDestination1 || null,
+    //     item_type: {
+    //       id: item.item_type?.id || "",
+    //       name: item.item_type?.name || "",
+    //     },
+    //     created_at: refinedData.created_at || today,
+    //     updated_at: refinedData.updated_at || today,
+    //   })),
+    // };
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
+
+    const finalCBM = parseFloat(totalCBM.toFixed(2));
+    const finalWeight = parseFloat(totalWeight.toFixed(2));
     try {
-      const response = await axios.post(apiUrl, payload, {
-        headers: { "Content-Type": "application/json" },
+      const response = await handleCalculateSeaFreight({
+        variables: {
+          input: {
+            transport_type: job.transport_type,
+            state:
+              refinedData.state ||
+              job.pick_up_state ||
+              pickUpDestination.address_state,
+            state_code: refinedData.state_code || refinedData.pick_up_stateCode,
+            service_choice: refinedData.service_choice,
+            company_rates:
+              ((job.job_category_id == 1 || job.job_category_id == 2) &&
+                refinedData.pick_up_stateCode === "QLD") ||
+              refinedData.pick_up_stateCode === "VIC"
+                ? filteredCompanyRates?.map((rate) => ({
+                    company_id: rate.company_id,
+                    seafreight_id: rate.seafreight_id,
+                    area: rate.area,
+                    cbm_rate: rate.cbm_rate,
+                    minimum_charge: rate.minimum_charge,
+                    // toll_enabled: rate.toll_enabled,
+                  }))
+                : [],
+            toll_enabled: refinedData.toll_enabled,
+            job_pickup_address: {
+              suburb: pickUpDestination?.address_city,
+              postcode: pickUpDestination?.address_postal_code,
+              state: pickUpDestination?.address_state,
+            },
+
+            freight_type: refinedData.freight_type,
+
+            pickup_time: {
+              ready_by: readyAt,
+            },
+            delivery_time: {
+              drop_by: dropAt,
+            },
+
+            ready_by: readyAt,
+            drop_by: dropAt,
+
+            job_destination_address:
+              jobDestinations.length > 0
+                ? {
+                    suburb: jobDestinations[0]?.address_city,
+                    postcode: jobDestinations[0]?.address_postal_code,
+                    state: jobDestinations[0]?.address_state,
+                  }
+                : null,
+
+            job_items: jobItems.map((item) => ({
+              id: item.id,
+              name: item.name || "",
+              quantity: item.quantity,
+              volume: item.volume,
+              weight: item.weight,
+              dimension_height: item.dimension_height,
+              dimension_width: item.dimension_width,
+              dimension_depth: item.dimension_depth,
+            })),
+
+            surcharges: {
+              hand_unload: job.is_hand_unloading || false,
+              dangerous_goods: job.is_dangerous_goods || false,
+              time_slot: job.is_inbound_connect || false,
+              timeslot_depots: job.is_inbound_connect
+                ? refinedData.timeslot_depots
+                : [],
+              tail_lift: job.is_tailgate_required || false,
+              stackable: false,
+            },
+            total_weight: finalWeight,
+            total_cbm: finalCBM,
+          },
+        },
       });
       let calculationData = response.data;
       setQuoteCalculationRes((prev) => ({
@@ -1443,7 +1676,7 @@ function JobPage() {
   };
   const downloadPDFapiUrl = process.env.NEXT_PUBLIC_PRICE_BREAKDOWN_API_URL;
 
-  const downloadQuotePdf = async () => {
+  const _downloadQuotePdf = async () => {
     if (!validateAddresses()) return;
     if (!validateTimeslotDepot()) return;
     if (
@@ -1473,7 +1706,7 @@ function JobPage() {
       });
       return;
     }
-    setIsDownloading(true);
+    // setIsDownloading(true);
 
     const jobDestination1 =
       jobDestinations.length > 0
@@ -1540,7 +1773,7 @@ function JobPage() {
               minimum_charge: rate.minimum_charge,
             }))
           : [],
-
+      toll_enabled: refinedData.toll_enabled,
       surcharges: {
         hand_unload: job.is_hand_unloading || false,
         dangerous_goods: job.is_dangerous_goods || false,
@@ -1583,7 +1816,7 @@ function JobPage() {
         isClosable: true,
       });
     } finally {
-      setIsDownloading(false);
+      // setIsDownloading(false);
     }
   };
   return (
@@ -1663,11 +1896,13 @@ function JobPage() {
                           company_id: e.value || null,
                           customer_id: null,
                         }));
+
                         setRefinedData((prev) => ({
                           ...prev,
                           area: null,
                           cbm_rate: null,
                           minimum_charge: null,
+                          toll_enabled: null,
                         }));
 
                         if (e.value) {
@@ -2212,11 +2447,11 @@ function JobPage() {
                   }
                   selectedJobId={job.job_type_id}
                   value={
-                    companyStandardStatic
+                    (companyStandardStatic
                       ? jobTypeOptions
-                      : filteredJobTypeOptions.find(
-                          (jobType) => jobType.value === job.job_type_id,
-                        )
+                      : filteredJobTypeOptions
+                    ).find((jobType) => jobType.value === job.job_type_id) ||
+                    null
                   }
                   placeholder="Select type"
                   onChange={(e) => {
@@ -2224,22 +2459,26 @@ function JobPage() {
                     //   ...job,
                     //   job_type_id: e.value || null,
                     // });
-                    const selectedCategory = e.value;
-                    const selectedCategoryName = companyStandardStatic
-                      ? jobTypeOptions
-                      : filteredJobTypeOptions.find(
-                          (job_category) =>
-                            job_category.value === selectedCategory,
-                        )?.label;
+                    // const selectedCategory = e.value;
+                    // const selectedCategoryName = companyStandardStatic
+                    //   ? jobTypeOptions
+                    //   : filteredJobTypeOptions.find(
+                    //       (job_category) =>
+                    //         job_category.value === selectedCategory,
+                    //     )?.label;
                     setJob((prev) => ({
                       ...prev,
-                      job_type_id: selectedCategory || null,
+                      job_type_id: e.value || null,
                     }));
-
                     setRefinedData((prev) => ({
                       ...prev,
-                      service_choice: selectedCategoryName || null,
+                      service_choice: e?.label ?? null, // ✅ "Standard" | "Express"
                     }));
+                    console.log(
+                      e.value,
+                      e.label,
+                      "job_type_id, service_choice",
+                    );
                   }}
                 />
                 {/* Items */}
@@ -2679,7 +2918,7 @@ function JobPage() {
                                   >
                                     Get A Quote
                                   </Button>
-                                  <Button
+                                  {/* <Button
                                     variant="outline"
                                     ms={4}
                                     colorScheme="blue"
@@ -2692,7 +2931,7 @@ function JobPage() {
                                     //                                     }}
                                   >
                                     Download Quote
-                                  </Button>
+                                  </Button> */}
                                 </Flex>
                                 {quoteCalculationRes && (
                                   <Box mt={4}>
@@ -2850,7 +3089,26 @@ function JobPage() {
                                           {quoteCalculationRes.stackable}
                                         </Text>
                                       </Flex>
-
+                                      <Flex
+                                        justify="space-between"
+                                        align="center"
+                                      >
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="500"
+                                          color="gray.700"
+                                          pr={2}
+                                        >
+                                          West Gate Toll Charges:
+                                        </Text>
+                                        <Text
+                                          fontSize="sm"
+                                          fontWeight="600"
+                                          color="blue.600"
+                                        >
+                                          {quoteCalculationRes.toll_amount}
+                                        </Text>
+                                      </Flex>
                                       {/* Total */}
                                       <Flex
                                         justify="space-between"

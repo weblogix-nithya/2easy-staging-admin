@@ -1869,6 +1869,36 @@ function CompanyEdit() {
                       <Divider />
 
                       <h3 className="mt-6 mb-4">Notifications</h3>
+                        <Flex className="w-full" alignItems="center">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Toll Enabled
+                        </FormLabel>
+
+                        <RadioGroup
+                          value={company.toll_enabled ? "1" : "0"}
+                          onChange={(e) => {
+                            setCompany({
+                              ...company,
+                              toll_enabled: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row" pt={3}>
+                            <Radio value="0">No</Radio>
+                            <Radio value="1" pl={6}>
+                              Yes
+                            </Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
+
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
                           display="flex"

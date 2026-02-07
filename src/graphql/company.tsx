@@ -18,6 +18,7 @@ export const GET_COMPANYS_QUERY = gql`
         id
         name
         payment_term
+        toll_enabled
       }
       paginatorInfo {
         count
@@ -59,6 +60,7 @@ export const GET_COMPANY_QUERY = gql`
       rate_card_url
       logo_url
       payment_term
+      toll_enabled
       weight_per_cubic
       standard_static
     }
@@ -193,6 +195,7 @@ type Company = {
   rate_card_url: string | null;
   logo_url: string | null;
   payment_term: string | null;
+  toll_enabled: boolean | null;
   weight_per_cubic: number | null;
   standard_static: boolean | null;
 };
@@ -223,6 +226,7 @@ export const defaultCompany: Company = {
   rate_card_url: null,
   logo_url: null,
   payment_term: "7_days",
+  toll_enabled: false,
   weight_per_cubic: 500, // default weight per cubic meter
   standard_static: false, // default to standard
 };
