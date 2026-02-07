@@ -123,7 +123,8 @@ function JobEdit() {
   const [job, setJob] = useState(defaultJob);
   const [reportJob, setReportJob] = useState<ReportJob>(defaultReportJob);
 
-  const [refinedData, setRefinedData] = useState({...defaultJobQuoteData,
+  const [refinedData, setRefinedData] = useState({
+    ...defaultJobQuoteData,
     // total_cbm: 0,
     // total_weight: 0,
     pick_up_state: "",
@@ -202,6 +203,8 @@ function JobEdit() {
   const [depotOptions, setDepotOptions] = useState([]);
   const [filtereddepotOptions, setFilteredDepotOptions] = useState([]);
   const [companyWeight, setCompanyWeight] = useState(null);
+  // const [companyStandardStatic, setCompanyStandardStatic] = useState(null);
+  const [companyToll, setCompanyToll] = useState(null);
   const [_selectedDepot, setSelectedDepot] = useState("");
 
   const [prevJobState, setPrevJobState] = useState({
@@ -449,9 +452,9 @@ function JobEdit() {
         setIsSameDayJob(today === formatDate(data.job.ready_at));
         setIsTomorrowJob(
           new Date(formatDate(data.job.ready_at)).toDateString() ===
-            new Date(
-              new Date(today).setDate(new Date(today).getDate() + 1),
-            ).toDateString(),
+          new Date(
+            new Date(today).setDate(new Date(today).getDate() + 1),
+          ).toDateString(),
         );
 
         // ✅ Set destination data
@@ -578,6 +581,10 @@ function JobEdit() {
         if (data?.company?.weight_per_cubic != null) {
           setCompanyWeight(data.company.weight_per_cubic);
         }
+        // setCompanyStandardStatic(
+        //   data.company?.standard_static ? 1 : 0,
+        // );
+        setCompanyToll(data.company?.toll_enabled ? 1 : 0);
         setRefinedData({
           ...refinedData,
         });
@@ -608,7 +615,7 @@ function JobEdit() {
         (location) => location.value === jobData.job.transport_location,
       );
 
-        const selectedCompany = companiesOptions.find(
+      const selectedCompany = companiesOptions.find(
         (company) => company.value === Number(job.company_id),
       );
 
@@ -648,7 +655,7 @@ function JobEdit() {
     });
   };
 
-  const [handleUpdateJob, {}] = useMutation(UPDATE_JOB_MUTATION, {
+  const [handleUpdateJob, { }] = useMutation(UPDATE_JOB_MUTATION, {
     variables: {
       input: {
         id: job.id,
@@ -828,7 +835,7 @@ function JobEdit() {
     },
   });
 
-  const [handleDeleteJob, {}] = useMutation(DELETE_JOB_MUTATION, {
+  const [handleDeleteJob, { }] = useMutation(DELETE_JOB_MUTATION, {
     variables: {
       id: id,
     },
@@ -1236,7 +1243,7 @@ function JobEdit() {
     //check if any job destination is_saved_address and populate setSavedAddresses
   };
   //handleDeleteJobItem
-  const [handleDeleteJobItem, {}] = useMutation(DELETE_JOB_ITEM_MUTATION, {
+  const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
       // console.log("Job Item Deleted", data);
     },
@@ -1245,7 +1252,7 @@ function JobEdit() {
     },
   });
   //handleDelete
-  const [handleDeleteJobDestination, {}] = useMutation(
+  const [handleDeleteJobDestination, { }] = useMutation(
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
@@ -1285,7 +1292,7 @@ function JobEdit() {
   };
   const [createJobDestination] = useMutation(CREATE_JOB_DESTINATION_MUTATION);
   //handleUpdateJobItems
-  const [handleUpdateJobItem, {}] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
+  const [handleUpdateJobItem, { }] = useMutation(UPDATE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
       // console.log("Job item updated");
     },
@@ -1294,7 +1301,7 @@ function JobEdit() {
     },
   });
   //handleUpdateJobDestinations
-  const [handleUpdateJobDestination, {}] = useMutation(
+  const [handleUpdateJobDestination, { }] = useMutation(
     UPDATE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
@@ -1306,7 +1313,7 @@ function JobEdit() {
     },
   );
   //deleteMedia
-  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: (_data) => {
       toast({
         title: "Attachment deleted",
@@ -1372,7 +1379,7 @@ function JobEdit() {
     },
     [re],
   );
-  const [handleCreateJobCcEmail, {}] = useMutation(
+  const [handleCreateJobCcEmail, { }] = useMutation(
     CREATE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
@@ -1429,13 +1436,13 @@ function JobEdit() {
     [jobCcEmailTags, jobCcEmails],
   );
 
-  const [handleDeleteJobCcEmail, {}] = useMutation(
+  const [handleDeleteJobCcEmail, { }] = useMutation(
     DELETE_JOB_CC_EMAIL_MUTATION,
     {
       variables: {
         id: deleteJobCcEmailId,
       },
-      onCompleted: (_data) => {},
+      onCompleted: (_data) => { },
       onError: (error) => {
         showGraphQLErrorToast(error);
       },
@@ -1492,6 +1499,9 @@ function JobEdit() {
             time_slot: Number(quoteCalculationRes.time_slot),
             tail_lift: Number(quoteCalculationRes.tail_lift),
             stackable: Number(quoteCalculationRes.stackable),
+            toll_amount: Number(quoteCalculationRes.toll_amount),
+            toll_applied: Boolean(quoteCalculationRes.toll_applied),
+            toll_type: quoteCalculationRes.toll_type,
             total: Number(quoteCalculationRes.total),
           },
         },
@@ -1537,23 +1547,24 @@ function JobEdit() {
     return true;
   };
 
-    const [handleCalculateSeaFreight] = useLazyQuery(
-      CALCULATE_SEA_FREIGHT_QUERY,
-      {
-        fetchPolicy: "no-cache",
-        onCompleted: (data) => {
-          setQuoteCalculationRes((prev) => ({
-            ...prev,
-            ...data.calculateSeaFreight,
-          }));
-          // freightCalculatedRef.current = true;
-          // setIsQuotePrice(true);
-        },
-        onError: (error) => {
-          showGraphQLErrorToast(error);
-        },
+  const [handleCalculateSeaFreight] = useLazyQuery(
+    CALCULATE_SEA_FREIGHT_QUERY,
+    {
+      fetchPolicy: "no-cache",
+      onCompleted: (data) => {
+        console.log("Sea freight calculation result:", data);
+        setQuoteCalculationRes((prev) => ({
+          ...prev,
+          ...data.calculateSeaFreight,
+        }));
+        // freightCalculatedRef.current = true;
+        // setIsQuotePrice(true);
       },
-    );
+      onError: (error) => {
+        showGraphQLErrorToast(error);
+      },
+    },
+  );
   const sendFreightData = async () => {
     // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
     // console.log(string, "st");
@@ -1565,11 +1576,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const _selectedCategoryName = jobCategories.find(
@@ -1672,7 +1683,7 @@ function JobEdit() {
     // };
 
     // try {
-        const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
       job.job_category_id,
       jobItems,
       companyWeight,
@@ -1680,7 +1691,7 @@ function JobEdit() {
 
     const finalCBM = parseFloat(totalCBM.toFixed(2));
     const finalWeight = parseFloat(totalWeight.toFixed(2));
-   try {
+    try {
       const response = await handleCalculateSeaFreight({
         variables: {
           input: {
@@ -1690,28 +1701,28 @@ function JobEdit() {
               job.pick_up_state ||
               pickUpDestination.address_state,
             state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-            service_choice: selectedJobTypeName ||refinedData.service_choice,
+            service_choice: selectedJobTypeName || refinedData.service_choice,
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
-          selectedstate?.value === "QLD") ||
-        selectedstate?.value === "VIC"
+                selectedstate?.value === "QLD") ||
+                selectedstate?.value === "VIC"
                 ? filteredCompanyRates?.map((rate) => ({
-                    company_id: rate.company_id,
-                    seafreight_id: rate.seafreight_id,
-                    area: rate.area,
-                    cbm_rate: rate.cbm_rate,
-                    minimum_charge: rate.minimum_charge,
-                    // toll_enabled: rate.toll_enabled,
-                  }))
+                  company_id: rate.company_id,
+                  seafreight_id: rate.seafreight_id,
+                  area: rate.area,
+                  cbm_rate: rate.cbm_rate,
+                  minimum_charge: rate.minimum_charge,
+                  // toll_enabled: rate.toll_enabled,
+                }))
                 : [],
-            toll_enabled: refinedData.toll_enabled,
+            toll_enabled: companyToll === 1 ? true : false,
             job_pickup_address: {
               suburb: pickUpDestination?.address_city,
               postcode: pickUpDestination?.address_postal_code,
               state: pickUpDestination?.address_state,
             },
 
-            freight_type: refinedData.freight_type,
+            freight_type: refinedData.freight_type || _selectedCategoryName,
 
             pickup_time: {
               ready_by: readyAt,
@@ -1726,10 +1737,10 @@ function JobEdit() {
             job_destination_address:
               jobDestinations.length > 0
                 ? {
-                    suburb: jobDestinations[0]?.address_city,
-                    postcode: jobDestinations[0]?.address_postal_code,
-                    state: jobDestinations[0]?.address_state,
-                  }
+                  suburb: jobDestinations[0]?.address_city,
+                  postcode: jobDestinations[0]?.address_postal_code,
+                  state: jobDestinations[0]?.address_state,
+                }
                 : null,
 
             job_items: jobItems.map((item) => ({
@@ -1758,11 +1769,19 @@ function JobEdit() {
           },
         },
       });
-      const calculationData = response?.data;
+      const calculationData = response?.data?.calculateSeaFreight;
+
+      // ✅ FIX 2: Validate response exists
+      if (!calculationData) {
+        throw new Error("No calculation data received from API");
+      }
+
+      console.log("API Response:", calculationData);
+      console.log("Calculated CBM:", finalCBM, "Weight:", finalWeight);
       setQuoteCalculationRes({
         ...quoteCalculationRes,
-        cbm_auto: Number(calculationData?.cbm_auto ?? 0),
-        total_weight: Number(calculationData?.total_weight ?? 0),
+        cbm_auto: Number(finalCBM ?? 0),
+        total_weight: Number(finalWeight ?? 0),
         freight: Number(calculationData?.freight ?? 0),
         fuel: Number(calculationData?.fuel ?? 0),
         hand_unload: Number(calculationData?.hand_unload ?? 0),
@@ -1771,6 +1790,8 @@ function JobEdit() {
         tail_lift: Number(calculationData?.tail_lift ?? 0),
         stackable: Number(calculationData?.stackable ?? 0),
         toll_amount: Number(calculationData?.toll_amount ?? 0),
+        toll_type: calculationData?.toll_type ?? null,
+        toll_applied: Boolean(calculationData?.toll_applied ?? false),
         total: Number(calculationData?.total ?? 0),
       });
       toast({ title: "Quote Calculation Success", status: "success" });
@@ -1802,6 +1823,9 @@ function JobEdit() {
           tail_lift: number;
           stackable: number;
           total: number;
+          toll_applied: boolean;
+          toll_type: string | null;
+          toll_amount: number;
         };
 
         await handleCreateJobPriceCalculationDetail({
@@ -1817,6 +1841,9 @@ function JobEdit() {
           tail_lift: Number(calculationData.tail_lift),
           stackable: Number(calculationData.stackable),
           total: Number(calculationData.total),
+          toll_applied: calculationData.toll_applied,
+          toll_type: calculationData.toll_type,
+          toll_amount: calculationData.toll_amount,
         })
           .then((_data) => {
             //   console.log("created successfully:", data);
@@ -1875,11 +1902,11 @@ function JobEdit() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-            state: jobDestinations[0]?.address_state,
-            suburb: jobDestinations[0]?.address_city,
-            postcode: jobDestinations[0]?.address_postal_code,
-            address: jobDestinations[0]?.address,
-          }
+          state: jobDestinations[0]?.address_state,
+          suburb: jobDestinations[0]?.address_city,
+          postcode: jobDestinations[0]?.address_postal_code,
+          address: jobDestinations[0]?.address,
+        }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1902,11 +1929,11 @@ function JobEdit() {
 
       destination: jobDestination1
         ? {
-            state: jobDestination1.state,
-            suburb: jobDestination1.suburb,
-            postcode: jobDestination1.postcode,
-            address: jobDestination1.address,
-          }
+          state: jobDestination1.state,
+          suburb: jobDestination1.suburb,
+          postcode: jobDestination1.postcode,
+          address: jobDestination1.address,
+        }
         : {},
 
       items: jobItems.map((item) => ({
@@ -1934,15 +1961,15 @@ function JobEdit() {
       company_rates:
         ((job.job_category_id == 1 || job.job_category_id == 2) &&
           selectedstate?.value === "QLD") ||
-        selectedstate?.value === "VIC"
+          selectedstate?.value === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-              company_id: rate.company_id,
-              seafreight_id: rate.seafreight_id,
-              area: rate.area,
-              cbm_rate: rate.cbm_rate,
-              state: rate.state,
-              minimum_charge: rate.minimum_charge,
-            }))
+            company_id: rate.company_id,
+            seafreight_id: rate.seafreight_id,
+            area: rate.area,
+            cbm_rate: rate.cbm_rate,
+            state: rate.state,
+            minimum_charge: rate.minimum_charge,
+          }))
           : [],
 
       surcharges: {
@@ -2275,7 +2302,7 @@ function JobEdit() {
                   tabs={tabs}
                   onChange={handleTabChange}
 
-                  // onChange={(tabId) => setActiveTab(tabId)}
+                // onChange={(tabId) => setActiveTab(tabId)}
                 />
 
                 {/* Job Details */}

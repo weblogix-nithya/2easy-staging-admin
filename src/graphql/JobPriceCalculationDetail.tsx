@@ -18,6 +18,9 @@ export const GET_JOB_PRICE_CALCULATION_DETAIL_QUERY = gql`
       dangerous_goods
       stackable
       total
+      toll_applied
+      toll_type
+      toll_amount
     }
   }
 `;
@@ -49,6 +52,9 @@ export const GET_JOB_PRICE_CALCULATION_DETAILS_QUERY = gql`
         tail_lift
         stackable
         total
+        toll_applied
+        toll_type
+        toll_amount
       }
       paginatorInfo {
         count
@@ -80,6 +86,9 @@ export const CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
       tail_lift
       stackable
       total
+      toll_applied
+      toll_type
+      toll_amount
     }
   }
 `;
@@ -103,6 +112,9 @@ export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
       tail_lift
       stackable
       total
+      toll_applied
+      toll_type
+      toll_amount
     }
   }
 `;
@@ -171,6 +183,9 @@ export interface CreateJobPriceCalculationDetailInput {
   time_slot: number,
   stackable: number;
   total: number;
+  toll_applied: boolean;
+  toll_type: string;
+  toll_amount: number;
 }
 
 export interface UpdateJobPriceCalculationDetailInput {
@@ -186,6 +201,9 @@ export interface UpdateJobPriceCalculationDetailInput {
   time_slot?: number,
   stackable?: number;
   total?: number;
+  toll_applied?: boolean;
+  toll_type?: string;
+  toll_amount?: number;
 }
 
 // Default JobPriceCalculationDetail
@@ -204,7 +222,7 @@ export const defaultJobPriceCalculationDetail: JobPriceCalculationDetail = {
   stackable: null,
   total: null,
   total_cbm: null,
-  toll_applied: null,
+  toll_applied: false,
   toll_type: null,
-  toll_amount: null,
+  toll_amount: 0,
 };
