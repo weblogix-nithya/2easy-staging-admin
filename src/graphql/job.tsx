@@ -1181,6 +1181,10 @@ export type JobQuoteData = {
   minimum_charge: number;
   area: string;
   company_rates: any[];
+  toll_enabled: boolean;  
+  timeslot_depots: string | null;
+  pick_up_state: string;
+  pick_up_stateCode: string;
 };
 
 const defaultJobQuoteData: JobQuoteData = {
@@ -1198,6 +1202,10 @@ const defaultJobQuoteData: JobQuoteData = {
   minimum_charge: 0,
   area: "",
   company_rates: [],
+  timeslot_depots: null,
+  toll_enabled: false,
+  pick_up_state: "",
+  pick_up_stateCode: "",
   job_pickup_address: {
     state: "",
     suburb: "",
