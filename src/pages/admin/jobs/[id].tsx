@@ -959,11 +959,14 @@ function JobEdit() {
           freight: data.jobPriceCalculationDetail?.freight,
           fuel: data.jobPriceCalculationDetail?.fuel,
           time_slot: data.jobPriceCalculationDetail?.time_slot,
-          tailgate: data.jobPriceCalculationDetail?.tailgate,
+          toll_applied: data.jobPriceCalculationDetail?.toll_applied,
+          toll_type: data.jobPriceCalculationDetail?.toll_type,
+          toll_amount: data.jobPriceCalculationDetail?.toll_amount,
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail?.stackable,
           total_price: data.jobPriceCalculationDetail?.total,
           total_weight: data.jobPriceCalculationDetail?.total_weight,
+
         });
         setQuoteCalculationRes((prev) => ({
           ...prev,
@@ -985,7 +988,9 @@ function JobEdit() {
           hand_unload: data.jobPriceCalculationDetail?.hand_unload,
           stackable: data.jobPriceCalculationDetail.stackable,
           time_slot: data.jobPriceCalculationDetail?.time_slot,
-          tailgate: data.jobPriceCalculationDetail?.tailgate,
+          toll_applied: data.jobPriceCalculationDetail?.toll_applied,
+          toll_type: data.jobPriceCalculationDetail?.toll_type,
+          toll_amount: data.jobPriceCalculationDetail?.toll_amount,
         }));
         setButtonText("Update Quote");
       }
