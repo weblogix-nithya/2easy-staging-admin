@@ -82,6 +82,7 @@ export const CREATE_COMPANY_MUTATION = gql`
       payment_term
       weight_per_cubic
       standard_static
+      toll_enabled
     }
   }
 `;
@@ -103,6 +104,7 @@ export const UPDATE_COMPANY_MUTATION = gql`
       payment_term
       weight_per_cubic
       standard_static
+      toll_enabled
     }
   }
 `;
@@ -140,6 +142,7 @@ export interface UpdateCompanyInput {
   payment_term: String;
   weight_per_cubic: Number;
   standard_static: Boolean;
+  toll_enabled: Boolean;
 }
 
 export interface CreateCompanyInput {
@@ -167,6 +170,7 @@ export interface CreateCompanyInput {
   payment_term: String;
   weight_per_cubic: Number;
   standard_static: Boolean;
+  toll_enabled: Boolean;
 }
 
 type Company = {
