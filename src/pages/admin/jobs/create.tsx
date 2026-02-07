@@ -442,10 +442,15 @@ function JobPage() {
       );
 
       if (selectedCompany) {
-        setRefinedData({
-          ...refinedData,
+        // setRefinedData({
+        //   ...refinedData,
+        //   toll_enabled: selectedCompany.toll,
+        // });
+        setRefinedData((prev) => ({
+          ...prev,
           toll_enabled: selectedCompany.toll,
-        });
+        }));
+
         // console.log(selectedCompany.min_rate, "selected company min rate")
       }
 
@@ -454,10 +459,15 @@ function JobPage() {
           (entity: { value: number }) => entity.value == companyId,
         );
         if (companyWithId) {
-          setRefinedData({
-            ...refinedData,
+          // setRefinedData({
+          //   ...refinedData,
+          //   toll_enabled: companyWithId.toll,
+          // });
+          setRefinedData((prev) => ({
+            ...prev,
             toll_enabled: companyWithId.toll,
-          });
+          }));
+
           // console.log(companyWithId,'companywithid min rate')
         }
       }
@@ -483,10 +493,9 @@ function JobPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId]);
 
-      useEffect(() => {
-      if (job.company_id) {
-
-        const selectedCompany = companiesOptions.find(
+  useEffect(() => {
+    if (job.company_id) {
+      const selectedCompany = companiesOptions.find(
         (company) => company.value === Number(job.company_id),
       );
 
@@ -497,7 +506,7 @@ function JobPage() {
         ...prev,
         toll_enabled: tollEnabled,
       }));
-      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.job_type_id]);
 
@@ -573,21 +582,20 @@ function JobPage() {
             (rate) => rate.state === jobDestination1?.state,
           );
 
-          
-        const selectedCompany = companiesOptions.find(
-        (company) => company.value === Number(companyId),
-      );
+          const selectedCompany = companiesOptions.find(
+            (company) => company.value === Number(companyId),
+          );
 
-      // ✅ Get toll value
-      const tollEnabled = selectedCompany?.toll ?? false;
+          // ✅ Get toll value
+          const tollEnabled = selectedCompany?.toll ?? false;
 
-      console.log("Selected Company ID:", companyId);
-      console.log("Toll Enabled:", tollEnabled);
+          console.log("Selected Company ID:", companyId);
+          console.log("Toll Enabled:", tollEnabled);
 
-      setRefinedData((prev) => ({
-        ...prev,
-        toll_enabled: tollEnabled,
-      }));
+          setRefinedData((prev) => ({
+            ...prev,
+            toll_enabled: tollEnabled,
+          }));
           // const payload = {
           //   freight_type: refinedData.freight_type,
           //   transport_type: job.transport_type,
@@ -655,7 +663,7 @@ function JobPage() {
           //     updated_at: refinedData.updated_at || today,
           //   })),
           // };
-             try {
+          try {
             const response = await handleCalculateSeaFreight({
               variables: {
                 input: {
@@ -1070,7 +1078,7 @@ function JobPage() {
       _jobItems,
       companyWeight,
     );
- setQuoteCalculationRes((prev) => ({
+    setQuoteCalculationRes((prev) => ({
       ...prev,
       total_weight: totalWeight,
       cbm_auto: totalCBM,
@@ -1421,7 +1429,7 @@ function JobPage() {
   };
 
   // const apiUrl = process.env.NEXT_PUBLIC_PRICE_QUOTE_API_URL;
-    const [handleCalculateSeaFreight] = useLazyQuery(
+  const [handleCalculateSeaFreight] = useLazyQuery(
     CALCULATE_SEA_FREIGHT_QUERY,
     {
       fetchPolicy: "no-cache",
@@ -1483,20 +1491,20 @@ function JobPage() {
     const filteredCompanyRates = companyRates?.filter(
       (rate) => rate.state === jobDestination1?.state,
     );
-            const selectedCompany = companiesOptions.find(
-        (company) => company.value === Number(companyId),
-      );
+    const selectedCompany = companiesOptions.find(
+      (company) => company.value === Number(companyId),
+    );
 
-      // ✅ Get toll value
-      const tollEnabled = selectedCompany?.toll ?? false;
+    // ✅ Get toll value
+    const tollEnabled = selectedCompany?.toll ?? false;
 
-      console.log("Selected Company ID:", companyId);
-      console.log("Toll Enabled:", tollEnabled);
+    console.log("Selected Company ID:", companyId);
+    console.log("Toll Enabled:", tollEnabled);
 
-      setRefinedData((prev) => ({
-        ...prev,
-        toll_enabled: tollEnabled,
-      }));
+    setRefinedData((prev) => ({
+      ...prev,
+      toll_enabled: tollEnabled,
+    }));
     // const payload = {
     //   freight_type: refinedData.freight_type,
     //   transport_type: job.transport_type,
@@ -1568,7 +1576,7 @@ function JobPage() {
     //     updated_at: refinedData.updated_at || today,
     //   })),
     // };
-        const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
       job.job_category_id,
       jobItems,
       companyWeight,
@@ -1577,7 +1585,7 @@ function JobPage() {
     const finalCBM = parseFloat(totalCBM.toFixed(2));
     const finalWeight = parseFloat(totalWeight.toFixed(2));
     try {
- const response = await handleCalculateSeaFreight({
+      const response = await handleCalculateSeaFreight({
         variables: {
           input: {
             transport_type: job.transport_type,
@@ -1653,7 +1661,7 @@ function JobPage() {
             total_cbm: finalCBM,
           },
         },
-       });
+      });
       let calculationData = response.data;
       setQuoteCalculationRes((prev) => ({
         ...prev,
@@ -1889,13 +1897,13 @@ function JobPage() {
                           customer_id: null,
                         }));
 
-                        setRefinedData({
-                          ...refinedData,
+                        setRefinedData((prev) => ({
+                          ...prev,
                           area: null,
                           cbm_rate: null,
                           minimum_charge: null,
                           toll_enabled: null,
-                        });
+                        }));
 
                         if (e.value) {
                           setCompanyWeight(null); // Reset before fetching
@@ -2458,15 +2466,19 @@ function JobPage() {
                     //       (job_category) =>
                     //         job_category.value === selectedCategory,
                     //     )?.label;
-                      setJob((prev) => ({
+                    setJob((prev) => ({
                       ...prev,
                       job_type_id: e.value || null,
                     }));
-                   setRefinedData((prev) => ({
+                    setRefinedData((prev) => ({
                       ...prev,
                       service_choice: e?.label ?? null, // ✅ "Standard" | "Express"
                     }));
-                      console.log(e.value, e.label, "job_type_id, service_choice");
+                    console.log(
+                      e.value,
+                      e.label,
+                      "job_type_id, service_choice",
+                    );
                   }}
                 />
                 {/* Items */}
@@ -3077,7 +3089,7 @@ function JobPage() {
                                           {quoteCalculationRes.stackable}
                                         </Text>
                                       </Flex>
-                                    <Flex
+                                      <Flex
                                         justify="space-between"
                                         align="center"
                                       >
