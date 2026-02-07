@@ -436,7 +436,7 @@ function JobPage() {
       setCompaniesOptions(newCompaniesOptions);
 
       // If a company is already selected, update refinedData with its properties
-      const _selectedCompany = newCompaniesOptions.find(
+      const selectedCompany = newCompaniesOptions.find(
         (entity: { value: number }) => entity.value == job.company_id,
         // (entity: { value: number }) => entity.value == job.company_id,
       );
@@ -450,7 +450,7 @@ function JobPage() {
       }
 
       if (!isAdmin) {
-        const _companyWithId = newCompaniesOptions.find(
+        const companyWithId = newCompaniesOptions.find(
           (entity: { value: number }) => entity.value == companyId,
         );
         if (companyWithId) {
@@ -1888,8 +1888,9 @@ function JobPage() {
                           company_id: e.value || null,
                           customer_id: null,
                         }));
-                        setRefinedData((prev) => ({
-                          ...prev,
+
+                        setRefinedData({
+                          ...refinedData,
                           area: null,
                           cbm_rate: null,
                           minimum_charge: null,
