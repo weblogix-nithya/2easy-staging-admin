@@ -434,7 +434,7 @@ export default function InvoiceIndex() {
             /> */}
           </Flex>
           <Flex justifyContent="flex-end" alignItems="center">
-            <Link href="/admin/invoices/create">
+           { isAdmin && <Link href="/admin/invoices/create">
               <Button
                 className="!h-[39px]"
                 fontSize="sm"
@@ -444,7 +444,7 @@ export default function InvoiceIndex() {
               >
                 Create Invoice
               </Button>
-            </Link>
+            </Link>}
             <Button
               fontSize="sm"
               lineHeight="19px"

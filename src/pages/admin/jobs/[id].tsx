@@ -2303,7 +2303,7 @@ function JobEdit() {
                     dropAt={dropAt}
                     setDropAt={setDropAt}
                     jobTypeOptions={jobTypeOptions}
-                    refinedData={refinedData}
+                    _refinedData={refinedData}
                     setRefinedData={setRefinedData}
                     today={today}
                     setIsSameDayJob={setIsSameDayJob}
