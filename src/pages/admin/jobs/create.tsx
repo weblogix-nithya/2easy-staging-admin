@@ -3101,7 +3101,7 @@ function JobPage() {
                                           {quoteCalculationRes.stackable}
                                         </Text>
                                       </Flex>
-                                      <Flex
+                                     { companyToll === 1 ? <Flex
                                         justify="space-between"
                                         align="center"
                                       >
@@ -3120,7 +3120,7 @@ function JobPage() {
                                         >
                                           {quoteCalculationRes.toll_amount}
                                         </Text>
-                                      </Flex>
+                                      </Flex>: null}
                                       {/* Total */}
                                       <Flex
                                         justify="space-between"

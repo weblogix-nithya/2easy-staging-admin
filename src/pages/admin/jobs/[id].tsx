@@ -2314,6 +2314,7 @@ function JobEdit() {
                 {tabId == 1 && (
                   <JobDetailsTab
                     isAdmin={isAdmin}
+                    companyToll={companyToll}
                     job={job}
                     setJob={setJob}
                     jobStatuses={jobStatuses}

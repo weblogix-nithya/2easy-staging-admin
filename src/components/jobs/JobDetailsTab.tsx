@@ -36,6 +36,7 @@ import JobInputTable from "./JobInputTable";
 
 const JobDetailsTab = ({
   isAdmin,
+  companyToll,
   job,
   setJob,
   jobStatuses,
@@ -1340,7 +1341,7 @@ const JobDetailsTab = ({
                           </Text>
                         </Flex>
 
-                        <Flex
+                        { companyToll === 1 ? <Flex
                           justify="space-between"
                           align="center"
                         >
@@ -1357,9 +1358,9 @@ const JobDetailsTab = ({
                             fontWeight="600"
                             color="blue.600"
                           >
-                            {quoteCalculationRes.toll_amount}
+                            {companyToll === 1 ? quoteCalculationRes.toll_amount : 0}
                           </Text>
-                        </Flex>
+                        </Flex>: null}
 
                         {/* Total */}
                         <Flex justify="space-between" align="center">
