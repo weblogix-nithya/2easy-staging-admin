@@ -270,43 +270,43 @@ export default function JobIndex({ }: // initialLoadOnly = false,
     },
   });
 
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState !== "visible") return;
+  // useEffect(() => {
+  //   const handleVisibility = () => {
+  //     if (document.visibilityState !== "visible") return;
 
-      const today = new Date();
-      const startOfToday = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-      );
-      const currentStartDate = rangeDate?.[0]
-        ? new Date(
-          rangeDate[0].getFullYear(),
-          rangeDate[0].getMonth(),
-          rangeDate[0].getDate(),
-        )
-        : null;
+  //     const today = new Date();
+  //     const startOfToday = new Date(
+  //       today.getFullYear(),
+  //       today.getMonth(),
+  //       today.getDate(),
+  //     );
+  //     const currentStartDate = rangeDate?.[0]
+  //       ? new Date(
+  //         rangeDate[0].getFullYear(),
+  //         rangeDate[0].getMonth(),
+  //         rangeDate[0].getDate(),
+  //       )
+  //       : null;
 
-      // 🔒 Already today → stop
-      if (
-        currentStartDate &&
-        currentStartDate.getTime() === startOfToday.getTime()
-      ) {
-        return;
-      }
-      setRangeDate([today, today]);
-      refetchJobs();
-      getAvailableDrivers();
-    };
+  //     // 🔒 Already today → stop
+  //     if (
+  //       currentStartDate &&
+  //       currentStartDate.getTime() === startOfToday.getTime()
+  //     ) {
+  //       return;
+  //     }
+  //     setRangeDate([today, today]);
+  //     refetchJobs();
+  //     getAvailableDrivers();
+  //   };
 
-    document.addEventListener("visibilitychange", handleVisibility);
+  //   document.addEventListener("visibilitychange", handleVisibility);
 
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rangeDate, groupedVars]);
+  //   return () => {
+  //     document.removeEventListener("visibilitychange", handleVisibility);
+  //   };
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [rangeDate, groupedVars]);
 
   const adminColumns = useMemo(() => {
     return getColumnsPre(
