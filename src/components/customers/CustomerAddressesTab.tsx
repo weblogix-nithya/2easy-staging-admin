@@ -126,7 +126,7 @@ export default function CustomerAddressesTab(props: any) {
       query: searchQuery,
       page: queryPageIndex + 1,
       first: queryPageSize,
-      orderByColumn: "address_line_1",
+      orderByColumn: "address_business_name",
       orderByOrder: "ASC",
       customer_id: parseInt(customer.id),
     },
