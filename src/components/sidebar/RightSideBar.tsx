@@ -9,6 +9,7 @@ import {
   DrawerCloseButton,
   DrawerContent,
   DrawerFooter,
+  DrawerOverlay,
   Flex,
   FormLabel,
   Menu,
@@ -244,8 +245,11 @@ function RightSideBar() {
         finalFocusRef={btnRef}
         onCloseComplete={onCloseComplete}
         size="md"
+        trapFocus={false}
+        blockScrollOnMount={false}
       >
-        <DrawerContent bg={sidebarBackgroundColor}>
+      <DrawerOverlay pointerEvents="none" />
+        <DrawerContent bg={sidebarBackgroundColor} pointerEvents="auto">
           <DrawerCloseButton
             zIndex="3"
             onClick={onClose}
