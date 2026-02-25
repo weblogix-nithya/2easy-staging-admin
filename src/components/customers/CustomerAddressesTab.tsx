@@ -48,7 +48,7 @@ export default function CustomerAddressesTab(props: any) {
     defaultCustomerAddress,
   );
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(10);
+  const [queryPageSize, setQueryPageSize] = useState(100);
   const [searchQuery, setSearchQuery] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [googleAddress, _setGoogleAddress] = useState(null);
@@ -126,8 +126,8 @@ export default function CustomerAddressesTab(props: any) {
       query: searchQuery,
       page: queryPageIndex + 1,
       first: queryPageSize,
-      orderByColumn: "id",
-      orderByOrder: "DESC",
+      orderByColumn: "address_business_name",
+      orderByOrder: "ASC",
       customer_id: parseInt(customer.id),
     },
   });

@@ -539,329 +539,336 @@ function JobPage() {
         duration: 10000,
         isClosable: true,
       });
-
-      try {
-        let _jobCcEmailTags = [...jobCcEmailTags];
-        for (let jobCcEmailTag of _jobCcEmailTags) {
-          await handleCreateJobCcEmail({
-            input: {
-              id: undefined,
-              email: jobCcEmailTag,
-              job_id: parseInt(jobId),
-            },
-          });
-        }
-
-        // Job Items
-        let _jobItems = [...jobItems];
-        for (let jobItem of _jobItems) {
-          jobItem.job_id = parseInt(jobId);
-          await handleCreateJobItem({
-            input: {
-              ...jobItem,
-              is_new: undefined,
-              dimension_height_cm: undefined,
-              dimension_width_cm: undefined,
-              dimension_depth_cm: undefined,
-              volume_cm: undefined,
-              id: undefined,
-              item_type: undefined,
-            },
-          });
-        }
-
-        // Price Calculation
-        const jobDestination1 =
-          jobDestinations.length > 0
-            ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
-            : null;
-
-        const filteredCompanyRates = companyRates?.filter(
-          (rate) => rate.state === jobDestination1?.state,
-        );
-
-        const selectedCompany = companiesOptions.find(
-          (company) => company.value === Number(companyId),
-        );
-
-        const tollEnabled = selectedCompany?.toll ?? false;
-
-        console.log("Selected Company ID:", companyId);
-        console.log("Toll Enabled:", tollEnabled);
-
-        setRefinedData((prev) => ({
-          ...prev,
-          toll_enabled: tollEnabled,
-        }));
-        // const payload = {
-        //   freight_type: refinedData.freight_type,
-        //   transport_type: job.transport_type,
-        //   state:
-        //     refinedData.state ||
-        //     job.pick_up_state ||
-        //     pickUpDestination.address_state,
-        //   state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-        //   service_choice: refinedData.service_choice,
-        //   company_rates:
-        //     ((job.job_category_id == 1 || job.job_category_id == 2) &&
-        //       refinedData.pick_up_stateCode === "QLD") ||
-        //     refinedData.pick_up_stateCode === "VIC"
-        //       ? filteredCompanyRates.map((rate) => ({
-        //           company_id: rate.company_id,
-        //           seafreight_id: rate.seafreight_id,
-        //           area: rate.area,
-        //           cbm_rate: rate.cbm_rate,
-        //           minimum_charge: rate.minimum_charge,
-        //         }))
-        //       : [],
-        //   job_pickup_address: {
-        //     state: pickUpDestination?.address_state,
-        //     suburb: pickUpDestination?.address_city,
-        //     postcode: pickUpDestination?.address_postal_code,
-        //     address: pickUpDestination?.address,
-        //   },
-        //   job_destination_address:
-        //     jobDestinations.length > 0
-        //       ? {
-        //           state: jobDestinations[0]?.address_state,
-        //           suburb: jobDestinations[0]?.address_city,
-        //           postcode: jobDestinations[0]?.address_postal_code,
-        //           address: jobDestinations[0]?.address,
-        //         }
-        //       : {},
-        //   pickup_time: { ready_by: readyAt },
-        //   delivery_time: { drop_by: dropAt },
-        //   surcharges: {
-        //     hand_unload: job.is_hand_unloading || false,
-        //     dangerous_goods: job.is_dangerous_goods || false,
-        //     time_slot: job.is_inbound_connect || null,
-        //     timeslot_depots: job.is_inbound_connect
-        //       ? refinedData.timeslot_depots
-        //       : null,
-        //     tail_lift: job.is_tailgate_required || null,
-        //     stackable: false,
-        //   },
-        //   job_items: jobItems.map((item) => ({
-        //     id: item.id,
-        //     name: item.name || "",
-        //     notes: item.notes || "",
-        //     quantity: item.quantity,
-        //     volume: item.volume,
-        //     weight: item.weight,
-        //     dimension_height: item.dimension_height,
-        //     dimension_width: item.dimension_width,
-        //     dimension_depth: item.dimension_depth,
-        //     job_destination: jobDestination1 || null,
-        //     item_type: {
-        //       id: item.item_type?.id || "",
-        //       name: item.item_type?.name || "",
-        //     },
-        //     created_at: refinedData.created_at || today,
-        //     updated_at: refinedData.updated_at || today,
-        //   })),
-        // };
+      (async () => {
         try {
-          const response = await handleCalculateSeaFreight({
-            variables: {
+          let _jobCcEmailTags = [...jobCcEmailTags];
+          for (let jobCcEmailTag of _jobCcEmailTags) {
+            await handleCreateJobCcEmail({
               input: {
-                transport_type: job.transport_type,
-                service_choice: refinedData.service_choice,
-                state:
-                  refinedData.state ||
-                  job.pick_up_state ||
-                  pickUpDestination.address_state,
-                state_code:
-                  refinedData.state_code || refinedData.pick_up_stateCode,
-
-                freight_type: refinedData.freight_type,
-
-                pickup_time: {
-                  ready_by: readyAt,
-                },
-                delivery_time: {
-                  drop_by: dropAt,
-                },
-
-                ready_by: readyAt,
-                drop_by: dropAt,
-
-                job_pickup_address: {
-                  suburb: pickUpDestination?.address_city,
-                  postcode: pickUpDestination?.address_postal_code,
-                  state: pickUpDestination?.address_state,
-                },
-
-                job_destination_address:
-                  jobDestinations.length > 0
-                    ? {
-                      suburb: jobDestinations[0]?.address_city,
-                      postcode: jobDestinations[0]?.address_postal_code,
-                      state: jobDestinations[0]?.address_state,
-                    }
-                    : null,
-
-                job_items: jobItems.map((item) => ({
-                  id: item.id,
-                  name: item.name || "",
-                  quantity: item.quantity,
-                  volume: item.volume,
-                  weight: item.weight,
-                  dimension_height: item.dimension_height,
-                  dimension_width: item.dimension_width,
-                  dimension_depth: item.dimension_depth,
-                })),
-
-                company_rates:
-                  filteredCompanyRates?.map((rate) => ({
-                    company_id: rate.company_id,
-                    seafreight_id: rate.seafreight_id,
-                    area: rate.area,
-                    cbm_rate: rate.cbm_rate,
-                    minimum_charge: rate.minimum_charge,
-                  })) || [],
-                toll_enabled: tollEnabled,
-                surcharges: {
-                  hand_unload: job.is_hand_unloading || false,
-                  dangerous_goods: job.is_dangerous_goods || false,
-                  time_slot: job.is_inbound_connect || false,
-                  timeslot_depots: job.is_inbound_connect
-                    ? refinedData.timeslot_depots
-                    : [],
-                  tail_lift: job.is_tailgate_required || false,
-                  stackable: false,
-                },
-
-                total_weight: job.totalWeight,
-                total_cbm: job.totalCbm,
+                id: undefined,
+                email: jobCcEmailTag,
+                job_id: parseInt(jobId),
               },
-            },
-          });
-
-          // ✅ CHANGE THIS LINE ~707
-          const calculationData = response.data?.calculateSeaFreight;
-
-          if (!calculationData) {
-            throw new Error("No calculation data received from API");
+            });
           }
 
-          console.log("Calculation Data:", calculationData);
+          // Job Items
+          let _jobItems = [...jobItems];
+          for (let jobItem of _jobItems) {
+            jobItem.job_id = parseInt(jobId);
+            await handleCreateJobItem({
+              input: {
+                ...jobItem,
+                is_new: undefined,
+                dimension_height_cm: undefined,
+                dimension_width_cm: undefined,
+                dimension_depth_cm: undefined,
+                volume_cm: undefined,
+                id: undefined,
+                item_type: undefined,
+              },
+            });
+          }
 
-          const { totalCBM, totalWeight } = calculateFinalWeightCBM(
-            job.job_category_id,
-            _jobItems,
-            companyWeight,
+          // Price Calculation
+          // const today = new Date().toISOString();
+          const jobDestination1 =
+            jobDestinations.length > 0
+              ? {
+                state: jobDestinations[0]?.address_state,
+                suburb: jobDestinations[0]?.address_city,
+                postcode: jobDestinations[0]?.address_postal_code,
+                address: jobDestinations[0]?.address,
+              }
+              : null;
+
+          const filteredCompanyRates = companyRates?.filter(
+            (rate) => rate.state === jobDestination1?.state,
           );
 
-          const finalCBM = parseFloat(totalCBM.toFixed(2));
-          const finalWeight = parseFloat(totalWeight.toFixed(2));
+          const selectedCompany = companiesOptions.find(
+            (company) => company.value === Number(companyId),
+          );
 
-          await handleCreateJobPriceCalculationDetail({
-            job_id: parseInt(jobId),
-            customer_id: Number(job.customer_id),
-            cbm_auto: Number(finalCBM ?? 0),
-            total_weight: Number(finalWeight ?? 0),
-            freight: Number(calculationData.freight ?? 0),
-            fuel: Number(calculationData.fuel ?? 0),
-            hand_unload: Number(calculationData.hand_unload ?? 0),
-            dangerous_goods: Number(calculationData.dangerous_goods ?? 0),
-            time_slot: Number(calculationData.time_slot ?? 0),
-            tail_lift: Number(calculationData.tail_lift ?? 0),
-            stackable: Number(calculationData.stackable ?? 0),
-            total: Number(calculationData.total ?? 0),
-            toll_applied: calculationData.toll_applied ?? false,
-            toll_type: calculationData.toll_type ?? null,
-            toll_amount: Number(calculationData.toll_amount ?? 0),
-          });
-        } catch (err) {
-          console.error("Error in price calculation", err);
-          toast({
-            title: "Price calculation failed",
-            description: err instanceof Error ? err.message : "Unknown error",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-        }
+          // ✅ Get toll value
+          const tollEnabled = selectedCompany?.toll ?? false;
 
-        await handleCreateJobDestination({
-          input: {
-            ...pickUpDestination,
-            is_pickup: true,
-            customer_id: undefined,
-            id: undefined,
-            job_id: parseInt(jobId),
-            jobDestination: undefined,
-          },
-        });
+          console.log("Selected Company ID:", companyId);
+          console.log("Toll Enabled:", tollEnabled);
 
-        for (let jobDestination of jobDestinations) {
+          setRefinedData((prev) => ({
+            ...prev,
+            toll_enabled: tollEnabled,
+          }));
+          // const payload = {
+          //   freight_type: refinedData.freight_type,
+          //   transport_type: job.transport_type,
+          //   state:
+          //     refinedData.state ||
+          //     job.pick_up_state ||
+          //     pickUpDestination.address_state,
+          //   state_code: refinedData.state_code || refinedData.pick_up_stateCode,
+          //   service_choice: refinedData.service_choice,
+          //   company_rates:
+          //     ((job.job_category_id == 1 || job.job_category_id == 2) &&
+          //       refinedData.pick_up_stateCode === "QLD") ||
+          //     refinedData.pick_up_stateCode === "VIC"
+          //       ? filteredCompanyRates.map((rate) => ({
+          //           company_id: rate.company_id,
+          //           seafreight_id: rate.seafreight_id,
+          //           area: rate.area,
+          //           cbm_rate: rate.cbm_rate,
+          //           minimum_charge: rate.minimum_charge,
+          //         }))
+          //       : [],
+          //   job_pickup_address: {
+          //     state: pickUpDestination?.address_state,
+          //     suburb: pickUpDestination?.address_city,
+          //     postcode: pickUpDestination?.address_postal_code,
+          //     address: pickUpDestination?.address,
+          //   },
+          //   job_destination_address:
+          //     jobDestinations.length > 0
+          //       ? {
+          //           state: jobDestinations[0]?.address_state,
+          //           suburb: jobDestinations[0]?.address_city,
+          //           postcode: jobDestinations[0]?.address_postal_code,
+          //           address: jobDestinations[0]?.address,
+          //         }
+          //       : {},
+          //   pickup_time: { ready_by: readyAt },
+          //   delivery_time: { drop_by: dropAt },
+          //   surcharges: {
+          //     hand_unload: job.is_hand_unloading || false,
+          //     dangerous_goods: job.is_dangerous_goods || false,
+          //     time_slot: job.is_inbound_connect || null,
+          //     timeslot_depots: job.is_inbound_connect
+          //       ? refinedData.timeslot_depots
+          //       : null,
+          //     tail_lift: job.is_tailgate_required || null,
+          //     stackable: false,
+          //   },
+          //   job_items: jobItems.map((item) => ({
+          //     id: item.id,
+          //     name: item.name || "",
+          //     notes: item.notes || "",
+          //     quantity: item.quantity,
+          //     volume: item.volume,
+          //     weight: item.weight,
+          //     dimension_height: item.dimension_height,
+          //     dimension_width: item.dimension_width,
+          //     dimension_depth: item.dimension_depth,
+          //     job_destination: jobDestination1 || null,
+          //     item_type: {
+          //       id: item.item_type?.id || "",
+          //       name: item.item_type?.name || "",
+          //     },
+          //     created_at: refinedData.created_at || today,
+          //     updated_at: refinedData.updated_at || today,
+          //   })),
+          // };
+          try {
+            const response = await handleCalculateSeaFreight({
+              variables: {
+                input: {
+                  transport_type: job.transport_type,
+                  service_choice: refinedData.service_choice,
+                  state:
+                    refinedData.state ||
+                    job.pick_up_state ||
+                    pickUpDestination.address_state,
+                  state_code:
+                    refinedData.state_code || refinedData.pick_up_stateCode,
+
+                  freight_type: refinedData.freight_type,
+
+                  pickup_time: {
+                    ready_by: readyAt,
+                  },
+                  delivery_time: {
+                    drop_by: dropAt,
+                  },
+
+                  ready_by: readyAt,
+                  drop_by: dropAt,
+
+                  job_pickup_address: {
+                    suburb: pickUpDestination?.address_city,
+                    postcode: pickUpDestination?.address_postal_code,
+                    state: pickUpDestination?.address_state,
+                  },
+
+                  job_destination_address:
+                    jobDestinations.length > 0
+                      ? {
+                        suburb: jobDestinations[0]?.address_city,
+                        postcode: jobDestinations[0]?.address_postal_code,
+                        state: jobDestinations[0]?.address_state,
+                      }
+                      : null,
+
+                  job_items: jobItems.map((item) => ({
+                    id: item.id,
+                    name: item.name || "",
+                    quantity: item.quantity,
+                    volume: item.volume,
+                    weight: item.weight,
+                    dimension_height: item.dimension_height,
+                    dimension_width: item.dimension_width,
+                    dimension_depth: item.dimension_depth,
+                  })),
+
+                  company_rates:
+                    filteredCompanyRates?.map((rate) => ({
+                      company_id: rate.company_id,
+                      seafreight_id: rate.seafreight_id,
+                      area: rate.area,
+                      cbm_rate: rate.cbm_rate,
+                      minimum_charge: rate.minimum_charge,
+                    })) || [],
+                  toll_enabled: tollEnabled,
+                  surcharges: {
+                    hand_unload: job.is_hand_unloading || false,
+                    dangerous_goods: job.is_dangerous_goods || false,
+                    time_slot: job.is_inbound_connect || false,
+                    timeslot_depots: job.is_inbound_connect
+                      ? refinedData.timeslot_depots
+                      : [],
+                    tail_lift: job.is_tailgate_required || false,
+                    stackable: false,
+                  },
+
+                  total_weight: job.totalWeight,
+                  total_cbm: job.totalCbm,
+                },
+              },
+            });
+
+            const calculationData = response.data as {
+              cbm_auto: number;
+              total_weight: number;
+              freight: number;
+              fuel: number;
+              hand_unload: number;
+              dangerous_goods: number;
+              time_slot: number;
+              tail_lift: number;
+              stackable: number;
+              total: number;
+              toll_applied: boolean;
+              toll_type: string | null;
+              toll_amount: number;
+            };
+
+            await handleCreateJobPriceCalculationDetail({
+              job_id: parseInt(jobId),
+              customer_id: Number(job.customer_id),
+              cbm_auto: Number(calculationData.cbm_auto ?? 0),
+              total_weight: Number(calculationData.total_weight ?? 0),
+              freight: Number(calculationData.freight ?? 0),
+              fuel: Number(calculationData.fuel ?? 0),
+              hand_unload: Number(calculationData.hand_unload ?? 0),
+              dangerous_goods: Number(calculationData.dangerous_goods ?? 0),
+              time_slot: Number(calculationData.time_slot ?? 0),
+              tail_lift: Number(calculationData.tail_lift ?? 0),
+              stackable: Number(calculationData.stackable ?? 0),
+              total: Number(calculationData.total ?? 0),
+              toll_applied: calculationData.toll_applied ?? false,
+              toll_type: calculationData.toll_type ?? null,
+              toll_amount: Number(calculationData.toll_amount ?? 0),
+            });
+          } catch (err) {
+            console.error("Error in price calculation", err);
+          }
           await handleCreateJobDestination({
             input: {
-              ...jobDestination,
-              is_pickup: false,
+              ...pickUpDestination,
+              is_pickup: true,
               customer_id: undefined,
               id: undefined,
               job_id: parseInt(jobId),
               jobDestination: undefined,
             },
           });
-        }
 
-        // Consignment docket
-        await handleSendConsignmentDocket({
-          variables: { id: parseInt(jobId) },
-        });
+          for (let jobDestination of jobDestinations) {
+            await handleCreateJobDestination({
+              input: {
+                ...jobDestination,
+                is_pickup: false,
+                customer_id: undefined,
+                id: undefined,
+                job_id: parseInt(jobId),
+                jobDestination: undefined,
+              },
+            });
+          }
 
-        // Media
-        for (const media of temporaryMedia) {
-          const reader = new FileReader();
-
-          await new Promise<void>((resolve, _reject) => {
-            reader.onerror = () => {
-              resolve();
-            };
-            reader.onabort = () => {
-              resolve();
-            };
-            reader.onload = () => {
-              handleCreateMedia({
-                variables: {
-                  input: {
-                    entity: "Job",
-                    entity_id: data.createJob.id,
-                  },
-                  media: media.file,
-                },
-              });
-              setTimeout(resolve, 100);
-            };
-            reader.readAsArrayBuffer(media.file);
+          // Consignment docket
+          await handleSendConsignmentDocket({
+            variables: { id: parseInt(jobId) },
           });
-        }
 
-        toast({
-          title: "Job created",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-        setNewJobId(jobId);
-        setIsJobCreatedOpen(true);
-      } catch (err) {
-        console.error("Error in post-create flow", err);
-        toast({
-          title: "Job creation failed",
-          description: err instanceof Error ? err.message : "Unknown error",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
+          // Media
+          // for (const media of temporaryMedia) {
+          //   const reader = new FileReader();
+          //   await new Promise<void>((resolve) => {
+          //     reader.onload = () => {
+          //       handleCreateMedia({
+          //         variables: {
+          //           input: {
+          //             entity: "Job",
+          //             entity_id: jobId,
+          //           },
+          //           media: media.file,
+          //         },
+          //       });
+          //       setTimeout(resolve, 100);
+          //     };
+          //     reader.onerror = resolve;
+          //     reader.onabort = resolve;
+          //     reader.readAsArrayBuffer(media.file);
+          //   });
+          // }
+          for (const media of temporaryMedia) {
+            const reader = new FileReader();
+
+            await new Promise<void>((resolve, _reject) => {
+              reader.onerror = () => {
+                // console.log("file reading has failed");
+                resolve(); // skip and continue
+              };
+              reader.onabort = () => {
+                // console.log("file reading was aborted");
+                resolve(); // skip and continue
+              };
+              reader.onload = () => {
+                handleCreateMedia({
+                  variables: {
+                    input: {
+                      entity: "Job",
+                      entity_id: data.createJob.id,
+                    },
+                    media: media.file,
+                  },
+                });
+                setTimeout(resolve, 100); // small delay for stability
+              };
+              reader.readAsArrayBuffer(media.file);
+            });
+          }
+          toast({
+            title: "Job created",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          setNewJobId(jobId);
+          setIsJobCreatedOpen(true);
+        } catch (err) {
+          console.error("Error in post-create flow", err);
+        }
+      })();
     },
     onError: (error) => {
       setIsSaving(false);
@@ -3101,7 +3108,7 @@ function JobPage() {
                                           {quoteCalculationRes.stackable}
                                         </Text>
                                       </Flex>
-                                     { companyToll === 1 ? <Flex
+                                      <Flex
                                         justify="space-between"
                                         align="center"
                                       >
@@ -3120,7 +3127,7 @@ function JobPage() {
                                         >
                                           {quoteCalculationRes.toll_amount}
                                         </Text>
-                                      </Flex>: null}
+                                      </Flex>
                                       {/* Total */}
                                       <Flex
                                         justify="space-between"
