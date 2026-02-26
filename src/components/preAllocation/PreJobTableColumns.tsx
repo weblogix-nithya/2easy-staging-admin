@@ -65,12 +65,13 @@ export const isCustomer = (state: RootState) => state.user.isCustomer;
 
 export const PickupAddressBusinessNameCell = ({ row }: any) => (
   <>
+    <Text fontSize="md">
+      {row.originaljob.pick_up_destination.address_business_name || "-"}
+    </Text>
     <Text fontSize="sm" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
       {formatAddress(row?.original?.job?.pick_up_destinations)}
     </Text>
-    <Text fontSize="sm">
-      {row.originaljob.pick_up_destination.address_business_name || "-"}
-    </Text>
+
   </>
 );
 export const JobDestinationsCell = ({ row }: any) => {
@@ -293,10 +294,11 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
           </Text>
         </>
       )}
+      <Text>{pickupDest?.address_business_name || "-"}</Text>
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
-      <Text>{pickupDest?.address_business_name || "-"}</Text>
+
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -359,10 +361,11 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
           </Text>
         </>
       )}
+      <Text fontSize="md">{pickupDest?.address_business_name || "-"}</Text>
       <Text mb="2" fontSize="sm" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
-      <Text fontSize="sm">{pickupDest?.address_business_name || "-"}</Text>
+
     </>
   );
 };
@@ -397,12 +400,13 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
           </Text>
         </>
       )}
+      <Text fontSize="md">{filteredDestinations[0]?.address_business_name || "-"}</Text>
       <Text fontSize="sm" isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
       </Text>
-      <Text fontSize="sm">{filteredDestinations[0]?.address_business_name || "-"}</Text>
+
     </>
   );
 };

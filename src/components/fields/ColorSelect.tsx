@@ -75,7 +75,7 @@ export default function Default(props: {
             classNamePrefix="two-color-select"
             isDisabled={isDisabled}
             placeholder={placeholder}
-            defaultValue={optionsArray.length > 0 ? optionsArray[0] : null}
+            defaultValue={optionsArray?.length > 0 ? optionsArray[0] : null}
             value={value}
             options={optionsArray}
             onChange={onChange}

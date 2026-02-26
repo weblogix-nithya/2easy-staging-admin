@@ -966,7 +966,7 @@ function JobEdit() {
           stackable: data.jobPriceCalculationDetail?.stackable,
           total_price: data.jobPriceCalculationDetail?.total,
           total_weight: data.jobPriceCalculationDetail?.total_weight,
-
+          timeslot_depots: job?.timeslot_depots,
         });
         setQuoteCalculationRes((prev) => ({
           ...prev,
@@ -1764,8 +1764,7 @@ function JobEdit() {
               dangerous_goods: job.is_dangerous_goods || false,
               time_slot: job.is_inbound_connect || false,
               timeslot_depots: job.is_inbound_connect
-                ? refinedData.timeslot_depots
-                : [],
+                ? job.timeslot_depots || _selectedDepot || refinedData.timeslot_depots : [], // Pass selectedDepot here
               tail_lift: job.is_tailgate_required || false,
               stackable: false,
             },

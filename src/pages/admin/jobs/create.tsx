@@ -591,6 +591,13 @@ function JobPage() {
 
         const tollEnabled = selectedCompany?.toll ?? false;
 
+        const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+          job.job_category_id,
+          _jobItems,
+          companyWeight,
+        );
+        const finalCBM = parseFloat(totalCBM.toFixed(2));
+        const finalWeight = parseFloat(totalWeight.toFixed(2));
         console.log("Selected Company ID:", companyId);
         console.log("Toll Enabled:", tollEnabled);
 
@@ -736,8 +743,8 @@ function JobPage() {
                   stackable: false,
                 },
 
-                total_weight: job.totalWeight,
-                total_cbm: job.totalCbm,
+                total_weight: finalWeight,
+                total_cbm: finalCBM,
               },
             },
           });
@@ -751,14 +758,7 @@ function JobPage() {
 
           console.log("Calculation Data:", calculationData);
 
-          const { totalCBM, totalWeight } = calculateFinalWeightCBM(
-            job.job_category_id,
-            _jobItems,
-            companyWeight,
-          );
 
-          const finalCBM = parseFloat(totalCBM.toFixed(2));
-          const finalWeight = parseFloat(totalWeight.toFixed(2));
 
           await handleCreateJobPriceCalculationDetail({
             job_id: parseInt(jobId),
@@ -1732,7 +1732,13 @@ function JobPage() {
     const filteredCompanyRates = companyRates?.filter(
       (rate) => rate.state === jobDestination1?.state,
     );
-
+    const { totalCBM, totalWeight } = calculateFinalWeightCBM(
+      job.job_category_id,
+      jobItems,
+      companyWeight,
+    );
+    const finalCBM = parseFloat(totalCBM.toFixed(2));
+    const finalWeight = parseFloat(totalWeight.toFixed(2));
     const payload = {
       pickup: {
         state: pickUpDestination?.address_state,
@@ -1795,6 +1801,8 @@ function JobPage() {
         tail_lift: job.is_tailgate_required || false,
         stackable: true,
       },
+      total_weight: finalWeight,
+      total_cbm: finalCBM,
     };
 
     try {
@@ -2462,7 +2470,7 @@ function JobPage() {
                     (companyStandardStatic
                       ? jobTypeOptions
                       : filteredJobTypeOptions
-                    ).find((jobType) => jobType.value === job.job_type_id) ||
+                    )?.find((jobType) => jobType.value === job.job_type_id) ||
                     null
                   }
                   placeholder="Select type"
@@ -3101,7 +3109,7 @@ function JobPage() {
                                           {quoteCalculationRes.stackable}
                                         </Text>
                                       </Flex>
-                                     { companyToll === 1 ? <Flex
+                                      {companyToll === 1 ? <Flex
                                         justify="space-between"
                                         align="center"
                                       >
@@ -3120,7 +3128,7 @@ function JobPage() {
                                         >
                                           {quoteCalculationRes.toll_amount}
                                         </Text>
-                                      </Flex>: null}
+                                      </Flex> : null}
                                       {/* Total */}
                                       <Flex
                                         justify="space-between"
