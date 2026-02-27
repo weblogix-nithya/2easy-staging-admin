@@ -371,8 +371,26 @@ export function Map({
         },
       );
     }
-    // map, center, zoom, markers, drivers
-    // Resize observers as you had them...
+
+    const resizeObserver = new ResizeObserver(() => {
+      google.maps.event.trigger(map, "resize");
+    });
+    resizeObserver.observe(ref.current);
+
+    const mutationObserver = new MutationObserver(() => {
+      google.maps.event.trigger(map, "resize");
+    });
+    mutationObserver.observe(document.body, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  //     // Resize observers as you had them...
     // (no change needed)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
