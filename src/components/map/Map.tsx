@@ -343,7 +343,7 @@ export function Map({
         map,
         suppressMarkers: true,
         suppressInfoWindows: true,
-        preserveViewport: true,
+        // preserveViewport: true,
       });
 
       directionsService.route(
@@ -372,24 +372,24 @@ export function Map({
       );
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-      google.maps.event.trigger(map, "resize");
-    });
-    resizeObserver.observe(ref.current);
+    // const resizeObserver = new ResizeObserver(() => {
+    //   google.maps.event.trigger(map, "resize");
+    // });
+    // resizeObserver.observe(ref.current);
 
-    const mutationObserver = new MutationObserver(() => {
-      google.maps.event.trigger(map, "resize");
-    });
-    mutationObserver.observe(document.body, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-    });
+    // const mutationObserver = new MutationObserver(() => {
+    //   google.maps.event.trigger(map, "resize");
+    // });
+    // mutationObserver.observe(document.body, {
+    //   attributes: true,
+    //   childList: true,
+    //   subtree: true,
+    // });
 
-    return () => {
-      resizeObserver.disconnect();
-      mutationObserver.disconnect();
-    };
+    // return () => {
+    //   resizeObserver.disconnect();
+    //   mutationObserver.disconnect();
+    // };
     //     // Resize observers as you had them...
     // (no change needed)
     // eslint-disable-next-line react-hooks/exhaustive-deps
