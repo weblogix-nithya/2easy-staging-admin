@@ -61,7 +61,18 @@ import RightSideBarJob from "./RightSideBarJob";
 
 // Assets
 
-function RightSideBar() {
+interface Marker {
+  lng: number;
+  lat: number;
+  icon?: string;
+  data?: any;
+}
+ 
+function RightSideBar({
+  setMarkers,
+}: {
+  setMarkers: React.Dispatch<React.SetStateAction<Marker[]>>;
+}) {
   const rightSideBarJobRef = useRef(null);
   const textColor = useColorModeValue("secondaryGray.900", "white");
   // let variantChange = "0.2s linear";
@@ -132,6 +143,7 @@ function RightSideBar() {
     dispatch(setRightSideBarJob(null));
     dispatch(setRightSideBarRoute(null));
     dispatch(setRightSideBarDriver(null));
+    setMarkers([])
   }
 
   // a little function to help us with reordering the result

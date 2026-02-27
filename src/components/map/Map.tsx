@@ -231,9 +231,9 @@ export function Map({
   // }, [map, center, zoom, markers, drivers]);
 
   useEffect(() => {
-  if (!map || !ref.current) return;
+    if (!map || !ref.current) return;
 
-      if (onZoomChanged) {
+    if (onZoomChanged) {
       map.addListener("zoom_changed", () => {
         onZoomChanged(map.getZoom() ?? zoom);
         setTimeout(() => google.maps.event.trigger(map, "resize"), 50);
@@ -250,114 +250,140 @@ export function Map({
       });
     }
 
-  const { AdvancedMarkerElement } = window.google.maps.marker;
+    const { AdvancedMarkerElement } = window.google.maps.marker;
 
-  // 1) CLEAR previous markers/route before drawing new ones
-  jobMarkersRef.current.forEach(m => (m.map = null));
-  driverMarkersRef.current.forEach(m => (m.map = null));
-  jobMarkersRef.current = [];
-  driverMarkersRef.current = [];
+    // 1) CLEAR previous markers/route before drawing new ones
+    jobMarkersRef.current.forEach((m) => (m.map = null));
+    driverMarkersRef.current.forEach((m) => (m.map = null));
+    jobMarkersRef.current = [];
+    driverMarkersRef.current = [];
 
-  if (directionsRef.current) {
-    directionsRef.current.setMap(null);
-    directionsRef.current = null;
-  }
-
-  const markerDataMap = new WeakMap<google.maps.marker.AdvancedMarkerElement, any>();
-  const driverDataMap = new WeakMap<google.maps.marker.AdvancedMarkerElement, any>();
-  const waypoints: google.maps.DirectionsWaypoint[] = [];
-
-  // 2) Draw job markers
-  markers?.forEach((marker, index) => {
-    const element = document.createElement("div");
-    element.style.width = "50px";
-    element.style.height = "50px";
-    element.style.backgroundImage = `url(${marker.icon})`;
-    element.style.backgroundSize = "contain";
-    element.style.backgroundRepeat = "no-repeat";
-
-    const advMarker = new AdvancedMarkerElement({
-      map,
-      position: { lat: marker.lat, lng: marker.lng },
-      content: element,
-      zIndex: 1000,
-    });
-
-    markerDataMap.set(advMarker, marker.data);
-    jobMarkersRef.current.push(advMarker);
-
-    if (index > 0 && index < (markers?.length ?? 0) - 1) {
-      waypoints.push({
-        location: { lng: marker.lng, lat: marker.lat },
-        stopover: true,
-      });
+    if (directionsRef.current) {
+      directionsRef.current.setMap(null);
+      directionsRef.current = null;
     }
 
-    advMarker.addListener("gmp-click", () => {
-      const data = markerDataMap.get(advMarker);
-      onMarkerClick(data);
-    });
-  });
+    const markerDataMap = new WeakMap<
+      google.maps.marker.AdvancedMarkerElement,
+      any
+    >();
+    const driverDataMap = new WeakMap<
+      google.maps.marker.AdvancedMarkerElement,
+      any
+    >();
+    const waypoints: google.maps.DirectionsWaypoint[] = [];
 
-  // 3) Draw driver markers (only what parent passed)
-  drivers?.forEach((driver) => {
-    if (!driver.lng || !driver.lat) return;
+    // 2) Draw job markers
+    markers?.forEach((marker, index) => {
+      const element = document.createElement("div");
+      element.style.width = "50px";
+      element.style.height = "50px";
+      element.style.backgroundImage = `url(${marker.icon})`;
+      element.style.backgroundSize = "contain";
+      element.style.backgroundRepeat = "no-repeat";
 
-    const element = document.createElement("div");
-    element.style.width = "25px";
-    element.style.height = "25px";
-    element.style.backgroundImage = `url(${driver.icon})`;
-    element.style.backgroundSize = "contain";
-    element.style.backgroundRepeat = "no-repeat";
+      const advMarker = new AdvancedMarkerElement({
+        map,
+        position: { lat: marker.lat, lng: marker.lng },
+        content: element,
+        zIndex: 1000,
+      });
 
-    const advDriver = new AdvancedMarkerElement({
-      map,
-      position: { lat: driver.lat, lng: driver.lng },
-      content: element,
-      zIndex: 1000,
-    });
+      markerDataMap.set(advMarker, marker.data);
+      jobMarkersRef.current.push(advMarker);
 
-    driverDataMap.set(advDriver, driver.data);
-    driverMarkersRef.current.push(advDriver);
-
-    advDriver.addListener("gmp-click", () => {
-      const data = driverDataMap.get(advDriver);
-      onDriverClick(data);
-    });
-  });
-
-  // 4) (Optional) re-draw route if you have enough points
-  if (waypoints.length < 23 && jobMarkersRef.current.length > 1 && (rightSideBarJob || rightSideBarRoute)) {
-    const directionsService = new google.maps.DirectionsService();
-    directionsRef.current = new google.maps.DirectionsRenderer({
-      map,
-      suppressMarkers: true,
-      suppressInfoWindows: true,
-      preserveViewport: true,
-    });
-
-    directionsService.route(
-      {
-        origin: jobMarkersRef.current[0].position!,
-        destination: jobMarkersRef.current[jobMarkersRef.current.length - 1].position!,
-        avoidTolls: true,
-        avoidHighways: false,
-        waypoints,
-        optimizeWaypoints: true,
-        travelMode: google.maps.TravelMode.DRIVING,
-      },
-      (response, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          directionsRef.current?.setDirections(response);
-        }
+      if (index > 0 && index < (markers?.length ?? 0) - 1) {
+        waypoints.push({
+          location: { lng: marker.lng, lat: marker.lat },
+          stopover: true,
+        });
       }
-    );
-  }
-// map, center, zoom, markers, drivers
-  // Resize observers as you had them...
-  // (no change needed)
-// eslint-disable-next-line react-hooks/exhaustive-deps
-}, [map, markers, drivers, onMarkerClick, onDriverClick, rightSideBarJob, rightSideBarRoute]);
+
+      advMarker.addListener("gmp-click", () => {
+        const data = markerDataMap.get(advMarker);
+        onMarkerClick(data);
+      });
+    });
+
+    // 3) Draw driver markers (only what parent passed)
+    drivers?.forEach((driver) => {
+      if (!driver.lng || !driver.lat) return;
+
+      const element = document.createElement("div");
+      element.style.width = "25px";
+      element.style.height = "25px";
+      element.style.backgroundImage = `url(${driver.icon})`;
+      element.style.backgroundSize = "contain";
+      element.style.backgroundRepeat = "no-repeat";
+
+      const advDriver = new AdvancedMarkerElement({
+        map,
+        position: { lat: driver.lat, lng: driver.lng },
+        content: element,
+        zIndex: 1000,
+      });
+
+      driverDataMap.set(advDriver, driver.data);
+      driverMarkersRef.current.push(advDriver);
+
+      advDriver.addListener("gmp-click", () => {
+        const data = driverDataMap.get(advDriver);
+        onDriverClick(data);
+      });
+    });
+
+    // 4) (Optional) re-draw route if you have enough points
+    if (
+      waypoints.length < 23 &&
+      jobMarkersRef.current.length > 1 &&
+      (rightSideBarJob || rightSideBarRoute)
+    ) {
+      const directionsService = new google.maps.DirectionsService();
+      directionsRef.current = new google.maps.DirectionsRenderer({
+        map,
+        suppressMarkers: true,
+        suppressInfoWindows: true,
+        preserveViewport: true,
+      });
+
+      directionsService.route(
+        {
+          origin: jobMarkersRef.current[0].position!,
+          destination:
+            jobMarkersRef.current[jobMarkersRef.current.length - 1].position!,
+          avoidTolls: true,
+          avoidHighways: false,
+          waypoints,
+          optimizeWaypoints: true,
+          travelMode: google.maps.TravelMode.DRIVING,
+        },
+        (response, status) => {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRef.current?.setDirections(response);
+            // MANUAL FIT BOUNDS (ONLY ONCE)
+            const bounds = new google.maps.LatLngBounds();
+            response.routes[0].overview_path.forEach((point) => {
+              bounds.extend(point);
+            });
+
+            map.fitBounds(bounds);
+          }
+        },
+      );
+    }
+    // map, center, zoom, markers, drivers
+    // Resize observers as you had them...
+    // (no change needed)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    map,
+    markers,
+    drivers,
+    onMarkerClick,
+    onDriverClick,
+    rightSideBarJob,
+    rightSideBarRoute,
+  ]);
 
   return (
     <div style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>

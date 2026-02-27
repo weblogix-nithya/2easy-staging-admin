@@ -253,7 +253,7 @@ export default function JobAllocationIndex() {
     return () => debouncedCenterChangeHandler.cancel?.();
   }, [debouncedCenterChangeHandler]);
 
-  const [_getRoute, { }] = useLazyQuery(GET_ROUTE_QUERY, {
+  const [_getRoute, {}] = useLazyQuery(GET_ROUTE_QUERY, {
     variables: {
       id: selectedRouteId,
     },
@@ -265,7 +265,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getJob, { }] = useLazyQuery(GET_JOB_QUERY, {
+  const [getJob, {}] = useLazyQuery(GET_JOB_QUERY, {
     variables: {
       id: selectedJobId,
     },
@@ -278,7 +278,7 @@ export default function JobAllocationIndex() {
     },
   });
 
-  const [getDriverCurrentRoute, { }] = useLazyQuery(
+  const [getDriverCurrentRoute, {}] = useLazyQuery(
     GET_DRIVER_CURRENT_ROUTE_QUERY,
     {
       variables: {
@@ -413,7 +413,7 @@ export default function JobAllocationIndex() {
 
   return (
     <AdminLayout>
-      <RightSideBar />
+      <RightSideBar setMarkers={setMarkers} />{" "}
       <Box
         pt={{ base: "130px", md: "97px", xl: "97px" }}
         w="full"
@@ -541,8 +541,8 @@ export default function JobAllocationIndex() {
                     value={
                       hasUserChosenDrivers
                         ? driverOptions.filter((opt) =>
-                          selectedDriverIds.includes(opt.value),
-                        )
+                            selectedDriverIds.includes(opt.value),
+                          )
                         : [] // no chips initially, but map shows all
                     }
                     options={driverOptions
@@ -617,8 +617,8 @@ export default function JobAllocationIndex() {
               overflowY: "auto",
               overflowX: "hidden",
             }}
-          // minW={0}
-          //  height="100vh"
+            // minW={0}
+            //  height="100vh"
           >
             <Flex className=" flex-col" minW={0}>
               <Flex className="relative">
@@ -643,9 +643,9 @@ export default function JobAllocationIndex() {
                 />
               </Flex>
               {customerName ||
-                pickupAddress ||
-                pickupAddress ||
-                australianState ? (
+              pickupAddress ||
+              pickupAddress ||
+              australianState ? (
                 <Flex className="pt-4 flex-wrap align-center">
                   <p className="text-sm mr-1">Filters: </p>
 
@@ -908,9 +908,9 @@ export default function JobAllocationIndex() {
                   ? true
                   : false
               }
-            // options={{
-            //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
-            // }}
+              // options={{
+              //   mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID, // 👈 dynamically load from env
+              // }}
             />
           </GridItem>
         </Grid>
