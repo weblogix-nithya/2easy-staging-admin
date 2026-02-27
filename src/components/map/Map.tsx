@@ -333,6 +333,7 @@ export function Map({
       map,
       suppressMarkers: true,
       suppressInfoWindows: true,
+      preserveViewport: true,
     });
 
     directionsService.route(
@@ -352,7 +353,7 @@ export function Map({
       }
     );
   }
-
+// map, center, zoom, markers, drivers
   // Resize observers as you had them...
   // (no change needed)
 // eslint-disable-next-line react-hooks/exhaustive-deps
