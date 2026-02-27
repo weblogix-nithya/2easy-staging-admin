@@ -356,8 +356,8 @@ export function Map({
   // Resize observers as you had them...
   // (no change needed)
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [map, center, zoom, markers, drivers, onMarkerClick, onDriverClick, rightSideBarJob, rightSideBarRoute]);
-
+  }, [ map, markers, drivers, rightSideBarRoute, ]);
+  
   return (
     <div style={{ height: "100vh", width: "100vw", overflow: "hidden" }}>
       <div
