@@ -38,7 +38,8 @@ interface JobContextMenuProps {
     onClose: () => void;
     drivers: DriverOption[];
 }
-
+const MENU_WIDTH = 360;
+const PADDING = 12; // gap from screen edges
 const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose, drivers }) => {
     const toast = useToast();
     const menuRef = useRef<HTMLDivElement>(null);
@@ -152,10 +153,26 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose,
         return () => document.removeEventListener("click", handleClickOutside);
     }, [onClose]);
 
-    const adjustedPosition = {
-        left: Math.min(position.x, window.innerWidth - 380),
-        top: Math.min(position.y, window.innerHeight - 650),
-    };
+    // ✅ Calculate how much space is available below and above the click point
+    const spaceBelow = window.innerHeight - position.y - PADDING;
+    const spaceAbove = position.y - PADDING;
+    const idealHeight = Math.min(600, window.innerHeight - PADDING * 2);
+
+    // ✅ Decide: open downward or upward?
+    // Prefer downward. If not enough space below, open upward.
+    const openDownward = spaceBelow >= Math.min(idealHeight, 300);
+
+    const top = openDownward
+        ? position.y                                  // open below click
+        : Math.max(PADDING, position.y - idealHeight); // open above click
+
+    // ✅ maxHeight = actual remaining space in chosen direction, capped at idealHeight
+    const maxHeight = openDownward
+        ? Math.min(idealHeight, spaceBelow)
+        : Math.min(idealHeight, spaceAbove);
+
+    // ✅ Horizontal: shift left if overflows right edge
+    const left = Math.min(position.x, window.innerWidth - MENU_WIDTH - PADDING);
 
     const availableLabels: JobMeta[] = metaData?.jobMetaList?.filter(m => m.type?.toLowerCase() === "label") || [];
 
@@ -163,89 +180,93 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose,
         <Box
             ref={menuRef}
             position="fixed"
-            left={`${adjustedPosition.left}px`}
-            top={`${adjustedPosition.top}px`}
+            left={`${left}px`}
+            top={`${top}px`}
             bg="white"
             boxShadow="xl"
             borderRadius="md"
             border="1px solid"
             borderColor="gray.200"
-            width="360px"
+            width={`${MENU_WIDTH}px`}
             zIndex={9999}
-            p={4}
+            // ✅ Key fix: maxHeight is dynamically computed from available screen space
+            maxHeight={`${maxHeight}px`}
+            display="flex"
+            flexDirection="column"
             onMouseDown={e => e.stopPropagation()}
             onClick={e => e.stopPropagation()}
         >
-            <Flex justify="space-between" align="center" mb={3}>
-                <Text fontWeight="semibold">
-                    Job #{job.name}
-                    <Link href={`/admin/jobs/${job.id}`} isExternal ml={1} color="blue.500">
-                        <ExternalLinkIcon />
-                    </Link>
-                </Text>
-                <IconButton aria-label="Close" icon={<CloseIcon />} size="xs" onClick={onClose} />
-            </Flex>
-
-            <Divider mb={3} />
-            <VStack spacing={4} align="stretch">
-                {/* Labels */}
-                <FormControl>
-                    <FormLabel fontSize="sm">Labels</FormLabel>
-                    <SimpleGrid columns={2} spacing={1}>
-                        {availableLabels.map(label => (
-                            <Checkbox
-                                key={label.id}
-                                size="sm"
-                                isChecked={selectedLabels.includes(String(label.id))}
-                                onChange={() => toggleLabel(String(label.id))}
-                            >
-                                <HStack spacing={2}>
-                                    <Box w="12px" h="12px" borderRadius="full" bg={label.color || "gray.300"} />
-                                    <Text fontSize="sm">{label.name}</Text>
-                                </HStack>
-                            </Checkbox>
-                        ))}
-                    </SimpleGrid>
-                </FormControl>
-
-                {/* Date/Time */}
+            {/* Sticky Header */}
+            <Box px={4} pt={4} pb={3} flexShrink={0}>
+                <Flex justify="space-between" align="center" mb={3}>
+                    <Text fontWeight="semibold">
+                        Job #{job.name}
+                        <Link href={`/admin/jobs/${job.id}`} isExternal ml={1} color="blue.500">
+                            <ExternalLinkIcon />
+                        </Link>
+                    </Text>
+                    <IconButton aria-label="Close" icon={<CloseIcon />} size="xs" onClick={onClose} />
+                </Flex>
                 <Divider />
-                <FormControl>
-                    <FormLabel fontSize="sm">Job Date</FormLabel>
-                    <Input type="date" size="sm" value={jobDateAt} onChange={e => setJobDateAt(e.target.value)} />
-                </FormControl>
-                <HStack spacing={2}>
-                    <FormControl flex={1}>
-                        <FormLabel fontSize="sm">Ready By</FormLabel>
-                        <Input type="time" size="sm" value={readyAt} onChange={e => setReadyAt(e.target.value)} />
-                    </FormControl>
-                    <FormControl flex={1}>
-                        <FormLabel fontSize="sm">Drop By</FormLabel>
-                        <Input type="time" size="sm" value={dropAt} onChange={e => setDropAt(e.target.value)} />
-                    </FormControl>
-                </HStack>
+            </Box>
 
-                {/* Driver & Status */}
-                <Divider />
-                <HStack spacing={2}>
-                    <FormControl flex={1}>
-                        <FormLabel fontSize="sm">Driver</FormLabel>
-                        <Select options={drivers} value={selectedDriver} onChange={setSelectedDriver} placeholder="Select Driver" isClearable size="sm" />
+            {/* Scrollable Body */}
+            <Box px={4} pb={4} overflowY="auto" flex={1}>
+                <VStack spacing={4} align="stretch">
+                    <FormControl>
+                        <FormLabel fontSize="sm">Labels</FormLabel>
+                        <SimpleGrid columns={2} spacing={1}>
+                            {availableLabels.map(label => (
+                                <Checkbox
+                                    key={label.id}
+                                    size="sm"
+                                    isChecked={selectedLabels.includes(String(label.id))}
+                                    onChange={() => toggleLabel(String(label.id))}
+                                >
+                                    <HStack spacing={2}>
+                                        <Box w="12px" h="12px" borderRadius="full" bg={label.color || "gray.300"} />
+                                        <Text fontSize="sm">{label.name}</Text>
+                                    </HStack>
+                                </Checkbox>
+                            ))}
+                        </SimpleGrid>
                     </FormControl>
-                    <FormControl flex={1}>
-                        <FormLabel fontSize="sm">Status</FormLabel>
-                        <Select options={jobStatuses} value={selectedStatus} onChange={setSelectedStatus} placeholder="Select Status" isClearable size="sm" />
+
+                    <Divider />
+                    <FormControl>
+                        <FormLabel fontSize="sm">Job Date</FormLabel>
+                        <Input type="date" size="sm" value={jobDateAt} onChange={e => setJobDateAt(e.target.value)} />
                     </FormControl>
-                </HStack>
+                    <HStack spacing={2}>
+                        <FormControl flex={1}>
+                            <FormLabel fontSize="sm">Ready By</FormLabel>
+                            <Input type="time" size="sm" value={readyAt} onChange={e => setReadyAt(e.target.value)} />
+                        </FormControl>
+                        <FormControl flex={1}>
+                            <FormLabel fontSize="sm">Drop By</FormLabel>
+                            <Input type="time" size="sm" value={dropAt} onChange={e => setDropAt(e.target.value)} />
+                        </FormControl>
+                    </HStack>
 
-                <Divider />
+                    <Divider />
+                    <HStack spacing={2}>
+                        <FormControl flex={1}>
+                            <FormLabel fontSize="sm">Driver</FormLabel>
+                            <Select options={drivers} value={selectedDriver} onChange={setSelectedDriver} placeholder="Select Driver" isClearable size="sm" />
+                        </FormControl>
+                        <FormControl flex={1}>
+                            <FormLabel fontSize="sm">Status</FormLabel>
+                            <Select options={jobStatuses} value={selectedStatus} onChange={setSelectedStatus} placeholder="Select Status" isClearable size="sm" />
+                        </FormControl>
+                    </HStack>
 
-                {/* Actions */}
-                <HStack>
-                    <Button size="sm" variant="outline" flex={1} onClick={onClose}>Cancel</Button>
-                    <Button size="sm" colorScheme="blue" flex={1} onClick={handleSave}>Save</Button>
-                </HStack>
-            </VStack>
+                    <Divider />
+                    <HStack>
+                        <Button size="sm" variant="outline" flex={1} onClick={onClose}>Cancel</Button>
+                        <Button size="sm" colorScheme="blue" flex={1} onClick={handleSave}>Save</Button>
+                    </HStack>
+                </VStack>
+            </Box>
         </Box>
     );
 };
