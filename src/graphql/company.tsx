@@ -19,6 +19,7 @@ export const GET_COMPANYS_QUERY = gql`
         name
         payment_term
         toll_enabled
+        waiting_enabled
       }
       paginatorInfo {
         count
@@ -61,6 +62,7 @@ export const GET_COMPANY_QUERY = gql`
       logo_url
       payment_term
       toll_enabled
+      waiting_enabled
       weight_per_cubic
       standard_static
     }
@@ -83,6 +85,7 @@ export const CREATE_COMPANY_MUTATION = gql`
       weight_per_cubic
       standard_static
       toll_enabled
+      waiting_enabled
     }
   }
 `;
@@ -105,6 +108,7 @@ export const UPDATE_COMPANY_MUTATION = gql`
       weight_per_cubic
       standard_static
       toll_enabled
+      waiting_enabled
     }
   }
 `;
@@ -143,6 +147,7 @@ export interface UpdateCompanyInput {
   weight_per_cubic: Number;
   standard_static: Boolean;
   toll_enabled: Boolean;
+  waiting_enabled: Boolean;
 }
 
 export interface CreateCompanyInput {
@@ -171,6 +176,7 @@ export interface CreateCompanyInput {
   weight_per_cubic: Number;
   standard_static: Boolean;
   toll_enabled: Boolean;
+  waiting_enabled: Boolean;     
 }
 
 type Company = {
@@ -200,6 +206,7 @@ type Company = {
   logo_url: string | null;
   payment_term: string | null;
   toll_enabled: boolean | null;
+  waiting_enabled: boolean | null;
   weight_per_cubic: number | null;
   standard_static: boolean | null;
 };
@@ -231,6 +238,7 @@ export const defaultCompany: Company = {
   logo_url: null,
   payment_term: "7_days",
   toll_enabled: false,
+  waiting_enabled: false,
   weight_per_cubic: 500, // default weight per cubic meter
   standard_static: false, // default to standard
 };
