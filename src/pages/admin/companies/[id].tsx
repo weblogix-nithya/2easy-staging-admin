@@ -173,7 +173,7 @@ function CompanyEdit() {
       return companyValue !== initialValue;
     });
   };
-  const { data: companyRatesData, refetch: getCompanyRates } = useQuery(
+  const { data: _companyRatesData, refetch: getCompanyRates } = useQuery(
     GET_COMPANY_RATE_QUERY,
     {
       variables: {
@@ -568,54 +568,54 @@ function CompanyEdit() {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
-    onCompleted: async (data) => {
-      try {
-        if (companyRatesData?.companyRate) {
-          // Update existing rate
-          await updateCompanyRate({
-            variables: {
-              id: companyRatesData.companyRate.id,
-              input: {
-                company_id: data.company.id,
-                state: companyRate.state,
-                seafreight_id: companyRate.seafreight_id || null,
-                area: companyRate.area || "",
-                cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
-                minimum_charge: parseFloat(
-                  companyRate.minimum_charge?.toString() || "0",
-                ),
-              },
-            },
-          });
-        } else {
-          // Create new rate
-          await createCompanyRate({
-            variables: {
-              input: {
-                company_id: data.company.id,
-                state: companyRate.state || "",
-                seafreight_id: companyRate.seafreight_id || null,
-                area: companyRate.area || "",
-                cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
-                minimum_charge: parseFloat(
-                  companyRate.minimum_charge?.toString() || "0",
-                ),
-              },
-            },
-          });
-        }
+    onCompleted: async (_data) => {
+      // try {
+        // if (companyRatesData?.companyRate) {
+        //   // Update existing rate
+        //   await updateCompanyRate({
+        //     variables: {
+        //       id: companyRatesData.companyRate.id,
+        //       input: {
+        //         company_id: data.company.id,
+        //         state: companyRate.state,
+        //         seafreight_id: companyRate.seafreight_id || null,
+        //         area: companyRate.area || "",
+        //         cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
+        //         minimum_charge: parseFloat(
+        //           companyRate.minimum_charge?.toString() || "0",
+        //         ),
+        //       },
+        //     },
+        //   });
+        // } else {
+        //   // Create new rate
+        //   await createCompanyRate({
+        //     variables: {
+        //       input: {
+        //         company_id: data.company.id,
+        //         state: companyRate.state || "",
+        //         seafreight_id: companyRate.seafreight_id || null,
+        //         area: companyRate.area || "",
+        //         cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
+        //         minimum_charge: parseFloat(
+        //           companyRate.minimum_charge?.toString() || "0",
+        //         ),
+        //       },
+        //     },
+        //   });
+        // }
 
         toast({
-          title: "Company and rates updated successfully",
+          title: "Company updated successfully",
           status: "success",
           duration: 5000,
           isClosable: true,
         });
 
-        router.push("/admin/companies");
-      } catch (error) {
-        showGraphQLErrorToast(error as any);
-      }
+        // router.push("/admin/companies");
+      // } catch (error) {
+      //   showGraphQLErrorToast(error as any);
+      // }
     },
     onError(error) {
       showGraphQLErrorToast(error);
@@ -1898,7 +1898,35 @@ function CompanyEdit() {
                           </Stack>
                         </RadioGroup>
                       </Flex>
+                        <Flex className="w-full" alignItems="center">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Waiting Time Enabled
+                        </FormLabel>
 
+                        <RadioGroup
+                          value={company.waiting_enabled ? "1" : "0"}
+                          onChange={(e) => {
+                            setCompany({
+                              ...company,
+                              waiting_enabled: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row" pt={3}>
+                            <Radio value="0">No</Radio>
+                            <Radio value="1" pl={6}>
+                              Yes
+                            </Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
                           display="flex"
