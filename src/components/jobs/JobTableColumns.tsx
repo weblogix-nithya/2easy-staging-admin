@@ -27,10 +27,11 @@ import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 // import { UPDATE_JOB_MUTATION } from "graphql/job";
 import {
+  // formatToTimeDate,
+  convertTo12Hour,
   formatAddress,
   formatDate,
   formatTime,
-  // formatToTimeDate,
   outputDynamicTable,
 } from "helpers/helper";
 import Image from "next/image";
@@ -944,8 +945,8 @@ export const AdminNotesCellExport = ({ row }: any) => {
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text maxW="140px" fontWeight="bold" noOfLines={1}>
-        {row?.original?.job?.timeslot || "-"}
+      <Text maxW="140px" fontSize="md" fontWeight="bold"  noOfLines={1}>
+        {convertTo12Hour(row?.original?.job?.timeslot) || "-"}
       </Text>
       <EditableFieldPopover
         row={row}
