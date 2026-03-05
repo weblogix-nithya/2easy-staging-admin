@@ -44,6 +44,17 @@ export function formatToTimeDate(apiDate: string): string {
   return moment.utc(apiDate).local().format("HH:mm, DD/MM/YYYY");
 }
 
+export function getLocalYMD(): string {
+  const d = new Date();
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
+}
+
 export function formatDateTimeToDB(date: string, time: string) {
   return moment(`${date} ${time}`, "YYYY-MM-DD hh:mm a")
     .utc()
@@ -558,6 +569,46 @@ export function isSameDay(jobDate: string, timeZone: string): boolean {
   const currentTime = moment().tz(timeZone);
   const jobDateTime = moment(jobDate).tz(timeZone);
   return currentTime.isSame(jobDateTime, "day");
+}
+
+export function convertTo12Hour(time24: string | null | undefined): string {
+  if (!time24) return;
+
+  // Match format like 1:2, 09:30, 12:5, 12:30
+  const timeRegex = /^\d{1,2}:\d{1,2}$/;
+  if (!timeRegex.test(time24)) {
+    return time24; // Return as-is if format doesn't match
+  }
+
+  let [hours, minutes] = time24.split(":");
+  let hour = Number(hours);
+
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${String(hour).padStart(2, "0")}:${minutes}${ampm}`;
+}
+
+export function getTimeDifferenceInMinutes(
+  time: string | null | undefined,
+): number | null {
+  if (!time) return null;
+
+  const timeRegex = /^\d{1,2}:\d{1,2}$/;
+  if (!timeRegex.test(time)) return null;
+
+  const [hours, minutes] = time.split(":").map(Number);
+
+  const now = new Date();
+  const target = new Date();
+
+  target.setHours(hours);
+  target.setMinutes(minutes);
+  target.setSeconds(0);
+
+  const diffMs = target.getTime() - now.getTime();
+  if (diffMs <= 0) return null;
+  return diffMs / (1000 * 60); // return minutes
 }
 
 // Get job destination timezone based on the latitude and longitude using Google Maps API

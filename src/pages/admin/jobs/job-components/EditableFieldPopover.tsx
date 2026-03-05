@@ -4,6 +4,7 @@ import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Flex,
   IconButton,
+  Input,
   // Input,
   Popover,
   PopoverArrow,
@@ -70,6 +71,10 @@ export default function EditableFieldPopover({
     if (!ref.current) return;
     const value = ref.current.value ?? "";
 
+    if (!ref.current?.reportValidity()) {
+      console.log(ref.current?.reportValidity())
+      return; // Stop submission
+    }
     setIsSaving(true);
     updateJob({
       variables: {
@@ -111,32 +116,39 @@ export default function EditableFieldPopover({
         <PopoverArrow />
         <PopoverCloseButton
           onClick={() => {
-            if (ref.current) ref.current.value = current; // revert
+            // if (ref.current) ref.current.value = current; // revert
             setIsOpen(false);
           }}
         />
         <Flex direction="column" gap={2}>
-          {multiline ? (
-            <Textarea
-              defaultValue={current}
-              ref={ref as React.RefObject<HTMLTextAreaElement>}
-              size="sm"
-              rows={8}
-              resize="none"
-              name={field}
-              id={field}
-            />
-          ) : (
-            <Textarea
-              defaultValue={current}
-              ref={ref as React.RefObject<HTMLTextAreaElement>}
-              size="sm"
-              rows={4}
-              placeholder="Enter value"              
-              name={field}
-              id={field}
-            />
-          )}
+          {field === "timeslot" ?
+            (
+              <Input
+                type="time"
+                defaultValue={current.length>0 ? current: "06:00"}
+                step={900} // Validation (00,15,30,45)
+                ref={ref as React.RefObject<HTMLInputElement>}
+                size="sm"
+              />
+            ) :
+            (multiline ? (
+              <Textarea
+                defaultValue={current}
+                ref={ref as React.RefObject<HTMLTextAreaElement>}
+                size="sm"
+                rows={8}
+                resize="none"
+              />
+            ) : (
+              <Textarea
+                defaultValue={current}
+                ref={ref as React.RefObject<HTMLTextAreaElement>}
+                size="sm"
+                rows={4}
+                placeholder="Enter value"
+              />
+            ))
+          }
           <Flex gap={2} justify="flex-end">
             <IconButton
               aria-label="Save"
@@ -153,7 +165,7 @@ export default function EditableFieldPopover({
               size="sm"
               colorScheme="red"
               onClick={() => {
-                if (ref.current) ref.current.value = current;
+                // if (ref.current) ref.current.value = current;
                 setIsOpen(false);
               }}
               isDisabled={isSaving}
