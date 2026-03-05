@@ -1,4 +1,4 @@
-import { useQuery } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -19,10 +19,6 @@ import {
 } from "@chakra-ui/react";
 import { CreatableSelect, Select } from "chakra-react-select";
 import CustomInputField from "components/fields/CustomInputField";
-import {
-  defaultSelectedFilter,
-  filterDisplayNames as defaultFilterDisplayNames,
-} from "components/jobs/Filters";
 import { GET_COMPANYS_QUERY } from "graphql/company";
 // import { formatDateTimeToDB } from "helpers/helper";
 import debounce from "lodash.debounce";
@@ -30,8 +26,24 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
-import { SelectedFilter } from "../jobs/Filters";
+import {
+  defaultSelectedFilter,
+  filterDisplayNames as defaultFilterDisplayNames, SelectedFilter
+} from "./Filters";
 
+// ─── GraphQL ─────────────────────────────────────────────────────────────────
+export const GET_AREA_COLOR_LIST = gql`
+  query GetAreaColorList($states: [String!]) {
+    areaColorList(states: $states) {
+      id
+      state
+      area
+      color
+    }
+  }
+`;
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface FilterJobsModalProps extends UseDisclosureProps {
   // jobStatuses?: { value: string; label: string }[];
   // jobCategories?: { value: string; label: string }[];
@@ -59,64 +71,22 @@ export default function FilterJobsModal({
   filterDisplayNames,
 }: FilterJobsModalProps) {
   const isCompany = useSelector((state: RootState) => state.user.isCompany);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [companiesOptions, setCompaniesOptions] = useState([]);
+
+  // ── Local filter display names ───────────────────────────────────────────
   const [localFilterDisplayNames, setLocalFilterDisplayNames] =
     useState(filterDisplayNames);
-  const onChangeSearchCompany = useMemo(() => {
-    return debounce((e) => {
-      setDebouncedSearch(e);
-    }, 300);
-  }, []);
-  const handleFilterApply = () => {
-    onFilterApply(
-      {
-        ...selectedFilters,
-      },
-      { ...localFilterDisplayNames },
-    );
-    onClose();
-  };
-  const handleResetAll = () => {
-    onFilterApply(
-      {
-        ...defaultSelectedFilter,
-      },
-      { ...defaultFilterDisplayNames },
-    );
-    onClose();
-  };
-  const stateOptions = [
-    { value: "Queensland", label: "QLD" },
-    { value: "Victoria", label: "VIC" },
-    { value: "New South Wales", label: "NSW" },
-    { value: "Western Australia", label: "WA" },
-    { value: "South Australia", label: "SA" },
-    { value: "Tasmania", label: "TAS" },
-  ];
 
-  // useQuery(GET_COMPANYS_QUERY, {
-  //   variables: {
-  //     query: debouncedSearch,
-  //     page: 1,
-  //     first: 100,
-  //     orderByColumn: "id",
-  //     orderByOrder: "ASC",
-  //   },
-  //   onCompleted: (data) => {
-  //     setCompaniesOptions([]);
-  //     data.companys.data.map((_entity: any) => {
-  //       setCompaniesOptions((companys) => [
-  //         ...companys,
-  //         {
-  //           value: parseInt(_entity.id),
-  //           label: _entity.name,
-  //         },
-  //       ]);
-  //     });
-  //   },
-  // });
-  // before: useQuery(..., { onCompleted: (...) { setCompaniesOptions(...) } })
+  // ── Companies ────────────────────────────────────────────────────────────
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [companiesOptions, setCompaniesOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  const onChangeSearchCompany = useMemo(
+    () => debounce((e: string) => setDebouncedSearch(e), 300),
+    [],
+  );
+
   const { data: companiesData } = useQuery(GET_COMPANYS_QUERY, {
     variables: {
       query: debouncedSearch,
@@ -131,7 +101,7 @@ export default function FilterJobsModal({
     if (!companiesData?.companys?.data) return;
     setCompaniesOptions(
       companiesData.companys.data.map((e: any) => ({
-        value: Number(e.id),
+        value: String(e.id),
         label: e.name,
       })),
     );
@@ -145,12 +115,99 @@ export default function FilterJobsModal({
     };
   }, [onChangeSearchCompany]);
 
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleFilterApply = () => {
+    onFilterApply({ ...selectedFilters }, { ...localFilterDisplayNames });
+    onClose();
+  };
+
+  const handleResetAll = () => {
+    onFilterApply(
+      { ...defaultSelectedFilter },
+      { ...defaultFilterDisplayNames },
+    );
+    onClose();
+  };
+
   function handleInputHighlight(
     event: React.MouseEvent<HTMLInputElement, MouseEvent>,
   ): void {
     // User request to highlight input field on click
     event.currentTarget.select();
   }
+
+  // ── Static options ────────────────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stateOptions = [
+    { value: "Victoria", label: "VIC" },
+    { value: "Queensland", label: "QLD" },
+    { value: "New South Wales", label: "NSW" },
+    { value: "Western Australia", label: "WA" },
+    { value: "South Australia", label: "SA" },
+    { value: "Tasmania", label: "TAS" },
+  ];
+
+
+  // ── Area / Quadrant ────────────────────────────────────────────
+
+  // Get selected state values
+  const selectedStateValues = useMemo(
+    () => (selectedFilters.states ?? []).map((s: any) => s.value),
+    [selectedFilters.states]
+  );
+
+  // Fetch areas based on selected states
+  const { data: areaData, loading: areaLoading } = useQuery(
+    GET_AREA_COLOR_LIST,
+    {
+      variables: { states: selectedStateValues },
+      skip: !isOpen || selectedStateValues.length === 0,
+    }
+  );
+
+  // Area options state
+  const [areaOptions, setAreaOptions] = useState<
+    { value: string; label: string; state: string }[]
+  >([]);
+
+  // Build area dropdown options
+  useEffect(() => {
+    if (!areaData?.areaColorList) {
+      setAreaOptions([]);
+      return;
+    }
+
+    // Remove duplicates safely
+    const unique = new Map<string, { value: string; label: string; state: string }>();
+
+    areaData.areaColorList.forEach((a: any) => {
+      if (!unique.has(a.area)) {
+        unique.set(a.area, {
+          value: a.area,
+          label: a.area,
+          state: a.state,
+        });
+      }
+    });
+
+    setAreaOptions(Array.from(unique.values()));
+  }, [areaData]);
+
+  useEffect(() => {
+    if (jobFilter.states?.length) {
+      setSelectedFilters(prev => ({
+        ...prev,
+        states: jobFilter.states.map(s => ({
+          value: s,
+          label:
+            stateOptions.find(opt => opt.value === s)?.label || s,
+        })),
+      }));
+    }
+  }, [jobFilter.states, stateOptions, setSelectedFilters]);
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Modal id="filter-jobs-modal" isCentered isOpen={isOpen} onClose={onClose}>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
@@ -192,6 +249,54 @@ export default function FilterJobsModal({
                 }}
               />
             </Box>
+
+            {/* ── Quad ── */}
+            <Box w={"full"}>
+              <FormLabel>Quad</FormLabel>
+              <Select
+                components={{
+                  DropdownIndicator: () => null,
+                  IndicatorSeparator: () => null,
+                }}
+                value={selectedFilters.quadrant ?? []}
+                isMulti
+                options={areaOptions}
+                name="quadrant"
+                isDisabled={selectedStateValues.length === 0}
+                placeholder={
+                  selectedStateValues.length === 0
+                    ? "Select a state first"
+                    : areaLoading
+                      ? "Loading..."
+                      : "Select quadrants..."
+                }
+
+                onChange={(e) => {
+                  setSelectedFilters({
+                    ...selectedFilters,
+                    quadrant: e.length > 0 ? e : undefined,
+                  });
+
+                  const values = e.map((o) => o.value);
+                  const labels = e.map((o) => o.label).join(",");
+
+                  setJobFilter({
+                    ...jobFilter,
+                    quadrant: values,
+                  });
+
+                  setLocalFilterDisplayNames({
+                    ...localFilterDisplayNames,
+                    quadrant: {
+                      label: "Quadrant",   // 🔥 IMPORTANT FIX
+                      value: labels,
+                    },
+                  });
+                }}
+              />
+            </Box>
+
+            {/* ── Suburb ── */}
             <Box w={"full"}>
               <FormLabel>Suburb</FormLabel>
               <CreatableSelect

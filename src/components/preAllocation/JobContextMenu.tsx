@@ -38,8 +38,10 @@ interface JobContextMenuProps {
     onClose: () => void;
     drivers: DriverOption[];
 }
+
 const MENU_WIDTH = 360;
 const PADDING = 12; // gap from screen edges
+
 const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose, drivers }) => {
     const toast = useToast();
     const menuRef = useRef<HTMLDivElement>(null);
@@ -53,17 +55,14 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose,
     const [readyAt, setReadyAt] = useState("06:00");
     const [dropAt, setDropAt] = useState("17:00");
 
-    // Queries
     const { data: metaData } = useQuery(GET_JOB_META_LIST_QUERY);
     const { data: statusData } = useQuery(GET_JOB_STATUSES_QUERY, {
         variables: { query: "", page: 1, first: 100, orderByColumn: "id", orderByOrder: "ASC" },
     });
 
-    // Mutations
     const [assignMetaToJob] = useMutation(ASSIGN_META_TO_JOB_MUTATION);
     const [updateJobRight] = useMutation(UPDATE_JOB_MUTATION, { onError: showGraphQLErrorToast });
 
-    // Toggle labels
     const toggleLabel = (labelId: string) => {
         setSelectedLabels(prev =>
             prev.includes(labelId) ? prev.filter(id => id !== labelId) : [...prev, labelId]
@@ -72,32 +71,20 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose,
 
     const handleSave = async () => {
         try {
-            // ------------------- 1️⃣ Assign labels as before -------------------
             await assignMetaToJob({
-                variables: {
-                    input: {
-                        job_id: job.id,
-                        job_meta_ids: selectedLabels,
-                    },
-                },
+                variables: { input: { job_id: job.id, job_meta_ids: selectedLabels } },
             });
 
-            // ------------------- 2️⃣ Prepare fields to update -------------------
             const fieldsToUpdate: any = {};
-            if (String(selectedDriver?.value) !== String(job.driver_id)) {
+            if (String(selectedDriver?.value) !== String(job.driver_id))
                 fieldsToUpdate.driver_id = selectedDriver?.value || null;
-            }
-            if (String(selectedStatus?.value) !== String(job.job_status?.id)) {
+            if (String(selectedStatus?.value) !== String(job.job_status?.id))
                 fieldsToUpdate.job_status_id = selectedStatus?.value || null;
-            }
-            if (jobDateAt && readyAt && formatDateTimeToDB(jobDateAt, readyAt) !== job.ready_at) {
+            if (jobDateAt && readyAt && formatDateTimeToDB(jobDateAt, readyAt) !== job.ready_at)
                 fieldsToUpdate.ready_at = formatDateTimeToDB(jobDateAt, readyAt);
-            }
-            if (jobDateAt && dropAt && formatDateTimeToDB(jobDateAt, dropAt) !== job.drop_at) {
+            if (jobDateAt && dropAt && formatDateTimeToDB(jobDateAt, dropAt) !== job.drop_at)
                 fieldsToUpdate.drop_at = formatDateTimeToDB(jobDateAt, dropAt);
-            }
 
-            // ------------------- 3️⃣ Call updateJobRight only if fields changed -------------------
             if (Object.keys(fieldsToUpdate).length > 0) {
                 await updateJobRight({
                     variables: {
@@ -112,37 +99,24 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose,
                 });
             }
 
-            toast({
-                title: "Job updated successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
+            toast({ title: "Job updated successfully", status: "success", duration: 3000, isClosable: true });
             onClose();
         } catch (e: any) {
             showGraphQLErrorToast(e);
         }
     };
 
-
-    // Initialize state from job
     useEffect(() => {
         if (job?.driver_id) setSelectedDriver(drivers.find(d => String(d.value) === String(job.driver_id)) || null);
         if (job?.job_status) setSelectedStatus({ value: String(job.job_status.id), label: job.job_status.name });
         if (job?.meta) setSelectedLabels(job.meta.map((m: any) => String(m.id)));
-
-        if (job?.ready_at) {
-            setJobDateAt(formatDate(job.ready_at));
-            setReadyAt(formatTimeUTCtoInput(job.ready_at));
-        }
+        if (job?.ready_at) { setJobDateAt(formatDate(job.ready_at)); setReadyAt(formatTimeUTCtoInput(job.ready_at)); }
         if (job?.drop_at) setDropAt(formatTimeUTCtoInput(job.drop_at));
     }, [job, drivers]);
 
     useEffect(() => {
-        if (statusData?.jobStatuses?.data) {
+        if (statusData?.jobStatuses?.data)
             setJobStatuses(statusData.jobStatuses.data.map((s: any) => ({ value: String(s.id), label: s.name })));
-        }
     }, [statusData]);
 
     useEffect(() => {

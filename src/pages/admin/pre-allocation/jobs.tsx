@@ -13,11 +13,11 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import {
-  defaultJobFilter,
   defaultSelectedFilter,
   filterDisplayNames,
+  preDefaultJobFilter,
   SelectedFilter,
-} from "components/jobs/Filters";
+} from "components/preAllocation/Filters";
 // import { getCompanyColumns } from "components/jobs/JobTableColumnsCustomer";
 import ActionBar from "components/preAllocation/PreActionBar";
 import {
@@ -49,9 +49,9 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 // import { FaFileExcel } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  setIsFilterTicked,
-  setJobFilters,
-  setJobMainFilters,
+  setIsPreFilterTicked,
+  setPreJobFilters,
+  setPreJobMainFilters,
 } from "store/jobFilterSlice";
 import { RootState } from "store/store";
 
@@ -147,7 +147,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const [driverOptions, setDriverOptions] = useState([]);
   const [isShowSelectedOnly, setIsShowSelectedOnly] = useState(false);
   const [isChecked, setIsChecked] = useState(true);
-  const [jobFilter, setJobFilter] = useState(defaultJobFilter);
+  const [jobFilter, setJobFilter] = useState(preDefaultJobFilter);
   const [mainJobFilter, setMainJobFilter] = useState(null);
   const [mainFilters, setMainFilters] = useState<any>(defaultSelectedFilter);
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilter>(
@@ -374,19 +374,25 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   }, [is_filter_ticked]);
 
   const handleResetAll = () => {
-    updateTags({ ...defaultSelectedFilter }, defaultJobFilter);
+    updateTags({ ...defaultSelectedFilter }, preDefaultJobFilter);
   };
 
-  const updateTags = (updatedValues: SelectedFilter, jobFilter: any) => {
+  const updateTags = (
+    updatedValues: SelectedFilter,
+    jobFilter: any,
+    displayNames?: any
+  ) => {
     const updatedJobFilter = { ...jobFilter };
+
     for (const key in defaultSelectedFilter) {
       if (
-        updatedValues[key as keyof SelectedFilter] == undefined ||
-        updatedValues[key as keyof SelectedFilter] == null ||
-        updatedValues[key as keyof SelectedFilter].length == 0
+        updatedValues[key as keyof SelectedFilter] === undefined ||
+        updatedValues[key as keyof SelectedFilter] === null ||
+        updatedValues[key as keyof SelectedFilter]?.length === 0
       ) {
         delete updatedJobFilter[key as keyof SelectedFilter];
       }
+
       setCookie(
         null,
         `jobFilters_${key}`,
@@ -394,25 +400,33 @@ export default function JobIndex({ }: // initialLoadOnly = false,
         {
           maxAge: 30 * 24 * 60 * 60,
           path: "*",
-        },
+        }
       );
+
       dispatch(
-        setJobFilters({
+        setPreJobFilters({
           key: key,
           value: updatedValues[key as keyof SelectedFilter],
-        }),
+        })
       );
     }
+
     setCookie(null, `jobMainFilters`, JSON.stringify(updatedJobFilter), {
       maxAge: 24 * 60 * 60,
       path: "*",
     });
-    dispatch(setJobMainFilters(updatedJobFilter));
+
+    dispatch(setPreJobMainFilters(updatedJobFilter));
 
     setJobFilter(updatedJobFilter);
     setMainJobFilter(updatedJobFilter);
     setSelectedFilters(updatedValues);
     setMainFilters(updatedValues);
+
+    // ✅ IMPORTANT FIX
+    if (displayNames) {
+      setMainFilterDisplayNames(displayNames);
+    }
   };
   const {
     isOpen: isOpenFilter,
@@ -662,7 +676,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
                 maxAge: 30 * 24 * 60 * 60,
                 path: "*",
               });
-              dispatch(setIsFilterTicked(checked ? "1" : "0"));
+              dispatch(setIsPreFilterTicked(checked ? "1" : "0"));
             }}
             handleExport={function (): void {
               throw new Error("Function not implemented.");
@@ -672,6 +686,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
           <Flex alignItems="left" flexWrap={"wrap"}>
             {Object.keys(mainFilters).map((filterKey) => {
               if (mainFilters[filterKey]) {
+                console.log("Rendering tag for:", filterKey, mainFilters[filterKey]);
                 return (
                   <Tag
                     key={filterKey}
@@ -834,10 +849,10 @@ export default function JobIndex({ }: // initialLoadOnly = false,
               // jobStatuses={jobStatuses}
               // jobCategories={jobCategories}
               onFilterApply={(selectedFilters, filterDisplayName) => {
-                // Update the tags
-                updateTags(selectedFilters, jobFilter);
+                updateTags(selectedFilters, jobFilter, filterDisplayName);
+
                 console.log(selectedFilters, "selectedFilters");
-                setMainFilterDisplayNames(filterDisplayName);
+
                 setCookie(
                   null,
                   "displayName",
@@ -845,7 +860,7 @@ export default function JobIndex({ }: // initialLoadOnly = false,
                   {
                     maxAge: 30 * 24 * 60 * 60,
                     path: "*",
-                  },
+                  }
                 );
               }}
               selectedFilters={selectedFilters}

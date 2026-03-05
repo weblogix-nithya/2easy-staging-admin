@@ -374,7 +374,7 @@ const PaginationTable = <T extends object>({
                                 fontSize="md"
                                 style={{ marginRight: "10px" }}
                               >
-                                Driver: {driver.full_name} — {driver.driver_no}
+                                #{driver.id} : {driver.full_name}
                               </Badge>
                               <Badge
                                 colorScheme="purple"
@@ -398,8 +398,6 @@ const PaginationTable = <T extends object>({
                                 )}
                               </Badge>
 
-
-                              {/* ✅ Show "Assign Jobs" button ONLY for pre-allocated (yellow) */}
                               {driver.bgcolor === "yellow" && (
                                 <Button
                                   type="button"
@@ -417,13 +415,15 @@ const PaginationTable = <T extends object>({
 
                               )}
                               {driver.bgcolor === "blue" && (
-                                <Badge
-                                  colorScheme="red"
-                                  variant="subtle"
-                                  fontSize="sm"
-                                >
-                                  Driver price: {driver.total_jobs_today_price ?? "-"}
-                                </Badge>
+                                <>
+                                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                                    Today Price: {driver.total_jobs_today_price ?? 0}
+                                  </Badge>
+
+                                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                                    Weekly Price: {driver.total_jobs_weekly_price ?? 0}
+                                  </Badge>
+                                </>
                               )}
                             </Flex>
                           </Flex>

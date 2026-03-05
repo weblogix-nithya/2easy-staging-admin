@@ -36,7 +36,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
-import { PRE_ALLOCATION_JOBS_QUERY, REMOVE_PRE_ALLOCATE_DRIVER } from "graphql/job";
+import { REMOVE_PRE_ALLOCATE_DRIVER } from "graphql/job";
 import {
   convertTo12Hour,
   formatAddress,
@@ -69,7 +69,7 @@ export const PickupAddressBusinessNameCell = ({ row }: any) => (
     <Text fontSize="md">
       {row.originaljob.pick_up_destination.address_business_name || "-"}
     </Text>
-    <Text fontSize="sm" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
+    <Text fontSize="md" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
       {formatAddress(row?.original?.job?.pick_up_destinations)}
     </Text>
 
@@ -104,7 +104,7 @@ export const JobDestinationsCell = ({ row }: any) => {
   return (
     <>
       {first ? (
-        <Text whiteSpace="pre-line" fontSize="sm" minWidth={"170px"}>
+        <Text whiteSpace="pre-line" fontSize="md" minWidth={"170px"}>
           {renderAddress(first)}
         </Text>
       ) : (
@@ -156,7 +156,7 @@ export const JobDestinationBusinessNameCell = ({ row }: any) => {
 
   return (
     <Text
-      fontSize="sm"
+      fontSize="md"
       textTransform="capitalize"
       minW="130px"
       maxW="170px"
@@ -191,14 +191,14 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(
               filteredDestinations[0].arrived_at,
               "HH:mm, DD/MM/YYYY",
             )}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Delivery time:{" "}
             {formatDate(
               filteredDestinations[0].updated_at,
@@ -285,11 +285,11 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     <>
       {pickupDest?.pickup_at && showPickupTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Collection time:{" "}
             {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
@@ -352,18 +352,18 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
     <>
       {pickupDest?.pickup_at && showPickupTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Collection time:{" "}
             {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
       <Text fontSize="md">{pickupDest?.address_business_name || "-"}</Text>
-      <Text mb="2" fontSize="sm" minWidth={"300px"} flexWrap={"nowrap"}>
+      <Text mb="2" fontSize="md" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
 
@@ -385,14 +385,14 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(
               filteredDestinations[0].arrived_at,
               "HH:mm, DD/MM/YYYY",
             )}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Delivery time:{" "}
             {formatDate(
               filteredDestinations[0].updated_at,
@@ -402,7 +402,7 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
         </>
       )}
       <Text fontSize="md">{filteredDestinations[0]?.address_business_name || "-"}</Text>
-      <Text fontSize="sm" isTruncated w={"fit-content"}>
+      <Text fontSize="md" isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
           : "-"}
@@ -415,13 +415,13 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
 export const ReadyDropByCell = ({ row }: any) => {
   return (
     <>
-      <Text fontSize="sm" isTruncated w={"fit-content"}>
+      <Text fontSize="md" isTruncated w={"fit-content"}>
         {row?.original?.job?.job_category?.name ?? "-"}
       </Text>
-      <Text isTruncated fontSize="sm" w={"fit-content"}>
+      <Text isTruncated fontSize="md" w={"fit-content"}>
         R: {formatTime(row?.original?.job?.ready_at)}
       </Text>
-      <Text isTruncated fontSize="sm" w={"fit-content"}>
+      <Text isTruncated fontSize="md" w={"fit-content"}>
         D: {formatTime(row?.original?.job?.drop_at)}
       </Text>
     </>
@@ -443,7 +443,7 @@ export const NotesCell = ({ row }: any) => {
 
   return (
     <Flex gap={2} align="center">
-      <Text fontSize="sm" maxW="200px" noOfLines={3}>
+      <Text fontSize="md" maxW="200px" noOfLines={3}>
         {display || "-"}
       </Text>
       <EditableFieldPopover
@@ -461,7 +461,7 @@ export const ItemsTypeCell = ({ row }: any) => {
   return (
     <div>
       {items?.map((item: any) => (
-        <Text fontSize="sm" key={`items-type-${item.id}`} mb={2}>
+        <Text fontSize="md" key={`items-type-${item.id}`} mb={2}>
           {item.item_type.name}
         </Text>
       ))}
@@ -484,11 +484,11 @@ export const ItemsDimensionCell = ({ row }: any) => {
     <VStack align="start" spacing={1}>
       {visibleItems.map((item: any) => (
         <Text
-          fontSize="sm"
+          fontSize="md"
           key={`items-dimension-${item.id}`}
           w="max-content"
         >
-          {`${(item.dimension_height * 100).toFixed(0)}x${(
+          {`${(item.quantity)} x ${(item.weight)} x ${(item.dimension_height * 100).toFixed(0)}x${(
             item.dimension_width * 100
           ).toFixed(0)}x${(item.dimension_depth * 100).toFixed(0)}`}
         </Text>
@@ -511,6 +511,8 @@ export const ItemsDimensionCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return items?.map((item: any) => {
     return [
+      `${(item.quantity * 100)?.toFixed(2)}x `,
+      `${(item.weight * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_height * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_width * 100)?.toFixed(2)}cm x `,
       `${(item.dimension_depth * 100)?.toFixed(2)}cm  \n`,
@@ -566,11 +568,11 @@ export const ItemsCbmCell = ({ row }: any) => {
   );
 };
 export const ItemsExtrasCell = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="100px">{row?.original?.job?.extras || "-"}</Text>;
+  return <Text fontSize="md" maxW="100px">{row?.original?.job?.extras || "-"}</Text>;
 };
 
 export const DriverCell = ({ row }: any) => {
-  return <Text fontSize="sm">{row?.original?.job?.driver?.full_name || "-"}</Text>;
+  return <Text fontSize="md">{row?.original?.job?.driver?.full_name || "-"}</Text>;
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -581,7 +583,7 @@ export const ItemsCbmCellExport = ({ row }: any) => {
 export const BookedByCell = ({ row }: any) => {
   const name = row?.original?.job?.company?.name || "-";
   return (
-    <Text fontSize="sm" maxW="150px" minW="100px">
+    <Text fontSize="md" maxW="150px" minW="100px">
       {name}
     </Text>
   );
@@ -667,11 +669,11 @@ export const StatusCell = ({ row }: any) => {
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Flex direction="column" gap={1} minWidth="150px">
-      <Text fontSize="sm" fontWeight="500">
+      <Text fontSize="md" fontWeight="500">
         Created:
         {formatDate(row?.original?.job?.created_at) || "-"}
       </Text>
-      <Text fontSize="sm">
+      <Text fontSize="md">
         Scheduled:
         {formatDate(row?.original?.job?.drop_at) || "-"}
         {/* It was ready_at initially, changed to drop_at as per client request,now adding both  */}
@@ -682,7 +684,7 @@ export const ReadyAtCell = ({ row }: any) => {
 
 export const LastFreeAtCell = ({ row }: any) => {
   return (
-    <Text fontSize="sm" maxW="150px" minW="150px">
+    <Text fontSize="md" maxW="150px" minW="150px">
       {row?.original?.job?.last_free_at || "-"}
     </Text>
   );
@@ -692,7 +694,7 @@ export const PickupBusinessNameCell = ({ row }: any) => {
     (dest: any) => dest.is_pickup === true,
   );
   return (
-    <Text fontSize="sm" maxW="150px" minW="100px">
+    <Text fontSize="md" maxW="150px" minW="100px">
       {pickupDest?.address_business_name || "-"}
     </Text>
   );
@@ -722,7 +724,7 @@ export const PickupAddressCell = ({ row }: any) => {
   };
 
   return (
-    <Text whiteSpace="pre-line" textTransform="capitalize" fontSize="sm" minWidth={"170px"}>
+    <Text whiteSpace="pre-line" textTransform="capitalize" fontSize="md" minWidth={"170px"}>
       {renderPickupAddress(pickup)}
     </Text>
   );
@@ -732,7 +734,7 @@ export const PickupAddressCell = ({ row }: any) => {
 
 export const CustomerReferenceCell = ({ row }: any) => {
   return (
-    <Text fontSize="sm" maxW="150px" noOfLines={2}>
+    <Text fontSize="md" maxW="150px" noOfLines={2}>
       {" "}
       {row?.original?.job?.reference_no || "-"}
     </Text>
@@ -741,44 +743,53 @@ export const CustomerReferenceCell = ({ row }: any) => {
 
 export const CategoryCell = ({ row }: any) => {
   return (
-    <Text fontSize="sm" maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>
+    <Text fontSize="md" maxW="100px">{row?.original?.job?.job_category?.name || "-"}</Text>
   );
 };
 
-export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
+export const DeliveryCell = ({ row, refetchTable }) => {
   const job = row?.original?.job;
   const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
-  const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
-    if (color.startsWith("#")) {
-      return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
-    }
-    return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
-  };
+
   const canRemove = !!job?.preallocation_driver_id;
 
-  const [removeDriver, { loading }] = useMutation(REMOVE_PRE_ALLOCATE_DRIVER, {
-    update: (cache, { data: { updateJob } }) => {
-      // Update cached jobs for preallocation table
-      const existingJobs: any = cache.readQuery({ query: PRE_ALLOCATION_JOBS_QUERY });
-      if (existingJobs) {
-        const newJobs = existingJobs.jobs.map((j) =>
-          j.id === updateJob.id
-            ? { ...j, preallocation_driver_id: null, driver_id: null }
-            : j
-        );
-        cache.writeQuery({
-          query: PRE_ALLOCATION_JOBS_QUERY,
-          data: { jobs: newJobs },
-        });
-      }
+  const getBadgeStyle = (color?: string) => ({
+    bg: color?.startsWith("#") ? color : color || "gray",
+    color: "#fff",
+    boxShadow: `0 0 0 1px ${color || "gray"}`,
+  });
 
-      // Remove job from AssignJobsModal selection
-      setSelectedJobs?.((prev) =>
-        prev.filter((jobItem) => jobItem.original.job.id !== job.id)
-      );
+  // ✅ ICON CONFIG (Cleaner)
+  const jobIcons = [
+    {
+      condition: job?.is_inbound_connect,
+      label: "Inbound Connect",
+      icon: faInfinity,
     },
+    {
+      condition: job?.is_paperwork_required,
+      label: "Paperwork Required",
+      icon: faPager,
+    },
+    {
+      condition: job?.is_hand_unloading,
+      label: "Handling",
+      icon: faHandHolding,
+    },
+    {
+      condition: job?.is_dangerous_goods,
+      label: "Dangerous goods",
+      icon: faWarning,
+    },
+    {
+      condition: job?.is_tailgate_required,
+      label: "Tail lift",
+      icon: faTruckRampBox,
+    },
+  ];
+
+  const [removeDriver, { loading }] = useMutation(REMOVE_PRE_ALLOCATE_DRIVER, {
     onCompleted: () => {
       toast({
         title: "Removed job from driver",
@@ -786,7 +797,7 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
         duration: 3000,
         isClosable: true,
       });
-      refetchTable?.(); // optional full refetch
+      refetchTable?.();
     },
     onError: (err) => {
       toast({
@@ -800,23 +811,26 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
   });
 
   const handleRemove = () => {
-    const input = {
-      id: job.id,
-      customer_id: job.customer.id,
-      company_id: job.company.id,
-      job_type_id: job.job_type.id,
-      name: job.name,
-      preallocation_driver_id: null,
-      driver_id: job.driver_id || null,
-      d_sort_id: job.d_sort_id || null,
-      sort_datetime: job.sort_datetime || null,
-    };
-
-    removeDriver({ variables: { input } });
+    removeDriver({
+      variables: {
+        input: {
+          id: job.id,
+          customer_id: job.customer.id,
+          company_id: job.company.id,
+          job_type_id: job.job_type.id,
+          name: job.name,
+          preallocation_driver_id: null,
+          driver_id: job.driver_id || null,
+          d_sort_id: job.d_sort_id || null,
+          sort_datetime: job.sort_datetime || null,
+        },
+      },
+    });
   };
 
   return (
     <>
+      {/* LABELS */}
       {labels.length > 0 && (
         <VStack align="start" spacing="4px" mb="10px">
           {labels.map((label) => (
@@ -836,15 +850,12 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
       )}
 
       <Flex direction="column" w="100%" maxW="150px">
-
-        {/* ROW 1: Remove Left, Job Name Right */}
+        {/* ROW 1 */}
         <Flex align="center" justify="space-between" w="100%">
-
-          {/* Remove Button LEFT */}
           {canRemove && (
-            <Tooltip label="Remove Job from Driver" placement="top">
+            <Tooltip label="Remove Job from Driver">
               <IconButton
-                aria-label="Remove Job from Driver"
+                aria-label="Remove Job"
                 icon={<CloseIcon />}
                 size="xs"
                 color="red.500"
@@ -855,71 +866,25 @@ export const DeliveryCell = ({ row, refetchTable, setSelectedJobs }) => {
             </Tooltip>
           )}
 
-          {/* Job Name RIGHT */}
           <Text ml="2" noOfLines={1}>
             {job?.name || "-"}
           </Text>
         </Flex>
 
-        {/* ROW 2: Icons under job name (RIGHT aligned) */}
+        {/* ROW 2 - ICONS */}
         <Flex justify={canRemove ? "flex-end" : "flex-start"} gap={1} mt="1" ml="2">
-          {job.is_inbound_connect && (
-            <React.Fragment key="inbound-connect">  {/* ✅ Key for conditional */}
-              <Tooltip label="Inbound Connect">
+          {jobIcons
+            .filter((item) => item.condition)
+            .map((item, index) => (
+              <Tooltip key={index} label={item.label}>
                 <FontAwesomeIcon
-                  icon={faInfinity}
+                  icon={item.icon}
                   className="!text-[var(--chakra-colors-red-400)] p-1"
                   size="sm"
                 />
               </Tooltip>
-            </React.Fragment>
-          )}
-          {job.is_paperwork_required && (
-            <React.Fragment key="paperwork-required">  {/* ✅ Key for conditional */}
-              <Tooltip label="Paperwork Required">
-                <FontAwesomeIcon
-                  icon={faPager}
-                  className="!text-[var(--chakra-colors-red-400)] p-1"
-                  size="sm"
-                />
-              </Tooltip>
-            </React.Fragment>
-          )}
-          {job.is_hand_unloading && (
-            <React.Fragment key="hand-unloading">  {/* ✅ Key for conditional */}
-              <Tooltip label="Handling">
-                <FontAwesomeIcon
-                  icon={faHandHolding}
-                  className="!text-[var(--chakra-colors-red-400)] p-1"
-                  size="sm"
-                />
-              </Tooltip>
-            </React.Fragment>
-          )}
-          {job.is_dangerous_goods && (
-            <React.Fragment key="dangerous-goods">  {/* ✅ Key for conditional */}
-              <Tooltip label="Dangerous goods">
-                <FontAwesomeIcon
-                  icon={faWarning}
-                  className="!text-[var(--chakra-colors-red-400)] p-1"
-                  size="sm"
-                />
-              </Tooltip>
-            </React.Fragment>
-          )}
-          {job.is_tailgate_required && (
-            <React.Fragment key="tailgate-required">  {/* ✅ Key for conditional */}
-              <Tooltip label="Tail lift">
-                <FontAwesomeIcon
-                  icon={faTruckRampBox}
-                  className="!text-[var(--chakra-colors-red-400)] p-1"
-                  size="sm"
-                />
-              </Tooltip>
-            </React.Fragment>
-          )}
+            ))}
         </Flex>
-
       </Flex>
     </>
   );
@@ -976,7 +941,7 @@ export const AdminNotesCell = ({ row }: any) => {
 
   return (
     <Flex gap={2} align="center">
-      <Text fontSize="sm" maxW="200px" noOfLines={2}>
+      <Text fontSize="md" maxW="200px" noOfLines={2}>
         {display || "-"}
       </Text>
       <EditableFieldPopover
@@ -1008,18 +973,44 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
 
 export const TotalQuantityCell = ({ row }: any) => {
   return (
-    <Text fontSize="sm" maxW="100px">{row?.original?.job?.total_quantity || "-"}</Text>
+    <Text fontSize="md" maxW="100px">{row?.original?.job?.total_quantity || "-"}</Text>
   );
 };
 export const TotalWeightCell = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="120px">{row?.original?.job?.total_weight || "-"}</Text>;
+  return <Text fontSize="md" maxW="120px">{row?.original?.job?.total_weight || "-"}</Text>;
 };
 export const TotalVolumeCell = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="120px">{row?.original?.job?.total_volume || "-"}</Text>;
+  return <Text fontSize="md" maxW="120px">{row?.original?.job?.total_volume || "-"}</Text>;
+};
+
+export const Charges = ({ row }: any) => {
+  const charges = row?.original?.job?.price_summary?.charges || [];
+
+  return (
+    <>
+      {charges.length > 0 ? (
+        charges.map((item: any, index: number) => (
+          <Text key={index} fontSize="md" w="180px">
+            {item.name} - ${item.total}
+          </Text>
+        ))
+      ) : (
+        <Text fontSize="md">0</Text>
+      )}
+    </>
+  );
+};
+
+export const SubTotal = ({ row }: any) => {
+  return <Text fontSize="md" maxW="160px">{row?.original?.job?.price_summary?.sub_total || "0"}</Text>;
+};
+
+export const Tax = ({ row }: any) => {
+  return <Text fontSize="md" maxW="150px">{row?.original?.job?.price_summary?.tax || "0"}</Text>;
 };
 
 export const TotalPrice = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+  return <Text fontSize="md" maxW="160px">{row?.original?.job?.price_summary?.total || "0"}</Text>;
 };
 
 export const SuburbAreaCell = ({ row }: any) => {
@@ -1040,6 +1031,25 @@ export const SuburbAreaCell = ({ row }: any) => {
         {area}
       </Badge>
       <Text fontSize="xs" mt={1}>{row?.original?.job?.driver?.full_name || ""}</Text>
+    </>
+  );
+};
+
+export const FromQuadCell = ({ row }: any) => {
+  const fromQuad = row?.original?.job?.pickup_quad || "";
+  return (
+    <>
+      <Text mt={1} fontSize="md" fontWeight="bold">{fromQuad}</Text>
+    </>
+  );
+};
+
+export const ToQuadCell = ({ row }: any) => {
+  const toQuad = row?.original?.job?.delivery_quad || "";
+
+  return (
+    <>
+      <Text mt={1} fontSize="md" fontWeight="bold">{toQuad}</Text>
     </>
   );
 };
@@ -1074,7 +1084,7 @@ function uniqueById(cols: any[]): any[] {
   return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 }
 
-export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
+export const tableColumn = (refetchJobs: () => void) => [
   {
     id: "name",
     Header: "Delivery ID",
@@ -1082,7 +1092,6 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
       <DeliveryCell
         row={row}
         refetchTable={refetchJobs}
-        setSelectedJobs={setSelectedJobs}
       />
     ),
     // ✅ Sort by job ID directly
@@ -1097,6 +1106,16 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     // ✅ Accessor for suburb_area sorting
     accessor: (row: any) => row?.job?.suburb_area || '',
     enableSorting: true,
+  },
+  {
+    id: "pickup_quad",
+    Header: "From Quad",
+    Cell: FromQuadCell,
+  },
+  {
+    id: "delivery_quad",
+    Header: "To Quad",
+    Cell: ToQuadCell,
   },
   {
     id: "job_type.name",
@@ -1158,7 +1177,23 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Cell: TotalVolumeCell,
   },
   {
-    id: "job_price_calculation_detail.total",
+    id: "price_summary.charges",
+    Header: "Charges",
+    Cell: Charges,
+  },
+  {
+    id: "price_summary.sub_total",
+    Header: "Sub Total",
+    Cell: SubTotal,
+  },
+
+  {
+    id: "price_summary.tax",
+    Header: "Tax",
+    Cell: Tax,
+  },
+  {
+    id: "price_summary.total",
     Header: "Total Price",
     Cell: TotalPrice,
   },
@@ -1178,11 +1213,6 @@ export const tableColumn = (refetchJobs: () => void, setSelectedJobs?: any) => [
     Header: "category",
     Cell: CategoryCell,
   },
-  // {
-  //   id: "suburb_area,area_color",
-  //   Header: "Quad",
-  //   Cell: SuburbAreaCell,
-  // },
   {
     id: "company.name",
     Header: "Company",
@@ -1276,7 +1306,7 @@ export const getColumnsPre = (
   withMedia: boolean,
   refetchJobs?: () => void,
   dynamicTableUsers?: DynamicTableUser[],
-  setSelectedJobs?: any,
+  // setSelectedJobs?: any,
 ) => {
   // 1) Selection checkbox column
   const base: any[] = [
@@ -1295,7 +1325,7 @@ export const getColumnsPre = (
   if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
     const cols = uniqueById([
       ...base,
-      ...tableColumn(refetchJobs, setSelectedJobs), // your static defaults
+      ...tableColumn(refetchJobs), // your static defaults
       // {
       //   id: "actions",
       //   Header: "Actions",
@@ -1312,7 +1342,7 @@ export const getColumnsPre = (
   // NOTE: outputDynamicTable should only include columns that are active:true.
   let columns = [
     ...base,
-    ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs, setSelectedJobs)),
+    ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs)),
   ];
 
   // 4) Swap only the Cell for the 2 special fields based on withMedia
@@ -1338,7 +1368,7 @@ export const bulkassigntableColumn = [
   {
     id: "name",
     Header: "Delivery ID",
-    Cell: DeliveryCellBulkAssign,
+    Cell: DeliveryCell,
     // width: "100px",
   },
   {
@@ -1401,7 +1431,23 @@ export const bulkassigntableColumn = [
     Cell: TotalVolumeCell,
   },
   {
-    id: "job_price_calculation_detail.total",
+    id: "price_summary.charges",
+    Header: "Charges",
+    Cell: Charges,
+  },
+  {
+    id: "price_summary.sub_total",
+    Header: "Sub Total",
+    Cell: SubTotal,
+  },
+
+  {
+    id: "price_summary.tax",
+    Header: "Tax",
+    Cell: Tax,
+  },
+  {
+    id: "price_summary.total",
     Header: "Total Price",
     Cell: TotalPrice,
   },
@@ -1421,6 +1467,16 @@ export const bulkassigntableColumn = [
     id: "job_category.name",
     Header: "category",
     Cell: CategoryCell,
+  },
+  {
+    id: "pickup_quad",
+    Header: "From Quad",
+    Cell: FromQuadCell,
+  },
+  {
+    id: "delivery_quad",
+    Header: "To Quad",
+    Cell: ToQuadCell,
   },
   {
     id: "suburb_area,area_color",

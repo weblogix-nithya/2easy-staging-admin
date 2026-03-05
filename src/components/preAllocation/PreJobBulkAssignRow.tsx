@@ -27,7 +27,7 @@ export function JobBulkAssignRow(props: { columns: any[]; item: any }) {
 
         return (
           <Td key={column.id} bg={bgColor}>
-            <div className="flex justify-left" {...attributes} {...listeners}>
+            <div  {...attributes} {...listeners}> {/* className="flex justify-left" */}
               {column.Cell ? (
                 column.Cell({ row: item })
               ) : column?.type === "date" ? (
