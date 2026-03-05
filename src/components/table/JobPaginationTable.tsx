@@ -117,28 +117,28 @@ type PaginationTableProps<T extends object> = {
   onContextMenu?: (event: React.MouseEvent, rowData: any) => void;
   onUpdateDriverFreeText?: (driver: any, value: string) => Promise<void>;
 } & (
-  | {
+    | {
       isServerSide?: false;
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-  | {
+    | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-) &
+  ) &
   (
     | {
-        showRowSelection?: false;
-        setSelectedRow?: never;
-        isFilterRowSelected?: never;
-      }
+      showRowSelection?: false;
+      setSelectedRow?: never;
+      isFilterRowSelected?: never;
+    }
     | {
-        showRowSelection: true;
-        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-        isFilterRowSelected: boolean;
-      }
+      showRowSelection: true;
+      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+      isFilterRowSelected: boolean;
+    }
   );
 const PaginationTable = <T extends object>({
   columns,
@@ -166,8 +166,8 @@ const PaginationTable = <T extends object>({
   setSavingDriverId,
   onUpdateDriverFreeText,
 }: // restyleTable = false,
-// autoResetSelectedRows= false,
-PaginationTableProps<T>) => {
+  // autoResetSelectedRows= false,
+  PaginationTableProps<T>) => {
   const router = useRouter();
   // const [pageRows, setPageRows] = useState([]);
 
@@ -258,9 +258,9 @@ PaginationTableProps<T>) => {
   // }, [page, isFilterRowSelected]);
 
   const pageRows = React.useMemo(
-  () => (isFilterRowSelected ? page.filter((row) => row.isSelected) : page),
-  [page, isFilterRowSelected]
-);
+    () => (isFilterRowSelected ? page.filter((row) => row.isSelected) : page),
+    [page, isFilterRowSelected]
+  );
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
@@ -335,7 +335,7 @@ PaginationTableProps<T>) => {
               <React.Fragment key={`driver-header-${index}`}>
                 {shouldShowDriverHeader && (
                   <Tr>
-                    <Td fontSize="sm" colSpan={columns.length} p={0}>
+                    <Td fontSize="md" colSpan={columns.length} p={0}>
                       <Box
                         bg="#1d2d53"
                         color="#fff"
@@ -586,10 +586,10 @@ PaginationTableProps<T>) => {
                     if (EXCLUDED_IDS.has(colId)) return;
                     toggleOptimisticRow(row); // instant
                   }}
-                  // className="css-en-xlrwr4"
-                  // onClick={
-                  //   isChecked ? () => row.toggleRowSelected() : undefined
-                  // }
+                // className="css-en-xlrwr4"
+                // onClick={
+                //   isChecked ? () => row.toggleRowSelected() : undefined
+                // }
                 >
                   {row?.cells?.map((cell, index) => {
                     let data;
@@ -641,13 +641,13 @@ PaginationTableProps<T>) => {
                     if (cell.column.Header === "Actions") {
                       data = (
                         <Td
-                          fontSize="sm"
+                          fontSize="md"
                           key={`action-${index}`}
                           data-column-id="actions"
-                          // paddingLeft={restyleTable && 1}
-                          // paddingInlineStart={restyleTable && 1}
-                          // paddingRight={restyleTable && 2}
-                          // paddingInlineEnd={restyleTable && 2}
+                        // paddingLeft={restyleTable && 1}
+                        // paddingInlineStart={restyleTable && 1}
+                        // paddingRight={restyleTable && 2}
+                        // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
                             {
@@ -656,20 +656,19 @@ PaginationTableProps<T>) => {
                                 //@ts-expect-error
                                 cell.column.isEdit) && (
                                 <Link
-                                  href={`${path || router.pathname}/${
-                                    cell.row.original.job.id
-                                  }`}
+                                  href={`${path || router.pathname}/${cell.row.original.job.id
+                                    }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <Button
                                     bg="white"
-                                    fontSize="sm"
+                                    fontSize="md"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faPen}
@@ -684,9 +683,8 @@ PaginationTableProps<T>) => {
                               //@ts-expect-error
                               cell.column.isView && (
                                 <Link
-                                  href={`${path || router.pathname}/${
-                                    cell.row.original.job.id
-                                  }`}
+                                  href={`${path || router.pathname}/${cell.row.original.job.id
+                                    }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -694,11 +692,11 @@ PaginationTableProps<T>) => {
                                   <Button
                                     // bg={boxBg}
                                     bg="white"
-                                    fontSize="sm"
+                                    fontSize="md"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faEye}
@@ -713,9 +711,8 @@ PaginationTableProps<T>) => {
                               //@ts-expect-error
                               cell.column.isTracking && (
                                 <Link
-                                  href={`${path || router.pathname}/tracking/${
-                                    cell.row.original.job.id
-                                  }`}
+                                  href={`${path || router.pathname}/tracking/${cell.row.original.job.id
+                                    }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -723,11 +720,11 @@ PaginationTableProps<T>) => {
                                   <Button
                                     // bg={boxBg}
                                     bg="white"
-                                    fontSize="sm"
+                                    fontSize="md"
                                     // fontWeight="500"
                                     className="!text-[#3B68DB]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     Track
                                   </Button>
@@ -740,7 +737,7 @@ PaginationTableProps<T>) => {
                     } else if (cell.column.Header === "Instructions") {
                       data = (
                         <Td
-                          fontSize="sm"
+                          fontSize="md"
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
@@ -797,12 +794,12 @@ PaginationTableProps<T>) => {
                           pr="20px"
                           bg={
                             cell.column.id === "timeslot" &&
-                            !["6", "7", "8", "9", "10"].includes(
-                              row?.original?.job?.job_status?.id,
-                            )
+                              !["6", "7", "8", "9", "10"].includes(
+                                row?.original?.job?.job_status?.id,
+                              )
                               ? (getTimeslotBgColor(
-                                  row?.original?.job?.timeslot,
-                                ) ?? "transparent")
+                                row?.original?.job?.timeslot,
+                              ) ?? "transparent")
                               : "transparent"
                           }
                         >

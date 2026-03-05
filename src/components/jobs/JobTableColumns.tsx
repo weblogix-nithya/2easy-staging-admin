@@ -97,7 +97,7 @@ export const JobDestinationsCell = ({ row }: any) => {
   return (
     <>
       {first ? (
-        <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
+        <Text whiteSpace="normal" fontSize="md" minWidth={"170px"}>
           {first.address_line_1}
           {"\n"}
           {first.address_city} {first.address_postal_code}
@@ -197,14 +197,14 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(
               filteredDestinations[0].arrived_at,
               "HH:mm, DD/MM/YYYY",
             )}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Delivery time:{" "}
             {formatDate(
               filteredDestinations[0].updated_at,
@@ -325,11 +325,11 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     <>
       {pickupDest?.pickup_at && showPickupTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Collection time:{" "}
             {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
@@ -414,11 +414,11 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
     <>
       {pickupDest?.pickup_at && showPickupTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Collection time:{" "}
             {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
@@ -447,14 +447,14 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
         <>
-          <Text fontSize="sm" color="blue.600" mb={1}>
+          <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
             {formatDate(
               filteredDestinations[0].arrived_at,
               "HH:mm, DD/MM/YYYY",
             )}
           </Text>
-          <Text fontSize="sm" color="red.600" mb={1}>
+          <Text fontSize="md" color="red.600" mb={1}>
             Delivery time:{" "}
             {formatDate(
               filteredDestinations[0].updated_at,
@@ -552,7 +552,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
     <VStack align="start" spacing={1}>
       {visibleItems.map((item: any) => (
         <Text
-          fontSize="sm"
+          fontSize="md"
           key={`items-dimension-${item.id}`}
           w="max-content"
         >
@@ -647,7 +647,7 @@ export const DriverCellExport = ({ row }: any) => {
   return `${row?.original?.job?.driver?.full_name || "-"}`;
 };
 export const TotalPrice = ({ row }: any) => {
-  return <Text fontSize="sm" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+  return <Text fontSize="md" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -735,10 +735,10 @@ export const StatusCellExport = ({ row }: any) =>
 export const ReadyAtCell = ({ row }: any) => {
   return (
     <Flex direction="column" gap={1} minWidth="200px">
-      <Text fontSize="sm" fontWeight="500">
+      <Text fontSize="md" fontWeight="500">
         Created Date: {formatDate(row?.original?.job?.created_at) || "-"}
       </Text>
-      <Text fontSize="sm">
+      <Text fontSize="md">
         Scheduled Date: {formatDate(row?.original?.job?.drop_at) || "-"}
         {/* It was ready_at initially, changed to drop_at as per client request,now adding both  */}
       </Text>
@@ -793,7 +793,7 @@ export const PickupAddressCell = ({ row }: any) => {
   const line2 = `${pickup.address_city} ${pickup.address_postal_code} ${pickup.address_state}`;
 
   return (
-    <Text whiteSpace="normal" fontSize="sm" minWidth={"170px"}>
+    <Text whiteSpace="normal" fontSize="md" minWidth={"170px"}>
       {line1}
       {"\n"}
       {line2}
@@ -945,7 +945,7 @@ export const AdminNotesCellExport = ({ row }: any) => {
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text maxW="140px" fontSize="md" fontWeight="bold"  noOfLines={1}>
+      <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
         {convertTo12Hour(row?.original?.job?.timeslot) || "-"}
       </Text>
       <EditableFieldPopover

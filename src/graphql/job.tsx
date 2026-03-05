@@ -417,6 +417,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
     $per_page: Int
     $orderBy: [OrderByClause!]
     $states: [String]
+    $quadrant: [String]
     $suburbs: [String]
     $weight_from: Float
     $weight_to: Float
@@ -434,6 +435,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
       per_page: $per_page
       orderBy: $orderBy
       states: $states
+      quadrant: $quadrant
       suburbs: $suburbs
       weight_from: $weight_from
       weight_to: $weight_to
@@ -468,6 +470,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           bgcolor
           current_suburb
           total_jobs_today_price
+          total_jobs_weekly_price
         }
         job {
           id
@@ -476,6 +479,8 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           driver_id
           preallocation_driver_id
           suburb_area
+          pickup_quad
+          delivery_quad
           weight_color
           volume_color
           area_color
@@ -542,7 +547,6 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           job_destinations {
             id
             is_pickup
-            pickup_at
             is_saved_address
             address_line_1
             address_city
@@ -557,10 +561,15 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
               downloadable_url
             }
           }
-          job_price_calculation_detail {
-            job_id
+          price_summary {
+          sub_total
+          tax
+          total
+          charges {
+            name
             total
           }
+        }
         }
       }
     }
@@ -1117,14 +1126,14 @@ export type Job = {
   media_admin?: any[] | null;
 
   [key: string]:
-    | string
-    | number
-    | null
-    | boolean
-    | undefined
-    | Date
-    | any[]
-    | any;
+  | string
+  | number
+  | null
+  | boolean
+  | undefined
+  | Date
+  | any[]
+  | any;
 };
 
 export const defaultJob: Job = {
