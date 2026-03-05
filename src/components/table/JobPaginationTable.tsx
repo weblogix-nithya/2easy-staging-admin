@@ -12,21 +12,26 @@ import {
   Tbody,
   Td,
   Text,
+  Textarea,
   Th,
   Thead,
   Tooltip,
   Tr,
   VStack,
 } from "@chakra-ui/react";
-import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
+import { faEye, faPen } from "@fortawesome/pro-regular-svg-icons";
 import { faMessageLines } from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
-import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
+import {
+  formatCurrency,
+  formatDate,
+  formatToTimeDate,
+  getTimeDifferenceInMinutes,
+} from "helpers/helper";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
   Column,
@@ -37,6 +42,7 @@ import {
   useSortBy,
   useTable,
 } from "react-table";
+import { RootState } from "store/store";
 
 // Non-toggle column ids
 const EXCLUDED_IDS = new Set([
@@ -77,6 +83,18 @@ const getStatusStyle = (status: string) => {
   return {};
 };
 
+export const getTimeslotBgColor = (time: string | null | undefined) => {
+  const diffMinutes = getTimeDifferenceInMinutes(time);
+
+  if (diffMinutes === null) return "transparent";
+
+  // const diffHours = diffMinutes / 60;
+
+  if (diffMinutes <= 60) return "#e63a49"; //red
+  if (diffMinutes <= 120) return "#ff7f00"; //orange
+  return "#00ff00"; //green
+};
+
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
   data: T[];
@@ -85,36 +103,42 @@ type PaginationTableProps<T extends object> = {
   plugins?: PluginHook<T>[];
   path?: string;
   showDelete?: boolean;
-  onDelete?: (data: any) => void;
   showPageSizeSelect?: boolean;
   showManualPages?: boolean;
   isChecked?: boolean;
   onSortingChange?: any;
   restyleTable?: boolean;
+  editingDriverId: number | null;
+  setEditingDriverId: React.Dispatch<React.SetStateAction<number | null>>;
+  freeTextValue?: string;
+  savingDriverId?: number | null;
+  setSavingDriverId?: React.Dispatch<React.SetStateAction<number | null>>;
+  setFreeTextValue?: React.Dispatch<React.SetStateAction<string>>;
   onContextMenu?: (event: React.MouseEvent, rowData: any) => void;
+  onUpdateDriverFreeText?: (driver: any, value: string) => Promise<void>;
 } & (
-    | {
+  | {
       isServerSide?: false;
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-    | {
+  | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-  ) &
+) &
   (
     | {
-      showRowSelection?: false;
-      setSelectedRow?: never;
-      isFilterRowSelected?: never;
-    }
+        showRowSelection?: false;
+        setSelectedRow?: never;
+        isFilterRowSelected?: never;
+      }
     | {
-      showRowSelection: true;
-      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-      isFilterRowSelected: boolean;
-    }
+        showRowSelection: true;
+        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+        isFilterRowSelected: boolean;
+      }
   );
 const PaginationTable = <T extends object>({
   columns,
@@ -123,10 +147,8 @@ const PaginationTable = <T extends object>({
   isServerSide = false,
   options,
   plugins = [],
-  _showDelete = false,
   setQueryPageIndex,
   setQueryPageSize,
-  // onDelete,
   path,
   showPageSizeSelect = false,
   // showManualPages = false,
@@ -137,9 +159,15 @@ const PaginationTable = <T extends object>({
   onSortingChange,
   restyleTable = false,
   onContextMenu,
+  editingDriverId,
+  setEditingDriverId,
+  setFreeTextValue,
+  savingDriverId,
+  setSavingDriverId,
+  onUpdateDriverFreeText,
 }: // restyleTable = false,
-  // autoResetSelectedRows= false,
-  PaginationTableProps<T>) => {
+// autoResetSelectedRows= false,
+PaginationTableProps<T>) => {
   const router = useRouter();
   // const [pageRows, setPageRows] = useState([]);
 
@@ -181,6 +209,7 @@ const PaginationTable = <T extends object>({
     ...plugins,
     useRowSelect,
   );
+  const freeTextRef = useRef<HTMLTextAreaElement>(null);
 
   const optimisticSelRef = React.useRef<Map<string, boolean>>(new Map());
   const [, force] = React.useState(0);
@@ -228,9 +257,10 @@ const PaginationTable = <T extends object>({
   //   //eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [page, isFilterRowSelected]);
 
-  const pageRows = isFilterRowSelected
-    ? page.filter((row) => row.isSelected)
-    : page;
+  const pageRows = React.useMemo(
+  () => (isFilterRowSelected ? page.filter((row) => row.isSelected) : page),
+  [page, isFilterRowSelected]
+);
 
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
@@ -244,7 +274,7 @@ const PaginationTable = <T extends object>({
 
   return (
     <VStack w="full" align="start" spacing={4}>
-      <Table colorScheme="white" {...getTableProps()}>
+      <Table colorScheme="simple" {...getTableProps()}>
         <Thead>
           {headerGroups.map((headerGroup, index) => (
             <Tr
@@ -319,19 +349,19 @@ const PaginationTable = <T extends object>({
                       >
                         <VStack align="start" spacing={3} w="full">
                           {/* --- DRIVER HEADER --- */}
+                          {/* === ROW 1 === */}
                           <Flex
-                            direction="column"
-                            align="start"
-                            wrap="wrap"
-                            gap={3}
-                            w="full"
+                            w="100%"
+                            align="center"
+                            justify="space-between"
+                            gap={4}
                           >
-                            <Flex wrap="wrap" align="start" gap={3}>
+                            {/* LEFT SIDE */}
+                            <Flex align="center" gap={3} wrap="wrap">
                               <Badge
-                                colorScheme="Darkblue"
+                                colorScheme="darkblue"
                                 variant="subtle"
                                 fontSize="md"
-                                style={{ marginRight: "10px" }}
                               >
                                 Driver: {driver.full_name} — {driver.driver_no}
                               </Badge>
@@ -356,14 +386,120 @@ const PaginationTable = <T extends object>({
                                   driver.last_job_drop_at_today,
                                 )}
                               </Badge>
-                              <Badge
-                                colorScheme="red"
-                                variant="subtle"
-                                fontSize="sm"
-                              >
-                                Driver price: {driver.total_jobs_today_price ?? "-"}
-                              </Badge>
                             </Flex>
+
+                            {/* CENTER (FREETEXT) */}
+                            <Flex mx="auto" minW="0">
+                              {editingDriverId === driver.id ? (
+                                <Box w="460px">
+                                  {" "}
+                                  {/* slightly wider */}
+                                  <Textarea
+                                    size="sm"
+                                    // value={freeTextValue}
+                                    // onChange={(e) =>
+                                    //   setFreeTextValue(e.target.value)
+                                    // }
+                                    defaultValue={
+                                      driver.today_free_text?.text || ""
+                                    }
+                                    ref={freeTextRef}
+                                    placeholder="Enter driver notes"
+                                    resize="none"
+                                    fontSize="md"
+                                    h="70px"
+                                    minH="70px"
+                                    w="460px"
+                                    bg="gray.100" // light grey background
+                                    color="red.600" // red text
+                                    border="1px solid"
+                                    borderColor="gray.300"
+                                    _focus={{
+                                      borderColor: "red.400",
+                                      boxShadow: "none",
+                                    }}
+                                    _hover={{
+                                      borderColor: "gray.400",
+                                    }}
+                                  />
+                                  <HStack mt={1} justify="flex-end">
+                                    <IconButton
+                                      aria-label="Save"
+                                      size="sm"
+                                      colorScheme="green"
+                                      icon={<span>✔</span>}
+                                      isLoading={savingDriverId === driver.id}
+                                      onClick={async () => {
+                                        if (!onUpdateDriverFreeText) return;
+                                        try {
+                                          const value =
+                                            freeTextRef.current?.value || "";
+                                          setSavingDriverId(driver.id);
+                                          await onUpdateDriverFreeText(
+                                            driver,
+                                            value.trim(),
+                                          );
+                                          setEditingDriverId(null);
+                                        } finally {
+                                          setSavingDriverId(null);
+                                        }
+                                      }}
+                                    />
+
+                                    <IconButton
+                                      aria-label="Cancel"
+                                      size="sm"
+                                      colorScheme="red"
+                                      icon={<span>✖</span>}
+                                      onClick={() => setEditingDriverId(null)}
+                                    />
+                                  </HStack>
+                                </Box>
+                              ) : (
+                                <>
+                                  <Box
+                                    w="460px"
+                                    minH="70px"
+                                    px={3}
+                                    py={2}
+                                    bg="gray.100" // light grey background
+                                    color="red.600" // red text
+                                    border="1px solid"
+                                    borderColor="gray.300"
+                                    borderRadius="md"
+                                    size="md"
+                                    fontSize="md"
+                                    cursor="pointer"
+                                    overflow="hidden"
+                                    display="flex"
+                                    alignItems="center"
+                                    onClick={() => {
+                                      setEditingDriverId(driver.id);
+                                      setFreeTextValue(
+                                        driver.today_free_text?.text || "",
+                                      );
+                                    }}
+                                  >
+                                    {driver?.today_free_text?.text?.trim()
+                                      ? driver.today_free_text.text
+                                      : "Click to add driver notes"}
+                                  </Box>
+                                </>
+                              )}
+                              {/* </Flex> */}
+                            </Flex>
+
+                            {/* RIGHT SIDE (ACTIONS) */}
+
+                            {/* RIGHT SIDE */}
+                            <Badge
+                              colorScheme="red"
+                              variant="subtle"
+                              fontSize="md"
+                            >
+                              Driver Price:{" "}
+                              {driver.total_jobs_today_price ?? "-"}
+                            </Badge>
                           </Flex>
 
                           {/* --- DRIVER DETAILS --- */}
@@ -373,7 +509,7 @@ const PaginationTable = <T extends object>({
                               variant="subtle"
                               fontSize="md"
                             >
-                              Current Suburb:  {driver.current_suburb ?? "-"}
+                              Current Suburb: {driver.current_suburb ?? "-"}
                             </Badge>
 
                             <Badge
@@ -432,11 +568,12 @@ const PaginationTable = <T extends object>({
                 )}
                 <Tr
                   {...row.getRowProps()}
-                  key={`data-row-${row.id || idx}`}
+                  key={`data-row-${row.id || index}`}
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
                   onContextMenu={(e) => {
-                    if (onContextMenu) {  // ✅ Check if handler exists
+                    if (onContextMenu) {
+                      // ✅ Check if handler exists
                       onContextMenu(e, row.original.job);
                     }
                   }}
@@ -449,10 +586,10 @@ const PaginationTable = <T extends object>({
                     if (EXCLUDED_IDS.has(colId)) return;
                     toggleOptimisticRow(row); // instant
                   }}
-                // className="css-en-xlrwr4"
-                // onClick={
-                //   isChecked ? () => row.toggleRowSelected() : undefined
-                // }
+                  // className="css-en-xlrwr4"
+                  // onClick={
+                  //   isChecked ? () => row.toggleRowSelected() : undefined
+                  // }
                 >
                   {row?.cells?.map((cell, index) => {
                     let data;
@@ -503,51 +640,25 @@ const PaginationTable = <T extends object>({
 
                     if (cell.column.Header === "Actions") {
                       data = (
-                        <Td fontSize="sm"
+                        <Td
+                          fontSize="sm"
                           key={`action-${index}`}
                           data-column-id="actions"
-                        // paddingLeft={restyleTable && 1}
-                        // paddingInlineStart={restyleTable && 1}
-                        // paddingRight={restyleTable && 2}
-                        // paddingInlineEnd={restyleTable && 2}
+                          // paddingLeft={restyleTable && 1}
+                          // paddingInlineStart={restyleTable && 1}
+                          // paddingRight={restyleTable && 2}
+                          // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
-                            {
-                              //@ts-expect-error
-                              cell.column.isDownload && (
-                                <Link
-                                  href={cell.value}
-                                  target="_blank"
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faDownload}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
                             {
                               //@ts-expect-error
                               (cell.column.isEdit == undefined ||
                                 //@ts-expect-error
                                 cell.column.isEdit) && (
                                 <Link
-                                  href={`${path || router.pathname}/${cell.row.original.job.id
-                                    }`}
+                                  href={`${path || router.pathname}/${
+                                    cell.row.original.job.id
+                                  }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -557,8 +668,8 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faPen}
@@ -573,8 +684,9 @@ const PaginationTable = <T extends object>({
                               //@ts-expect-error
                               cell.column.isView && (
                                 <Link
-                                  href={`${path || router.pathname}/${cell.row.original.job.id
-                                    }`}
+                                  href={`${path || router.pathname}/${
+                                    cell.row.original.job.id
+                                  }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -585,8 +697,8 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faEye}
@@ -601,8 +713,9 @@ const PaginationTable = <T extends object>({
                               //@ts-expect-error
                               cell.column.isTracking && (
                                 <Link
-                                  href={`${path || router.pathname}/tracking/${cell.row.original.job.id
-                                    }`}
+                                  href={`${path || router.pathname}/tracking/${
+                                    cell.row.original.job.id
+                                  }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -613,39 +726,12 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[#3B68DB]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     Track
                                   </Button>
                                 </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              cell.column.isDelete && (
-                                <Button
-                                  // bg={boxBg}
-                                  bg="white"
-                                  fontSize="sm"
-                                  // fontWeight="500"
-                                  className="!text-[var(--chakra-colors-black-400)]"
-                                  onClick={() => {
-                                    onDelete(cell.row.original.job.id);
-                                  }}
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={
-                                      cell.column.deleteIcon != undefined
-                                        ? cell.column.deleteIcon
-                                        : faTrashAlt
-                                    }
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    size="lg"
-                                  />
-                                </Button>
                               )
                             }
                           </Flex>
@@ -653,7 +739,8 @@ const PaginationTable = <T extends object>({
                       );
                     } else if (cell.column.Header === "Instructions") {
                       data = (
-                        <Td fontSize="sm"
+                        <Td
+                          fontSize="sm"
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
@@ -708,6 +795,16 @@ const PaginationTable = <T extends object>({
                           paddingRight={restyleTable && 2}
                           paddingInlineEnd={restyleTable && 2}
                           pr="20px"
+                          bg={
+                            cell.column.id === "timeslot" &&
+                            !["6", "7", "8", "9", "10"].includes(
+                              row?.original?.job?.job_status?.id,
+                            )
+                              ? (getTimeslotBgColor(
+                                  row?.original?.job?.timeslot,
+                                ) ?? "transparent")
+                              : "transparent"
+                          }
                         >
                           {
                             // @ts-expect-error

@@ -319,6 +319,10 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           no_max_pallets
           current_suburb
           total_jobs_today_price
+          today_free_text {
+            id
+            text
+          }
         }
         job {
           id
@@ -397,9 +401,9 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
               downloadable_url
             }
           }
-          job_price_calculation_detail { 
+          job_price_calculation_detail {
             job_id
-            total      
+            total
           }
         }
       }
@@ -483,8 +487,14 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           is_dangerous_goods
           is_tailgate_required
           is_paperwork_required
-          job_type { id name }
-          job_status { id name }
+          job_type {
+            id
+            name
+          }
+          job_status {
+            id
+            name
+          }
           ready_at
           start_at
           drop_at
@@ -494,10 +504,22 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           extras
           admin_notes
           customer_notes
-          driver { id full_name }
-          company { id name }
-          job_category { id name }
-          customer { id full_name }
+          driver {
+            id
+            full_name
+          }
+          company {
+            id
+            name
+          }
+          job_category {
+            id
+            name
+          }
+          customer {
+            id
+            full_name
+          }
           job_items {
             id
             quantity
@@ -506,7 +528,10 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
             dimension_height
             dimension_depth
             dimension_width
-            item_type { id name }
+            item_type {
+              id
+              name
+            }
           }
           meta {
             id
@@ -526,18 +551,21 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
             address_business_name
             updated_at
             arrived_at
-            media { name collection_name downloadable_url }
+            media {
+              name
+              collection_name
+              downloadable_url
+            }
           }
-          job_price_calculation_detail { 
+          job_price_calculation_detail {
             job_id
-            total      
+            total
           }
         }
       }
     }
   }
 `;
-
 
 export const GET_JOB_QUERY = gql`
   query job($id: ID!) {
@@ -909,8 +937,6 @@ export const PREALLOCATE_JOBS_MUTATION = gql`
   }
 `;
 
-
-
 export const BULK_UPDATE_SORT_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
     bulkUpdateJob(input: $input) {
@@ -961,6 +987,27 @@ export const REMOVE_PRE_ALLOCATE_DRIVER = gql`
 `;
 
 
+export const CREATE_DRIVER_FREE_TEXT = gql`
+  mutation CreateDriverFreeText($input: CreateDriverFreeTextInput!) {
+    createDriverFreeText(input: $input) {
+      id
+      driver_id
+      date
+      text
+    }
+  }
+`;
+
+export const UPDATE_DRIVER_FREE_TEXT = gql`
+  mutation UpdateDriverFreeText($input: UpdateDriverFreeTextInput!) {
+    updateDriverFreeText(input: $input) {
+      id
+      driver_id
+      date
+      text
+    }
+  }
+`;
 
 export interface UpdateJobInput {
   id: number;
@@ -1070,14 +1117,14 @@ export type Job = {
   media_admin?: any[] | null;
 
   [key: string]:
-  | string
-  | number
-  | null
-  | boolean
-  | undefined
-  | Date
-  | any[]
-  | any;
+    | string
+    | number
+    | null
+    | boolean
+    | undefined
+    | Date
+    | any[]
+    | any;
 };
 
 export const defaultJob: Job = {
@@ -1181,7 +1228,7 @@ export type JobQuoteData = {
   minimum_charge: number;
   area: string;
   company_rates: any[];
-  toll_enabled: boolean;  
+  toll_enabled: boolean;
   timeslot_depots: string | null;
   pick_up_state: string;
   pick_up_stateCode: string;
