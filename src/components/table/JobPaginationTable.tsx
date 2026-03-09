@@ -162,7 +162,7 @@ const PaginationTable = <T extends object>({
   editingDriverId,
   setEditingDriverId,
   setFreeTextValue,
-  savingDriverId,
+  // savingDriverId,
   setSavingDriverId,
   onUpdateDriverFreeText,
 }: // restyleTable = false,
@@ -347,224 +347,203 @@ PaginationTableProps<T>) => {
                         borderRadius="md"
                         w="100%"
                       >
-                        <VStack align="start" spacing={3} w="full">
-                          {/* --- DRIVER HEADER --- */}
-                          {/* === ROW 1 === */}
-                          <Flex
-                            w="100%"
-                            align="center"
-                            justify="space-between"
-                            gap={4}
-                          >
-                            {/* LEFT SIDE */}
-                            <Flex align="center" gap={3} wrap="wrap">
+                        {/* ================= ROW 1 ================= */}
+                        <Flex
+                          w="100%"
+                          align="flex-start"
+                          justify="space-between"
+                          gap={6}
+                          mb={4}
+                        >
+                          {/* LEFT COLUMN — FIXED WIDTH */}
+                          <Box minW="420px" maxW="420px">
+                            <VStack align="start" spacing={2}>
                               <Badge
                                 colorScheme="darkblue"
                                 variant="subtle"
                                 fontSize="md"
+                                whiteSpace="nowrap"
+                                overflow="hidden"
+                                textOverflow="ellipsis"
+                                maxW="100%"
                               >
-                                #{driver.id} : {driver.full_name}
-                              </Badge>
-                              <Badge
-                                colorScheme="purple"
-                                variant="subtle"
-                                fontSize="md"
-                              >
-                                First Collection:{" "}
-                                {formatToTimeDate(
-                                  driver.first_job_start_at_today,
-                                )}
+                                #{driver?.id} : {driver?.full_name}
                               </Badge>
 
-                              <Badge
-                                colorScheme="purple"
-                                variant="subtle"
-                                fontSize="md"
-                              >
-                                Last Delivery:{" "}
-                                {formatToTimeDate(
-                                  driver.last_job_drop_at_today,
-                                )}
-                              </Badge>
-                            </Flex>
+                              <HStack spacing={3} whiteSpace="nowrap">
+                                <Badge
+                                  colorScheme="purple"
+                                  variant="subtle"
+                                  fontSize="md"
+                                >
+                                  First Collection:{" "}
+                                  {formatToTimeDate(
+                                    driver?.first_job_start_at_today,
+                                  )}
+                                </Badge>
 
-                            {/* CENTER (FREETEXT) */}
-                            {/* <Flex mx="auto" minW="0"> */}
-                            <Flex minW="0" flex="1" justify="center">
-                              {editingDriverId === driver.id ? (
-                                <Box w="55%" maxW="700px" minH="70px">
-                                  {" "}
-                                  <Textarea
+                                <Badge
+                                  colorScheme="purple"
+                                  variant="subtle"
+                                  fontSize="md"
+                                >
+                                  Last Delivery:{" "}
+                                  {formatToTimeDate(
+                                    driver?.last_job_drop_at_today,
+                                  )}
+                                </Badge>
+                              </HStack>
+                            </VStack>
+                          </Box>
+
+                          {/* CENTER — FIXED START POSITION */}
+                          <Box w="550px" flexShrink={0}>
+                            {editingDriverId === driver?.id ? (
+                              <HStack align="flex-start" spacing={2}>
+                                <Textarea
+                                  flex="1"
+                                  defaultValue={
+                                    driver?.today_free_text?.text || ""
+                                  }
+                                  ref={freeTextRef}
+                                  resize="none"
+                                  fontSize="md"
+                                  bg="gray.100"
+                                  color="red.600"
+                                  border="1px solid"
+                                  borderColor="gray.300"
+                                  minH="60px"
+                                />
+
+                                <VStack spacing={2}>
+                                  <IconButton
+                                    aria-label="Save"
                                     size="sm"
-                                    w="100%"
-                                    // value={freeTextValue}
-                                    // onChange={(e) =>
-                                    //   setFreeTextValue(e.target.value)
-                                    // }
-                                    defaultValue={
-                                      driver.today_free_text?.text || ""
-                                    }
-                                    ref={freeTextRef}
-                                    placeholder="Enter driver notes"
-                                    resize="none"
-                                    fontSize="md"
-                                    // h="70px"
-                                    // minH="70px"
-                                    // w="460px"
-                                    bg="gray.100" // light grey background
-                                    color="red.600" // red text
-                                    border="1px solid"
-                                    borderColor="gray.300"
-                                    _focus={{
-                                      borderColor: "red.400",
-                                      boxShadow: "none",
-                                    }}
-                                    _hover={{
-                                      borderColor: "gray.400",
+                                    colorScheme="green"
+                                    icon={<span>✔</span>}
+                                    isLoading={savingDriverId === driver?.id}
+                                    onClick={async () => {
+                                      if (!onUpdateDriverFreeText) return;
+                                      try {
+                                        const value =
+                                          freeTextRef.current?.value || "";
+                                        setSavingDriverId(driver?.id);
+                                        await onUpdateDriverFreeText(
+                                          driver,
+                                          value.trim(),
+                                        );
+                                        setEditingDriverId(null);
+                                      } finally {
+                                        setSavingDriverId(null);
+                                      }
                                     }}
                                   />
-                                  <HStack mt={1} justify="flex-end">
-                                    <IconButton
-                                      aria-label="Save"
-                                      size="sm"
-                                      colorScheme="green"
-                                      icon={<span>✔</span>}
-                                      isLoading={savingDriverId === driver.id}
-                                      onClick={async () => {
-                                        if (!onUpdateDriverFreeText) return;
-                                        try {
-                                          const value =
-                                            freeTextRef.current?.value || "";
-                                          setSavingDriverId(driver.id);
-                                          await onUpdateDriverFreeText(
-                                            driver,
-                                            value.trim(),
-                                          );
-                                          setEditingDriverId(null);
-                                        } finally {
-                                          setSavingDriverId(null);
-                                        }
-                                      }}
-                                    />
 
-                                    <IconButton
-                                      aria-label="Cancel"
-                                      size="sm"
-                                      colorScheme="red"
-                                      icon={<span>✖</span>}
-                                      onClick={() => setEditingDriverId(null)}
-                                    />
-                                  </HStack>
-                                </Box>
-                              ) : (
-                                <>
-                                  <Box
-                                    w="55%"
-                                    maxW="700px"
-                                    minH="70px"
-                                    px={3}
-                                    py={2}
-                                    bg="gray.100" // light grey background
-                                    color="red.600" // red text
-                                    border="1px solid"
-                                    borderColor="gray.300"
-                                    borderRadius="md"
-                                    size="md"
-                                    fontSize="md"
-                                    cursor="pointer"
-                                    overflow="hidden"
-                                    display="flex"
-                                    alignItems="center"
-                                    whiteSpace="pre-line"
-                                    onClick={() => {
-                                      setEditingDriverId(driver.id);
-                                      setFreeTextValue(
-                                        driver.today_free_text?.text || "",
-                                      );
-                                    }}
-                                  >
-                                    {driver?.today_free_text?.text?.trim()
-                                      ? driver.today_free_text.text
-                                      : "Click to add driver notes"}
-                                  </Box>
-                                </>
-                              )}
-                              {/* </Flex> */}
-                            </Flex>
+                                  <IconButton
+                                    aria-label="Cancel"
+                                    size="sm"
+                                    colorScheme="red"
+                                    icon={<span>✖</span>}
+                                    onClick={() => setEditingDriverId(null)}
+                                  />
+                                </VStack>
+                              </HStack>
+                            ) : (
+                              <Box
+                                w="100%"
+                                minH="60px"
+                                px={3}
+                                py={2}
+                                bg="gray.100"
+                                color="red.600"
+                                border="1px solid"
+                                borderColor="gray.300"
+                                borderRadius="md"
+                                whiteSpace="pre-line"
+                                cursor="pointer"
+                                onClick={() => setEditingDriverId(driver.id)}
+                              >
+                                {driver?.today_free_text?.text?.trim()
+                                  ? driver?.today_free_text?.text
+                                  : "Click to add driver notes"}
+                              </Box>
+                            )}
+                          </Box>
 
-                            {/* RIGHT SIDE (ACTIONS) */}
+                          {/* RIGHT — PRICE */}
+                          <Box minW="150px" textAlign="right">
+                             <>
+                                <Badge colorScheme="red" variant="subtle" fontSize="sm" mr={'4px'}>
+                                  Today Price: {driver?.total_jobs_today_price ?? 0}
+                                </Badge>
 
-                            {/* RIGHT SIDE */}
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              Driver Price:{" "}
-                              {driver.total_jobs_today_price ?? "-"}
-                            </Badge>
-                          </Flex>
+                                <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                                  Weekly Price: {driver?.total_jobs_weekly_price ?? 0}
+                                </Badge>
+                              </>
+                          </Box>
+                        </Flex>
 
-                          {/* --- DRIVER DETAILS --- */}
-                          <Flex wrap="wrap" align="start" gap={3} w="full">
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              Current Suburb: {driver.current_suburb ?? "-"}
-                            </Badge>
+                        {/* ================= ROW 2 ================= */}
+                        <Flex wrap="wrap" align="center" gap={3}>
+                          <Badge
+                            colorScheme="red"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            Current Suburb: {driver?.current_suburb ?? "-"}
+                          </Badge>
 
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              Mobile Number: {driver.phone_no ?? "-"}
-                            </Badge>
+                          <Badge
+                            colorScheme="red"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            Mobile Number: {driver?.phone_no ?? "-"}
+                          </Badge>
 
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              Rego: {driver.registration_no ?? "-"}
-                            </Badge>
+                          <Badge
+                            colorScheme="red"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            Rego: {driver?.registration_no ?? "-"}
+                          </Badge>
 
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
-                            </Badge>
-                            <Badge
-                              colorScheme="blue"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              CBM: {driver.cbm_summary_today ?? 0} /{" "}
-                              {driver.no_max_volume ?? 0}
-                            </Badge>
+                          <Badge
+                            colorScheme="red"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            TAILGATE: {driver?.is_tailgated ? "Yes" : "No"}
+                          </Badge>
 
-                            <Badge
-                              colorScheme="blue"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              Weight: {driver.weight_summary_today ?? 0} /{" "}
-                              {driver.no_max_capacity ?? 0}
-                            </Badge>
+                          <Badge
+                            colorScheme="blue"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            CBM: {driver?.cbm_summary_today ?? 0} /{" "}
+                            {driver?.no_max_volume ?? 0}
+                          </Badge>
 
-                            <Badge
-                              colorScheme="blue"
-                              variant="subtle"
-                              fontSize="md"
-                            >
-                              Pallets: {driver.no_max_pallets ?? 0}
-                            </Badge>
-                          </Flex>
-                        </VStack>
+                          <Badge
+                            colorScheme="blue"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            Weight: {driver?.weight_summary_today ?? 0} /{" "}
+                            {driver?.no_max_capacity ?? 0}
+                          </Badge>
+
+                          <Badge
+                            colorScheme="blue"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            Pallets: {driver?.no_max_pallets ?? 0}
+                          </Badge>
+                        </Flex>
                       </Box>
                     </Td>
                   </Tr>
