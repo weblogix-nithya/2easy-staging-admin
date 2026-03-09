@@ -228,8 +228,8 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
           {normalMedia.map((media: any, index: number) => (
             <Link key={`${index + 1}`} href={media.downloadable_url} isExternal>
               <Image
-                src={media.downloadable_url}
-                alt={media.name || "Delivery evidence"}
+                src={media?.downloadable_url}
+                alt={media?.name || "Delivery evidence"}
                 width={50}
                 height={50}
                 style={{
@@ -343,8 +343,8 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
           {normalMedia.map((media: any, index: number) => (
             <Link key={index} href={media.downloadable_url} isExternal>
               <Image
-                src={media.downloadable_url}
-                alt={media.name || "Pickup evidence"}
+                src={media?.downloadable_url}
+                alt={media?.name || "Pickup evidence"}
                 width={50}
                 height={50}
                 style={{
@@ -530,7 +530,7 @@ export const ItemsTypeCell = ({ row }: any) => {
     <div>
       {items?.map((item: any) => (
         <Text key={`items-type-${item.id}`} mb={2}>
-          {item.item_type.name}
+          {item.item_type?.name}
         </Text>
       ))}
     </div>
@@ -539,7 +539,7 @@ export const ItemsTypeCell = ({ row }: any) => {
 export const ItemsTypeCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return items?.map((item: any) => {
-    return [`${item.item_type.name}  \n`];
+    return [`${item.item_type?.name}  \n`];
   });
 };
 export const ItemsDimensionCell = ({ row }: any) => {
@@ -694,7 +694,7 @@ export const JobTypeCell: React.FC<{
 };
 export const TypeCellExport = ({ row }: any) =>
   `${row?.original?.job?.job_type?.name
-    ? `${row.original.job.job_type.name}`
+    ? `${row.original.job.job_type?.name}`
     : "-"
   }`;
 
@@ -727,8 +727,8 @@ export const StatusCell = ({ row }: any) => {
 };
 
 export const StatusCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_status.name
-    ? `${row.original.job.job_status.name}`
+  `${row?.original?.job?.job_status?.name
+    ? `${row.original.job.job_status?.name}`
     : "-"
   }`;
 
@@ -876,7 +876,7 @@ export const DeliveryCell = ({ row }: any) => {
               whiteSpace="nowrap"
               {...getBadgeStyle(label.color)}
             >
-              {label.name}
+              {label?.name}
             </Badge>
           ))}
         </VStack>
@@ -911,7 +911,7 @@ export const DeliveryCell = ({ row }: any) => {
 };
 
 export const DeliveryCellExport = ({ row }: any) =>
-  `${row?.original?.job?.name ? `${row.original.job.name}` : "-"}`;
+  `${row?.original?.job?.name ? `${row.original.job?.name}` : "-"}`;
 
 export const AdminNotesCell = ({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";
