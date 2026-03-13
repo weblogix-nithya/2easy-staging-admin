@@ -37,6 +37,8 @@ import {
   useTable,
 } from "react-table";
 
+import { getTimeslotBgColor } from "./JobPaginationTable";
+
 // Non-toggle column ids
 const EXCLUDED_IDS = new Set([
   "actions",
@@ -93,28 +95,28 @@ type PaginationTableProps<T extends object> = {
   refetchJobs?: () => void;
   onContextMenu?: (e: React.MouseEvent, job: any) => void;
 } & (
-    | {
+  | {
       isServerSide?: false;
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-    | {
+  | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-  ) &
+) &
   (
     | {
-      showRowSelection?: false;
-      setSelectedRow?: never;
-      isFilterRowSelected?: never;
-    }
+        showRowSelection?: false;
+        setSelectedRow?: never;
+        isFilterRowSelected?: never;
+      }
     | {
-      showRowSelection: true;
-      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-      isFilterRowSelected: boolean;
-    }
+        showRowSelection: true;
+        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+        isFilterRowSelected: boolean;
+      }
   );
 const PaginationTable = <T extends object>({
   columns,
@@ -139,8 +141,8 @@ const PaginationTable = <T extends object>({
   restyleTable = false,
   onContextMenu,
 }: // restyleTable = false,
-  // autoResetSelectedRows= false,
-  PaginationTableProps<T>) => {
+// autoResetSelectedRows= false,
+PaginationTableProps<T>) => {
   const router = useRouter();
   // const [pageRows, setPageRows] = useState([]);
 
@@ -284,7 +286,6 @@ const PaginationTable = <T extends object>({
               key={`header-row-${index}`}
             >
               {headerGroup.headers.map((column) => (
-
                 <Th
                   {...column.getHeaderProps(
                     column.enableSorting
@@ -344,7 +345,11 @@ const PaginationTable = <T extends object>({
                   <Tr key={index}>
                     <Td colSpan={columns.length} p={0}>
                       <Box
-                        bg={driver.bgcolor === 'blue' ? 'rgb(29, 45, 83)' : 'rgb(250, 220, 82)'} // ✅ Use bgcolor from backend
+                        bg={
+                          driver.bgcolor === "blue"
+                            ? "rgb(29, 45, 83)"
+                            : "rgb(250, 220, 82)"
+                        } // ✅ Use bgcolor from backend
                         color={driver.bgcolor === "yellow" ? "#000" : "#fff"} // ✅ Black text for yellow, white for blue
                         px={6}
                         py={3}
@@ -352,8 +357,8 @@ const PaginationTable = <T extends object>({
                         borderLeft="4px solid"
                         borderColor={
                           driver.bgcolor === "yellow"
-                            ? "#2F80ED"  // Orange border for yellow (pre-allocated) #F59E0B
-                            : "#2F80ED"  // Blue border for blue (assigned)
+                            ? "#2F80ED" // Orange border for yellow (pre-allocated) #F59E0B
+                            : "#2F80ED" // Blue border for blue (assigned)
                         }
                         borderRadius="md"
                         w="100%"
@@ -412,16 +417,25 @@ const PaginationTable = <T extends object>({
                                 >
                                   Assign Jobs
                                 </Button>
-
                               )}
                               {driver.bgcolor === "blue" && (
                                 <>
-                                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
-                                    Today Price: {driver.total_jobs_today_price ?? 0}
+                                  <Badge
+                                    colorScheme="red"
+                                    variant="subtle"
+                                    fontSize="sm"
+                                  >
+                                    Today Price:{" "}
+                                    {driver.total_jobs_today_price ?? 0}
                                   </Badge>
 
-                                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
-                                    Weekly Price: {driver.total_jobs_weekly_price ?? 0}
+                                  <Badge
+                                    colorScheme="red"
+                                    variant="subtle"
+                                    fontSize="sm"
+                                  >
+                                    Weekly Price:{" "}
+                                    {driver.total_jobs_weekly_price ?? 0}
                                   </Badge>
                                 </>
                               )}
@@ -492,11 +506,12 @@ const PaginationTable = <T extends object>({
                 )}
                 <Tr
                   {...row.getRowProps()}
-                  key={`data-row-${index}`}  // ✅ Fix: Use 'index' instead of undefined 'idx'
+                  key={`data-row-${index}`} // ✅ Fix: Use 'index' instead of undefined 'idx'
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
                   onContextMenu={(e) => {
-                    if (onContextMenu) {  // ✅ Check if handler exists
+                    if (onContextMenu) {
+                      // ✅ Check if handler exists
                       onContextMenu(e, row.original.job);
                     }
                   }}
@@ -509,12 +524,13 @@ const PaginationTable = <T extends object>({
                     if (EXCLUDED_IDS.has(colId)) return;
                     toggleOptimisticRow(row); // instant
                   }}
-                // className="css-en-xlrwr4"
-                // onClick={
-                // isChecked ? () => row.toggleRowSelected() : undefined
-                // }
+                  // className="css-en-xlrwr4"
+                  // onClick={
+                  // isChecked ? () => row.toggleRowSelected() : undefined
+                  // }
                 >
-                  {row?.cells?.map((cell, cellIndex) => {  // ✅ Renamed inner index to 'cellIndex' for clarity
+                  {row?.cells?.map((cell, cellIndex) => {
+                    // ✅ Renamed inner index to 'cellIndex' for clarity
                     let data;
                     if (cell.column.id === "selection") {
                       return (
@@ -522,7 +538,7 @@ const PaginationTable = <T extends object>({
                           {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
-                          key={`selection-${cellIndex}`}  // ✅ Use cellIndex for unique key
+                          key={`selection-${cellIndex}`} // ✅ Use cellIndex for unique key
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!showRowSelection) return;
@@ -565,12 +581,12 @@ const PaginationTable = <T extends object>({
                     if (cell.column.Header === "Actions") {
                       data = (
                         <Td
-                          key={`action-${cellIndex}`}  // ✅ Use cellIndex
+                          key={`action-${cellIndex}`} // ✅ Use cellIndex
                           data-column-id="actions"
-                        // paddingLeft={restyleTable && 1}
-                        // paddingInlineStart={restyleTable && 1}
-                        // paddingRight={restyleTable && 2}
-                        // paddingInlineEnd={restyleTable && 2}
+                          // paddingLeft={restyleTable && 1}
+                          // paddingInlineStart={restyleTable && 1}
+                          // paddingRight={restyleTable && 2}
+                          // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
                             {
@@ -589,8 +605,8 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faDownload}
@@ -607,8 +623,9 @@ const PaginationTable = <T extends object>({
                                 //@ts-expect-error
                                 cell.column.isEdit) && (
                                 <Link
-                                  href={`${path || router.pathname}/${cell.row.original.job.id
-                                    }`}
+                                  href={`${path || router.pathname}/${
+                                    cell.row.original.job.id
+                                  }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -618,8 +635,8 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faPen}
@@ -634,8 +651,9 @@ const PaginationTable = <T extends object>({
                               //@ts-expect-error
                               cell.column.isView && (
                                 <Link
-                                  href={`${path || router.pathname}/${cell.row.original.job.id
-                                    }`}
+                                  href={`${path || router.pathname}/${
+                                    cell.row.original.job.id
+                                  }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -646,8 +664,8 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faEye}
@@ -662,8 +680,9 @@ const PaginationTable = <T extends object>({
                               //@ts-expect-error
                               cell.column.isTracking && (
                                 <Link
-                                  href={`${path || router.pathname}/tracking/${cell.row.original.job.id
-                                    }`}
+                                  href={`${path || router.pathname}/tracking/${
+                                    cell.row.original.job.id
+                                  }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -674,8 +693,8 @@ const PaginationTable = <T extends object>({
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[#3B68DB]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                    // color={textColorSecondary}
+                                    // borderRadius="7px"
                                   >
                                     Track
                                   </Button>
@@ -694,8 +713,8 @@ const PaginationTable = <T extends object>({
                                   onClick={() => {
                                     onDelete(cell.row.original.job.id);
                                   }}
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                 >
                                   <FontAwesomeIcon
                                     icon={
@@ -718,7 +737,7 @@ const PaginationTable = <T extends object>({
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
-                          key={`instructions-${cellIndex}`}  // ✅ Use cellIndex
+                          key={`instructions-${cellIndex}`} // ✅ Use cellIndex
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
                           paddingRight={restyleTable && 2}
@@ -763,18 +782,27 @@ const PaginationTable = <T extends object>({
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
-                          key={`default-${cellIndex}`}  // ✅ Use cellIndex
+                          key={`default-${cellIndex}`}
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
                           paddingRight={restyleTable && 2}
                           paddingInlineEnd={restyleTable && 2}
                           pr="20px"
                           bg={
-                            cell.column.id === "total_weight"
-                              ? row.original?.job?.weight_color ?? "transparent"
-                              : cell.column.id === "total_volume"
-                                ? row.original?.job?.volume_color ?? "transparent"
-                                : undefined
+                            cell.column.id === "timeslot" &&
+                            !["6", "7", "8", "9", "10"].includes(
+                              row?.original?.job?.job_status?.id,
+                            )
+                              ? (getTimeslotBgColor(
+                                  row?.original?.job?.timeslot,
+                                ) ?? "transparent")
+                              : cell.column.id === "total_weight"
+                                ? (row.original?.job?.weight_color ??
+                                  "transparent")
+                                : cell.column.id === "total_volume"
+                                  ? (row.original?.job?.volume_color ??
+                                    "transparent")
+                                  : undefined
                           }
                         >
                           {
@@ -857,6 +885,5 @@ const PaginationTable = <T extends object>({
     </VStack>
   );
 };
-
 
 export default PaginationTable;

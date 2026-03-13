@@ -406,6 +406,16 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
             job_id
             total
           }
+          driver_pay
+          price_summary {
+            sub_total
+            tax
+            total
+            charges {
+              name
+              total
+            }
+          }
         }
       }
     }
@@ -562,15 +572,16 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
               downloadable_url
             }
           }
+          driver_pay
           price_summary {
-          sub_total
-          tax
-          total
-          charges {
-            name
+            sub_total
+            tax
             total
+            charges {
+              name
+              total
+            }
           }
-        }
         }
       }
     }
@@ -996,7 +1007,6 @@ export const REMOVE_PRE_ALLOCATE_DRIVER = gql`
   }
 `;
 
-
 export const CREATE_DRIVER_FREE_TEXT = gql`
   mutation CreateDriverFreeText($input: CreateDriverFreeTextInput!) {
     createDriverFreeText(input: $input) {
@@ -1127,14 +1137,14 @@ export type Job = {
   media_admin?: any[] | null;
 
   [key: string]:
-  | string
-  | number
-  | null
-  | boolean
-  | undefined
-  | Date
-  | any[]
-  | any;
+    | string
+    | number
+    | null
+    | boolean
+    | undefined
+    | Date
+    | any[]
+    | any;
 };
 
 export const defaultJob: Job = {

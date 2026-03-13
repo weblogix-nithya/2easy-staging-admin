@@ -1014,7 +1014,7 @@ export const AdminNotesCell = ({ row }: any) => {
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
-      <Text fontSize="md" fontWeight="bold" maxW="140px" noOfLines={1}>
+      <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
         {convertTo12Hour(row?.original?.job?.timeslot) || "-"}
       </Text>
       <EditableFieldPopover
@@ -1068,10 +1068,25 @@ export const Charges = ({ row }: any) => {
 };
 
 export const SubTotal = ({ row }: any) => {
+  const subTotal = Number(row?.original?.job?.price_summary?.sub_total || 0);
+  const tax = Number(row?.original?.job?.price_summary?.tax || 0);
+  const total = Number(row?.original?.job?.price_summary?.total || 0);
+  const driverPay = Number(row?.original?.job?.driver_pay || 0);
+
+  const isAllZero = subTotal === 0 && tax === 0 && total === 0;
+
   return (
-    <Text fontSize="md" maxW="160px">
-      {row?.original?.job?.price_summary?.sub_total || "0"}
-    </Text>
+    <>
+      <Text fontSize="md" w="250px">
+        {isAllZero
+          ? "Invoice: 0"
+          : `Invoice: ${subTotal}+${tax}= $${total}`}
+      </Text>
+
+      <Text fontSize="md" w="250px">
+        Driver Pay: {driverPay}
+      </Text>
+    </>
   );
 };
 
@@ -1262,7 +1277,7 @@ export const tableColumn = (refetchJobs: () => void) => [
   },
   {
     id: "price_summary.sub_total",
-    Header: "Sub Total",
+    Header: "Total",
     Cell: SubTotal,
   },
 
@@ -1516,7 +1531,7 @@ export const bulkassigntableColumn = [
   },
   {
     id: "price_summary.sub_total",
-    Header: "Sub Total",
+    Header: "Total",
     Cell: SubTotal,
   },
 
