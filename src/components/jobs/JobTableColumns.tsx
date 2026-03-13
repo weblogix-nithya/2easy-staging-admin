@@ -21,7 +21,7 @@ import {
   Tooltip,
   // Textarea,
   // useToast,
-  VStack
+  VStack,
 } from "@chakra-ui/react";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
@@ -60,8 +60,7 @@ function formatAddressLines(dest: any) {
       secondLine: "-",
     };
   }
-  const firstLine =
-    dest.address_business_name || dest.address_line_1 || "-";
+  const firstLine = dest.address_business_name || dest.address_line_1 || "-";
 
   const addressParts = [
     dest?.address_line_1 || null,
@@ -122,7 +121,8 @@ export const JobDestinationsCell = ({ row }: any) => {
             <PopoverBody>
               {filteredDestinations.map((destination: any, index: number) => (
                 <Text color="black" mb="5" key={`dest-${index}`}>
-                  Address {index + 1}: {formatAddressLines(destination).secondLine}
+                  Address {index + 1}:{" "}
+                  {formatAddressLines(destination).secondLine}
                 </Text>
               ))}
             </PopoverBody>
@@ -220,8 +220,16 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       </Text>
       <Text>{filteredDestinations[0]?.address_business_name || "-"}</Text> */}
       {/* ⭐ Address with View More / View Less */}
-      <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"} whiteSpace="pre-wrap" w={"fit-content"}>
-        {dest?.is_saved_address ? formatAddressLines(dest).firstLine : formatAddressLines(dest).secondLine}
+      <Text
+        mb="2"
+        minWidth={"300px"}
+        flexWrap={"nowrap"}
+        whiteSpace="pre-wrap"
+        w={"fit-content"}
+      >
+        {dest?.is_saved_address
+          ? formatAddressLines(dest).firstLine
+          : formatAddressLines(dest).secondLine}
       </Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
@@ -261,8 +269,9 @@ export const PickupAddressWithTimebulkCell = ({ row }: any) => {
 
   return (
     <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code
-        }\n ${pickupDest?.address_business_name || "-"}`}
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
+        pickupDest?.address_postal_code
+      }\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
 };
@@ -273,8 +282,9 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
 
   return (
     <Text mb="2" whiteSpace="pre-wrap" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code
-        }\n ${pickupDest?.address_business_name || "-"}`}
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
+        pickupDest?.address_postal_code
+      }\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
 };
@@ -336,7 +346,9 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
         </>
       )}
       <Text mb="2" whiteSpace="pre-wrap" minWidth={"300px"} flexWrap={"nowrap"}>
-        {pickupDest?.is_saved_address ? formatAddressLines(pickupDest).firstLine : formatAddressLines(pickupDest).secondLine}
+        {pickupDest?.is_saved_address
+          ? formatAddressLines(pickupDest).firstLine
+          : formatAddressLines(pickupDest).secondLine}
       </Text>
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
@@ -379,26 +391,29 @@ export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   const arrivalTime =
     showPickupTime && pickupDest?.arrived_at
       ? `Arrival time: ${formatDate(
-        pickupDest.arrived_at,
-        "HH:mm, DD/MM/YYYY",
-      )}`
+          pickupDest.arrived_at,
+          "HH:mm, DD/MM/YYYY",
+        )}`
       : "";
 
   const collectionTime =
     showPickupTime && pickupDest?.pickup_at
       ? `Collection time: ${formatDate(
-        pickupDest.pickup_at,
-        "HH:mm, DD/MM/YYYY",
-      )}`
+          pickupDest.pickup_at,
+          "HH:mm, DD/MM/YYYY",
+        )}`
       : "";
 
-  const address = `${pickupDest?.address_line_1 || ""}, ${pickupDest?.address_city || ""
-    }, ${pickupDest?.address_postal_code || ""}`;
+  const address = `${pickupDest?.address_line_1 || ""}, ${
+    pickupDest?.address_city || ""
+  }, ${pickupDest?.address_postal_code || ""}`;
   const businessName = pickupDest?.address_business_name || "-";
 
-  return `${arrivalTime}${arrivalTime && collectionTime ? "\n" : ""
-    }${collectionTime}${arrivalTime || collectionTime ? "\n" : ""
-    }${address}\n${businessName}`;
+  return `${arrivalTime}${
+    arrivalTime && collectionTime ? "\n" : ""
+  }${collectionTime}${
+    arrivalTime || collectionTime ? "\n" : ""
+  }${address}\n${businessName}`;
 };
 export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
@@ -425,7 +440,9 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
         </>
       )}
       <Text whiteSpace="pre-wrap" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {pickupDest?.is_saved_address ? formatAddressLines(pickupDest).firstLine : formatAddressLines(pickupDest).secondLine}
+        {pickupDest?.is_saved_address
+          ? formatAddressLines(pickupDest).firstLine
+          : formatAddressLines(pickupDest).secondLine}
       </Text>
     </>
   );
@@ -464,7 +481,9 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
         </>
       )}
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-        {dest?.is_saved_address ? formatAddressLines(dest).firstLine : formatAddressLines(dest).secondLine}
+        {dest?.is_saved_address
+          ? formatAddressLines(dest).firstLine
+          : formatAddressLines(dest).secondLine}
       </Text>
       {/* <Text isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
@@ -551,11 +570,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
   return (
     <VStack align="start" spacing={1}>
       {visibleItems.map((item: any) => (
-        <Text
-          fontSize="md"
-          key={`items-dimension-${item.id}`}
-          w="max-content"
-        >
+        <Text fontSize="md" key={`items-dimension-${item.id}`} w="max-content">
           {`${(item.dimension_height * 100).toFixed(0)}x${(
             item.dimension_width * 100
           ).toFixed(0)}x${(item.dimension_depth * 100).toFixed(0)}`}
@@ -634,7 +649,11 @@ export const ItemsCbmCell = ({ row }: any) => {
   );
 };
 export const ItemsExtrasCell = ({ row }: any) => {
-  return <Text maxW="100px" fontWeight="bold">{row?.original?.job?.extras || "-"}</Text>;
+  return (
+    <Text maxW="100px" fontWeight="bold">
+      {row?.original?.job?.extras || "-"}
+    </Text>
+  );
 };
 
 export const ItemsExtrasCellExport = ({ row }: any) => {
@@ -646,8 +665,30 @@ export const DriverCell = ({ row }: any) => {
 export const DriverCellExport = ({ row }: any) => {
   return `${row?.original?.job?.driver?.full_name || "-"}`;
 };
+// export const TotalPrice = ({ row }: any) => {
+//   return <Text fontSize="md" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+// };
 export const TotalPrice = ({ row }: any) => {
-  return <Text fontSize="md" maxW="150px">{row?.original?.job?.job_price_calculation_detail?.total || "-"}</Text>;
+  const subTotal = Number(row?.original?.job?.price_summary?.sub_total || 0);
+  const tax = Number(row?.original?.job?.price_summary?.tax || 0);
+  const total = Number(row?.original?.job?.price_summary?.total || 0);
+  const driverPay = Number(row?.original?.job?.driver_pay || 0);
+
+  const isAllZero = subTotal === 0 && tax === 0 && total === 0;
+
+  return (
+    <>
+      <Text fontSize="md" w="250px">
+        {isAllZero
+          ? "Invoice: 0"
+          : `Invoice: ${subTotal} + ${tax}= $${total}`}
+      </Text>
+
+      <Text fontSize="md" w="250px">
+        Driver Pay: $ {driverPay}
+      </Text>
+    </>
+  );
 };
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -693,9 +734,10 @@ export const JobTypeCell: React.FC<{
   );
 };
 export const TypeCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_type?.name
-    ? `${row.original.job.job_type?.name}`
-    : "-"
+  `${
+    row?.original?.job?.job_type?.name
+      ? `${row.original.job.job_type?.name}`
+      : "-"
   }`;
 
 export const StatusCell = ({ row }: any) => {
@@ -727,9 +769,10 @@ export const StatusCell = ({ row }: any) => {
 };
 
 export const StatusCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_status?.name
-    ? `${row.original.job.job_status?.name}`
-    : "-"
+  `${
+    row?.original?.job?.job_status?.name
+      ? `${row.original.job.job_status?.name}`
+      : "-"
   }`;
 
 export const ReadyAtCell = ({ row }: any) => {
@@ -747,7 +790,8 @@ export const ReadyAtCell = ({ row }: any) => {
 };
 
 export const ReadyAtCellExport = ({ row }: any) =>
-  `Created Date: ${formatDate(row?.original?.job?.created_at) || "-"
+  `Created Date: ${
+    formatDate(row?.original?.job?.created_at) || "-"
   } | Scheduled Date: ${formatDate(row?.original?.job?.drop_at) || "-"}`;
 
 export const LastFreeAtCell = ({ row }: any) => {
@@ -759,7 +803,8 @@ export const LastFreeAtCell = ({ row }: any) => {
   );
 };
 export const LastFreeAtCellExport = ({ row }: any) =>
-  `${row?.original?.job?.last_free_at ? `${row.original.job.last_free_at}` : "-"
+  `${
+    row?.original?.job?.last_free_at ? `${row.original.job.last_free_at}` : "-"
   }`;
 export const PickupBusinessNameCell = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
@@ -812,8 +857,9 @@ export const PickupAddressCellExport = ({ row }: any) => {
   if (!pickup) return "-";
 
   const line1 = pickup.address_line_1 || "";
-  const line2 = `${pickup.address_city || ""} ${pickup.address_postal_code || ""
-    }, Australia`;
+  const line2 = `${pickup.address_city || ""} ${
+    pickup.address_postal_code || ""
+  }, Australia`;
 
   return `${line1}\n${line2}`;
 };
@@ -828,7 +874,8 @@ export const CustomerReferenceCell = ({ row }: any) => {
 };
 
 export const CustomerReferenceCellExport = ({ row }: any) =>
-  `${row?.original?.job?.reference_no ? `${row.original.job.reference_no}` : "-"
+  `${
+    row?.original?.job?.reference_no ? `${row.original.job.reference_no}` : "-"
   }`;
 
 export const CategoryCell = ({ row }: any) => {
@@ -838,9 +885,10 @@ export const CategoryCell = ({ row }: any) => {
 };
 
 export const CategoryCellExport = ({ row }: any) =>
-  `${row?.original?.job?.job_category?.name
-    ? `${row.original.job.job_category?.name}`
-    : "-"
+  `${
+    row?.original?.job?.job_category?.name
+      ? `${row.original.job.job_category?.name}`
+      : "-"
   }`;
 // export const DeliveryCell = ({ row }: any) => {
 //   return <Text maxW="100px">{row?.original?.job?.name || "-"}</Text>;
@@ -852,7 +900,8 @@ export const DeliveryCell = ({ row }: any) => {
 
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
-    if (!color) return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
+    if (!color)
+      return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
     if (color.startsWith("#")) {
       return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
     }
@@ -882,18 +931,11 @@ export const DeliveryCell = ({ row }: any) => {
         </VStack>
       )}
 
-      <Flex
-        align="center"
-        justify="space-between"
-        gap="8px"
-        maxW="260px"
-      >
+      <Flex align="center" justify="space-between" gap="8px" maxW="260px">
         {/* RIGHT SIDE */}
         {job?.id && (
           <>
-            <Text noOfLines={1}>
-              {job?.name || "-"}
-            </Text>
+            <Text noOfLines={1}>{job?.name || "-"}</Text>
             <Tooltip label="Edit Job" placement="top">
               <IconButton
                 aria-label="Edit Job"
@@ -905,7 +947,7 @@ export const DeliveryCell = ({ row }: any) => {
             </Tooltip>
           </>
         )}
-      </Flex >
+      </Flex>
     </>
   );
 };
@@ -938,8 +980,9 @@ export const AdminNotesCell = ({ row }: any) => {
 };
 
 export const AdminNotesCellExport = ({ row }: any) => {
-  return `${row?.original?.job?.admin_notes ? `${row.original.job.admin_notes}` : "-"
-    }`;
+  return `${
+    row?.original?.job?.admin_notes ? `${row.original.job.admin_notes}` : "-"
+  }`;
 };
 
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
@@ -963,10 +1006,10 @@ export const TimeslotCellExport = ({ row }: any) =>
 
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
   "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
-  {
-    with: PickupAddressWithTimeCell,
-    without: PickupAddressWithTimewithoutMediaCell,
-  },
+    {
+      with: PickupAddressWithTimeCell,
+      without: PickupAddressWithTimewithoutMediaCell,
+    },
   "job_destinations.address,job_destinations.address_business_name": {
     with: JobDestinationWithBusinessNameCell,
     without: JobDestinationWithBusinessNamewithoutMediaCell,
