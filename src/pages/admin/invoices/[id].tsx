@@ -115,7 +115,6 @@ function InvoiceEdit() {
   const [_invoiceStatusId, setInvoiceStatusId] = useState(null);
   const router = useRouter();
   const { id } = router.query;
-
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
@@ -214,62 +213,65 @@ function InvoiceEdit() {
     },
   });
 
-  // const {
-  //   loading: invoiceLoading,
-  //   // data: invoiceData,
-  //   refetch: getInvoice,
-  // } = useQuery(GET_INVOICE_QUERY, {
-  //   variables: {
-  //     id: id,
-  //   },
-  //   skip: !id,
-  //   onCompleted: (data) => {
-  //     if (data?.invoice == null) {
-  //       router.push("/admin/invoices");
-  //     }
-  //     setInvoice((prev) => ({
-  //       ...prev,
-  //       ...data.invoice,
-  //       issued_at: new Date(data.invoice.issued_at),
-  //       due_at: new Date(data.invoice.due_at),
-  //       invoice_status_id: String(data.invoice.invoice_status_id),
-  //       invoice_no: data.invoice.invoice_no,
-  //       manual_inv_url: data.invoice.manual_inv_url,
-  //       job: data.invoice.job,
-  //     }));
-  //     setSelectedPaymentTerm(data.invoice.company.payment_term);
-  //     setInvoiceStatusId(data?.invoice.invoice_status_id);
-  //   },
-  //   onError(error) {
-  //     console.log("onError");
-  //     console.log(error);
-  //   },
-  // });
+//   const {
+//     loading: invoiceLoading,
+//     data,
+//     refetch: getInvoice,
+//   } = useQuery(GET_INVOICE_QUERY, {
+//     variables: { id },
+//     skip: !id,
+//   });
 
+//   useEffect(() => {
+// console.log(data,'router useffect 1')
+
+//     if (!data?.invoice) return;
+// console.log(data,'router useffect 1.1')
+
+//     setInvoice((prev) => ({
+//       ...prev,
+//       ...data.invoice,
+//       issued_at: new Date(data.invoice.issued_at),
+//       due_at: new Date(data.invoice.due_at),
+//       invoice_status_id: String(data.invoice.invoice_status_id),
+//       manual_inv_url: data.invoice.manual_inv_url,
+//     }));
+// console.log(data,'router useffect 1.2')
+
+//     setSelectedPaymentTerm(data.invoice.company?.payment_term);
+//     setInvoiceStatusId(data.invoice.invoice_status_id);
+//   }, [data]);
   const {
     loading: invoiceLoading,
-    data,
+    // data: invoiceData,
     refetch: getInvoice,
   } = useQuery(GET_INVOICE_QUERY, {
-    variables: { id },
+    variables: {
+      id: id,
+    },
     skip: !id,
+    onCompleted: (data) => {
+      if (data?.invoice == null) {
+        router.push("/admin/invoices");
+      }
+      setInvoice((prev) => ({
+        ...prev,
+        ...data.invoice,
+        issued_at: new Date(data.invoice.issued_at),
+        due_at: new Date(data.invoice.due_at),
+        invoice_status_id: String(data.invoice.invoice_status_id),
+        invoice_no: data.invoice.invoice_no,
+        manual_inv_url: data.invoice.manual_inv_url,
+        job: data.invoice.job,
+      }));
+      setSelectedPaymentTerm(data.invoice.company.payment_term);
+      setInvoiceStatusId(data?.invoice.invoice_status_id);
+    },
+    onError(error) {
+      console.log("onError");
+      console.log(error);
+    },
   });
-
-  useEffect(() => {
-    if (!data?.invoice) return;
-
-    setInvoice((prev) => ({
-      ...prev,
-      ...data.invoice,
-      issued_at: new Date(data.invoice.issued_at),
-      due_at: new Date(data.invoice.due_at),
-      invoice_status_id: String(data.invoice.invoice_status_id),
-      manual_inv_url: data.invoice.manual_inv_url,
-    }));
-
-    setSelectedPaymentTerm(data.invoice.company?.payment_term);
-    setInvoiceStatusId(data.invoice.invoice_status_id);
-  }, [data]);
 
   const handleUpdateLineItem = (lineItem: any) => {
     return new Promise((resolve, reject) => {
