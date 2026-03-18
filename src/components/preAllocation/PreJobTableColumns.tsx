@@ -39,7 +39,6 @@ import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 import { REMOVE_PRE_ALLOCATE_DRIVER } from "graphql/job";
 import {
-  convertTo12Hour,
   formatAddress,
   formatDate,
   formatTime,
@@ -510,7 +509,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
       {visibleItems.map((item: any) => (
         <Grid
           key={`items-dimension-${item.id}`}
-          templateColumns="120px 40px 80px 80px"
+          templateColumns="120px 50px 40px 80px 80px"
           columnGap={4}
           fontSize="md"
         >
@@ -520,6 +519,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
             {(item.dimension_width * 100).toFixed(0)}x
             {(item.dimension_depth * 100).toFixed(0)}
           </Text>
+          <Text>{item?.item_type?.name}</Text>
 
           {/* Quantity */}
           <Text textAlign="right">{item.quantity}</Text>
@@ -1015,7 +1015,7 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
     <Flex gap={2} align="center">
       <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
-        {convertTo12Hour(row?.original?.job?.timeslot) || "-"}
+        {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover
         row={row}
@@ -1072,20 +1072,22 @@ export const SubTotal = ({ row }: any) => {
   const tax = Number(row?.original?.job?.price_summary?.tax || 0);
   const total = Number(row?.original?.job?.price_summary?.total || 0);
   const driverPay = Number(row?.original?.job?.driver_pay || 0);
+  const driverId = row?.original?.job?.driver_id;
 
   const isAllZero = subTotal === 0 && tax === 0 && total === 0;
 
   return (
     <>
       <Text fontSize="md" w="250px">
-        {isAllZero
-          ? "Invoice: 0"
-          : `Invoice: ${subTotal}+${tax}= $${total}`}
+        {isAllZero ? "Invoice: 0" : `Invoice: ${subTotal}+${tax}= $${total}`}
       </Text>
 
-      <Text fontSize="md" w="250px">
-        Driver Pay: {driverPay}
-      </Text>
+      {/* {driverId && ( */}
+      {driverId !== null && driverId !== undefined && (
+        <Text fontSize="md" w="250px">
+          Driver Pay: $ {driverPay}
+        </Text>
+      )}
     </>
   );
 };

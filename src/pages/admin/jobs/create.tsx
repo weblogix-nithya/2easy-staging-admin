@@ -32,6 +32,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
+import Time12HourPicker from "components/fields/Time12HourPicker";
 // import CustomInputFieldAdornment from "components/fields/CustomInputFieldAdornment";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
@@ -574,11 +575,11 @@ function JobPage() {
         const jobDestination1 =
           jobDestinations.length > 0
             ? {
-              state: jobDestinations[0]?.address_state,
-              suburb: jobDestinations[0]?.address_city,
-              postcode: jobDestinations[0]?.address_postal_code,
-              address: jobDestinations[0]?.address,
-            }
+                state: jobDestinations[0]?.address_state,
+                suburb: jobDestinations[0]?.address_city,
+                postcode: jobDestinations[0]?.address_postal_code,
+                address: jobDestinations[0]?.address,
+              }
             : null;
 
         const filteredCompanyRates = companyRates?.filter(
@@ -706,10 +707,10 @@ function JobPage() {
                 job_destination_address:
                   jobDestinations.length > 0
                     ? {
-                      suburb: jobDestinations[0]?.address_city,
-                      postcode: jobDestinations[0]?.address_postal_code,
-                      state: jobDestinations[0]?.address_state,
-                    }
+                        suburb: jobDestinations[0]?.address_city,
+                        postcode: jobDestinations[0]?.address_postal_code,
+                        state: jobDestinations[0]?.address_state,
+                      }
                     : null,
 
                 job_items: jobItems.map((item) => ({
@@ -757,8 +758,6 @@ function JobPage() {
           }
 
           console.log("Calculation Data:", calculationData);
-
-
 
           await handleCreateJobPriceCalculationDetail({
             job_id: parseInt(jobId),
@@ -881,7 +880,7 @@ function JobPage() {
   // }, [router.isReady, pendingJobId]);
   //handleCreateMedia
 
-  const [handleCreateMedia, { }] = useMutation(ADD_MEDIA_MUTATION, {
+  const [handleCreateMedia, {}] = useMutation(ADD_MEDIA_MUTATION, {
     onCompleted: () => {
       /*toast({
         title: "Media updated",
@@ -1484,11 +1483,11 @@ function JobPage() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-          state: jobDestinations[0]?.address_state,
-          suburb: jobDestinations[0]?.address_city,
-          postcode: jobDestinations[0]?.address_postal_code,
-          address: jobDestinations[0]?.address,
-        }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1601,15 +1600,15 @@ function JobPage() {
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
                 refinedData.pick_up_stateCode === "QLD") ||
-                refinedData.pick_up_stateCode === "VIC"
+              refinedData.pick_up_stateCode === "VIC"
                 ? filteredCompanyRates?.map((rate) => ({
-                  company_id: rate.company_id,
-                  seafreight_id: rate.seafreight_id,
-                  area: rate.area,
-                  cbm_rate: rate.cbm_rate,
-                  minimum_charge: rate.minimum_charge,
-                  // toll_enabled: rate.toll_enabled,
-                }))
+                    company_id: rate.company_id,
+                    seafreight_id: rate.seafreight_id,
+                    area: rate.area,
+                    cbm_rate: rate.cbm_rate,
+                    minimum_charge: rate.minimum_charge,
+                    // toll_enabled: rate.toll_enabled,
+                  }))
                 : [],
             toll_enabled: companyToll === 1 ? true : false,
             job_pickup_address: {
@@ -1633,10 +1632,10 @@ function JobPage() {
             job_destination_address:
               jobDestinations.length > 0
                 ? {
-                  suburb: jobDestinations[0]?.address_city,
-                  postcode: jobDestinations[0]?.address_postal_code,
-                  state: jobDestinations[0]?.address_state,
-                }
+                    suburb: jobDestinations[0]?.address_city,
+                    postcode: jobDestinations[0]?.address_postal_code,
+                    state: jobDestinations[0]?.address_state,
+                  }
                 : null,
 
             job_items: jobItems.map((item) => ({
@@ -1722,11 +1721,11 @@ function JobPage() {
     const jobDestination1 =
       jobDestinations.length > 0
         ? {
-          state: jobDestinations[0]?.address_state,
-          suburb: jobDestinations[0]?.address_city,
-          postcode: jobDestinations[0]?.address_postal_code,
-          address: jobDestinations[0]?.address,
-        }
+            state: jobDestinations[0]?.address_state,
+            suburb: jobDestinations[0]?.address_city,
+            postcode: jobDestinations[0]?.address_postal_code,
+            address: jobDestinations[0]?.address,
+          }
         : null;
 
     const filteredCompanyRates = companyRates?.filter(
@@ -1749,11 +1748,11 @@ function JobPage() {
 
       destination: jobDestination1
         ? {
-          state: jobDestination1.state,
-          suburb: jobDestination1.suburb,
-          postcode: jobDestination1.postcode,
-          address: jobDestination1.address,
-        }
+            state: jobDestination1.state,
+            suburb: jobDestination1.suburb,
+            postcode: jobDestination1.postcode,
+            address: jobDestination1.address,
+          }
         : {},
 
       items: jobItems.map((item) => ({
@@ -1781,14 +1780,14 @@ function JobPage() {
       company_rates:
         ((job.job_category_id == 1 || job.job_category_id == 2) &&
           refinedData.pick_up_stateCode === "QLD") ||
-          refinedData.pick_up_stateCode === "VIC"
+        refinedData.pick_up_stateCode === "VIC"
           ? filteredCompanyRates.map((rate) => ({
-            company_id: rate.company_id,
-            area: rate.area,
-            seafreight_id: rate.seafreight_id,
-            cbm_rate: rate.cbm_rate,
-            minimum_charge: rate.minimum_charge,
-          }))
+              company_id: rate.company_id,
+              area: rate.area,
+              seafreight_id: rate.seafreight_id,
+              cbm_rate: rate.cbm_rate,
+              minimum_charge: rate.minimum_charge,
+            }))
           : [],
       toll_enabled: refinedData.toll_enabled,
       surcharges: {
@@ -1933,7 +1932,9 @@ function JobPage() {
                             setCompanyStandardStatic(
                               res.data.company?.standard_static ? 1 : 0,
                             );
-                            setCompanyToll(res.data.company?.toll_enabled ? 1 : 0);
+                            setCompanyToll(
+                              res.data.company?.toll_enabled ? 1 : 0,
+                            );
                           });
                           getCompanyRates({ company_id: Number(e.value) });
                         }
@@ -2061,7 +2062,7 @@ function JobPage() {
                     name="operator_phone"
                     value={customerSelected.phone_no}
                     onChange={
-                      (_e) => { }
+                      (_e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -2076,7 +2077,7 @@ function JobPage() {
                     isDisabled={true}
                     value={customerSelected.email}
                     onChange={
-                      (_e) => { }
+                      (_e) => {}
                       //setJob({
                       //  ...job,
                       //  [e.target.name]: e.target.value,
@@ -2143,11 +2144,11 @@ function JobPage() {
                       setIsSameDayJob(today === selected);
                       setIsTomorrowJob(
                         new Date(selected).toDateString() ===
-                        new Date(
-                          new Date(today).setDate(
-                            new Date(today).getDate() + 1,
-                          ),
-                        ).toDateString(),
+                          new Date(
+                            new Date(today).setDate(
+                              new Date(today).getDate() + 1,
+                            ),
+                          ).toDateString(),
                       );
                     }}
                   />
@@ -2194,7 +2195,7 @@ function JobPage() {
                     }}
                   />
 
-                  <CustomInputField
+                  {/* <CustomInputField
                     label="Timeslot:"
                     placeholder=""
                     name="timeslot"
@@ -2205,8 +2206,47 @@ function JobPage() {
                         [e.target.name]: e.target.value,
                       }))
                     }
-                  />
+                  /> */}
+                  {/* <CustomInputField
+                    label="Timeslot1:"
+                    type={"time"}
+                    placeholder=""
+                    name="Timeslot1"
+                    step={900}
+                    value={job.timeslot}
+                    // onChange={(e) =>
+                    // onChange={(e) => {
+                    onChange={(e) => {
+                      const time12 = convert24To12(e.target.value);
+                      setJob((prev) => ({
+                        ...prev,
+                        drop_at: time12, 
+                      }));
+                    }}
+                  /> */}
+                <Flex alignItems="center" mb="16px">
+                  <FormLabel
+                    width="200px"
+                    fontSize="sm"
+                    fontWeight="500"
+                    color="navy.700"
+                  >
+                    Timeslot:
+                  </FormLabel>
 
+                  <Box width="100%">
+                    <Time12HourPicker
+                      value={job.timeslot}
+                      onChange={(val) =>
+                        setJob((prev) => ({
+                          ...prev,
+                          timeslot: val,
+                        }))
+                      }
+                      mode="quick"
+                    />
+                  </Box>
+                </Flex>
                   <CustomInputField
                     label="Last Free Day:"
                     type={"date"}
@@ -2642,12 +2682,12 @@ function JobPage() {
                         value={
                           job.base_notes ? job.base_notes : customerBaseNotes
                         }
-                      // onChange={(e) =>
-                      //   setJob({
-                      //     ...job,
-                      //     [e.target.name]: e.target.value,
-                      //   })
-                      // }
+                        // onChange={(e) =>
+                        //   setJob({
+                        //     ...job,
+                        //     [e.target.name]: e.target.value,
+                        //   })
+                        // }
                       />
                     )}
                   </Box>
@@ -2687,7 +2727,7 @@ function JobPage() {
                                   jobDestinations[0].address_state == "Victoria"
                                     ? "VIC"
                                     : jobDestinations[0].address_state ==
-                                      "Queensland"
+                                        "Queensland"
                                       ? "QLD"
                                       : "";
                                 const filtereddepotOp = depotOptions.filter(
@@ -3109,26 +3149,28 @@ function JobPage() {
                                           {quoteCalculationRes.stackable}
                                         </Text>
                                       </Flex>
-                                      {companyToll === 1 ? <Flex
-                                        justify="space-between"
-                                        align="center"
-                                      >
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="500"
-                                          color="gray.700"
-                                          pr={2}
+                                      {companyToll === 1 ? (
+                                        <Flex
+                                          justify="space-between"
+                                          align="center"
                                         >
-                                          West Gate Toll Charges:
-                                        </Text>
-                                        <Text
-                                          fontSize="sm"
-                                          fontWeight="600"
-                                          color="blue.600"
-                                        >
-                                          {quoteCalculationRes.toll_amount}
-                                        </Text>
-                                      </Flex> : null}
+                                          <Text
+                                            fontSize="sm"
+                                            fontWeight="500"
+                                            color="gray.700"
+                                            pr={2}
+                                          >
+                                            West Gate Toll Charges:
+                                          </Text>
+                                          <Text
+                                            fontSize="sm"
+                                            fontWeight="600"
+                                            color="blue.600"
+                                          >
+                                            {quoteCalculationRes.toll_amount}
+                                          </Text>
+                                        </Flex>
+                                      ) : null}
                                       {/* Total */}
                                       <Flex
                                         justify="space-between"
