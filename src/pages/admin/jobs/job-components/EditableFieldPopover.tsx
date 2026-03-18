@@ -4,8 +4,6 @@ import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import {
   Flex,
   IconButton,
-  Input,
-  // Input,
   Popover,
   PopoverArrow,
   PopoverCloseButton,
@@ -15,6 +13,7 @@ import {
   Textarea,
   useToast,
 } from "@chakra-ui/react";
+import Time12HourPicker from "components/fields/Time12HourPicker";
 import { UPDATE_JOB_MUTATION } from "graphql/job";
 import React, { useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -41,8 +40,8 @@ export default function EditableFieldPopover({
   const isAdmin = useSelector((s: RootState) => s.user.isAdmin);
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const current = (row?.original?.job?.[field] ?? "") as string;
+  const [draftValue, setDraftValue] = useState(current);
 
   // Strict ref-only draft (no state re-renders while typing)
   const ref = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -67,15 +66,22 @@ export default function EditableFieldPopover({
     },
   });
 
-  const handleSave = () => {
-    if (!ref.current) return;
-    const value = ref.current.value ?? "";
-
-    if (!ref.current?.reportValidity()) {
-      console.log(ref.current?.reportValidity())
-      return; // Stop submission
+  React.useEffect(() => {
+    if (isOpen) {
+      setDraftValue(current);
     }
+  }, [isOpen, current]);
+
+  const handleSave = () => {
+    const value =
+      field === "timeslot" ? draftValue : (ref.current?.value ?? "");
+
+    if (field !== "timeslot" && !ref.current?.reportValidity()) {
+      return;
+    }
+
     setIsSaving(true);
+
     updateJob({
       variables: {
         input: {
@@ -83,13 +89,27 @@ export default function EditableFieldPopover({
           customer_id: row.original.job.customer.id,
           company_id: row.original.job.company.id,
           job_type_id: row.original.job.job_type.id,
-          // send only the edited field
           [field]: value,
         },
       },
     });
   };
 
+  const handleSaveWithValue = (overrideValue: string) => {
+    setIsSaving(true);
+
+    updateJob({
+      variables: {
+        input: {
+          id: parseInt(row.original.job.id),
+          customer_id: row.original.job.customer.id,
+          company_id: row.original.job.company.id,
+          job_type_id: row.original.job.job_type.id,
+          [field]: overrideValue,
+        },
+      },
+    });
+  };
   if (!isAdmin) return null;
 
   return (
@@ -121,34 +141,44 @@ export default function EditableFieldPopover({
           }}
         />
         <Flex direction="column" gap={2}>
-          {field === "timeslot" ?
-            (
-              <Input
-                type="time"
-                defaultValue={current.length>0 ? current: "06:00"}
-                step={900} // Validation (00,15,30,45)
-                ref={ref as React.RefObject<HTMLInputElement>}
-                size="sm"
-              />
-            ) :
-            (multiline ? (
-              <Textarea
-                defaultValue={current}
-                ref={ref as React.RefObject<HTMLTextAreaElement>}
-                size="sm"
-                rows={8}
-                resize="none"
-              />
-            ) : (
-              <Textarea
-                defaultValue={current}
-                ref={ref as React.RefObject<HTMLTextAreaElement>}
-                size="sm"
-                rows={4}
-                placeholder="Enter value"
-              />
-            ))
-          }
+          {field === "timeslot" ? (
+            // <Input
+            //   type="time"
+            //   defaultValue={current.length>0 ? current: "06:00"}
+            //   step={900} // Validation (00,15,30,45)
+            //   ref={ref as React.RefObject<HTMLInputElement>}
+            //   size="sm"
+            // />
+            <Time12HourPicker
+              mode="quick"
+              value={draftValue}
+              // onChange={(val) => setDraftValue(val)}
+              onChange={(val) => {
+                setDraftValue(val);
+
+                // 🔥 auto save immediately
+                setTimeout(() => {
+                  handleSaveWithValue(val);
+                }, 0);
+              }}
+            />
+          ) : multiline ? (
+            <Textarea
+              defaultValue={current}
+              ref={ref as React.RefObject<HTMLTextAreaElement>}
+              size="sm"
+              rows={8}
+              resize="none"
+            />
+          ) : (
+            <Textarea
+              defaultValue={current}
+              ref={ref as React.RefObject<HTMLTextAreaElement>}
+              size="sm"
+              rows={4}
+              placeholder="Enter value"
+            />
+          )}
           <Flex gap={2} justify="flex-end">
             <IconButton
               aria-label="Save"

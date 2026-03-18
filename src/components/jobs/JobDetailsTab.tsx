@@ -24,6 +24,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import ColorSelect from "components/fields/ColorSelect";
 import CustomInputField from "components/fields/CustomInputField";
+import Time12HourPicker from "components/fields/Time12HourPicker";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import PaginationTable from "components/table/PaginationTable";
@@ -32,7 +33,6 @@ import { formatDate, formatTime } from "helpers/helper";
 import React from "react";
 
 import JobInputTable from "./JobInputTable";
-
 
 const JobDetailsTab = ({
   isAdmin,
@@ -182,8 +182,8 @@ const JobDetailsTab = ({
                 ].find((_e) => _e.value == job.transport_type)}
                 placeholder=""
                 onChange={(e) => {
-                  setJob(prev => ({ ...prev, transport_type: e.value }));
-                  setRefinedData(prev => ({
+                  setJob((prev) => ({ ...prev, transport_type: e.value }));
+                  setRefinedData((prev) => ({
                     ...prev,
                     transport_type: e.value,
                   }));
@@ -205,15 +205,15 @@ const JobDetailsTab = ({
                   { value: "QLD", label: "Queensland" },
                 ].find((_e) => _e.value == job.transport_location)}
                 placeholder=""
-              // onChange={(e) => {
-              //   const newState = {
-              //     ...refinedData,
-              //     state_code: e.value,
-              //     state: e.label,
-              //   };
-              //   setJob({ ...job, transport_location: e.value });
-              //   setRefinedData(newState);
-              // }}
+                // onChange={(e) => {
+                //   const newState = {
+                //     ...refinedData,
+                //     state_code: e.value,
+                //     state: e.label,
+                //   };
+                //   setJob({ ...job, transport_location: e.value });
+                //   setRefinedData(newState);
+                // }}
               />
               <Text
                 style={{
@@ -241,21 +241,21 @@ const JobDetailsTab = ({
               placeholder=""
               isDisabled={true}
 
-            // onChange={(e) => {
-            //   setJob({
-            //     ...job,
-            //     company_id: e.value || null,
-            //     customer_id: null,
-            //   });
-            //   getCustomersByCompanyId({
-            //     query: "",
-            //     page: 1,
-            //     first: 100,
-            //     orderByColumn: "id",
-            //     orderByOrder: "ASC",
-            //     company_id: e.value,
-            //   });
-            // }}
+              // onChange={(e) => {
+              //   setJob({
+              //     ...job,
+              //     company_id: e.value || null,
+              //     customer_id: null,
+              //   });
+              //   getCustomersByCompanyId({
+              //     query: "",
+              //     page: 1,
+              //     first: 100,
+              //     orderByColumn: "id",
+              //     orderByOrder: "ASC",
+              //     company_id: e.value,
+              //   });
+              // }}
             />
           )}
           <CustomInputField
@@ -270,7 +270,7 @@ const JobDetailsTab = ({
             placeholder=""
             onChange={(e) => {
               // Update job with the selected customer ID
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 customer_id: e.value || null,
               }));
@@ -324,7 +324,7 @@ const JobDetailsTab = ({
             name="operator_phone"
             value={customerSelected.phone_no ?? ""}
             onChange={
-              (_e) => { }
+              (_e) => {}
               //setJob({
               //  ...job,
               //  [e.target.name]: e.target.value,
@@ -338,7 +338,7 @@ const JobDetailsTab = ({
             isDisabled={true}
             value={customerSelected.email ?? ""}
             onChange={
-              (_e) => { }
+              (_e) => {}
               //setJob({
               //  ...job,
               //  [e.target.name]: e.target.value,
@@ -356,9 +356,9 @@ const JobDetailsTab = ({
               setIsSameDayJob(today === e.target.value);
               setIsTomorrowJob(
                 new Date(e.target.value).toDateString() ===
-                new Date(
-                  new Date(today).setDate(new Date(today).getDate() + 1),
-                ).toDateString(),
+                  new Date(
+                    new Date(today).setDate(new Date(today).getDate() + 1),
+                  ).toDateString(),
               );
             }}
           />
@@ -371,7 +371,7 @@ const JobDetailsTab = ({
             value={readyAt ?? ""}
             onChange={(e) => {
               setReadyAt(e.target.value);
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 ready_at: new Date(
                   `${jobDateAt} ${e.target.value}`,
@@ -389,7 +389,7 @@ const JobDetailsTab = ({
             value={dropAt ?? ""}
             onChange={(e) => {
               setDropAt(e.target.value);
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 ready_at: new Date(`${jobDateAt} ${readyAt}`).toISOString(),
                 drop_at: new Date(
@@ -398,20 +398,43 @@ const JobDetailsTab = ({
               }));
             }}
           />
-
+          {/* 
           <CustomInputField
             label="Timeslot:"
             placeholder=""
             name="timeslot"
             value={job.timeslot ?? ""}
             onChange={(e) =>
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 [e.target.name]: e.target.value,
               }))
             }
-          />
+          /> */}
 
+          <Flex alignItems="center" mb="16px">
+            <FormLabel
+              width="200px"
+              fontSize="sm"
+              fontWeight="500"
+              color="navy.700"
+            >
+              Timeslot:
+            </FormLabel>
+
+            <Box width="100%">
+              <Time12HourPicker
+                value={job.timeslot}
+                onChange={(val) =>
+                  setJob((prev) => ({
+                    ...prev,
+                    timeslot: val,
+                  }))
+                }
+                mode="full"
+              />
+            </Box>
+          </Flex>
           <CustomInputField
             label="Last Free Day:"
             type={"date"}
@@ -420,7 +443,7 @@ const JobDetailsTab = ({
             value={job.last_free_at ?? ""}
             onChange={(e) => {
               const value = e.target.value == "" ? null : e.target.value;
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 [e.target.name]: value,
               }));
@@ -434,8 +457,8 @@ const JobDetailsTab = ({
             value={
               job.job_type_id
                 ? jobTypeOptions.find(
-                  (jobType) => jobType.value == job.job_type_id,
-                )
+                    (jobType) => jobType.value == job.job_type_id,
+                  )
                 : ""
             }
             placeholder="Select type"
@@ -445,12 +468,12 @@ const JobDetailsTab = ({
                 (jobType) => jobType.value === selectedType,
               )?.label;
 
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 job_type_id: selectedType || null,
               }));
 
-              setRefinedData(prev => ({
+              setRefinedData((prev) => ({
                 ...prev,
                 service_choice: selectedTypeName || null,
               }));
@@ -463,7 +486,7 @@ const JobDetailsTab = ({
             name="reference_no"
             value={job.reference_no ?? ""}
             onChange={(e) =>
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 [e.target.name]: e.target.value,
               }))
@@ -476,7 +499,7 @@ const JobDetailsTab = ({
             name="booked_by"
             value={job.booked_by ?? ""}
             onChange={(e) =>
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 [e.target.name]: e.target.value,
               }))
@@ -490,7 +513,7 @@ const JobDetailsTab = ({
             name="quoted_price"
             value={job.quoted_price ?? ""}
             onChange={(e) =>
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 [e.target.name]: e.target.value,
               }))
@@ -504,7 +527,7 @@ const JobDetailsTab = ({
             name="admin_notes"
             value={job.admin_notes ?? ""}
             onChange={(e) =>
-              setJob(prev => ({
+              setJob((prev) => ({
                 ...prev,
                 [e.target.name]: e.target.value,
               }))
@@ -620,7 +643,7 @@ const JobDetailsTab = ({
                   // const selectedStateCode= jobDestination?.address_state=="Victoria"? "VIC" : jobDestination?.address_state=="Queensland"? "QLD" :"";
                   // setFilteredDepotOptions(depotOptions.filter((option) => option.label === selectedStateCode));
                   // console.log(depotOptions.filter((option) => option.label === selectedStateCode))
-                  setJob(prev => ({
+                  setJob((prev) => ({
                     ...prev,
                     ...{
                       pick_up_lng: jobDestination.lng,
@@ -882,7 +905,7 @@ const JobDetailsTab = ({
               name="customer_notes"
               value={job.customer_notes}
               onChange={(e) =>
-                setJob(prev => ({
+                setJob((prev) => ({
                   ...prev,
                   [e.target.name]: e.target.value,
                 }))
@@ -894,12 +917,12 @@ const JobDetailsTab = ({
               placeholder=""
               name="base_notes"
               value={job.base_notes}
-            // onChange={(e) =>
-            //   setJob({
-            //     ...job,
-            //     [e.target.name]: e.target.value,
-            //   })
-            // }
+              // onChange={(e) =>
+              //   setJob({
+              //     ...job,
+              //     [e.target.name]: e.target.value,
+              //   })
+              // }
             />
 
             {/* <Text fontSize="sm" color={textColorSecodary} mt={3}>
@@ -948,7 +971,7 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_inbound_connect ? "1" : "0"}
                       onChange={(e) => {
-                        setJob(prev => ({
+                        setJob((prev) => ({
                           ...prev,
                           is_inbound_connect: e === "1" ? true : false,
                         }));
@@ -1028,7 +1051,7 @@ const JobDetailsTab = ({
                   // defaultValue={"0"}
                   value={job.is_stackable_required ? "1" : "0"}
                   onChange={(e) => {
-                    setJob(prev => ({
+                    setJob((prev) => ({
                       ...prev,
                       is_stackable_required: e === "1" ? true : false,
                     }));
@@ -1060,7 +1083,7 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_hand_unloading ? "1" : "0"}
                       onChange={(e) => {
-                        setJob(prev => ({
+                        setJob((prev) => ({
                           ...prev,
                           is_hand_unloading: e === "1" ? true : false,
                         }));
@@ -1095,7 +1118,7 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_dangerous_goods ? "1" : "0"}
                       onChange={(e) => {
-                        setJob(prev => ({
+                        setJob((prev) => ({
                           ...prev,
                           is_dangerous_goods: e === "1" ? true : false,
                         }));
@@ -1130,7 +1153,7 @@ const JobDetailsTab = ({
                       isDisabled={!isAdmin}
                       value={job.is_tailgate_required ? "1" : "0"}
                       onChange={(e) => {
-                        setJob(prev => ({
+                        setJob((prev) => ({
                           ...prev,
                           is_tailgate_required: e === "1" ? true : false,
                         }));
@@ -1341,26 +1364,27 @@ const JobDetailsTab = ({
                           </Text>
                         </Flex>
 
-                        { companyToll === 1 ? <Flex
-                          justify="space-between"
-                          align="center"
-                        >
-                          <Text
-                            fontSize="sm"
-                            fontWeight="500"
-                            color="gray.700"
-                            pr={2}
-                          >
-                            West Gate Toll Charges:
-                          </Text>
-                          <Text
-                            fontSize="sm"
-                            fontWeight="600"
-                            color="blue.600"
-                          >
-                            {companyToll === 1 ? quoteCalculationRes.toll_amount : 0}
-                          </Text>
-                        </Flex>: null}
+                        {companyToll === 1 ? (
+                          <Flex justify="space-between" align="center">
+                            <Text
+                              fontSize="sm"
+                              fontWeight="500"
+                              color="gray.700"
+                              pr={2}
+                            >
+                              West Gate Toll Charges:
+                            </Text>
+                            <Text
+                              fontSize="sm"
+                              fontWeight="600"
+                              color="blue.600"
+                            >
+                              {companyToll === 1
+                                ? quoteCalculationRes.toll_amount
+                                : 0}
+                            </Text>
+                          </Flex>
+                        ) : null}
 
                         {/* Total */}
                         <Flex justify="space-between" align="center">

@@ -577,7 +577,6 @@ function JobEdit() {
         if (data?.company == null) {
           // router.push("/admin/companies");
         }
-        // console.log("Company data:", data.company);
         if (data?.company?.weight_per_cubic != null) {
           setCompanyWeight(data.company.weight_per_cubic);
         }
@@ -590,8 +589,6 @@ function JobEdit() {
         });
       },
       onError(_error) {
-        // console.log("onError");
-        // console.log(error);
       },
     },
   );
@@ -608,35 +605,33 @@ function JobEdit() {
 
       // Find the selected category name based on job_category_id
       const selectedCategoryName = jobCategories.find(
-        (job_category) => job_category.value === jobData.job.job_category_id,
+        (job_category) => job_category.value == jobData.job.job_category_id,
       )?.label;
 
       const selectedLocation = locationOptions.find(
-        (location) => location.value === jobData.job.transport_location,
+        (location) => location.value == jobData.job.transport_location,
       );
 
       const selectedCompany = companiesOptions.find(
-        (company) => company.value === Number(job.company_id),
+        (company) => company.value == Number(job.company_id),
       );
 
       // ✅ Get toll value
       const tollEnabled = selectedCompany?.toll ?? false;
 
-      console.log("Selected Company ID:", selectedCompany);
-      console.log("Toll Enabled:", tollEnabled);
 
       setRefinedData((prev) => ({
         ...prev,
         toll_enabled: tollEnabled,
       }));
-      setRefinedData({
-        ...refinedData,
+      setRefinedData((prev) => ({
+        ...prev,
         freight_type: selectedCategoryName,
         state_code: jobData.job.transport_location,
         state: selectedLocation?.label || null,
         // job_type: matchedJobType?.name || null,
         // job_type_color: matchedJobType?.color || null
-      });
+      }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobData, jobCategories, jobTypeOptions, companyRates]); // Use 'jobData' instead of 'data'
@@ -704,7 +699,6 @@ function JobEdit() {
         transport_type: job.transport_type,
         transport_location: job.transport_location,
       },
-      // // console.log("job", job)
     },
     onCompleted: async (data) => {
       //update job items
@@ -1009,7 +1003,6 @@ function JobEdit() {
     },
     onError: (error) => {
       // Handle the error and set data to empty
-      //   console.log("Error fetching job price calculation detail:", error);
       setIsUpdateMode(false); // No data found, so we need to create a new entry
       setRefinedData(defaultJobQuoteData);
       setQuoteCalculationRes(defaultJobPriceCalculationDetail);
@@ -1250,7 +1243,6 @@ function JobEdit() {
   //handleDeleteJobItem
   const [handleDeleteJobItem, { }] = useMutation(DELETE_JOB_ITEM_MUTATION, {
     onCompleted: (_data) => {
-      // console.log("Job Item Deleted", data);
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -1261,7 +1253,6 @@ function JobEdit() {
     DELETE_JOB_DESTINATION_MUTATION,
     {
       onCompleted: (_data) => {
-        // console.log("Job destination Deleted", data);
       },
       onError: (error) => {
         showGraphQLErrorToast(error);
@@ -1487,7 +1478,6 @@ function JobEdit() {
   );
 
   const handleUpdateJobPriceCalculationDetail = (quoteCalculationRes: any) => {
-    //console.log(quoteCalculationRes, "quoteCalculationRes");
     return new Promise((resolve, reject) => {
       updateJobPriceCalculationDetail({
         variables: {
@@ -1557,7 +1547,6 @@ function JobEdit() {
     {
       fetchPolicy: "no-cache",
       onCompleted: (data) => {
-        console.log("Sea freight calculation result:", data);
         setQuoteCalculationRes((prev) => ({
           ...prev,
           ...data.calculateSeaFreight,
@@ -1599,8 +1588,7 @@ function JobEdit() {
       (location) =>
         location.label?.toLowerCase() == job?.pick_up_state?.toLowerCase(),
     );
-    // console.log(selectedstate, "selectedstate");
-    const selectedJobTypeName = jobTypeOptions.find(
+    const _selectedJobTypeName = jobTypeOptions.find(
       (job_type) => job_type.value == job.job_type_id,
     )?.label;
 
@@ -1611,7 +1599,6 @@ function JobEdit() {
     const filteredCompanyRates = companyRates?.filter(
       (rate) => rate.state === jobDestination1?.state,
     );
-    // console.log(filteredCompanyRates, "filteredCompanyRates")
 
     // const payload = {
     //   customer_id: Number(job.customer_id),
@@ -1693,7 +1680,9 @@ function JobEdit() {
       jobItems,
       companyWeight,
     );
-
+let selectedServiceChoice= jobTypeOptions.find(
+      (job_type) => job_type.value == job.job_type_id,
+    )?.label;
     const finalCBM = parseFloat(totalCBM.toFixed(2));
     const finalWeight = parseFloat(totalWeight.toFixed(2));
     try {
@@ -1706,7 +1695,7 @@ function JobEdit() {
               job.pick_up_state ||
               pickUpDestination.address_state,
             state_code: refinedData.state_code || refinedData.pick_up_stateCode,
-            service_choice: selectedJobTypeName || refinedData.service_choice,
+            service_choice: selectedServiceChoice,
             company_rates:
               ((job.job_category_id == 1 || job.job_category_id == 2) &&
                 selectedstate?.value === "QLD") ||
@@ -1780,8 +1769,6 @@ function JobEdit() {
         throw new Error("No calculation data received from API");
       }
 
-      console.log("API Response:", calculationData);
-      console.log("Calculated CBM:", finalCBM, "Weight:", finalWeight);
       setQuoteCalculationRes({
         ...quoteCalculationRes,
         cbm_auto: Number(finalCBM ?? 0),
@@ -1923,6 +1910,10 @@ function JobEdit() {
     const selectedDepot = depotOptions.find(
       (depot) => depot.value === job.timeslot_depots,
     )?.label;
+
+    const selectedServiceChoice =jobTypeOptions.find(
+      (job_type) => job_type.value == job.job_type_id,
+    )?.label;
     const payload = {
       pickup: {
         state: pickUpDestination?.address_state,
@@ -1952,7 +1943,7 @@ function JobEdit() {
       })),
 
       transport_type: job.transport_type,
-      service_choice: refinedData.service_choice,
+      service_choice: selectedServiceChoice,
       state:
         refinedData.state ||
         job.pick_up_state ||

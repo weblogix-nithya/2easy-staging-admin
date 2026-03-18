@@ -571,46 +571,70 @@ export function isSameDay(jobDate: string, timeZone: string): boolean {
   return currentTime.isSame(jobDateTime, "day");
 }
 
-export function convertTo12Hour(time24: string | null | undefined): string {
-  if (!time24) return;
+// export function getTimeDifferenceInMinutes(
+//   time: string | null | undefined,
+// ): number | null {
+//   if (!time) return null;
 
-  // Match format like 1:2, 09:30, 12:5, 12:30
-  const timeRegex = /^\d{1,2}:\d{1,2}$/;
-  if (!timeRegex.test(time24)) {
-    return time24; // Return as-is if format doesn't match
-  }
+//   const timeRegex = /^\d{1,2}:\d{1,2}$/;
+//   if (!timeRegex.test(time)) return null;
 
-  let [hours, minutes] = time24.split(":");
-  let hour = Number(hours);
+//   const [hours, minutes] = time.split(":").map(Number);
 
-  const ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12;
+//   const now = new Date();
+//   const target = new Date();
 
-  return `${String(hour).padStart(2, "0")}:${minutes}${ampm}`;
-}
+//   target.setHours(hours);
+//   target.setMinutes(minutes);
+//   target.setSeconds(0);
+
+//   const diffMs = target.getTime() - now.getTime();
+//   if (diffMs <= 0) return null;
+//   return diffMs / (1000 * 60); // return minutes
+// }
 
 export function getTimeDifferenceInMinutes(
   time: string | null | undefined,
 ): number | null {
   if (!time) return null;
 
-  const timeRegex = /^\d{1,2}:\d{1,2}$/;
-  if (!timeRegex.test(time)) return null;
+  const match = time.trim().match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+  if (!match) return null; // if not our format → ignore
 
-  const [hours, minutes] = time.split(":").map(Number);
+  let hour = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  // Convert to 24hr internally for comparison
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
 
   const now = new Date();
   const target = new Date();
 
-  target.setHours(hours);
+  target.setHours(hour);
   target.setMinutes(minutes);
   target.setSeconds(0);
 
   const diffMs = target.getTime() - now.getTime();
   if (diffMs <= 0) return null;
-  return diffMs / (1000 * 60); // return minutes
+
+  return diffMs / (1000 * 60);
 }
 
+// export const convert24To12 = (time24: string) => {
+//   if (!time24) return "";
+
+//   const [hourStr, minute] = time24.split(":");
+//   let hour = parseInt(hourStr, 10);
+
+//   const ampm = hour >= 12 ? "PM" : "AM";
+
+//   hour = hour % 12;
+//   if (hour === 0) hour = 12;
+
+//   return `${hour.toString().padStart(2, "0")}:${minute} ${ampm}`;
+// };
 // Get job destination timezone based on the latitude and longitude using Google Maps API
 // export async function getTimezone(address_state: number) {
 //   const response = await fetch(

@@ -28,7 +28,6 @@ import { DynamicTableUser } from "graphql/dynamicTableUser";
 // import { UPDATE_JOB_MUTATION } from "graphql/job";
 import {
   // formatToTimeDate,
-  convertTo12Hour,
   formatAddress,
   formatDate,
   formatTime,
@@ -650,7 +649,7 @@ export const ItemsCbmCell = ({ row }: any) => {
 };
 export const ItemsExtrasCell = ({ row }: any) => {
   return (
-    <Text maxW="100px" fontWeight="bold">
+    <Text maxW="100px" fontWeight="800">
       {row?.original?.job?.extras || "-"}
     </Text>
   );
@@ -673,20 +672,21 @@ export const TotalPrice = ({ row }: any) => {
   const tax = Number(row?.original?.job?.price_summary?.tax || 0);
   const total = Number(row?.original?.job?.price_summary?.total || 0);
   const driverPay = Number(row?.original?.job?.driver_pay || 0);
-
+  const driverId = row?.original?.job?.driver_id;
   const isAllZero = subTotal === 0 && tax === 0 && total === 0;
 
   return (
     <>
       <Text fontSize="md" w="250px">
-        {isAllZero
-          ? "Invoice: 0"
-          : `Invoice: ${subTotal} + ${tax}= $${total}`}
+        {isAllZero ? "Invoice: 0" : `Invoice: ${subTotal} + ${tax}= $${total}`}
       </Text>
 
-      <Text fontSize="md" w="250px">
-        Driver Pay: $ {driverPay}
-      </Text>
+      {/* {driverId && ( */}
+      {driverId !== null && driverId !== undefined && (
+        <Text fontSize="md" w="250px">
+          Driver Pay: $ {driverPay}
+        </Text>
+      )}
     </>
   );
 };
@@ -777,7 +777,7 @@ export const StatusCellExport = ({ row }: any) =>
 
 export const ReadyAtCell = ({ row }: any) => {
   return (
-    <Flex direction="column" gap={1} minWidth="200px">
+    <Flex direction="column" gap={1} minWidth="210px">
       <Text fontSize="md" fontWeight="500">
         Created Date: {formatDate(row?.original?.job?.created_at) || "-"}
       </Text>
@@ -987,9 +987,20 @@ export const AdminNotesCellExport = ({ row }: any) => {
 
 export const TimeslotCell = ({ row, refetchJobs }: any) => {
   return (
-    <Flex gap={2} align="center">
-      <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
-        {convertTo12Hour(row?.original?.job?.timeslot) || "-"}
+    <Flex gap={2}>
+      <Text
+        minW="150px"
+        fontSize="28px"
+        fontWeight="900"
+        letterSpacing="2px"
+        textAlign="center"
+        color="white"
+        textShadow="
+    2px 2px 0 rgba(0,0,0,0.85),
+    3px 3px 6px rgba(0,0,0,0.6)
+  "
+      >
+        {row?.original?.job?.timeslot || "-"}
       </Text>
       <EditableFieldPopover
         row={row}
