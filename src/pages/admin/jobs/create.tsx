@@ -2194,19 +2194,6 @@ function JobPage() {
                       }));
                     }}
                   />
-
-                  {/* <CustomInputField
-                    label="Timeslot:"
-                    placeholder=""
-                    name="timeslot"
-                    value={job.timeslot}
-                    onChange={(e) =>
-                      setJob((prev) => ({
-                        ...prev,
-                        [e.target.name]: e.target.value,
-                      }))
-                    }
-                  /> */}
                   {/* <CustomInputField
                     label="Timeslot1:"
                     type={"time"}
