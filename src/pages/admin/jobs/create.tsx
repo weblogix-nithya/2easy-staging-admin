@@ -1,6 +1,8 @@
 "use client";
 // Chakra imports
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
+import { Alert, AlertIcon, AlertTitle } from "@chakra-ui/react";
+
 import {
   Box,
   Button,
@@ -2211,29 +2213,29 @@ function JobPage() {
                       }));
                     }}
                   /> */}
-                <Flex alignItems="center" mb="16px">
-                  <FormLabel
-                    width="200px"
-                    fontSize="sm"
-                    fontWeight="500"
-                    color="navy.700"
-                  >
-                    Timeslot:
-                  </FormLabel>
+                  <Flex alignItems="center" mb="16px">
+                    <FormLabel
+                      width="200px"
+                      fontSize="sm"
+                      fontWeight="500"
+                      color="navy.700"
+                    >
+                      Timeslot:
+                    </FormLabel>
 
-                  <Box width="100%">
-                    <Time12HourPicker
-                      value={job.timeslot}
-                      onChange={(val) =>
-                        setJob((prev) => ({
-                          ...prev,
-                          timeslot: val,
-                        }))
-                      }
-                      mode="quick"
-                    />
-                  </Box>
-                </Flex>
+                    <Box width="100%">
+                      <Time12HourPicker
+                        value={job.timeslot}
+                        onChange={(val) =>
+                          setJob((prev) => ({
+                            ...prev,
+                            timeslot: val,
+                          }))
+                        }
+                        mode="quick"
+                      />
+                    </Box>
+                  </Flex>
                   <CustomInputField
                     label="Last Free Day:"
                     type={"date"}
@@ -2777,11 +2779,11 @@ function JobPage() {
                               Is Stackable Freight?
                             </FormLabel>
                             <RadioGroup
-                              defaultValue={"0"}
+                              value={job?.is_stackable_required ? "1" : "0"} // ✅ controlled
                               onChange={(e) => {
                                 setJob((prev) => ({
                                   ...prev,
-                                  is_stackable_required: e === "1",
+                                  is_stackable_required: e === "1", // ✅ correct mapping
                                 }));
                               }}
                             >
@@ -2792,6 +2794,24 @@ function JobPage() {
                                 </Radio>
                               </Stack>
                             </RadioGroup>
+                            {/* ✅ Warning Message */}
+
+                            {!job?.is_stackable_required && (
+                              <Alert
+                                status="warning"
+                                mt={3}
+                                borderRadius="md"
+                                bg="white"
+                                border="1px solid"
+                                borderColor="orange.300"
+                              >
+                                <AlertIcon color="orange.400" />
+                                <AlertTitle fontSize="sm" color="orange.600">
+                                  Non-stackable freight may be subject to a
+                                  higher rate on the final invoice
+                                </AlertTitle>
+                              </Alert>
+                            )}
                           </Flex>
                           <Flex
                             flexDirection="column"

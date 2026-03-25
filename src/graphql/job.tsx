@@ -1113,6 +1113,7 @@ export interface CreateJobInput {
   admin_notes?: string;
   customer_notes?: string;
   base_notes?: string;
+  is_stackable_required?: boolean;
   // job_price_quote?: JobPriceCalculationDetail[];
 }
 
@@ -1159,7 +1160,7 @@ export type Job = {
   // job_price_quote?: JobPriceCalculationDetail[];
   media: any[] | null;
   media_admin?: any[] | null;
-
+  is_stackable_required?: boolean;
   [key: string]:
     | string
     | number
@@ -1182,7 +1183,7 @@ export const defaultJob: Job = {
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: null,
-
+is_stackable_required: true,
   customer_id: null,
   company_id: null,
   media: [],
