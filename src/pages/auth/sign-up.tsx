@@ -120,6 +120,18 @@ export default function SignUp() {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",
       });
+      if (!data.login.user.is_admin) {
+        setCookie(null, "customer_id", data.login.user.customer?.id, {
+          maxAge: 30 * 24 * 60 * 60,
+          path: "/",
+        });
+      } else {
+        // Remove customer_id if admin
+        setCookie(null, "customer_id", "", {
+          maxAge: 0,
+          path: "/",
+        });
+      }
       setCookie(null, "is_company_admin", data.login.user.is_company_admin, {
         maxAge: 30 * 24 * 60 * 60,
         path: "/",

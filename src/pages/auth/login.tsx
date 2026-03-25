@@ -88,10 +88,10 @@ export default function SignIn() {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
-          setCookie(null, "customer_id", data.login.user.customer?.id, {
-            maxAge: 30 * 24 * 60 * 60,
-            path: "/",
-          });
+          // setCookie(null, "customer_id", data.login.user.customer?.id, {
+          //   maxAge: 30 * 24 * 60 * 60,
+          //   path: "/",
+          // });
           setCookie(null, "company_id", data.login.user.customer?.company_id, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
@@ -108,6 +108,18 @@ export default function SignIn() {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
           });
+          if (!data.login.user.is_admin) {
+            setCookie(null, "customer_id", data.login.user.customer?.id, {
+              maxAge: 30 * 24 * 60 * 60,
+              path: "/",
+            });
+          } else {
+            // Remove customer_id if admin
+            setCookie(null, "customer_id", "", {
+              maxAge: 0,
+              path: "/",
+            });
+          }
           setCookie(null, "reset_approve", data.login.user.reset_approve, {
             maxAge: 30 * 24 * 60 * 60,
             path: "/",
