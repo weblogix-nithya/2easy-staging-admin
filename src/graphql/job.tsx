@@ -351,6 +351,7 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           }
           pick_up_address
           last_free_at
+          created_at
           timeslot
           extras
           admin_notes
@@ -1025,6 +1026,29 @@ export const UPDATE_DRIVER_FREE_TEXT = gql`
       driver_id
       date
       text
+    }
+  }
+`;
+
+export const GET_JOB_LOGS_QUERY = gql`
+  query jobLogs($job_id: Int, $first: Int!) {
+    jobLogs(job_id: $job_id, first: $first) {
+      data {
+        id
+        job_id
+        job {
+          name
+        }
+        user {
+          name
+        }
+        action
+        field
+        old_value
+        new_value
+        mail_sent
+        created_at
+      }
     }
   }
 `;
