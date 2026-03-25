@@ -1,33 +1,15 @@
 import { useQuery } from "@apollo/client";
 import {
   Box,
-  Button,
-  Center,
-  Divider,
-  Flex,
-  GridItem,
-  Link,
   SimpleGrid,
-  Skeleton,
-  Spinner,
-  Table,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-  useColorModeValue,
-  useToast,
 } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { GET_JOB_LOGS_QUERY } from "graphql/job";
-import { formatCurrency } from "helpers/helper";
 import { useRouter } from "next/router";
 // import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "store/store";
+import React, { useMemo, useState } from "react";
+// import { useSelector } from "react-redux";
+// import { RootState } from "store/store";
 
 export default function InvoiceTab(props: {
   jobObjectId: any;
@@ -35,7 +17,7 @@ export default function InvoiceTab(props: {
 }) {
   const { jobObjectId, activeTab } = props;
   console.log(jobObjectId, activeTab, "jobObjectId,t");
-  const toast = useToast();
+  // const toast = useToast();
   const router = useRouter();
   const [queryPageIndex, setQueryPageIndex] = useState(0);
   const [queryPageSize, setQueryPageSize] = useState(100);
@@ -76,9 +58,9 @@ export default function InvoiceTab(props: {
     ],
     [],
   );
-  const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
+  // const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
 
-  const textColor = useColorModeValue("navy.700", "white");
+  // const textColor = useColorModeValue("navy.700", "white");
 
   const { loading: jobLogsLoading, data: jobLogsData } = useQuery(
     GET_JOB_LOGS_QUERY,

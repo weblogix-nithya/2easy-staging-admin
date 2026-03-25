@@ -25,8 +25,8 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import axios from "axios";
-import InvoiceTab from "components/jobs/InvoiceTab";
 import AuditLogTab from "components/jobs/AuditLogTab";
+import InvoiceTab from "components/jobs/InvoiceTab";
 import JobDetailsTab from "components/jobs/JobDetailsTab";
 import MessageLogTab from "components/jobs/MessageLogTab";
 import ReportsTab from "components/jobs/ReportsTab";
