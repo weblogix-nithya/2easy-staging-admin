@@ -1041,6 +1041,9 @@ export const GET_JOB_LOGS_QUERY = gql`
         }
         user {
           name
+          roles {
+          name
+          }
         }
         action
         field

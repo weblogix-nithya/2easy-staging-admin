@@ -1,13 +1,11 @@
 import { useQuery } from "@apollo/client";
-import {
-  Box,
-  SimpleGrid,
-} from "@chakra-ui/react";
+import { Box, SimpleGrid } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { GET_JOB_LOGS_QUERY } from "graphql/job";
 import { useRouter } from "next/router";
 // import { useRouter } from "next/router";
 import React, { useMemo, useState } from "react";
+import { JsonTreeViewer } from "./JobTableColumns";
 // import { useSelector } from "react-redux";
 // import { RootState } from "store/store";
 
@@ -29,6 +27,10 @@ export default function InvoiceTab(props: {
         accessor: "user.name",
       },
       {
+        Header: "User Role",
+        accessor: "user.roles[0].name",
+      },
+      {
         Header: "Action",
         accessor: "action",
       },
@@ -43,6 +45,7 @@ export default function InvoiceTab(props: {
       {
         Header: "New Value",
         accessor: "new_value",
+        Cell: ({ value }: any) => <JsonTreeViewer value={value} />,
       },
       {
         Header: "Mail Sent",
@@ -58,6 +61,7 @@ export default function InvoiceTab(props: {
     ],
     [],
   );
+
   // const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
 
   // const textColor = useColorModeValue("navy.700", "white");
@@ -115,3 +119,18 @@ export default function InvoiceTab(props: {
     </Box>
   );
 }
+
+export const formatToLocal = (dateString?: string) => {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+};
