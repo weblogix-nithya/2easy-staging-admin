@@ -1,5 +1,8 @@
 // components/tabs/JobDetailsTab.tsx
 import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
   Divider,
@@ -1048,12 +1051,11 @@ const JobDetailsTab = ({
                   Is Stackable Freight?
                 </FormLabel>
                 <RadioGroup
-                  // defaultValue={"0"}
-                  value={job.is_stackable_required ? "1" : "0"}
+                  value={job?.is_stackable_required ? "1" : "0"} // ✅ controlled
                   onChange={(e) => {
                     setJob((prev) => ({
                       ...prev,
-                      is_stackable_required: e === "1" ? true : false,
+                      is_stackable_required: e === "1", // ✅ correct mapping
                     }));
                   }}
                 >
@@ -1064,6 +1066,24 @@ const JobDetailsTab = ({
                     </Radio>
                   </Stack>
                 </RadioGroup>
+                {/* ✅ Warning Message */}
+
+                {!job?.is_stackable_required && (
+                  <Alert
+                    status="warning"
+                    mt={3}
+                    borderRadius="md"
+                    bg="white"
+                    border="1px solid"
+                    borderColor="orange.300"
+                  >
+                    <AlertIcon color="orange.400" />
+                    <AlertTitle fontSize="sm" color="orange.600">
+                      Non-stackable freight may be subject to a higher rate on
+                      the final invoice
+                    </AlertTitle>
+                  </Alert>
+                )}
               </Flex>
               <Flex alignItems="center" width="100%" pt={7}>
                 <SimpleGrid columns={{ sm: 1 }} width="100%">

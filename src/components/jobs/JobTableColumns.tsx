@@ -1,8 +1,10 @@
 // import { useMutation } from "@apollo/client";
 // import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import { EditIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import {
   Badge,
+  Box,
   Button,
   Flex,
   // HStack,
@@ -36,7 +38,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/router";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
-import React from "react";
+import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
 // import { useSelector } from "react-redux";
 import { RootState } from "store/store";
@@ -1498,4 +1500,117 @@ export const getBulkAssignColumns = (
   columns.push(...dynamicColumns);
 
   return columns;
+};
+
+const getTypeColor = (value: any) => {
+  if (typeof value === "string") return "green.600";
+  if (typeof value === "number") return "purple.600";
+  if (typeof value === "boolean") return "red.500";
+  if (value === null) return "gray.500";
+  return "gray.700";
+};
+
+const getPreview = (value: any) => {
+  if (Array.isArray(value)) return `[${value.length}]`;
+  if (typeof value === "object" && value !== null)
+    return `{${Object.keys(value).length}}`;
+  return null;
+};
+
+const JsonNode = ({ data, level = 0 }: { data: any; level?: number }) => {
+  const [open, setOpen] = useState(false);
+
+  if (typeof data !== "object" || data === null) {
+    return (
+      <Text as="span" color={getTypeColor(data)}>
+        {JSON.stringify(data)}
+      </Text>
+    );
+  }
+  const formatToLocal = (value: string) => {
+    const date = new Date(value);
+
+    if (isNaN(date.getTime())) return value; // not a date
+
+    return date.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+  const isDateString = (value: unknown): value is string => {
+    return (
+      typeof value === "string" &&
+      !isNaN(Date.parse(value)) &&
+      value.includes("T")
+    );
+  };
+  return (
+    <Box pl={level * 4}>
+      {Object.entries(data).map(([key, value]) => {
+        const isExpandable = typeof value === "object" && value !== null;
+
+        return (
+          <Box key={key}>
+            <Flex align="center">
+              {isExpandable ? (
+                <Box cursor="pointer" onClick={() => setOpen(!open)} mr={1}>
+                  {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                </Box>
+              ) : (
+                <Box w="16px" />
+              )}
+
+              <Text as="span" color="blue.600" fontWeight="600" mr={1}>
+                {key}:
+              </Text>
+
+              {!isExpandable ? (
+                <Text as="span" color={getTypeColor(value)}>
+                  {isDateString(value)
+                    ? formatToLocal(value) // no TS error now
+                    : JSON.stringify(value)}
+                </Text>
+              ) : (
+                !open && (
+                  <Text as="span" color="gray.500">
+                    {getPreview(value)}
+                  </Text>
+                )
+              )}
+            </Flex>
+
+            {isExpandable && open && (
+              <JsonNode data={value} level={level + 1} />
+            )}
+          </Box>
+        );
+      })}
+    </Box>
+  );
+};
+
+export const JsonTreeViewer = ({ value }: { value: any }) => {
+  let parsed;
+
+  try {
+    parsed = typeof value === "string" ? JSON.parse(value) : value;
+  } catch {
+    return <Text fontSize="sm">{value}</Text>;
+  }
+
+  return (
+    <Box
+      bg="gray.50"
+      p={3}
+      borderRadius="md"
+      fontSize="sm"
+      fontFamily="mono"
+      maxH="300px"
+      overflowY="auto"
+      border="1px solid"
+      borderColor="gray.200"
+    >
+      <JsonNode data={parsed} />
+    </Box>
+  );
 };
