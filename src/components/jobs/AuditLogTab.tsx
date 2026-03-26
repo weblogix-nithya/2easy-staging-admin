@@ -2,52 +2,46 @@ import { useQuery } from "@apollo/client";
 import { Box, SimpleGrid } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
 import { GET_JOB_LOGS_QUERY } from "graphql/job";
+import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { useRouter } from "next/router";
-// import { useRouter } from "next/router";
 import React, { useMemo, useState } from "react";
 
 import { JsonTreeViewer } from "./JobTableColumns";
-// import { useSelector } from "react-redux";
-// import { RootState } from "store/store";
-
 export default function InvoiceTab(props: {
   jobObjectId: any;
   activeTab: any;
 }) {
   const { jobObjectId, activeTab } = props;
   console.log(jobObjectId, activeTab, "jobObjectId,t");
-  // const toast = useToast();
   const router = useRouter();
   const [_queryPageIndex, setQueryPageIndex] = useState(0);
   const [_queryPageSize, setQueryPageSize] = useState(100);
+  const [jobStatuses, setJobStatuses] = useState<Record<number, string>>({});
 
   const columns = useMemo(
     () => [
-      {
-        Header: "User",
-        accessor: "user.name",
-      },
-      {
-        Header: "User Role",
-        accessor: "user.roles[0].name",
-      },
-      {
-        Header: "Action",
-        accessor: "action",
-      },
-      {
-        Header: "Field",
-        accessor: "field",
-      },
+      { Header: "User", accessor: "user.name" },
+      { Header: "User Role", accessor: "user.roles[0].name" },
+      { Header: "Action", accessor: "action" },
+      { Header: "Field", accessor: "field" },
+
       {
         Header: "Old Value",
         accessor: "old_value",
+        Cell: ({ row }: any) =>
+          formatValue(row.original.field, row.original.old_value),
       },
       {
         Header: "New Value",
         accessor: "new_value",
-        Cell: ({ value }: any) => <JsonTreeViewer value={value} />,
+        Cell: ({ row }: any) =>
+          row.original.field?.includes("status_id") ? (
+            formatValue(row.original.field, row.original.new_value)
+          ) : (
+            <JsonTreeViewer value={row.original.new_value} />
+          ),
       },
+
       {
         Header: "Mail Sent",
         accessor: "mail_sent",
@@ -55,17 +49,44 @@ export default function InvoiceTab(props: {
         trueLabel: "Yes",
         falseLabel: "No",
       },
-      {
-        Header: "Date",
-        accessor: "created_at",
-      },
+
+      { Header: "Date", accessor: "created_at" },
     ],
-    [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [jobStatuses],
   );
 
-  // const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
+  const formatValue = (field: string, value: any) => {
+  if (value === null || value === undefined) return "-";
 
-  // const textColor = useColorModeValue("navy.700", "white");
+  if (field?.includes("status_id")) {
+    return jobStatuses[Number(value)] || `Unknown (${value})`;
+  }
+
+  return value;
+  };
+
+  useQuery(GET_JOB_STATUSES_QUERY, {
+    variables: {
+      query: "",
+      page: 1,
+      first: 100,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
+    },
+    fetchPolicy: "network-only",
+    onCompleted: (data) => {
+      const map = data?.jobStatuses?.data?.reduce(
+        (acc: Record<number, string>, item: any) => {
+          acc[Number(item.id)] = item.name;
+          return acc;
+        },
+        {},
+      );
+
+      setJobStatuses(map);
+    },
+  });
 
   const { loading: jobLogsLoading, data: jobLogsData } = useQuery(
     GET_JOB_LOGS_QUERY,
@@ -87,29 +108,11 @@ export default function InvoiceTab(props: {
         columns={{ sm: 1 }}
         spacing={{ base: "20px", xl: "20px" }}
       >
-        {/* <Flex minWidth="max-content">
-                            <SearchBar
-                              background={menuBg}
-                              onChangeSearchQuery={onChangeSearchQuery}
-                              me="10px"
-                              borderRadius="30px"
-                            />
-                          </Flex> */}
-
         {!jobLogsLoading && jobLogsData?.jobLogs?.data.length >= 0 && (
           <PaginationTable
             columns={columns}
             showDelete={true}
             data={jobLogsData?.jobLogs?.data}
-            // options={{
-            //   initialState: {
-            //     pageIndex: queryPageIndex,
-            //     pageSize: queryPageSize,
-            //   },
-            //   manualPagination: true,
-            //   pageCount:
-            //     jobLogsData?.jobLogs?.data.paginatorInfo.lastPage,
-            // }}
             setQueryPageIndex={setQueryPageIndex}
             setQueryPageSize={setQueryPageSize}
             isServerSide
@@ -120,18 +123,3 @@ export default function InvoiceTab(props: {
     </Box>
   );
 }
-
-export const formatToLocal = (dateString?: string) => {
-  if (!dateString) return "-";
-
-  const date = new Date(dateString);
-
-  return date.toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-};
