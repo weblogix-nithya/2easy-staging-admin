@@ -2,7 +2,6 @@
 // Chakra imports
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client";
 import { Alert, AlertIcon, AlertTitle } from "@chakra-ui/react";
-
 import {
   Box,
   Button,

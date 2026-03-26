@@ -5,6 +5,7 @@ import { GET_JOB_LOGS_QUERY } from "graphql/job";
 import { useRouter } from "next/router";
 // import { useRouter } from "next/router";
 import React, { useMemo, useState } from "react";
+
 import { JsonTreeViewer } from "./JobTableColumns";
 // import { useSelector } from "react-redux";
 // import { RootState } from "store/store";
@@ -17,8 +18,8 @@ export default function InvoiceTab(props: {
   console.log(jobObjectId, activeTab, "jobObjectId,t");
   // const toast = useToast();
   const router = useRouter();
-  const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(100);
+  const [_queryPageIndex, setQueryPageIndex] = useState(0);
+  const [_queryPageSize, setQueryPageSize] = useState(100);
 
   const columns = useMemo(
     () => [

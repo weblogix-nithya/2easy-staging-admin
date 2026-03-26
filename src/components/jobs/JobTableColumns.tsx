@@ -1,6 +1,7 @@
 // import { useMutation } from "@apollo/client";
 // import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
 import { EditIcon } from "@chakra-ui/icons";
+import { ChevronDownIcon, ChevronRightIcon } from "@chakra-ui/icons";
 import {
   Badge,
   Box,
@@ -24,7 +25,6 @@ import {
   // useToast,
   VStack,
 } from "@chakra-ui/react";
-import { ChevronRightIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
 // import { UPDATE_JOB_MUTATION } from "graphql/job";
@@ -1518,6 +1518,8 @@ const getPreview = (value: any) => {
 };
 
 const JsonNode = ({ data, level = 0 }: { data: any; level?: number }) => {
+  const [open, setOpen] = useState(false);
+
   if (typeof data !== "object" || data === null) {
     return (
       <Text as="span" color={getTypeColor(data)}>
@@ -1547,8 +1549,6 @@ const JsonNode = ({ data, level = 0 }: { data: any; level?: number }) => {
       {Object.entries(data).map(([key, value]) => {
         const isExpandable = typeof value === "object" && value !== null;
 
-        const [open, setOpen] = useState(false);
-
         return (
           <Box key={key}>
             <Flex align="center">
@@ -1565,7 +1565,7 @@ const JsonNode = ({ data, level = 0 }: { data: any; level?: number }) => {
               </Text>
 
               {!isExpandable ? (
-                <Text as="span" color={getTypeColor(value)} >
+                <Text as="span" color={getTypeColor(value)}>
                   {isDateString(value)
                     ? formatToLocal(value) // no TS error now
                     : JSON.stringify(value)}
