@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import React, { useMemo, useState } from "react";
 
 import { JsonTreeViewer } from "./JobTableColumns";
+import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
 export default function InvoiceTab(props: {
   jobObjectId: any;
   activeTab: any;
@@ -17,6 +18,7 @@ export default function InvoiceTab(props: {
   const [_queryPageIndex, setQueryPageIndex] = useState(0);
   const [_queryPageSize, setQueryPageSize] = useState(100);
   const [jobStatuses, setJobStatuses] = useState<Record<number, string>>({});
+  const [invoiceStatuses, setInvoiceStatuses] = useState<Record<number, string>>({});
 
   const columns = useMemo(
     () => [
@@ -59,12 +61,36 @@ export default function InvoiceTab(props: {
   const formatValue = (field: string, value: any) => {
   if (value === null || value === undefined) return "-";
 
-  if (field?.includes("status_id")) {
+  if (field?.includes("job_status_id")) {
     return jobStatuses[Number(value)] || `Unknown (${value})`;
   }
 
+    if (field?.includes("invoice_status_id")) {
+    return invoiceStatuses[Number(value)] || `Unknown (${value})`;
+  }
   return value;
   };
+
+    useQuery(GET_INVOICE_STATUSES_QUERY, {
+      variables: {
+        query: "",
+        page: 1,
+        first: 100,
+        orderByColumn: "id",
+        orderByOrder: "ASC",
+      },
+      onCompleted: (data) => {
+      const map = data?.invoiceStatuses?.data?.reduce(
+        (acc: Record<number, string>, item: any) => {
+          acc[Number(item.id)] = item.name;
+          return acc;
+        },
+        {},
+      );
+
+      setInvoiceStatuses(map);
+    },
+    });
 
   useQuery(GET_JOB_STATUSES_QUERY, {
     variables: {
@@ -93,7 +119,7 @@ export default function InvoiceTab(props: {
     {
       variables: {
         job_id: Number(jobObjectId),
-        first: 50,
+        first: Number(50),
       },
       skip: !router.isReady || !jobObjectId || activeTab !== "audit", // ✅ ONLY runs for Invoice tab
       fetchPolicy: "network-only",

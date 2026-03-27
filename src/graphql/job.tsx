@@ -1042,7 +1042,7 @@ export const GET_JOB_LOGS_QUERY = gql`
         user {
           name
           roles {
-          name
+            name
           }
         }
         action
@@ -1051,6 +1051,11 @@ export const GET_JOB_LOGS_QUERY = gql`
         new_value
         mail_sent
         created_at
+        invoice_id
+        invoice {
+          name
+        }
+        status
       }
     }
   }
@@ -1186,7 +1191,7 @@ export const defaultJob: Job = {
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: null,
-is_stackable_required: true,
+  is_stackable_required: true,
   customer_id: null,
   company_id: null,
   media: [],
