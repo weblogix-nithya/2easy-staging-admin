@@ -930,6 +930,7 @@ export const UPDATE_JOB_MUTATION = gql`
       transport_location
       timeslot_depots
       company_area
+      delete_reason
     }
   }
 `;
@@ -1092,6 +1093,7 @@ export interface UpdateJobInput {
   quoted_price?: string;
   customer_notes?: string;
   base_notes?: string;
+  delete_reason?: string;
   // job_price_quote: any;
 }
 
