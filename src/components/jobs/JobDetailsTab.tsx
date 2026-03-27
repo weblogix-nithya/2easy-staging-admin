@@ -1,4 +1,5 @@
 // components/tabs/JobDetailsTab.tsx
+import { useMutation } from "@apollo/client";
 import {
   Alert,
   AlertIcon,
@@ -10,6 +11,12 @@ import {
   FormLabel,
   Grid,
   GridItem,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   Radio,
   RadioGroup,
   SimpleGrid,
@@ -18,17 +25,11 @@ import {
   Tbody,
   Td,
   Text,
+  Textarea,
   Th,
   Thead,
-  Tr,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Textarea,
   Toast,
+  Tr,
 } from "@chakra-ui/react";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -40,12 +41,11 @@ import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
+import { UPDATE_JOB_MUTATION } from "graphql/job";
 import { formatDate, formatTime } from "helpers/helper";
 import React, { useState } from "react";
 
 import JobInputTable from "./JobInputTable";
-import { useMutation } from "@apollo/client";
-import { UPDATE_JOB_MUTATION } from "graphql/job";
 
 const JobDetailsTab = ({
   isAdmin,

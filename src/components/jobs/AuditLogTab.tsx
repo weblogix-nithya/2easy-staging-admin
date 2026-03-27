@@ -1,13 +1,13 @@
 import { useQuery } from "@apollo/client";
 import { Box, SimpleGrid } from "@chakra-ui/react";
 import PaginationTable from "components/table/PaginationTable";
+import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
 import { GET_JOB_LOGS_QUERY } from "graphql/job";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
 import { useRouter } from "next/router";
 import React, { useMemo, useState } from "react";
 
 import { JsonTreeViewer } from "./JobTableColumns";
-import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
 export default function InvoiceTab(props: {
   jobObjectId: any;
   activeTab: any;
