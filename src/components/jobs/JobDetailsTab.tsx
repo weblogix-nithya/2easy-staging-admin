@@ -131,6 +131,9 @@ const JobDetailsTab = ({
           input: {
             id: job.id,
             name: job.name,
+            job_type_id: job.job_type_id,
+            company_id: job.company_id,
+            customer_id: job.customer_id,
             delete_reason: deleteReason,
           },
         },
@@ -151,9 +154,9 @@ const JobDetailsTab = ({
     setIsDeleteOpen(true);
   };
   const handleClose = () => {
-  setDeleteReason("");
-  setIsDeleteOpen(false);
-};
+    setDeleteReason("");
+    setIsDeleteOpen(false);
+  };
   return (
     <Box mt={10}>
       {/* Basic fields */}
