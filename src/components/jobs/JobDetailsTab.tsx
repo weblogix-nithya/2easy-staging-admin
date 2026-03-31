@@ -1,4 +1,5 @@
 // components/tabs/JobDetailsTab.tsx
+import { useMutation } from "@apollo/client";
 import {
   Alert,
   AlertIcon,
@@ -10,6 +11,12 @@ import {
   FormLabel,
   Grid,
   GridItem,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   Radio,
   RadioGroup,
   SimpleGrid,
@@ -18,8 +25,10 @@ import {
   Tbody,
   Td,
   Text,
+  Textarea,
   Th,
   Thead,
+  Toast,
   Tr,
 } from "@chakra-ui/react";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
@@ -32,8 +41,9 @@ import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
+import { UPDATE_JOB_MUTATION } from "graphql/job";
 import { formatDate, formatTime } from "helpers/helper";
-import React from "react";
+import React, { useState } from "react";
 
 import JobInputTable from "./JobInputTable";
 
@@ -42,6 +52,8 @@ const JobDetailsTab = ({
   companyToll,
   job,
   setJob,
+  deleteReason,
+  setDeleteReason,
   jobStatuses,
   jobCategories,
   drivers,
@@ -100,6 +112,51 @@ const JobDetailsTab = ({
   depotOptions,
   _setDepotOptions,
 }) => {
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const handleDeleteWithReason = async () => {
+    if (!deleteReason.trim()) {
+      Toast({
+        title: "Please enter delete reason",
+        status: "error",
+        duration: 2000,
+      });
+      return;
+    }
+
+    try {
+      // ✅ Step 1: Update job
+      await handleUpdateJob({
+        variables: {
+          input: {
+            id: job.id,
+            name: job.name,
+            job_type_id: job.job_type_id,
+            company_id: job.company_id,
+            customer_id: job.customer_id,
+            delete_reason: deleteReason,
+          },
+        },
+      });
+
+      // ✅ Step 2: Delete job (THIS WAS MISSING)
+      await handleDeleteJob();
+
+      // ✅ Step 3: Close modal
+      setIsDeleteOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  const [handleUpdateJob] = useMutation(UPDATE_JOB_MUTATION);
+
+  const openDeleteModal = () => {
+    setIsDeleteOpen(true);
+  };
+  const handleClose = () => {
+    setDeleteReason("");
+    setIsDeleteOpen(false);
+  };
   return (
     <Box mt={10}>
       {/* Basic fields */}
@@ -1435,10 +1492,38 @@ const JobDetailsTab = ({
           <Divider className="mt-12 mb-6" />
 
           <Flex alignItems="center" className="mb-8">
-            <AreYouSureAlert onDelete={handleDeleteJob}></AreYouSureAlert>
+            <AreYouSureAlert onDelete={openDeleteModal}></AreYouSureAlert>
           </Flex>
         </Box>
       )}{" "}
+      <Modal isOpen={isDeleteOpen} onClose={handleClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Delete Job</ModalHeader>
+
+          <ModalBody>
+            <Textarea
+              placeholder="Enter delete reason..."
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+            />
+          </ModalBody>
+
+          <ModalFooter>
+            <Button mr={3} onClick={handleClose}>
+              Cancel
+            </Button>
+
+            <Button
+              colorScheme="red"
+              onClick={handleDeleteWithReason}
+              isDisabled={!deleteReason.trim()}
+            >
+              Confirm Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

@@ -123,6 +123,7 @@ function JobEdit() {
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = useState(defaultJob);
   const [reportJob, setReportJob] = useState<ReportJob>(defaultReportJob);
+  const [deleteReason, setDeleteReason] = useState("");
 
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
@@ -2312,6 +2313,8 @@ function JobEdit() {
                     companyToll={companyToll}
                     job={job}
                     setJob={setJob}
+                    deleteReason={deleteReason}
+                    setDeleteReason = {setDeleteReason}   
                     jobStatuses={jobStatuses}
                     jobCategories={jobCategories}
                     depotOptions={depotOptions}

@@ -1,11 +1,7 @@
 import { useLazyQuery, useQuery } from "@apollo/client";
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
   Avatar,
+  Badge,
   Box,
   Divider,
   Flex,
@@ -13,18 +9,23 @@ import {
   GridItem,
   IconButton,
   Text,
-  Tooltip
+  Tooltip,
 } from "@chakra-ui/react";
 import { faBoltLightning } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  DeliveryAddressWithTimebulkCustomerCell,
+  DeliveryTrackingCell,
+  PickupAddressWithTimewithoutMediacustomerCell,
+  TimeslotCustomerCell,
+} from "components/jobs/JobTableColumns";
 import { TrackingMap } from "components/map/TrackingMap";
-import RsbJobIndicatorCircle from "components/sidebar/components/RsbJobIndicatorCircle";
-import { GET_JOB_QUERY } from "graphql/job";
+import PaginationTable from "components/table/PaginationTable";
+import { GET_JOB_QUERY, GET_JOBS_QUERY } from "graphql/job";
 import { GET_DRIVER_CURRENT_ROUTE_QUERY } from "graphql/route";
 import {
   australianStates,
   formatDate,
-  formatTime,
   getMapIcon,
 } from "helpers/helper";
 import debounce from "lodash.debounce";
@@ -45,7 +46,37 @@ export default function TrackingJob() {
   const [markers, setMarkers] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [pollingSpeed, setPollingSpeed] = useState(60000);
+  const [queryPageIndex, setQueryPageIndex] = useState(0);
+  const [queryPageSize, setQueryPageSize] = useState(50);
+  // const [date, setDate] = useState(today);
 
+  const Columns = useMemo(
+    () => [
+      {
+        id: "name",
+        Header: "Delivery ID",
+        Cell: ({ row }: any) => <DeliveryTrackingCell row={row} />,
+      },
+      {
+        id: "timeslot",
+        Header: "Timeslot",
+        Cell: ({ row }: any) => <TimeslotCustomerCell row={row} />,
+      },
+  {
+    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+    Header: "Pickup Address and Name ",
+    // width: "200px",
+    Cell: PickupAddressWithTimewithoutMediacustomerCell, // Use the new cell component
+  },
+  {
+    id: "job_destinations.address,job_destinations.address_business_name",
+    Header: "Delivery Address and Name",
+    Cell: DeliveryAddressWithTimebulkCustomerCell,
+  },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
   // const centerChangeHandler = (data: any) => {
   //   setCenter(data);
   // };
@@ -76,6 +107,8 @@ export default function TrackingJob() {
     skip: !jobId,
     onCompleted: (data) => {
       const localDate = formatDate(data?.job?.ready_at);
+      const driverId = Number(data?.job?.driver_id);
+      const baseDate = moment(localDate).utc().format("YYYY-MM-DD");
       getDriverCurrentRoutes({
         variables: {
           page: 1,
@@ -87,6 +120,19 @@ export default function TrackingJob() {
           driver_id: Number(data?.job?.driver_id),
         },
       });
+      getJobs({
+        variables: {
+          page: 1,
+          first: 50,
+          today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
+          orderBy: [{ column: "id", order: "DESC" }],
+          between_at: {
+            from_at: `${baseDate} 00:00:00`,
+            to_at: `${baseDate} 23:59:59`,
+          },
+          driver_id: driverId,
+        },
+      });
     },
     onError(error) {
       console.log("onError");
@@ -94,9 +140,16 @@ export default function TrackingJob() {
     },
   });
 
+  const [getJobs, { data: jobsList, loading: jobsLoading }] =
+    useLazyQuery(GET_JOBS_QUERY, {
+      onCompleted: (data) => {
+        console.log(data,'jobsdata')
+      }
+    });
+
   const [
     getDriverCurrentRoutes,
-    { data: _routes, loading: loadingDriverCurrentRoutes },
+    { data: driverCurrentRoutesData, loading: loadingDriverCurrentRoutes },
   ] = useLazyQuery(GET_DRIVER_CURRENT_ROUTE_QUERY, {
     pollInterval: pollingSpeed,
     notifyOnNetworkStatusChange: true,
@@ -127,6 +180,7 @@ export default function TrackingJob() {
         ];
 
         setRoutePoints(routePoints);
+        console.log(routePoints, "routep");
         setMarkers(markers);
         setCenter({
           lat: australianStates[1].lat,
@@ -140,6 +194,7 @@ export default function TrackingJob() {
     },
   });
 
+  // ✅ GROUPED TABLE DATA
   return (
     <AdminLayout>
       <Box
@@ -185,7 +240,11 @@ export default function TrackingJob() {
               <Grid
                 templateAreas={`"nav main"`}
                 gridTemplateRows={"1fr 30px"}
-                gridTemplateColumns={{ base: "35% 1fr", md: "420px 1fr" }}
+                // gridTemplateColumns={{ base: "35% 1fr", md: "420px 1fr" }}
+                gridTemplateColumns={{
+                  base: "1fr",
+                  md: "minmax(300px, 40%) 60%",
+                }}
                 // h="90vh"
                 gap="1px"
                 color="blackAlpha.700"
@@ -196,168 +255,138 @@ export default function TrackingJob() {
                 <GridItem
                   area={"nav"}
                   className="job-list-column h-full overflow-auto pt-4 border-t"
-                  sx={{ maxWidth: "420px", height: "calc(100vh - 186px)" }}
+                  sx={{ height: "calc(100vh - 186px)" }}
                 >
                   <Box className="px-6">
-                    <h2>Job #{jobData.job.name}</h2>
+                    <Flex justify="space-between" align="flex-start" gap={6}>
+                      {/* ✅ LEFT COLUMN ONLY */}
+                      <Box flex="1">
+                        <h2>Job #{jobData.job.name}</h2>
 
-                    <Divider className="mb-2 mt-3" />
+                        <Divider className="mb-2 mt-3" />
 
-                    <Flex alignItems="center" mb={"16px"}>
-                      <Text width="200px" fontSize="sm">
-                        Date
-                      </Text>
-                      <Text fontSize="sm">
-                        {formatDate(jobData.job.ready_at, "DD MMM YYYY")}
-                      </Text>
+                        <Flex alignItems="center" mb="16px">
+                          <Text width="200px" fontSize="sm">
+                            Date
+                          </Text>
+                          <Text fontSize="sm">
+                            {formatDate(jobData.job.ready_at, "DD MMM YYYY")}
+                          </Text>
+                        </Flex>
+
+                        <Flex alignItems="center" mb="16px">
+                          <Text width="200px" fontSize="sm">
+                            Assigned to
+                          </Text>
+                          <Flex align="center">
+                            <Avatar
+                              variant="jobAllocation"
+                              src={
+                                jobData.job.driver
+                                  ? jobData.job.driver.media_url
+                                  : "/img/avatars/driverIcon.png"
+                              }
+                            />
+                            <Text ml={2}>{jobData?.job.driver?.full_name}</Text>
+                          </Flex>
+                        </Flex>
+                      </Box>
+
+                      <Box flex="1">
+                        {/* your collection / delivery UI */}
+                        <Flex justify="space-between" mb="12px">
+                          <Box textAlign="center">
+                            <Text fontSize="3xl" color="black">
+                              Collection
+                            </Text>
+                            <Text fontSize="3xl" color="black">
+                              {driverCurrentRoutesData?.routes?.data?.[0]
+                                ?.pickup_delivery_count?.pickup_count ?? 0}
+                            </Text>
+                          </Box>
+                          <Divider
+                            orientation="vertical"
+                            borderColor="gray.300"
+                          />
+                          <Box textAlign="center">
+                            <Text fontSize="3xl" color="black">
+                              Delivery
+                            </Text>
+                            <Text fontSize="3xl" color="black">
+                              {driverCurrentRoutesData?.routes?.data?.[0]
+                                ?.pickup_delivery_count?.delivery_count ?? 0}
+                            </Text>
+                          </Box>
+                        </Flex>
+                      </Box>
                     </Flex>
-                    <Flex alignItems="center" mb={"16px"}>
-                      <Text width="200px" fontSize="sm">
-                        Assigned to
-                      </Text>
-                      <Flex>
-                        <Avatar
-                          variant="jobAllocation"
-                          src={
-                            jobData.job.driver
-                              ? jobData.job.driver.media_url
-                              : "/img/avatars/driverIcon.png"
-                          }
-                        />
-                        <Text className="ml-1">
-                          {jobData?.job.driver?.full_name}
-                        </Text>
-                      </Flex>
-                    </Flex>
-                    <Divider className="mb-2 mt-3" />
+                    {/* <Divider className="mb-2 mt-3" /> */}
+
+                    {jobData?.job.driver && (
+                      <Box
+                        bg="#1d2d53"
+                        color="#fff"
+                        px={6}
+                        py={3}
+                        borderTop="4px solid"
+                        borderLeft="4px solid"
+                        borderColor="#2F80ED"
+                        borderRadius="md"
+                        w="100%"
+                      >
+                        <Flex justify="space-between" align="center">
+                          <Badge
+                            colorScheme="red"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            Current Suburb:{" "}
+                            {jobData?.job.driver?.current_suburb ?? "-"}
+                          </Badge>
+
+                          <Badge
+                            colorScheme="red"
+                            variant="subtle"
+                            fontSize="md"
+                          >
+                            TAILGATE:{" "}
+                            {jobData?.job.driver?.is_tailgated ? "Yes" : "No"}
+                          </Badge>
+                        </Flex>
+                      </Box>
+                    )}
+
+                    {/* ✅ COLLECTION / DELIVERY COUNT */}
 
                     {/* ROUTE POINTS */}
-                    {!loadingDriverCurrentRoutes && routePoints.length > 0 && (
+                    {/* {!loadingDriverCurrentRoutes && routePoints.length > 0 && ( */}
                       <Flex className="flex-col mt-4 job-destination-card-wrap">
-                        {/* Check if upcoming stop belongs to current Job. */}
-                        {Number(routePoints[0].job.id) === Number(jobId) && (
-                          <Flex className="p-2 gap-y-2 flex-col bg-[#F4F4F4] rounded-lg">
-                            <Text
-                              fontSize="md"
-                              textColor="#2BA620"
-                              fontWeight="700 !important"
-                            >
-                              Your drive is arriving soon
-                            </Text>
-                            <Box>
-                              <Text fontSize="sm">
-                                Your stop is up next in the route. Your driver’s
-                                estimated arrival time at the location is
-                                between{" "}
-                                {formatTime(
-                                  routePoints[0].job_destination.estimated_at,
-                                )}{" "}
-                                -{" "}
-                                {formatTime(
-                                  moment(
-                                    routePoints[0].job_destination.estimated_at,
-                                  )
-                                    .add(30, "minutes")
-                                    .toString(),
-                                )}
-                              </Text>
-                            </Box>
-                          </Flex>
+                        {!jobsLoading && jobsList.jobs.data.length > 0 ? (
+                          <PaginationTable
+                            columns={Columns}
+data={jobsList?.jobs?.data ?? []}
+                            options={{
+                              initialState: {
+                                pageIndex: queryPageIndex,
+                                pageSize: queryPageSize,
+                              },
+                              manualPagination: true,
+                              pageCount:
+                                driverCurrentRoutesData?.data?.routes
+                                  ?.paginatorInfo?.lastPage || 0,
+                            }}
+                            // onReset={(id: any) => handleReset(id)}
+                            setQueryPageIndex={setQueryPageIndex}
+                            setQueryPageSize={setQueryPageSize}
+                            isServerSide
+                          />
+                        ) : (
+                          <div className="text-center mt-20 text-gray-500">
+                            No data yet
+                          </div>
                         )}
-                        {/* -------------------Route Points------------------- */}
-                        <Text fontSize="xs" className="pl-9 mt-5">
-                          Next Stop:
-                        </Text>
-                        {routePoints.map((routePoint: any, index: any) => {
-                          const isJobTracked =
-                            Number(routePoint.job.id) === Number(jobId);
-
-                          const blueText = isJobTracked ? "text-[#3B68DB]" : "";
-                          return (
-                            <Flex
-                              key={`${index}-${routePoint.id}`}
-                              className="job-destination-card"
-                            >
-                              <RsbJobIndicatorCircle
-                                destinationStatus={
-                                  routePoint.route_point_status_id
-                                }
-                              />
-                              <Flex className="!max-w-md w-full">
-                                <Flex className="w-full flex-col">
-                                  <Text
-                                    className={`!text-sm !font-bold ${blueText}`}
-                                  >
-                                    {isJobTracked
-                                      ? `${routePoint.job_destination.address_line_1}, ${routePoint.job_destination.address_city}, ${routePoint.job_destination.address_postal_code}`
-                                      : `${routePoint.job_destination.address_city} ${routePoint.job_destination.address_state} ${routePoint.job_destination.address_postal_code}`}
-                                  </Text>
-                                  <Flex className="w-full gap-x-3 mb-6">
-                                    <Text
-                                      fontSize="xs"
-                                      className={`mt-[1px] ${blueText}`}
-                                    >
-                                      Job #{routePoint.job.name}
-                                    </Text>
-                                    {isJobTracked && (
-                                      <Accordion
-                                        allowMultiple
-                                        variant="instructions"
-                                      >
-                                        <AccordionItem>
-                                          {({ isExpanded }) => (
-                                            <>
-                                              <AccordionButton className="!p-0">
-                                                <Flex alignItems="center">
-                                                  <Box
-                                                    as="span"
-                                                    textAlign="left"
-                                                  >
-                                                    {isExpanded ? (
-                                                      <Text className="!font-bold">
-                                                        Instructions
-                                                      </Text>
-                                                    ) : (
-                                                      <Text className="!font-bold">
-                                                        Instructions
-                                                      </Text>
-                                                    )}
-                                                  </Box>
-                                                  <AccordionIcon />
-                                                </Flex>
-                                              </AccordionButton>
-
-                                              <AccordionPanel p={0}>
-                                                <div className="p-2 bg-[#f4f4f4] rounded-lg border">
-                                                  <p className="text-xs">
-                                                    <strong>
-                                                      Pick up notes:{" "}
-                                                    </strong>
-                                                    {`${routePoint.job_destination
-                                                        .pick_up_notes
-                                                        ? routePoint
-                                                          .job_destination
-                                                          .pick_up_notes
-                                                        : routePoint
-                                                          .job_destination
-                                                          .notes ?? "N/A"
-                                                      }`}
-                                                  </p>
-                                                </div>
-                                              </AccordionPanel>
-                                            </>
-                                          )}
-                                        </AccordionItem>
-                                      </Accordion>
-                                    )}
-                                  </Flex>
-                                </Flex>
-                              </Flex>
-                            </Flex>
-                          );
-                        })}
                       </Flex>
-                    )}
+                    {/* )} */}
                   </Box>
                 </GridItem>
 

@@ -66,9 +66,15 @@ export const GET_DRIVER_CURRENT_ROUTE_QUERY = gql`
           no_max_volume
           no_max_capacity
           media_url
+          current_suburb
+          is_tailgated
           lat
           lng
         }
+        pickup_delivery_count {
+          pickup_count
+          delivery_count
+          }
         route_points {
           id
           label
@@ -85,6 +91,12 @@ export const GET_DRIVER_CURRENT_ROUTE_QUERY = gql`
             name
             pick_up_notes
             customer_notes
+            meta {
+              id
+              type
+              name
+              color
+            }
           }
           vehicle_hire {
             name

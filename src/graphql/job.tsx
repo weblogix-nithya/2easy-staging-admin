@@ -608,6 +608,7 @@ export const GET_JOB_QUERY = gql`
       }
       driver {
         full_name
+        current_suburb
         no_max_capacity
       }
       job_category_id
@@ -930,6 +931,7 @@ export const UPDATE_JOB_MUTATION = gql`
       transport_location
       timeslot_depots
       company_area
+      delete_reason
     }
   }
 `;
@@ -1042,7 +1044,7 @@ export const GET_JOB_LOGS_QUERY = gql`
         user {
           name
           roles {
-          name
+            name
           }
         }
         action
@@ -1051,6 +1053,11 @@ export const GET_JOB_LOGS_QUERY = gql`
         new_value
         mail_sent
         created_at
+        invoice_id
+        invoice {
+          name
+        }
+        status
       }
     }
   }
@@ -1087,6 +1094,7 @@ export interface UpdateJobInput {
   quoted_price?: string;
   customer_notes?: string;
   base_notes?: string;
+  delete_reason?: string;
   // job_price_quote: any;
 }
 
@@ -1186,7 +1194,7 @@ export const defaultJob: Job = {
   // job_category_name: undefined,
   job_status_id: null,
   job_type_id: null,
-is_stackable_required: true,
+  is_stackable_required: true,
   customer_id: null,
   company_id: null,
   media: [],
