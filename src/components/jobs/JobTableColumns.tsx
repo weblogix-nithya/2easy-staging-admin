@@ -40,6 +40,7 @@ import { useRouter } from "next/router";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
 import React, { useState } from "react";
 import { MdMenu } from "react-icons/md";
+import { useSelector } from "react-redux";
 // import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
@@ -290,6 +291,56 @@ export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
   );
 };
 
+export const DeliveryAddressWithTimebulkCustomerCell = ({ row }: any) => {
+  const companyId = useSelector((state: RootState) => state.user.companyId);
+
+  const pickupDest = row?.original?.job_destinations?.find(
+    (dest: any) => dest.is_pickup === false,
+  );
+  const showPickupTime =
+    row?.original?.job_status.id == 4 ||
+    row?.original?.job_status.id == 5 ||
+    row?.original?.job_status.id == 6 ||
+    row?.original?.job_status.id == 7;
+  const showfullAddress = Number(row?.original?.company_id) === Number(companyId);
+  return (
+    <>
+      {pickupDest?.pickup_at && showPickupTime && (
+        <>
+          <Text fontSize="md" color="blue.600" mb={1}>
+            Arrival time:{" "}
+            {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+          <Text fontSize="md" color="red.600" mb={1}>
+            Collection time:{" "}
+            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+        </>
+      )}
+      {showfullAddress ? (
+        <Text
+          whiteSpace="pre-wrap"
+          mb="2"
+          minWidth={"300px"}
+          flexWrap={"nowrap"}
+        >
+          {pickupDest?.is_saved_address
+            ? formatAddressLines(pickupDest).firstLine
+            : formatAddressLines(pickupDest).secondLine}
+        </Text>
+      ):(
+           <Text
+          whiteSpace="pre-wrap"
+          mb="2"
+          minWidth={"300px"}
+          flexWrap={"nowrap"}
+        >
+          {pickupDest?.address_city}, {pickupDest?.address_postal_code}
+        </Text>
+      )}
+    </>
+  );
+};
 export const DeliveryAddressWithTimeBulkCellExport = ({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations;
 
@@ -496,6 +547,59 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
   );
 };
 
+export const PickupAddressWithTimewithoutMediacustomerCell = ({ row }: any) => {
+  // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
+  // const customerId = useSelector((state: RootState) => state.user.customerId);
+  const companyId = useSelector((state: RootState) => state.user.companyId);
+
+  console.log(row, "rows p");
+  const pickupDest = row?.original?.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const showPickupTime =
+    row?.original?.job_status.id == 4 ||
+    row?.original?.job_status.id == 5 ||
+    row?.original?.job_status.id == 6 ||
+    row?.original?.job_status.id == 7;
+  const showfullAddress = Number(row?.original?.company_id) === Number(companyId);
+  return (
+    <>
+      {pickupDest?.pickup_at && showPickupTime && (
+        <>
+          <Text fontSize="md" color="blue.600" mb={1}>
+            Arrival time:{" "}
+            {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+          <Text fontSize="md" color="red.600" mb={1}>
+            Collection time:{" "}
+            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
+          </Text>
+        </>
+      )}
+      {showfullAddress ? (
+        <Text
+          whiteSpace="pre-wrap"
+          mb="2"
+          minWidth={"300px"}
+          flexWrap={"nowrap"}
+        >
+          {pickupDest?.is_saved_address
+            ? formatAddressLines(pickupDest).firstLine
+            : formatAddressLines(pickupDest).secondLine}
+        </Text>
+      ):(
+           <Text
+          whiteSpace="pre-wrap"
+          mb="2"
+          minWidth={"300px"}
+          flexWrap={"nowrap"}
+        >
+          {pickupDest?.address_city}, {pickupDest?.address_postal_code}
+        </Text>
+      )}
+    </>
+  );
+};
 export const ReadyDropByCell = ({ row }: any) => {
   return (
     <>
@@ -899,7 +1003,6 @@ export const CategoryCellExport = ({ row }: any) =>
 export const DeliveryCell = ({ row }: any) => {
   const router = useRouter();
   const job = row?.original?.job;
-
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
     if (!color)
@@ -953,7 +1056,46 @@ export const DeliveryCell = ({ row }: any) => {
     </>
   );
 };
+type Props = {
+  row: any;
+};
+export const DeliveryTrackingCell = ({ row }: Props) => {
+  const job = row?.original?.name;
 
+  console.log(row, "row");
+  const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
+  const getBadgeStyle = (color?: string) => {
+    if (!color)
+      return { bg: "gray", color: "#fff", boxShadow: `0 0 0 1px ${color}` };
+    if (color.startsWith("#")) {
+      return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
+    }
+    return { bg: `${color}`, color: `#fff`, boxShadow: `0 0 0 1px ${color}` };
+  };
+
+  return (
+    <>
+      {labels.length > 0 && (
+        <VStack align="start" spacing="4px" mb="10px">
+          {labels.map((label) => (
+            <Badge
+              key={label.id}
+              fontSize="12px"
+              px="8px"
+              py="2px"
+              borderRadius="4px"
+              whiteSpace="nowrap"
+              {...getBadgeStyle(label.color)}
+            >
+              {label?.name}
+            </Badge>
+          ))}
+        </VStack>
+      )}
+      <Text>{row.original.name} </Text>
+    </>
+  );
+};
 export const DeliveryCellExport = ({ row }: any) =>
   `${row?.original?.job?.name ? `${row.original.job?.name}` : "-"}`;
 
@@ -1014,6 +1156,27 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
   );
 };
 
+export const TimeslotCustomerCell = ({ row }: any) => {
+  return (
+    <Flex gap={2}>
+      <Text
+        minW="150px"
+        fontSize="28px"
+        fontWeight="900"
+        letterSpacing="2px"
+        textAlign="center"
+        color="white"
+        textShadow="
+    2px 2px 0 rgba(0,0,0,0.85),
+    3px 3px 6px rgba(0,0,0,0.6)
+  "
+      >
+        {row?.original?.timeslot || "-"}
+      </Text>
+     
+    </Flex>
+  );
+};
 export const TimeslotCellExport = ({ row }: any) =>
   `${row?.original?.job?.timeslot ? `${row.original.job.timeslot}` : "-"}`;
 

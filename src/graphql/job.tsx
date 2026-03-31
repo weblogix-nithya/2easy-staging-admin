@@ -608,6 +608,7 @@ export const GET_JOB_QUERY = gql`
       }
       driver {
         full_name
+        current_suburb
         no_max_capacity
       }
       job_category_id
