@@ -102,6 +102,8 @@ export const GET_DRIVER_CURRENT_ROUTE_QUERY = gql`
               pickup_at
               arrived_at
               is_saved_address
+              address_business_name
+              address_line_1
               address_city
               address_postal_code
             }
