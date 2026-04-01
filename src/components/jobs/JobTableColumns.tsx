@@ -548,8 +548,6 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
 };
 
 export const PickupAddressWithTimewithoutMediacustomerCell = ({ row }: any) => {
-  // const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
-  // const customerId = useSelector((state: RootState) => state.user.customerId);
   const companyId = useSelector((state: RootState) => state.user.companyId);
 
   console.log(row, "rows p");
@@ -1060,9 +1058,9 @@ type Props = {
   row: any;
 };
 export const DeliveryTrackingCell = ({ row }: Props) => {
-  const job = row?.original?.name;
+  const job = row?.original;
 
-  console.log(row, "row");
+  console.log(row, "rowss");
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const getBadgeStyle = (color?: string) => {
     if (!color)

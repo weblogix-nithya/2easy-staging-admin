@@ -58,8 +58,7 @@ export default function TrackingJob() {
       {
         id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
         Header: "Pickup Address and Name ",
-        // width: "200px",
-        Cell: PickupAddressWithTimewithoutMediacustomerCell, // Use the new cell component
+        Cell: PickupAddressWithTimewithoutMediacustomerCell, 
       },
       {
         id: "job_destinations.address,job_destinations.address_business_name",
@@ -240,7 +239,7 @@ const groupedJobs = Object.values(
                 // gridTemplateColumns={{ base: "35% 1fr", md: "420px 1fr" }}
                 gridTemplateColumns={{
                   base: "1fr",
-                  md: "minmax(300px, 40%) 60%",
+                  md: "minmax(300px, 50%) 50%",
                 }}
                 // h="90vh"
                 gap="1px"
@@ -362,7 +361,7 @@ const groupedJobs = Object.values(
                           data={groupedJobs ?? []}
                           options={{
                             initialState: {
-                              pageIndex: 1,
+                              pageIndex: 0,
                               pageSize: 100,
                             },
                             manualPagination: false,
