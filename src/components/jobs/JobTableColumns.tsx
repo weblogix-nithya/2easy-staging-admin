@@ -54,7 +54,7 @@ type JobLabel = {
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
-function formatAddressLines(dest: any) {
+export function formatAddressLines(dest: any) {
   // console.log(dest);
   if (!dest) {
     return {
@@ -1160,17 +1160,7 @@ export const TimeslotCustomerCell = ({ row }: any) => {
   return (
     <Flex gap={2}>
       <Text
-        minW="150px"
-        fontSize="28px"
-        fontWeight="900"
-        letterSpacing="2px"
-        textAlign="center"
-        color="white"
-        textShadow="
-    2px 2px 0 rgba(0,0,0,0.85),
-    3px 3px 6px rgba(0,0,0,0.6)
-  "
-      >
+        minW="150px"  >
         {row?.original?.timeslot || "-"}
       </Text>
      

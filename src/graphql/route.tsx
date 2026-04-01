@@ -74,7 +74,7 @@ export const GET_DRIVER_CURRENT_ROUTE_QUERY = gql`
         pickup_delivery_count {
           pickup_count
           delivery_count
-          }
+        }
         route_points {
           id
           label
@@ -89,8 +89,22 @@ export const GET_DRIVER_CURRENT_ROUTE_QUERY = gql`
           job {
             id
             name
+            timeslot
+            job_status {
+              id
+              name
+            }
             pick_up_notes
             customer_notes
+            company_id
+            job_destinations {
+              is_pickup
+              pickup_at
+              arrived_at
+              is_saved_address
+              address_city
+              address_postal_code
+            }
             meta {
               id
               type

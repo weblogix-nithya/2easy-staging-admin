@@ -21,13 +21,9 @@ import {
 } from "components/jobs/JobTableColumns";
 import { TrackingMap } from "components/map/TrackingMap";
 import PaginationTable from "components/table/PaginationTable";
-import { GET_JOB_QUERY, GET_JOBS_QUERY } from "graphql/job";
+import { GET_JOB_QUERY } from "graphql/job";
 import { GET_DRIVER_CURRENT_ROUTE_QUERY } from "graphql/route";
-import {
-  australianStates,
-  formatDate,
-  getMapIcon,
-} from "helpers/helper";
+import { australianStates, formatDate, getMapIcon } from "helpers/helper";
 import debounce from "lodash.debounce";
 import moment from "moment";
 import { useRouter } from "next/router";
@@ -46,9 +42,6 @@ export default function TrackingJob() {
   const [markers, setMarkers] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [pollingSpeed, setPollingSpeed] = useState(60000);
-  const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(50);
-  // const [date, setDate] = useState(today);
 
   const Columns = useMemo(
     () => [
@@ -62,17 +55,17 @@ export default function TrackingJob() {
         Header: "Timeslot",
         Cell: ({ row }: any) => <TimeslotCustomerCell row={row} />,
       },
-  {
-    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-    Header: "Pickup Address and Name ",
-    // width: "200px",
-    Cell: PickupAddressWithTimewithoutMediacustomerCell, // Use the new cell component
-  },
-  {
-    id: "job_destinations.address,job_destinations.address_business_name",
-    Header: "Delivery Address and Name",
-    Cell: DeliveryAddressWithTimebulkCustomerCell,
-  },
+      {
+        id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
+        Header: "Pickup Address and Name ",
+        // width: "200px",
+        Cell: PickupAddressWithTimewithoutMediacustomerCell, // Use the new cell component
+      },
+      {
+        id: "job_destinations.address,job_destinations.address_business_name",
+        Header: "Delivery Address and Name",
+        Cell: DeliveryAddressWithTimebulkCustomerCell,
+      },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -107,8 +100,6 @@ export default function TrackingJob() {
     skip: !jobId,
     onCompleted: (data) => {
       const localDate = formatDate(data?.job?.ready_at);
-      const driverId = Number(data?.job?.driver_id);
-      const baseDate = moment(localDate).utc().format("YYYY-MM-DD");
       getDriverCurrentRoutes({
         variables: {
           page: 1,
@@ -120,32 +111,25 @@ export default function TrackingJob() {
           driver_id: Number(data?.job?.driver_id),
         },
       });
-      getJobs({
-        variables: {
-          page: 1,
-          first: 50,
-          today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
-          orderBy: [{ column: "id", order: "DESC" }],
-          between_at: {
-            from_at: `${baseDate} 00:00:00`,
-            to_at: `${baseDate} 23:59:59`,
-          },
-          driver_id: driverId,
-        },
-      });
+      // getJobs({
+      //   variables: {
+      //     page: 1,
+      //     first: 50,
+      //     // today: moment(localDate).utc().format("YYYY-MM-DD HH:mm:ss"),
+      //     orderBy: [{ column: "id", order: "DESC" }],
+      //     between_at: {
+      //       from_at: `${currentDate} 00:00:00`,
+      //       to_at: `${currentDate} 23:59:59`,
+      //     },
+      //     driver_id: driverId,
+      //   },
+      // });
     },
     onError(error) {
       console.log("onError");
       console.log(error);
     },
   });
-
-  const [getJobs, { data: jobsList, loading: jobsLoading }] =
-    useLazyQuery(GET_JOBS_QUERY, {
-      onCompleted: (data) => {
-        console.log(data,'jobsdata')
-      }
-    });
 
   const [
     getDriverCurrentRoutes,
@@ -159,8 +143,9 @@ export default function TrackingJob() {
         // Filter out Completed Stops.
         const routePoints = route.route_points.filter(
           (point: any) =>
-            Number(point.route_point_status_id) < 3 && point.job_destination,
+            Number(point.route_point_status_id) <= 3 && point.job_destination,
         );
+        console.log(routePoints, "r");
         const markers = routePoints.map((point: any) => {
           return {
             lat: point.lat,
@@ -194,7 +179,19 @@ export default function TrackingJob() {
     },
   });
 
-  // ✅ GROUPED TABLE DATA
+const groupedJobs = Object.values(
+  routePoints.reduce((acc: Record<string, any>, point: any) => {
+    const jobId = point?.job?.id;
+
+    if (!acc[jobId]) {
+      acc[jobId] = point.job; // ✅ only job object
+    }
+
+    return acc;
+  }, {})
+);
+
+  console.log(groupedJobs, "gr");
   return (
     <AdminLayout>
       <Box
@@ -356,37 +353,30 @@ export default function TrackingJob() {
                       </Box>
                     )}
 
-                    {/* ✅ COLLECTION / DELIVERY COUNT */}
-
                     {/* ROUTE POINTS */}
                     {/* {!loadingDriverCurrentRoutes && routePoints.length > 0 && ( */}
-                      <Flex className="flex-col mt-4 job-destination-card-wrap">
-                        {!jobsLoading && jobsList.jobs.data.length > 0 ? (
-                          <PaginationTable
-                            columns={Columns}
-data={jobsList?.jobs?.data ?? []}
-                            options={{
-                              initialState: {
-                                pageIndex: queryPageIndex,
-                                pageSize: queryPageSize,
-                              },
-                              manualPagination: true,
-                              pageCount:
-                                driverCurrentRoutesData?.data?.routes
-                                  ?.paginatorInfo?.lastPage || 0,
-                            }}
-                            // onReset={(id: any) => handleReset(id)}
-                            setQueryPageIndex={setQueryPageIndex}
-                            setQueryPageSize={setQueryPageSize}
-                            isServerSide
-                          />
-                        ) : (
-                          <div className="text-center mt-20 text-gray-500">
-                            No data yet
-                          </div>
-                        )}
-                      </Flex>
-                    {/* )} */}
+                    <Flex className="flex-col mt-4 job-destination-card-wrap">
+                    {!jobLoading && groupedJobs?.length > 0 ? (
+                        <PaginationTable
+                          columns={Columns}
+                          data={groupedJobs ?? []}
+                          options={{
+                            initialState: {
+                              pageIndex: 1,
+                              pageSize: 100,
+                            },
+                            manualPagination: false,
+                            pageCount: groupedJobs.length,
+                          }}
+                          isServerSide={false}
+                        />
+                      ) : (
+                        <div className="text-center mt-20 text-gray-500">
+                          No data yet
+                        </div>
+                      )}
+                    </Flex>
+                    {/* // )}  */}
                   </Box>
                 </GridItem>
 
