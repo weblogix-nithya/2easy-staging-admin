@@ -104,6 +104,24 @@ export default function InvoiceIndex() {
     { value: "Tasmania", label: "Tasmania" },
   ];
 
+  const effectiveCompanyFilter = isAdmin ? companyFilter : companyId;
+
+  const effectiveCustomerFilter: number[] = useMemo(() => {
+    if (customerFilter && customerFilter.length > 0) {
+      return customerFilter.map((id) => Number(id));
+    }
+
+    return [];
+  }, [customerFilter]);
+
+  useEffect(() => {
+    if (!isAdmin && (isCompanyAdmin || isCustomer)) {
+      if (companyId) {
+        setCompanyFilter(companyId);
+      }
+    }
+  }, [isAdmin, isCompanyAdmin, isCustomer, companyId]);
+
   useQuery(GET_JOB_CATEGORIES_QUERY, {
     variables: {
       query: "",
@@ -155,7 +173,9 @@ export default function InvoiceIndex() {
       first: 100,
       orderByColumn: "id",
       orderByOrder: "ASC",
+      company_id: effectiveCompanyFilter,
     },
+    skip: !effectiveCompanyFilter,
     onCompleted: (data) => {
       setCustomerOptions([]);
       data.customers.data.map((customer: any) => {
@@ -333,7 +353,11 @@ export default function InvoiceIndex() {
       orderByColumn: "id",
       orderByOrder: "DESC",
       invoice_status_id: !isAdmin && tabId == 1 ? 2 : tabId,
-      company_id: companyId,
+      company_id: effectiveCompanyFilter,
+      customer_filter_ids:
+        effectiveCustomerFilter.length > 0
+          ? effectiveCustomerFilter
+          : undefined,
       job_category_id: jobCategoryFilter,
       state: stateFilter,
       between_at:
@@ -350,43 +374,7 @@ export default function InvoiceIndex() {
             }
           : undefined,
     },
-    skip: !isCompanyAdmin,
-  });
-
-  const {
-    loading: customerInvoiceLoading,
-    // error: customerInvoiceError,
-    data: customerInvoices,
-    refetch: getCustomerInvoices,
-  } = useQuery(GET_INVOICES_QUERY, {
-    variables: {
-      query: searchQuery,
-      page: queryPageIndex + 1,
-      first: queryPageSize,
-      is_rcti: true,
-      orderByColumn: "id",
-      orderByOrder: "DESC",
-      invoice_status_id: !isAdmin && tabId == 1 ? 2 : tabId,
-      customer_id: customerId,
-      job_category_id: jobCategoryFilter,
-      state: stateFilter,
-      company_filter_id: companyFilter,
-      customer_filter_ids: customerFilter,
-      between_at:
-        rangeDate && rangeDate[0]
-          ? {
-              from_at:
-                rangeDate && rangeDate[0]
-                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-              to_at:
-                rangeDate && rangeDate[1]
-                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-            }
-          : undefined,
-    },
-    skip: !isCustomer || isCompanyAdmin,
+    skip: isAdmin || (!isCompanyAdmin && !isCustomer),
   });
 
   useEffect(() => {
@@ -398,8 +386,8 @@ export default function InvoiceIndex() {
     if (isAdmin) {
       getInvoices();
       getInvoiceTotals();
-    } else if (isCompanyAdmin) getCompanyInvoices();
-    else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
+    } else if (isCustomer || isCompanyAdmin) getCompanyInvoices();
+    // else if (!) getCustomerInvoices();
     else return;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobCategoryFilter]);
@@ -408,8 +396,8 @@ export default function InvoiceIndex() {
     if (isAdmin) {
       getInvoices();
       getInvoiceTotals();
-    } else if (isCompanyAdmin) getCompanyInvoices();
-    else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
+    } else if (isCustomer || isCompanyAdmin) getCompanyInvoices();
+    // else if (!isCustomer || isCompanyAdmin) getCustomerInvoices();
     else return;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateFilter]);
@@ -434,17 +422,19 @@ export default function InvoiceIndex() {
             /> */}
           </Flex>
           <Flex justifyContent="flex-end" alignItems="center">
-           { isAdmin && <Link href="/admin/invoices/create">
-              <Button
-                className="!h-[39px]"
-                fontSize="sm"
-                lineHeight="19px"
-                variant="brand"
-                fontWeight="500"
-              >
-                Create Invoice
-              </Button>
-            </Link>}
+            {isAdmin && (
+              <Link href="/admin/invoices/create">
+                <Button
+                  className="!h-[39px]"
+                  fontSize="sm"
+                  lineHeight="19px"
+                  variant="brand"
+                  fontWeight="500"
+                >
+                  Create Invoice
+                </Button>
+              </Link>
+            )}
             <Button
               fontSize="sm"
               lineHeight="19px"
@@ -497,35 +487,64 @@ export default function InvoiceIndex() {
               <DateRangePicker value={rangeDate} onChange={setRangeDate} />
             </Box>
             <Box className="!max-w-md" p="10px 10px" h="max-content" w="20%">
-              <Select
-                placeholder="Company"
-                options={companiesOptions}
-                size="lg"
-                className="select mb-0"
-                classNamePrefix="two-easy-select"
-                onInputChange={(e) => {
-                  onChangeSearchCompany(e);
-                }}
-                onChange={(e) => setCompanyFilter(e?.value || null)}
-                isClearable={true}
-              ></Select>
+              {isAdmin ? (
+                <Select
+                  placeholder="Company"
+                  options={companiesOptions}
+                  size="lg"
+                  className="select mb-0"
+                  classNamePrefix="two-easy-select"
+                  onInputChange={(e) => {
+                    onChangeSearchCompany(e);
+                  }}
+                  onChange={(e) => setCompanyFilter(e?.value || null)}
+                  isClearable={true}
+                ></Select>
+              ) : (
+                <Select
+                  placeholder="Company"
+                  options={companiesOptions}
+                  onInputChange={(e) => onChangeSearchCompany(e)}
+                  onChange={(e) => setCompanyFilter(e?.value || null)}
+                  isClearable={isAdmin}
+                  isDisabled={!isAdmin}
+                  value={
+                    companiesOptions.find(
+                      (c) => Number(c.value) === Number(effectiveCompanyFilter),
+                    ) || null
+                  }
+                />
+              )}
             </Box>
             <Box className="!max-w-md" p="10px 10px" h="max-content" w="20%">
-              <Select
-                placeholder="User"
-                isMulti
-                options={customerOptions}
-                size="lg"
-                className="select mb-0"
-                classNamePrefix="two-easy-select"
-                onInputChange={(e) => {
-                  onChangeSearchCustomer(e);
-                }}
-                onChange={(e) =>
-                  setCustomerFilter(e ? e.map((item) => item.value) : null)
-                }
-                isClearable={true}
-              ></Select>
+              {isAdmin ? (
+                <Select
+                  placeholder="User"
+                  isMulti
+                  options={customerOptions}
+                  size="lg"
+                  className="select mb-0"
+                  classNamePrefix="two-easy-select"
+                  onInputChange={(e) => {
+                    onChangeSearchCustomer(e);
+                  }}
+                  onChange={(e) =>
+                    setCustomerFilter(e ? e.map((item) => item.value) : null)
+                  }
+                  isClearable={true}
+                ></Select>
+              ) : (
+                <Select
+                  placeholder="User"
+                  isMulti
+                  options={customerOptions}
+                  onInputChange={(e) => onChangeSearchCustomer(e)}
+                  onChange={(e) =>
+                    setCustomerFilter(e ? e.map((item) => item.value) : null)
+                  }
+                  isDisabled={!effectiveCompanyFilter}
+                />
+              )}
             </Box>
             <Box className="!max-w-md" p="10px 10px" h="max-content" w="15%">
               <Select
@@ -596,7 +615,7 @@ export default function InvoiceIndex() {
             />
           )}
 
-          {isCompanyAdmin &&
+          {(isCompanyAdmin || isCustomer) &&
             !companyInvoiceLoading &&
             companyInvoices?.invoices.data.length >= 0 && (
               <PaginationTable
@@ -609,26 +628,6 @@ export default function InvoiceIndex() {
                   },
                   manualPagination: true,
                   pageCount: companyInvoices?.invoices.paginatorInfo.lastPage,
-                }}
-                setQueryPageIndex={setQueryPageIndex}
-                setQueryPageSize={setQueryPageSize}
-                isServerSide
-              />
-            )}
-
-          {isCustomer &&
-            !customerInvoiceLoading &&
-            customerInvoices?.invoices.data.length >= 0 && (
-              <PaginationTable
-                columns={columns}
-                data={customerInvoices?.invoices.data}
-                options={{
-                  initialState: {
-                    pageIndex: queryPageIndex,
-                    pageSize: queryPageSize,
-                  },
-                  manualPagination: true,
-                  pageCount: customerInvoices?.invoices.paginatorInfo.lastPage,
                 }}
                 setQueryPageIndex={setQueryPageIndex}
                 setQueryPageSize={setQueryPageSize}

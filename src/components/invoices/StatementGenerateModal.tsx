@@ -55,13 +55,19 @@ export default function StatementGenerateModal({
   const cancelRef = useRef();
   const toast = useToast();
 
+  // useEffect(() => {
+  //   if (isCustomer) {
+  //     setSelectedCompany({ value: companyId, label: "" });
+  //     setSelectedCustomer([customerId]);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [isCustomer, companyId, customerId]);
+  // Company auto-selected
   useEffect(() => {
-    if (isCustomer) {
+    if (!isAdmin && (isCompanyAdmin || isCustomer)) {
       setSelectedCompany({ value: companyId, label: "" });
-      setSelectedCustomer([customerId]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCustomer, companyId, customerId]);
+  }, [isAdmin, isCompanyAdmin, isCustomer, companyId]);
 
   const onChangeSearchCompany = useMemo(() => {
     return debounce((e) => {
@@ -148,13 +154,26 @@ export default function StatementGenerateModal({
   );
 
   const handleGenerateCompanyStatementPDF = () => {
-    if (!selectedCompany || selectedCustomer.length === 0) {
-      toast({
-        title: "Please select company and customer",
-        status: "error",
-        duration: 3000,
-      });
-      return;
+    if (isAdmin) {
+      // ✅ KEEP EXISTING ADMIN LOGIC
+      if (!selectedCompany || selectedCustomer.length === 0) {
+        toast({
+          title: "Please select company and customer",
+          status: "error",
+          duration: 3000,
+        });
+        return;
+      }
+    } else {
+      // ✅ NON-ADMIN → ONLY DATE RANGE REQUIRED
+      if (!rangeDate || !rangeDate[0] || !rangeDate[1]) {
+        toast({
+          title: "Please select date range",
+          status: "error",
+          duration: 3000,
+        });
+        return;
+      }
     }
 
     toast({
@@ -167,8 +186,14 @@ export default function StatementGenerateModal({
 
     generateCompanyStatementPDF({
       variables: {
-        companyId: selectedCompany.value,
-        customerIds: selectedCustomer,
+        companyId: isAdmin ? selectedCompany?.value : companyId,
+        // customerIds: selectedCustomer,
+        customerIds: isAdmin
+          ? selectedCustomer
+          : selectedCustomer.length > 0
+            ? selectedCustomer
+            : undefined, // 🔥 KEY CHANGE
+
         invoiceDateRange: rangeDate,
       },
     });
@@ -291,7 +316,12 @@ export default function StatementGenerateModal({
                   variant="primary"
                   className="ml-2"
                   onClick={handleGenerateCompanyStatementPDF}
-                  isDisabled={!selectedCompany || selectedCustomer.length === 0}
+                  // isDisabled={!selectedCompany || selectedCustomer.length === 0}
+                  isDisabled={
+                    isAdmin
+                      ? !selectedCompany || selectedCustomer.length === 0
+                      : !rangeDate || !rangeDate[0] || !rangeDate[1]
+                  }
                   isLoading={isLoading}
                 >
                   Generate PDF

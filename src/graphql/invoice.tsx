@@ -278,7 +278,7 @@ export const GENERATE_INVOICE_PDF_MUTATION = gql`
 export const GENERATE_COMPANY_STATEMENT_PDF_MUTATION = gql`
   mutation generateCompanyInvoiceStatement(
     $companyId: ID!
-    $customerIds: [ID!]!
+    $customerIds: [ID!]
     $invoiceDateRange: [String]
   ) {
     generateCompanyInvoiceStatement(
