@@ -42,7 +42,7 @@ export default function InvoiceIndex() {
   const [stateFilter, setStateFilter] = useState(null);
   const [companyFilter, setCompanyFilter] = useState(null);
   const [tabs, setTabs] = useState([]);
-  const { companyId, customerId, isAdmin, isCompanyAdmin, isCustomer } =
+  const { companyId, isAdmin, isCompanyAdmin, isCustomer } =
     useSelector((state: RootState) => state.user);
   const [companiesOptions, setCompaniesOptions] = useState([]);
   const [debouncedCompanySearch, setDebouncedCompanySearch] = useState("");

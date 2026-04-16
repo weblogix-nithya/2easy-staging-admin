@@ -54,7 +54,7 @@ export default function PreAllocateModal({
 
   const getIndex = (id: UniqueIdentifier) =>
     selectedJobs?.findIndex(
-      (dynamicTableUser: any) => dynamicTableUser.id == id,
+      (dynamicTableUser: any) => dynamicTableUser?.id == id,
     );
   // console.log(selectedJobs, "sssss");
   const activeIndex = activeId ? getIndex(activeId) : -1;
@@ -64,8 +64,8 @@ export default function PreAllocateModal({
     // console.log(item, "te");
     return {
       id: item?.original?.job?.id,
-      customer_id: item?.original?.job?.customer.id,
-      company_id: item?.original?.job?.company.id,
+      customer_id: item?.original?.job?.customer?.id,
+      company_id: item?.original?.job?.company?.id,
       preallocation_driver_id: selectedDriver?.id,
       name: item?.original?.job?.name,
       d_sort_id: Number(index + 1),
@@ -74,7 +74,7 @@ export default function PreAllocateModal({
     };
   });
   // console.log(sortedBulkAssignJobs,'sortedBulkAssignJobs')
-  const [handleBulkAssignJobs, { }] = useMutation(PREALLOCATE_JOBS_MUTATION, {
+  const [handleBulkAssignJobs, {}] = useMutation(PREALLOCATE_JOBS_MUTATION, {
     variables: {
       input: sortedBulkAssignJobs,
     },
@@ -104,27 +104,29 @@ export default function PreAllocateModal({
     <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose}>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
       <ModalContent maxWidth={"85%"}>
-
         <ModalHeader>
-
           <Text m="4">
-            Pre-Allocation Jobs {selectedDriver?.full_name ? ` - ${selectedDriver.full_name}` : ""}
+            Pre-Allocation Jobs{" "}
+            {selectedDriver?.full_name ? ` - ${selectedDriver.full_name}` : ""}
           </Text>
-
 
           <Divider />
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody p="4">
-
-
-          <VStack overflowX="auto" spacing={4} w="full" align="start" p={4} mb={4}>
-
+          <VStack
+            overflowX="auto"
+            spacing={4}
+            w="full"
+            align="start"
+            p={4}
+            mb={4}
+          >
             <Table size="sm">
               <Thead>
                 <Tr>
                   {columns.map((column) => (
-                    <Th key={`row-header-bulk-assign-${column.id}`}>
+                    <Th key={`row-header-bulk-assign-${column?.id}`}>
                       {column.Header}
                     </Th>
                   ))}
@@ -136,7 +138,7 @@ export default function PreAllocateModal({
                     if (!active) {
                       return;
                     }
-                    setActiveId(active.id);
+                    setActiveId(active?.id);
                   }}
                   onDragEnd={({ over }) => {
                     setActiveId(null);
@@ -155,15 +157,17 @@ export default function PreAllocateModal({
                   onDragCancel={() => setActiveId(null)}
                 >
                   <SortableContext items={selectedJobs}>
-                    {selectedJobs.map((item) => {
-                      return (
-                        <JobBulkAssignRow
-                          key={item.original.job.id}
-                          columns={columns}
-                          item={item}
-                        />
-                      );
-                    })}
+                    <div style={{ display: "contents" }}>
+                      {selectedJobs.map((item) => {
+                        return (
+                          <JobBulkAssignRow
+                            key={item?.original?.job?.id}
+                            columns={columns}
+                            item={item}
+                          />
+                        );
+                      })}
+                    </div>
                   </SortableContext>
                 </DndContext>
               </Tbody>

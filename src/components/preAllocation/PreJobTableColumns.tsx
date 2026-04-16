@@ -176,8 +176,8 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
     (destination: any) => destination?.is_pickup === false,
   );
   const showDeliveryTime =
-    row?.original?.job?.job_status.id == 6 ||
-    row?.original?.job?.job_status.id == 7;
+    row?.original?.job?.job_status?.id == 6 ||
+    row?.original?.job?.job_status?.id == 7;
 
   // Only get media if not in status 6 or 7
   const normalMedia =
@@ -273,10 +273,10 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
     (dest: any) => dest.is_pickup === true,
   );
   const showPickupTime =
-    row?.original?.job?.job_status.id == 4 ||
-    row?.original?.job?.job_status.id == 5 ||
-    row?.original?.job?.job_status.id == 6 ||
-    row?.original?.job?.job_status.id == 7;
+    row?.original?.job?.job_status?.id == 4 ||
+    row?.original?.job?.job_status?.id == 5 ||
+    row?.original?.job?.job_status?.id == 6 ||
+    row?.original?.job?.job_status?.id == 7;
   const normalMedia =
     pickupDest?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
@@ -343,10 +343,10 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
     (dest: any) => dest.is_pickup === true,
   );
   const showPickupTime =
-    row?.original?.job?.job_status.id == 4 ||
-    row?.original?.job?.job_status.id == 5 ||
-    row?.original?.job?.job_status.id == 6 ||
-    row?.original?.job?.job_status.id == 7;
+    row?.original?.job?.job_status?.id == 4 ||
+    row?.original?.job?.job_status?.id == 5 ||
+    row?.original?.job?.job_status?.id == 6 ||
+    row?.original?.job?.job_status?.id == 7;
 
   return (
     <>
@@ -377,8 +377,8 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
     (destination: any) => destination?.is_pickup === false,
   );
   const showDeliveryTime =
-    row?.original?.job?.job_status.id == 6 ||
-    row?.original?.job?.job_status.id == 7;
+    row?.original?.job?.job_status?.id == 6 ||
+    row?.original?.job?.job_status?.id == 7;
 
   return (
     <>
@@ -461,7 +461,7 @@ export const ItemsTypeCell = ({ row }: any) => {
   return (
     <div>
       {items?.map((item: any) => (
-        <Text fontSize="md" key={`items-type-${item.id}`} mb={2}>
+        <Text fontSize="md" key={`items-type-${item?.id}`} mb={2}>
           {item.item_type.name}
         </Text>
       ))}
@@ -485,7 +485,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
     //   {visibleItems.map((item: any) => (
     //     <Text
     //       fontSize="md"
-    //       key={`items-dimension-${item.id}`}
+    //       key={`items-dimension-${item?.id}`}
     //       w="max-content"
     //     >
     //       {`${(item.quantity)} x ${(item.weight)} x ${(item.dimension_height * 100).toFixed(0)}x${(
@@ -508,7 +508,7 @@ export const ItemsDimensionCell = ({ row }: any) => {
     <VStack align="stretch" spacing={1} w="100%">
       {visibleItems.map((item: any) => (
         <Grid
-          key={`items-dimension-${item.id}`}
+          key={`items-dimension-${item?.id}`}
           templateColumns="120px 50px 40px 80px 80px"
           columnGap={4}
           fontSize="md"
@@ -563,7 +563,7 @@ export const ItemsQuantityCell = ({ row }: any) => {
   return (
     <div>
       {items?.map((item: any) => (
-        <Text key={`items-quantity-${item.id}`} mb={2}>
+        <Text key={`items-quantity-${item?.id}`} mb={2}>
           {item?.quantity}
         </Text>
       ))}
@@ -581,7 +581,7 @@ export const ItemsWeightCell = ({ row }: any) => {
   return (
     <div>
       {items?.map((item: any) => (
-        <Text key={`items-weight-${item.id}`} mb={2}>
+        <Text key={`items-weight-${item?.id}`} mb={2}>
           {item?.weight}kg
         </Text>
       ))}
@@ -599,7 +599,7 @@ export const ItemsCbmCell = ({ row }: any) => {
   return (
     <div>
       {items?.map((item: any) => (
-        <Text key={`items-cbm-${item.id}`} mb={2}>
+        <Text key={`items-cbm-${item?.id}`} mb={2}>
           {item.volume?.toFixed(2)}cbm
         </Text>
       ))}
@@ -865,10 +865,10 @@ export const DeliveryCell = ({ row, refetchTable }) => {
     removeDriver({
       variables: {
         input: {
-          id: job.id,
-          customer_id: job.customer.id,
-          company_id: job.company.id,
-          job_type_id: job.job_type.id,
+          id: job?.id,
+          customer_id: job.customer?.id,
+          company_id: job.company?.id,
+          job_type_id: job.job_type?.id,
           name: job.name,
           preallocation_driver_id: null,
           driver_id: job.driver_id || null,
@@ -886,7 +886,7 @@ export const DeliveryCell = ({ row, refetchTable }) => {
         <VStack align="start" spacing="4px" mb="10px">
           {labels.map((label) => (
             <Badge
-              key={label.id}
+              key={label?.id}
               fontSize="12px"
               px="8px"
               py="2px"
@@ -961,8 +961,8 @@ export const DeliveryCellBulkAssign = ({ row }: any) => {
 //   // const router = useRouter();
 //   const job = row?.original?.job;
 //   // const handleNavigate = () => {
-//   //   if (job?.id) {
-//   //     router.push(`/admin/jobs/${job.id}`);
+//   //   if (job??.id) {
+//   //     router.push(`/admin/jobs/${job?.id}`);
 //   //   }
 //   // };
 
@@ -972,7 +972,7 @@ export const DeliveryCellBulkAssign = ({ row }: any) => {
 //         {job?.name || "-"}
 //       </Text>
 
-//       {/* {job?.id && (
+//       {/* {job??.id && (
 //         <Tooltip label="Edit Job" placement="top">
 //           <IconButton
 //             aria-label="Edit Job"
@@ -1170,7 +1170,7 @@ const MEDIA_CELL: Record<string, { with: any; without: any }> = {
 // Replace the Cell for specific columns based on withMedia flag
 function applyMediaCells(cols: any[], withMedia: boolean): any[] {
   return cols.map((col) => {
-    const media = MEDIA_CELL[col.id];
+    const media = MEDIA_CELL[col?.id];
     if (!media) return col;
     return {
       ...col,
@@ -1182,7 +1182,7 @@ function applyMediaCells(cols: any[], withMedia: boolean): any[] {
 // de-dupe helper (keeps first occurrence)
 function uniqueById(cols: any[]): any[] {
   const seen = new Set<string>();
-  return cols.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
+  return cols.filter((c) => (seen.has(c?.id) ? false : (seen.add(c?.id), true)));
 }
 
 export const tableColumn = (refetchJobs: () => void) => [

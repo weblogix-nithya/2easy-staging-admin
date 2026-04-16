@@ -7,14 +7,14 @@ export function JobBulkAssignRow(props: { columns: any[]; item: any }) {
   const { columns, item } = props;
 
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: item.id });
+    useSortable({ id: item?.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
   return (
-    <Tr key={item.original.id} ref={setNodeRef} style={style}>
+    <Tr key={item?.original?.id} ref={setNodeRef} style={style}>
       {columns.map((column) => {
         const isWeight = column.id === "total_weight";
         const isVolume = column.id === "total_volume";
