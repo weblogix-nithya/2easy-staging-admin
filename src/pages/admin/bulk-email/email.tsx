@@ -1,6 +1,4 @@
-import "react-quill/dist/quill.snow.css";
 import { useMutation } from "@apollo/client";
-
 import {
   Box,
   Button,
@@ -9,7 +7,7 @@ import {
   Input,
   SimpleGrid,
   Text,
-  Textarea,
+  // Textarea,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
@@ -19,12 +17,14 @@ import PrivateAccessModal from "components/access/PrivateAccessModal";
 import { TabsComponent } from "components/tabs/TabsComponet";
 import { SEND_GROUP_EMAIL } from "graphql/jobCcEmails";
 import AdminLayout from "layouts/admin";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
-
+const ReactQuill = dynamic(() => import("react-quill"), {
+  ssr: false,
+});
 export default function InvoiceIndex() {
   const { isAdmin } = useSelector((state: RootState) => state.user);
   const [subject, setSubject] = useState("");
@@ -359,7 +359,11 @@ export default function InvoiceIndex() {
                     }}
                   >
                     {body ? (
-                      <Box dangerouslySetInnerHTML={{ __html: body }} />
+                      <ReactQuill
+                        value={body}
+                        readOnly={true}
+                        theme="bubble" // or "snow"
+                      />
                     ) : (
                       <Text color="gray.400">
                         [Your message will appear here]
