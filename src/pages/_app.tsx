@@ -7,6 +7,7 @@ import "@wojtekmaj/react-daterange-picker/dist/DateRangePicker.css";
 import "react-calendar/dist/Calendar.css";
 import "styles/MiniCalendar.css";
 import "styles/DatePickerCalendar.css";
+import "react-quill/dist/quill.snow.css";
 
 import { ApolloProvider } from "@apollo/client";
 import { CacheProvider } from "@emotion/react";

@@ -41,7 +41,7 @@ export default function StatementGenerateModal({
   isOpen,
   onClose,
 }: StatementGenerateModalProps) {
-  const { companyId, customerId, isAdmin, isCompanyAdmin, isCustomer } =
+  const { companyId, isAdmin, isCompanyAdmin, isCustomer } =
     useSelector((state: RootState) => state.user);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [companiesOptions, setCompaniesOptions] = useState([]);

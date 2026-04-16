@@ -1,5 +1,3 @@
-import "react-quill/dist/quill.snow.css";
-
 import { useMutation, useQuery } from "@apollo/client";
 import {
   Box,
