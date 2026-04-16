@@ -1,4 +1,6 @@
+import "react-quill/dist/quill.snow.css";
 import { useMutation } from "@apollo/client";
+
 import {
   Box,
   Button,
@@ -19,6 +21,7 @@ import { SEND_GROUP_EMAIL } from "graphql/jobCcEmails";
 import AdminLayout from "layouts/admin";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
@@ -276,7 +279,15 @@ export default function InvoiceIndex() {
                     mb={3}
                     size="lg"
                   />
-                  <Textarea
+                  <Box mb={3} flex="1">
+                    <ReactQuill
+                      theme="snow"
+                      value={body}
+                      onChange={(html) => setBody(html)}
+                      style={{ height: "300px", marginBottom: "40px" }}
+                    />
+                  </Box>
+                  {/* <Textarea
                     placeholder="Type your email message here..."
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
@@ -285,13 +296,13 @@ export default function InvoiceIndex() {
                     size="lg"
                     flex="1"
                     resize="none"
-                  />
+                  /> */}
                   <Button
                     colorScheme="blue"
                     onClick={() => {
-                      const finalBody = `Hello!\n\n\n${body}\n\nRegards, \n2easy`;
+                      // const finalBody = `Hello!\n\n\n${body}\n\nRegards, \n2easy`;
                       sendGroupEmail({
-                        variables: { subject, body: finalBody },
+                        variables: { subject, body: body },
                       });
                     }}
                     isLoading={loading}
@@ -338,13 +349,18 @@ export default function InvoiceIndex() {
                   </Text>
                   <Box
                     flex="1"
-                    whiteSpace="pre-wrap"
                     color="gray.800"
                     fontSize="md"
                     mb={2}
                     minHeight="200px"
+                    sx={{
+                      p: { marginBottom: "8px" },
+                      ul: { paddingLeft: "20px" },
+                    }}
                   >
-                    {body || (
+                    {body ? (
+                      <Box dangerouslySetInnerHTML={{ __html: body }} />
+                    ) : (
                       <Text color="gray.400">
                         [Your message will appear here]
                       </Text>
@@ -379,8 +395,8 @@ export default function InvoiceIndex() {
                 ></FileInput>
               </Flex> */}
 
-              {/* foreach jobAttachments */}
-              {/* {temporaryMedia.length >= 0 && (
+            {/* foreach jobAttachments */}
+            {/* {temporaryMedia.length >= 0 && (
                 <PaginationTable
                   columns={attachmentColumns}
                   data={temporaryMedia}
