@@ -1,5 +1,8 @@
 import { useMutation, useQuery } from "@apollo/client";
 import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
   Divider,
@@ -1268,7 +1271,26 @@ export default function QuoteEdit() {
                       </RadioGroup>
                     </Box>
                   </Flex>
-
+                <Flex alignItems="center" mb="16px">
+                  <Box width="40%" ml="200px">
+                    {!quote?.is_stackable_freight && (
+                      <Alert
+                        status="warning"
+                        mt={3}
+                        borderRadius="md"
+                        bg="white"
+                        border="1px solid"
+                        borderColor="orange.300"
+                      >
+                        <AlertIcon color="orange.400" />
+                        <AlertTitle fontSize="sm" color="orange.600">
+                          Non-stackable freight may be subject to a higher rate
+                          on the final invoice
+                        </AlertTitle>
+                      </Alert>
+                    )}
+                  </Box>
+                </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
                       display="flex"

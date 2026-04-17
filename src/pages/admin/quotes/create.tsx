@@ -1,5 +1,8 @@
 import { useMutation, useQuery } from "@apollo/client";
 import {
+  Alert,
+  AlertIcon,
+  AlertTitle,
   Box,
   Button,
   Divider,
@@ -38,8 +41,16 @@ export default function QuoteCreate() {
     [],
   );
 
-  const { isAdmin, isCustomer, isCompany, userName, customerId, companyId,isCompanyAdmin,userId } =
-    useSelector((state: RootState) => state.user);
+  const {
+    isAdmin,
+    isCustomer,
+    isCompany,
+    userName,
+    customerId,
+    companyId,
+    isCompanyAdmin,
+    userId,
+  } = useSelector((state: RootState) => state.user);
   console.log(
     isAdmin,
     companyId,
@@ -70,7 +81,7 @@ export default function QuoteCreate() {
   }, []);
   useEffect(() => {
     dateChanged();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requiredDateAt, dropAt, readyAt]);
   const dateChanged = () => {
     try {
@@ -86,15 +97,26 @@ export default function QuoteCreate() {
   };
 
   useEffect(() => {
-    if (isCustomer) {
+    if (isAdmin) return;
+    if (isCompanyAdmin) {
+      setQuote({
+        ...quote,
+        // customer_name: userName,
+        // customer_id: customerId,
+        company_id: companyId,
+        // ...(companyId ? {  } : {}),
+      });
+    } else {
       setQuote({
         ...quote,
         customer_name: userName,
         customer_id: customerId,
-        ...(companyId ? { company_id: companyId } : {}),
+        company_id: companyId,
+        // ...(companyId ? { company_id: companyId } : {}),
       });
     }
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // console.log(isCustomer, companyId, "iscust,comp");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId, isCustomer]);
 
   useQuery(GET_QUOTE_CATEGORIES_QUERY, {
@@ -185,7 +207,7 @@ export default function QuoteCreate() {
   });
 
   useEffect(() => {
-    if (quote.company_id) {
+    if (quote.company_id && isAdmin) {
       setCustomerOptions([]); // Clear previous options
       getCustomers({ query: "", company_id: quote.company_id }).then(
         ({ data }) => {
@@ -200,11 +222,47 @@ export default function QuoteCreate() {
                 "full_name",
               ),
             );
+            console.log(
+              setCustomerOptions(
+                formatToSelect(
+                  data.customers.data.filter(
+                    (customer: { company_id: number }) =>
+                      customer.company_id === quote.company_id,
+                  ),
+                  "id",
+                  "full_name",
+                ),
+              ),
+              "l",
+            );
           }
         },
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!isAdmin) {
+      setCustomerOptions([]);
+
+      getCustomers({ query: "", company_id: companyId }).then(({ data }) => {
+        if (data?.customers?.data) {
+          setCustomerOptions(
+            formatToSelect(
+              data.customers.data, // ✅ already filtered from API
+              "id",
+              "full_name",
+            ),
+          );
+
+          console.log(
+            formatToSelect(
+              data.customers.data, // ✅ already filtered from API
+              "id",
+              "full_name",
+            ),
+            "l",
+          );
+        }
+      });
+    }
   }, [quote.company_id, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
@@ -295,7 +353,7 @@ export default function QuoteCreate() {
               <h1 className="my-8">New Quote</h1>
               {/* Fields */}
               <Box mb="16px">
-                {!isCompany && (
+                {isAdmin ? (
                   <CustomInputField
                     isSelect={true}
                     optionsArray={companiesOptions}
@@ -314,16 +372,19 @@ export default function QuoteCreate() {
                       });
                     }}
                   />
-                )}
-                {isCustomer ? (
-                  <CustomInputField
-                    label="Customer Name"
-                    placeholder=""
-                    name="customer_name"
-                    value={quote.customer_name}
-                    isDisabled={true}
-                  />
                 ) : (
+                  <CustomInputField
+                    isSelect={true}
+                    optionsArray={companiesOptions}
+                    label="Company:"
+                    value={companiesOptions.find(
+                      (entity) => entity.value == companyId,
+                    )}
+                    placeholder=""
+                    isDisabled={!isAdmin}
+                  />
+                )}
+                {isAdmin ? (
                   <CustomInputField
                     isSelect={true}
                     optionsArray={customerOptions}
@@ -342,6 +403,28 @@ export default function QuoteCreate() {
                         customer_name: e.label || null,
                       })
                     }
+                  />
+                ) : (
+                  <CustomInputField
+                  isSelect={true}
+                    label="Customer Name"
+                    optionsArray={customerOptions}
+                    placeholder=""
+                    name="customer_name"
+                    // value={quote.customer_name}
+                    value={
+                      customerOptions.find(
+                        (entity) => entity.value == quote.customer_id,
+                      ) || { value: null, label: "" }
+                    }
+                    onChange={(e) =>
+                      setQuote({
+                        ...quote,
+                        customer_id: e.value || null,
+                        customer_name: e.label || null,
+                      })
+                    }
+                    // isDisabled={true}
                   />
                 )}
                 {isAdmin && (
@@ -535,7 +618,8 @@ export default function QuoteCreate() {
                   </FormLabel>
                   <Box width="100%">
                     <RadioGroup
-                      defaultValue={"0"}
+                      // defaultValue={"0"}
+                      value={quote?.is_stackable_freight ? "1" : "0"} // ✅ controlled
                       onChange={(e) => {
                         setQuote({
                           ...quote,
@@ -552,7 +636,26 @@ export default function QuoteCreate() {
                     </RadioGroup>
                   </Box>
                 </Flex>
-
+                <Flex alignItems="center" mb="16px">
+                  <Box width="40%" ml="200px">
+                    {!quote?.is_stackable_freight && (
+                      <Alert
+                        status="warning"
+                        mt={3}
+                        borderRadius="md"
+                        bg="white"
+                        border="1px solid"
+                        borderColor="orange.300"
+                      >
+                        <AlertIcon color="orange.400" />
+                        <AlertTitle fontSize="sm" color="orange.600">
+                          Non-stackable freight may be subject to a higher rate
+                          on the final invoice
+                        </AlertTitle>
+                      </Alert>
+                    )}
+                  </Box>
+                </Flex>
                 <Flex alignItems="center" mb="16px">
                   <FormLabel
                     display="flex"

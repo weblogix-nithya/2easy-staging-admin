@@ -25,7 +25,13 @@ export const userSlice = createSlice({
     },
     setCustomerId: (state, action: PayloadAction<any>) => {
       state.customerId = action.payload;
+      // state.isCustomer = true;
+      // // ✅ only set customer if NOT admin and NOT company admin
+      // if (!state.isAdmin && !state.isCompanyAdmin) {
       state.isCustomer = true;
+      // } else {
+      //   state.isCustomer = false; // optional safety
+      // }
     },
     setDriverId: (state, action: PayloadAction<any>) => {
       state.driverId = action.payload;
