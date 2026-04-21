@@ -12,6 +12,7 @@ export const GET_QUOTES_QUERY = gql`
     $quote_category_id: ID
     $quote_status_id: ID
     $customer_id: ID
+    $company_id: ID
   ) {
     quotes(
       query: $query
@@ -21,6 +22,7 @@ export const GET_QUOTES_QUERY = gql`
       quote_category_id: $quote_category_id
       quote_status_id: $quote_status_id
       customer_id: $customer_id
+      company_id: $company_id
     ) {
       data {
         id
@@ -321,7 +323,7 @@ export const defaultQuote: Quote = {
   quote_type_id: null,
   media: [],
   is_tailgate_required: false,
-  is_stackable_freight: false,
+  is_stackable_freight: true,
   is_hand_unloading: false,
   is_dangerous_goods: false,
   is_timeslot_required: false,

@@ -17,7 +17,7 @@ export default function QuoteTabPanel(props: {
   const [queryPageIndexChild, setQueryPageIndexChild] =
     useState(queryPageIndex);
   const [queryPageSize, setQueryPageSize] = useState(50);
-  const { isCustomer, customerId } = useSelector(
+  const { companyId,isAdmin } = useSelector(
     (state: RootState) => state.user,
   );
 
@@ -98,7 +98,8 @@ export default function QuoteTabPanel(props: {
       orderByOrder: "DESC",
       quote_category_id: categoryId,
       quote_status_id: tabId,
-      customer_id: isCustomer ? customerId : undefined,
+      company_id: isAdmin ? undefined : Number(companyId),
+      // customer_id: isAdmin ? customerId : undefined,
     },
   });
 

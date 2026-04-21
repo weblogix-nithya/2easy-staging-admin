@@ -392,6 +392,24 @@ PaginationTableProps<T>) => {
                                     driver?.last_job_drop_at_today,
                                   )}
                                 </Badge>
+                                {driver?.no_max_length != null && (
+                                  <Badge
+                                    colorScheme="blue"
+                                    variant="subtle"
+                                    fontSize="md"
+                                  >
+                                    L: {driver.no_max_length} M
+                                  </Badge>
+                                )}
+                                {driver?.no_max_height != null && (
+                                  <Badge
+                                    colorScheme="blue"
+                                    variant="subtle"
+                                    fontSize="md"
+                                  >
+                                    H: {driver.no_max_height} M
+                                  </Badge>
+                                )}
                               </HStack>
                             </VStack>
                           </Box>
@@ -459,28 +477,45 @@ PaginationTableProps<T>) => {
                                 border="1px solid"
                                 borderColor="gray.300"
                                 borderRadius="md"
-                                whiteSpace="pre-line"
+                                // whiteSpace="pre-line"
                                 cursor="pointer"
                                 onClick={() => setEditingDriverId(driver.id)}
                               >
-                                {driver?.today_free_text?.text?.trim()
-                                  ? driver?.today_free_text?.text
-                                  : "Click to add driver notes"}
+                                {driver?.today_free_text?.text?.trim() ? (
+                                  <Box
+                                    dangerouslySetInnerHTML={{
+                                      __html: driver.today_free_text.text,
+                                    }}
+                                  />
+                                ) : (
+                                  "Click to add driver notes"
+                                )}
                               </Box>
                             )}
                           </Box>
 
                           {/* RIGHT — PRICE */}
                           <Box minW="150px" textAlign="right">
-                             <>
-                                <Badge colorScheme="red" variant="subtle" fontSize="sm" mr={'4px'}>
-                                  Today Price: {driver?.total_jobs_today_price ?? 0}
-                                </Badge>
+                            <>
+                              <Badge
+                                colorScheme="red"
+                                variant="subtle"
+                                fontSize="sm"
+                                mr={"4px"}
+                              >
+                                Today Price:{" "}
+                                {driver?.total_jobs_today_price ?? 0}
+                              </Badge>
 
-                                <Badge colorScheme="red" variant="subtle" fontSize="sm">
-                                  Weekly Price: {driver?.total_jobs_weekly_price ?? 0}
-                                </Badge>
-                              </>
+                              <Badge
+                                colorScheme="red"
+                                variant="subtle"
+                                fontSize="sm"
+                              >
+                                Weekly Price:{" "}
+                                {driver?.total_jobs_weekly_price ?? 0}
+                              </Badge>
+                            </>
                           </Box>
                         </Flex>
 

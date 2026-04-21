@@ -1397,6 +1397,7 @@ function DriverEdit() {
                           isRequired={true}
                           variant="main"
                           fontSize="sm"
+                          step="any"
                           ms={{ base: "0px", md: "0px" }}
                           type="number"
                           name="no_max_length"
@@ -1404,7 +1405,7 @@ function DriverEdit() {
                           onChange={(e) =>
                             setDriver({
                               ...driver,
-                              [e.target.name]: parseInt(e.target.value),
+                              [e.target.name]: parseFloat(e.target.value),
                             })
                           }
                           placeholder=""
@@ -1444,6 +1445,7 @@ function DriverEdit() {
                           isRequired={true}
                           variant="main"
                           fontSize="sm"
+                          step="any"
                           ms={{ base: "0px", md: "0px" }}
                           type="number"
                           name="no_max_height"
@@ -1451,7 +1453,7 @@ function DriverEdit() {
                           onChange={(e) =>
                             setDriver({
                               ...driver,
-                              [e.target.name]: parseInt(e.target.value),
+                              [e.target.name]: parseFloat(e.target.value),
                             })
                           }
                           placeholder=""
