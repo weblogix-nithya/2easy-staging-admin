@@ -317,6 +317,8 @@ export const GROUPED_PAGINATED_JOBS_QUERY = gql`
           no_max_volume
           no_max_capacity
           no_max_pallets
+          no_max_length
+          no_max_height
           current_suburb
           total_jobs_today_price
           total_jobs_weekly_price
