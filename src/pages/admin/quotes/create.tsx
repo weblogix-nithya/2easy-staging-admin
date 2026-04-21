@@ -263,6 +263,7 @@ export default function QuoteCreate() {
         }
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote.company_id, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
