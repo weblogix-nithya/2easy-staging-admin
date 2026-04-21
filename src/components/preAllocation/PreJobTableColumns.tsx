@@ -608,7 +608,19 @@ export const ItemsCbmCell = ({ row }: any) => {
 };
 export const ItemsExtrasCell = ({ row }: any) => {
   return (
-    <Text fontSize="md" maxW="100px">
+    <Text
+      minW="140px"
+      fontSize="26px"
+      whiteSpace="nowrap"
+      fontWeight="800"
+      letterSpacing="1.5px"
+      textAlign="center"
+      color="white"
+      textShadow="
+        2px 2px 0 rgba(0,0,0,0.95),
+        4px 4px 6px rgba(0,0,0,0.65)
+      "
+    >
       {row?.original?.job?.extras || "-"}
     </Text>
   );
@@ -1182,7 +1194,9 @@ function applyMediaCells(cols: any[], withMedia: boolean): any[] {
 // de-dupe helper (keeps first occurrence)
 function uniqueById(cols: any[]): any[] {
   const seen = new Set<string>();
-  return cols.filter((c) => (seen.has(c?.id) ? false : (seen.add(c?.id), true)));
+  return cols.filter((c) =>
+    seen.has(c?.id) ? false : (seen.add(c?.id), true),
+  );
 }
 
 export const tableColumn = (refetchJobs: () => void) => [
