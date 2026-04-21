@@ -302,7 +302,8 @@ export const DeliveryAddressWithTimebulkCustomerCell = ({ row }: any) => {
     row?.original?.job_status.id == 5 ||
     row?.original?.job_status.id == 6 ||
     row?.original?.job_status.id == 7;
-  const showfullAddress = Number(row?.original?.company_id) === Number(companyId);
+  const showfullAddress =
+    Number(row?.original?.company_id) === Number(companyId);
   return (
     <>
       {pickupDest?.pickup_at && showPickupTime && (
@@ -328,8 +329,8 @@ export const DeliveryAddressWithTimebulkCustomerCell = ({ row }: any) => {
             ? formatAddressLines(pickupDest).firstLine
             : formatAddressLines(pickupDest).secondLine}
         </Text>
-      ):(
-           <Text
+      ) : (
+        <Text
           whiteSpace="pre-wrap"
           mb="2"
           minWidth={"300px"}
@@ -559,7 +560,8 @@ export const PickupAddressWithTimewithoutMediacustomerCell = ({ row }: any) => {
     row?.original?.job_status.id == 5 ||
     row?.original?.job_status.id == 6 ||
     row?.original?.job_status.id == 7;
-  const showfullAddress = Number(row?.original?.company_id) === Number(companyId);
+  const showfullAddress =
+    Number(row?.original?.company_id) === Number(companyId);
   return (
     <>
       {pickupDest?.pickup_at && showPickupTime && (
@@ -585,8 +587,8 @@ export const PickupAddressWithTimewithoutMediacustomerCell = ({ row }: any) => {
             ? formatAddressLines(pickupDest).firstLine
             : formatAddressLines(pickupDest).secondLine}
         </Text>
-      ):(
-           <Text
+      ) : (
+        <Text
           whiteSpace="pre-wrap"
           mb="2"
           minWidth={"300px"}
@@ -753,7 +755,19 @@ export const ItemsCbmCell = ({ row }: any) => {
 };
 export const ItemsExtrasCell = ({ row }: any) => {
   return (
-    <Text maxW="100px" fontWeight="800">
+    <Text
+      minW="140px"
+      fontSize="26px"
+      whiteSpace="nowrap"
+      fontWeight="800"
+      letterSpacing="1.5px"
+      textAlign="center"
+      color="white"
+      textShadow="
+        2px 2px 0 rgba(0,0,0,0.95),
+        4px 4px 6px rgba(0,0,0,0.65)
+      "
+    >
       {row?.original?.job?.extras || "-"}
     </Text>
   );
@@ -1157,11 +1171,7 @@ export const TimeslotCell = ({ row, refetchJobs }: any) => {
 export const TimeslotCustomerCell = ({ row }: any) => {
   return (
     <Flex gap={2}>
-      <Text
-        minW="150px"  >
-        {row?.original?.timeslot || "-"}
-      </Text>
-     
+      <Text minW="150px">{row?.original?.timeslot || "-"}</Text>
     </Flex>
   );
 };
