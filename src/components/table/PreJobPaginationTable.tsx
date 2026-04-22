@@ -19,7 +19,12 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { faTrashAlt } from "@fortawesome/pro-light-svg-icons";
-import { faDownload, faEye, faMessageLines, faPen } from "@fortawesome/pro-regular-svg-icons";
+import {
+  faDownload,
+  faEye,
+  faMessageLines,
+  faPen,
+} from "@fortawesome/pro-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
@@ -180,6 +185,8 @@ PaginationTableProps<T>) => {
       autoResetSelectedRows: false,
       autoResetSortBy: false,
       disableSortRemove: true,
+      getRowId: (row: any, index: number) =>
+        row?.job?.id ? row.job.id.toString() : `row-${index}`,
     },
     useSortBy,
     usePagination,
