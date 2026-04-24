@@ -21,21 +21,17 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       gestureHandling: "greedy",
     });
 
-    // ✅ Fit bounds (better UX)
+    // ✅ Fit bounds
     const bounds = new google.maps.LatLngBounds();
     points.forEach((p) => bounds.extend(p));
     map.fitBounds(bounds);
 
-    // ✅ Visible path
-    // 🔥 Draw gradient segments with arrows
+    // ✅ Gradient + arrows
     for (let i = 0; i < points.length - 1; i++) {
       const start = points[i];
       const end = points[i + 1];
 
-      // progress (0 → 1)
       const progress = i / (points.length - 1);
-
-      // 🔥 Gradient color (blue → green → yellow → red)
       const hue = 220 - progress * 220;
       const color = `hsl(${hue}, 100%, 50%)`;
 
@@ -44,8 +40,6 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
         strokeColor: color,
         strokeOpacity: 1,
         strokeWeight: 4,
-
-        // 🔥 Direction arrows
         icons: [
           {
             icon: {
@@ -57,30 +51,28 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
             repeat: "80px",
           },
         ],
-
         map,
       });
     }
 
-    // ✅ Invisible hover line (fix hover issue)
+    // ✅ Hover line
     const hoverLine = new google.maps.Polyline({
       path: points,
       strokeOpacity: 0,
-      strokeWeight: 20, // 🔥 big hit area
+      strokeWeight: 20,
       map,
     });
 
-    // ✅ Info window
     const infoWindow = new google.maps.InfoWindow();
 
-    // ✅ Find closest point
     const getClosestPoint = (latLng: google.maps.LatLng) => {
       let minDist = Infinity;
       let closest = points[0];
 
       points.forEach((p) => {
         const dist =
-          Math.pow(p.lat - latLng.lat(), 2) + Math.pow(p.lng - latLng.lng(), 2);
+          Math.pow(p.lat - latLng.lat(), 2) +
+          Math.pow(p.lng - latLng.lng(), 2);
 
         if (dist < minDist) {
           minDist = dist;
@@ -91,9 +83,18 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       return closest;
     };
 
-    // ✅ Hover detection (fixed)
+    // ✅ ONLY ONE hover listener
     hoverLine.addListener("mousemove", (e: any) => {
       const closest = getClosestPoint(e.latLng);
+
+      const distance =
+        Math.pow(closest.lat - e.latLng.lat(), 2) +
+        Math.pow(closest.lng - e.latLng.lng(), 2);
+
+      if (distance > 0.00001) {
+        infoWindow.close();
+        return;
+      }
 
       infoWindow.setContent(`
         <div style="font-size:12px;">
@@ -102,11 +103,7 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
         </div>
       `);
 
-      infoWindow.setPosition({
-        lat: closest.lat,
-        lng: closest.lng,
-      });
-
+      infoWindow.setPosition(closest);
       infoWindow.open(map);
     });
 
@@ -114,37 +111,61 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       infoWindow.close();
     });
 
-    // ✅ Extra: works even when not exactly on line
-    map.addListener("mousemove", (e: any) => {
-      const closest = getClosestPoint(e.latLng);
-
-      infoWindow.setContent(`
-        <div style="font-size:12px;">
-          <b>${closest.time}</b>
-        </div>
-      `);
-
-      infoWindow.setPosition({
-        lat: closest.lat,
-        lng: closest.lng,
-      });
-
-      infoWindow.open(map);
-    });
-
-    // ✅ START marker
-    new google.maps.Marker({
-      position: points[0],
-      map,
-      label: "S",
-    });
-
-    // ✅ END marker
+    // ✅ Start / End markers
+    new google.maps.Marker({ position: points[0], map, label: "S" });
     new google.maps.Marker({
       position: points[points.length - 1],
       map,
       label: "E",
     });
+
+    // =========================
+    // 🔥 PLAYBACK ANIMATION
+    // =========================
+
+    let index = 0;
+
+    const movingMarker = new google.maps.Marker({
+      position: points[0],
+      map,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 6,
+        fillColor: "#ff0000",
+        fillOpacity: 1,
+        strokeWeight: 2,
+      },
+    });
+
+    const playbackInfo = new google.maps.InfoWindow();
+
+    const interval = setInterval(() => {
+      if (index >= points.length) {
+        clearInterval(interval);
+        return;
+      }
+
+      const p = points[index];
+
+      movingMarker.setPosition(p);
+
+      playbackInfo.setContent(`
+        <div style="font-size:12px;">
+          <b>${p.time}</b><br/>
+          ${p.suburb ?? ""}
+        </div>
+      `);
+
+      playbackInfo.open(map, movingMarker);
+
+      index++;
+    }, 400);
+
+    // ✅ cleanup (important)
+    return () => {
+      clearInterval(interval);
+    };
+
   }, [points]);
 
   return <div ref={ref} style={{ height: "100vh", width: "100%" }} />;
