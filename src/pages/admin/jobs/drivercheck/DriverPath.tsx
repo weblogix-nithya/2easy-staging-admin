@@ -44,7 +44,7 @@ export default function DriverPathPage() {
       variables: {
         driver_id: "1216",
         today_au: true,
-        first: 10000,
+        first: 250,
         page: 1,
       },
     });
