@@ -9,12 +9,6 @@ type Point = {
   suburb?: string;
 };
 
-export interface Marker {
-  lng: number;
-  lat: number;
-  icon?: string;
-  data?: any;
-}
 export default function DriverPathMap({
   points,
 }: {
@@ -31,8 +25,13 @@ export default function DriverPathMap({
       gestureHandling: "greedy",
     });
 
-    // 🔥 Draw path
-    const polyline = new google.maps.Polyline({
+    // ✅ Fit bounds (better UX)
+    const bounds = new google.maps.LatLngBounds();
+    points.forEach((p) => bounds.extend(p));
+    map.fitBounds(bounds);
+
+    // ✅ Visible path
+    const visibleLine = new google.maps.Polyline({
       path: points,
       geodesic: true,
       strokeColor: "#2563eb",
@@ -41,10 +40,18 @@ export default function DriverPathMap({
       map,
     });
 
-    // 🔥 Info window (tooltip)
+    // ✅ Invisible hover line (fix hover issue)
+    const hoverLine = new google.maps.Polyline({
+      path: points,
+      strokeOpacity: 0,
+      strokeWeight: 20, // 🔥 big hit area
+      map,
+    });
+
+    // ✅ Info window
     const infoWindow = new google.maps.InfoWindow();
 
-    // 🔥 Helper: find nearest point
+    // ✅ Find closest point
     const getClosestPoint = (latLng: google.maps.LatLng) => {
       let minDist = Infinity;
       let closest = points[0];
@@ -63,8 +70,8 @@ export default function DriverPathMap({
       return closest;
     };
 
-    // 🔥 Hover on path
-    polyline.addListener("mousemove", (e: any) => {
+    // ✅ Hover detection (fixed)
+    hoverLine.addListener("mousemove", (e: any) => {
       const closest = getClosestPoint(e.latLng);
 
       infoWindow.setContent(`
@@ -82,9 +89,40 @@ export default function DriverPathMap({
       infoWindow.open(map);
     });
 
-    // hide when mouse out
-    polyline.addListener("mouseout", () => {
+    hoverLine.addListener("mouseout", () => {
       infoWindow.close();
+    });
+
+    // ✅ Extra: works even when not exactly on line
+    map.addListener("mousemove", (e: any) => {
+      const closest = getClosestPoint(e.latLng);
+
+      infoWindow.setContent(`
+        <div style="font-size:12px;">
+          <b>${closest.time}</b>
+        </div>
+      `);
+
+      infoWindow.setPosition({
+        lat: closest.lat,
+        lng: closest.lng,
+      });
+
+      infoWindow.open(map);
+    });
+
+    // ✅ START marker
+    new google.maps.Marker({
+      position: points[0],
+      map,
+      label: "S",
+    });
+
+    // ✅ END marker
+    new google.maps.Marker({
+      position: points[points.length - 1],
+      map,
+      label: "E",
     });
 
   }, [points]);
