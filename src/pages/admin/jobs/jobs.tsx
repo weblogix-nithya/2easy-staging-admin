@@ -891,7 +891,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
           columns={{ sm: 1 }}
           spacing={{ base: "20px", xl: "20px" }}
         >
-          isAdmin && ({" "}
+         { isAdmin && (
           <Button
             onClick={() => Router.push("/admin/jobs/drivercheck")}
             className="!h-[30px] ml-2"
@@ -900,7 +900,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
           >
             driver check
           </Button>
-          )
+          )}
           <JobHeader
             isAdmin={isAdmin}
             isCompany={isCompany}
