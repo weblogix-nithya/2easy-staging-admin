@@ -249,6 +249,37 @@ export const DELETE_ROUTE_MUTATION = gql`
   }
 `;
 
+export const DRIVER_LOGS_QUERY = gql`
+  query DriverLogsList(
+    $driver_id: ID!
+    $today_au: Boolean
+    $first: Int!
+    $page: Int
+  ) {
+    driverLogsList(
+      driver_id: $driver_id
+      today_au: $today_au
+      first: $first
+      page: $page
+    ) {
+      data {
+        id
+        driver_id
+        suburb
+        pincode
+        lng
+        lat
+        created_at
+        created_at_au
+      }
+      paginatorInfo {
+        currentPage
+        lastPage
+        total
+      }
+    }
+  }
+`;
 export interface UpdateRouteInput {
   id: Number;
   name: String;

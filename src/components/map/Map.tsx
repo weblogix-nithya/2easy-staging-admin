@@ -75,6 +75,17 @@ export function Map({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const path = markers?.map((m) => ({ lat: m.lat, lng: m.lng }));
+
+  if (path?.length > 1) {
+    new google.maps.Polyline({
+      path,
+      strokeColor: "#FF0000",
+      strokeOpacity: 1,
+      strokeWeight: 3,
+      map,
+    });
+  }
   // Step 2: Render map once it's ready
   // useEffect(() => {
   //   if (!map || !ref.current) return;
