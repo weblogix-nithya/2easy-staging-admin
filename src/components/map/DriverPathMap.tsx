@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 
 type Point = {
@@ -11,6 +12,11 @@ type Point = {
 
 export default function DriverPathMap({ points }: { points: Point[] }) {
   const ref = useRef<HTMLDivElement>(null);
+
+  // 🎮 controls
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const indexRef = useRef(0);
+  const isPlayingRef = useRef(false);
 
   useEffect(() => {
     if (!ref.current || !window.google || points.length === 0) return;
@@ -26,7 +32,9 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     points.forEach((p) => bounds.extend(p));
     map.fitBounds(bounds);
 
-    // ✅ Gradient + arrows
+    // =========================
+    // 🎨 Gradient + arrows path
+    // =========================
     for (let i = 0; i < points.length - 1; i++) {
       const start = points[i];
       const end = points[i + 1];
@@ -55,7 +63,9 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       });
     }
 
-    // ✅ Hover line
+    // =========================
+    // 🎯 Hover detection line
+    // =========================
     const hoverLine = new google.maps.Polyline({
       path: points,
       strokeOpacity: 0,
@@ -63,7 +73,7 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       map,
     });
 
-    const infoWindow = new google.maps.InfoWindow();
+    const hoverInfo = new google.maps.InfoWindow();
 
     const getClosestPoint = (latLng: google.maps.LatLng) => {
       let minDist = Infinity;
@@ -83,7 +93,6 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       return closest;
     };
 
-    // ✅ ONLY ONE hover listener
     hoverLine.addListener("mousemove", (e: any) => {
       const closest = getClosestPoint(e.latLng);
 
@@ -92,27 +101,34 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
         Math.pow(closest.lng - e.latLng.lng(), 2);
 
       if (distance > 0.00001) {
-        infoWindow.close();
+        hoverInfo.close();
         return;
       }
 
-      infoWindow.setContent(`
+      hoverInfo.setContent(`
         <div style="font-size:12px;">
           <b>${closest.time}</b><br/>
           ${closest.suburb ?? ""}
         </div>
       `);
 
-      infoWindow.setPosition(closest);
-      infoWindow.open(map);
+      hoverInfo.setPosition(closest);
+      hoverInfo.open(map);
     });
 
     hoverLine.addListener("mouseout", () => {
-      infoWindow.close();
+      hoverInfo.close();
     });
 
-    // ✅ Start / End markers
-    new google.maps.Marker({ position: points[0], map, label: "S" });
+    // =========================
+    // 📍 Start / End markers
+    // =========================
+    new google.maps.Marker({
+      position: points[0],
+      map,
+      label: "S",
+    });
+
     new google.maps.Marker({
       position: points[points.length - 1],
       map,
@@ -120,11 +136,8 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     });
 
     // =========================
-    // 🔥 PLAYBACK ANIMATION
+    // 🎬 Playback animation
     // =========================
-
-    let index = 0;
-
     const movingMarker = new google.maps.Marker({
       position: points[0],
       map,
@@ -139,34 +152,89 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
 
     const playbackInfo = new google.maps.InfoWindow();
 
-    const interval = setInterval(() => {
-      if (index >= points.length) {
-        clearInterval(interval);
-        return;
-      }
+    const startPlayback = () => {
+      if (isPlayingRef.current) return;
 
-      const p = points[index];
+      isPlayingRef.current = true;
 
-      movingMarker.setPosition(p);
+      intervalRef.current = setInterval(() => {
+        if (indexRef.current >= points.length) {
+          clearInterval(intervalRef.current!);
+          isPlayingRef.current = false;
+          return;
+        }
 
-      playbackInfo.setContent(`
-        <div style="font-size:12px;">
-          <b>${p.time}</b><br/>
-          ${p.suburb ?? ""}
-        </div>
-      `);
+        const p = points[indexRef.current];
 
-      playbackInfo.open(map, movingMarker);
+        movingMarker.setPosition(p);
 
-      index++;
-    }, 400);
+        playbackInfo.setContent(`
+          <div style="font-size:12px;">
+            <b>${p.time}</b><br/>
+            ${p.suburb ?? ""}
+          </div>
+        `);
 
-    // ✅ cleanup (important)
-    return () => {
-      clearInterval(interval);
+        playbackInfo.open(map, movingMarker);
+
+        indexRef.current++;
+      }, 300);
     };
 
+    const pausePlayback = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      isPlayingRef.current = false;
+    };
+
+    const restartPlayback = () => {
+      pausePlayback();
+      indexRef.current = 0;
+      startPlayback();
+    };
+
+    // expose to buttons
+    (window as any).playRoute = startPlayback;
+    (window as any).pauseRoute = pausePlayback;
+    (window as any).restartRoute = restartPlayback;
+
+    // auto start (optional)
+    startPlayback();
+
+    return () => {
+      pausePlayback();
+    };
   }, [points]);
 
-  return <div ref={ref} style={{ height: "100vh", width: "100%" }} />;
+  return (
+    <div style={{ position: "relative" }}>
+      <div ref={ref} style={{ height: "100vh", width: "100%" }} />
+
+      {/* 🎮 Controls */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          left: "20px",
+          zIndex: 1000,
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        <Button onClick={() => (window as any).playRoute()}>
+          ▶️ Play
+        </Button>
+
+        <Button onClick={() => (window as any).pauseRoute()}>
+          ⏸ Pause
+        </Button>
+
+        <Button onClick={() => (window as any).restartRoute()}>
+          🔁 Restart
+        </Button>
+      </div>
+    </div>
+  );
 }
