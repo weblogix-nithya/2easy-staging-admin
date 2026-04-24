@@ -9,11 +9,7 @@ type Point = {
   suburb?: string;
 };
 
-export default function DriverPathMap({
-  points,
-}: {
-  points: Point[];
-}) {
+export default function DriverPathMap({ points }: { points: Point[] }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,14 +27,40 @@ export default function DriverPathMap({
     map.fitBounds(bounds);
 
     // ✅ Visible path
-    const visibleLine = new google.maps.Polyline({
-      path: points,
-      geodesic: true,
-      strokeColor: "#2563eb",
-      strokeOpacity: 1,
-      strokeWeight: 4,
-      map,
-    });
+    // 🔥 Draw gradient segments with arrows
+    for (let i = 0; i < points.length - 1; i++) {
+      const start = points[i];
+      const end = points[i + 1];
+
+      // progress (0 → 1)
+      const progress = i / (points.length - 1);
+
+      // 🔥 Gradient color (blue → green → yellow → red)
+      const hue = 220 - progress * 220;
+      const color = `hsl(${hue}, 100%, 50%)`;
+
+      new google.maps.Polyline({
+        path: [start, end],
+        strokeColor: color,
+        strokeOpacity: 1,
+        strokeWeight: 4,
+
+        // 🔥 Direction arrows
+        icons: [
+          {
+            icon: {
+              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 3,
+              strokeColor: color,
+            },
+            offset: "0",
+            repeat: "80px",
+          },
+        ],
+
+        map,
+      });
+    }
 
     // ✅ Invisible hover line (fix hover issue)
     const hoverLine = new google.maps.Polyline({
@@ -58,8 +80,7 @@ export default function DriverPathMap({
 
       points.forEach((p) => {
         const dist =
-          Math.pow(p.lat - latLng.lat(), 2) +
-          Math.pow(p.lng - latLng.lng(), 2);
+          Math.pow(p.lat - latLng.lat(), 2) + Math.pow(p.lng - latLng.lng(), 2);
 
         if (dist < minDist) {
           minDist = dist;
@@ -124,7 +145,6 @@ export default function DriverPathMap({
       map,
       label: "E",
     });
-
   }, [points]);
 
   return <div ref={ref} style={{ height: "100vh", width: "100%" }} />;
