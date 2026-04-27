@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@chakra-ui/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Point = {
   lat: number;
@@ -13,61 +13,135 @@ type Point = {
 export default function DriverPathMap({ points }: { points: Point[] }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // 🎮 controls
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const indexRef = useRef(0);
   const isPlayingRef = useRef(false);
+  const animationRef = useRef<number>();
+  const speedRef = useRef(2);
+
+  const [speed, setSpeed] = useState(2);
+  const startPlaybackRef = useRef<() => void>();
+  const pausePlaybackRef = useRef<() => void>();
+  const restartPlaybackRef = useRef<() => void>();
+
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
 
   useEffect(() => {
     if (!ref.current || !window.google || points.length === 0) return;
 
+    // 🔥 Reduce points if too large
+    const MAX_POINTS = 300;
+    const optimizedPoints =
+      points.length > MAX_POINTS
+        ? points.filter(
+            (_, i) => i % Math.ceil(points.length / MAX_POINTS) === 0,
+          )
+        : points;
+
     const map = new google.maps.Map(ref.current, {
-      center: points[0],
+      center: optimizedPoints[0],
       zoom: 14,
       gestureHandling: "greedy",
+        mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || undefined
     });
 
     // ✅ Fit bounds
     const bounds = new google.maps.LatLngBounds();
-    points.forEach((p) => bounds.extend(p));
+    optimizedPoints.forEach((p) => bounds.extend(p));
     map.fitBounds(bounds);
 
-    // =========================
-    // 🎨 Gradient + arrows path
-    // =========================
-    for (let i = 0; i < points.length - 1; i++) {
-      const start = points[i];
-      const end = points[i + 1];
+    // 🔒 Lock zoom
+    const MIN_ZOOM = 14;
+    google.maps.event.addListener(map, "zoom_changed", () => {
+      if (map.getZoom()! < MIN_ZOOM) {
+        map.setZoom(MIN_ZOOM);
+      }
+    });
 
-      const progress = i / (points.length - 1);
-      const hue = 220 - progress * 220;
-      const color = `hsl(${hue}, 100%, 50%)`;
+    // =========================
+    // 🎨 SINGLE Polyline (optimized)
+    // =========================
+    new google.maps.Polyline({
+      path: optimizedPoints,
+      strokeColor: "#3b82f6",
+      strokeOpacity: 1,
+      strokeWeight: 4,
+      map,
+    });
 
-      new google.maps.Polyline({
-        path: [start, end],
-        strokeColor: color,
-        strokeOpacity: 1,
-        strokeWeight: 4,
-        icons: [
-          {
-            icon: {
-              path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 3,
-              strokeColor: color,
-            },
-            offset: "0",
-            repeat: "80px",
-          },
-        ],
+    // =========================
+    // 📍 Advanced Markers
+    // =========================
+    const createMarker = (label: string, position: any) => {
+      const div = document.createElement("div");
+      div.innerText = label;
+      div.style.background = "#6b46c1";
+      div.style.color = "white";
+      div.style.padding = "4px 6px";
+      div.style.borderRadius = "6px";
+      div.style.fontSize = "12px";
+
+      return new google.maps.marker.AdvancedMarkerElement({
+        position,
         map,
+        content: div,
       });
-    }
+    };
+
+    createMarker("S", optimizedPoints[0]);
+    createMarker("E", optimizedPoints[optimizedPoints.length - 1]);
 
     // =========================
-    // 🎯 Hover detection line
+    // 🎯 Moving Marker
     // =========================
+    const movingDiv = document.createElement("div");
+    movingDiv.style.width = "10px";
+    movingDiv.style.height = "10px";
+    movingDiv.style.background = "red";
+    movingDiv.style.borderRadius = "50%";
+
+    const movingContainer = document.createElement("div");
+
+    movingContainer.style.display = "flex";
+    movingContainer.style.flexDirection = "column";
+    movingContainer.style.alignItems = "center";
+
+    const label = document.createElement("div");
+    label.style.background = "red";
+    label.style.color = "white";
+    label.style.padding = "4px 6px";
+    label.style.borderRadius = "6px";
+    label.style.fontSize = "12px";
+    label.style.marginBottom = "4px";
+
+    const dot = document.createElement("div");
+    dot.style.width = "10px";
+    dot.style.height = "10px";
+    dot.style.background = "red";
+    dot.style.borderRadius = "50%";
+
+    movingContainer.appendChild(label);
+    movingContainer.appendChild(dot);
+
+    const movingMarker = new google.maps.marker.AdvancedMarkerElement({
+      position: optimizedPoints[0],
+      map,
+      content: movingContainer,
+    });
+
+    const playbackInfo = new google.maps.InfoWindow();
+
+    // ✅ OPEN ONLY ONCE (fix blinking)
+    playbackInfo.open(map, movingMarker);
+
+    // =========================
+    // 🎯 Hover (optimized)
+    // =========================
+    let lastIndex = 0;
+
     const hoverLine = new google.maps.Polyline({
-      path: points,
+      path: optimizedPoints,
       strokeOpacity: 0,
       strokeWeight: 20,
       map,
@@ -76,117 +150,95 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     const hoverInfo = new google.maps.InfoWindow();
 
     const getClosestPoint = (latLng: google.maps.LatLng) => {
-      let minDist = Infinity;
-      let closest = points[0];
+      let min = Infinity;
+      let closest = optimizedPoints[0];
 
-      points.forEach((p) => {
-        const dist =
-          Math.pow(p.lat - latLng.lat(), 2) +
-          Math.pow(p.lng - latLng.lng(), 2);
+      const start = Math.max(0, lastIndex - 5);
+      const end = Math.min(optimizedPoints.length, lastIndex + 5);
 
-        if (dist < minDist) {
-          minDist = dist;
+      for (let i = start; i < end; i++) {
+        const p = optimizedPoints[i];
+        const d =
+          Math.pow(p.lat - latLng.lat(), 2) + Math.pow(p.lng - latLng.lng(), 2);
+
+        if (d < min) {
+          min = d;
           closest = p;
+          lastIndex = i;
         }
-      });
+      }
 
       return closest;
     };
 
     hoverLine.addListener("mousemove", (e: any) => {
-      const closest = getClosestPoint(e.latLng);
-
-      const distance =
-        Math.pow(closest.lat - e.latLng.lat(), 2) +
-        Math.pow(closest.lng - e.latLng.lng(), 2);
-
-      if (distance > 0.00001) {
-        hoverInfo.close();
-        return;
-      }
+      const p = getClosestPoint(e.latLng);
 
       hoverInfo.setContent(`
         <div style="font-size:12px;">
-          <b>${closest.time}</b><br/>
-          ${closest.suburb ?? ""}
+          <b>${p.time}</b><br/>
+          ${p.suburb ?? ""}
         </div>
       `);
 
-      hoverInfo.setPosition(closest);
+      hoverInfo.setPosition(p);
       hoverInfo.open(map);
     });
 
-    hoverLine.addListener("mouseout", () => {
-      hoverInfo.close();
-    });
+    hoverLine.addListener("mouseout", () => hoverInfo.close());
 
     // =========================
-    // 📍 Start / End markers
+    // 🎬 Animation (optimized)
     // =========================
-    new google.maps.Marker({
-      position: points[0],
-      map,
-      label: "S",
-    });
+    let lastUpdate = 0;
 
-    new google.maps.Marker({
-      position: points[points.length - 1],
-      map,
-      label: "E",
-    });
+    const animate = (time: number) => {
+      if (!isPlayingRef.current) return;
 
-    // =========================
-    // 🎬 Playback animation
-    // =========================
-    const movingMarker = new google.maps.Marker({
-      position: points[0],
-      map,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 6,
-        fillColor: "#ff0000",
-        fillOpacity: 1,
-        strokeWeight: 2,
-      },
-    });
+      if (time - lastUpdate < 100 / speedRef.current) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
 
-    const playbackInfo = new google.maps.InfoWindow();
+      lastUpdate = time;
+
+      const i = indexRef.current;
+
+      if (i >= optimizedPoints.length) {
+        isPlayingRef.current = false;
+        return;
+      }
+
+      const p = optimizedPoints[i];
+
+      movingMarker.position = p;
+
+      // 🔥 NO BLINK (only update)
+      label.innerHTML = `
+          <b>${p.time}</b><br/>
+          ${p.suburb ?? ""}
+        `;
+
+      // 📍 keep in view
+      const bounds = map.getBounds();
+      if (!bounds || !bounds.contains(p)) {
+        map.panTo(p);
+      }
+
+      indexRef.current++;
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
 
     const startPlayback = () => {
       if (isPlayingRef.current) return;
-
       isPlayingRef.current = true;
-
-      intervalRef.current = setInterval(() => {
-        if (indexRef.current >= points.length) {
-          clearInterval(intervalRef.current!);
-          isPlayingRef.current = false;
-          return;
-        }
-
-        const p = points[indexRef.current];
-
-        movingMarker.setPosition(p);
-
-        playbackInfo.setContent(`
-          <div style="font-size:12px;">
-            <b>${p.time}</b><br/>
-            ${p.suburb ?? ""}
-          </div>
-        `);
-
-        playbackInfo.open(map, movingMarker);
-
-        indexRef.current++;
-      }, 300);
+      animate(0);
     };
 
     const pausePlayback = () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
       isPlayingRef.current = false;
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
 
     const restartPlayback = () => {
@@ -195,17 +247,16 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       startPlayback();
     };
 
-    // expose to buttons
-    (window as any).playRoute = startPlayback;
-    (window as any).pauseRoute = pausePlayback;
-    (window as any).restartRoute = restartPlayback;
+    startPlaybackRef.current = startPlayback;
+    pausePlaybackRef.current = pausePlayback;
+    restartPlaybackRef.current = restartPlayback;
 
-    // auto start (optional)
-    startPlayback();
+    // startPlayback();
+    setTimeout(() => {
+      startPlayback();
+    }, 500);
 
-    return () => {
-      pausePlayback();
-    };
+    return () => pausePlayback();
   }, [points]);
 
   return (
@@ -221,19 +272,28 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
           zIndex: 1000,
           display: "flex",
           gap: "10px",
+          alignItems: "center",
+          background: "white",
+          padding: "10px",
+          borderRadius: "8px",
         }}
       >
-        <Button onClick={() => (window as any).playRoute()}>
-          ▶️ Play
-        </Button>
+        <Button onClick={() => startPlaybackRef.current?.()}>▶️</Button>
+        <Button onClick={() => pausePlaybackRef.current?.()}>⏸</Button>
+        <Button onClick={() => restartPlaybackRef.current?.()}>🔁</Button>
 
-        <Button onClick={() => (window as any).pauseRoute()}>
-          ⏸ Pause
-        </Button>
-
-        <Button onClick={() => (window as any).restartRoute()}>
-          🔁 Restart
-        </Button>
+        {/* 🎚 Speed Slider */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <label style={{ fontSize: "12px" }}>Speed: {speed}x</label>
+          <input
+            type="range"
+            min="0.5"
+            max="5"
+            step="0.5"
+            value={speed}
+            onChange={(e) => setSpeed(Number(e.target.value))}
+          />
+        </div>
       </div>
     </div>
   );
