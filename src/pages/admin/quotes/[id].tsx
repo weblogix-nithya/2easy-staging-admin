@@ -949,12 +949,12 @@ export default function QuoteEdit() {
                           (quote.job
                             ? " and Booked"
                             : quote.is_quote_send
-                            ? " - Quote Sent"
-                            : "")}
+                              ? " - Quote Sent"
+                              : "")}
                     </Tag>
                   </Flex>
                   <Flex alignItems="center">
-                   {quote?.quote_status?.name === "Processed" && (
+                    {quote?.quote_status?.name === "Processed" && (
                       <Button
                         mx="5px"
                         variant="secondary"
@@ -1271,26 +1271,26 @@ export default function QuoteEdit() {
                       </RadioGroup>
                     </Box>
                   </Flex>
-                <Flex alignItems="center" mb="16px">
-                  <Box width="40%" ml="200px">
-                    {!quote?.is_stackable_freight && (
-                      <Alert
-                        status="warning"
-                        mt={3}
-                        borderRadius="md"
-                        bg="white"
-                        border="1px solid"
-                        borderColor="orange.300"
-                      >
-                        <AlertIcon color="orange.400" />
-                        <AlertTitle fontSize="sm" color="orange.600">
-                          Non-stackable freight may be subject to a higher rate
-                          on the final invoice
-                        </AlertTitle>
-                      </Alert>
-                    )}
-                  </Box>
-                </Flex>
+                  <Flex alignItems="center" mb="16px">
+                    <Box width="40%" ml="200px">
+                      {!quote?.is_stackable_freight && (
+                        <Alert
+                          status="warning"
+                          mt={3}
+                          borderRadius="md"
+                          bg="white"
+                          border="1px solid"
+                          borderColor="orange.300"
+                        >
+                          <AlertIcon color="orange.400" />
+                          <AlertTitle fontSize="sm" color="orange.600">
+                            Non-stackable freight may be subject to a higher
+                            rate on the final invoice
+                          </AlertTitle>
+                        </Alert>
+                      )}
+                    </Box>
+                  </Flex>
                   <Flex alignItems="center" mb="16px">
                     <FormLabel
                       display="flex"
@@ -2006,7 +2006,37 @@ export default function QuoteEdit() {
                       <Button
                         variant="primary"
                         isDisabled={isProcessBooking}
+                        // onClick={() => {
+                        //   handleProcessAndBook();
+                        // }}
                         onClick={() => {
+                          if (!requiredDateAt) {
+                            toast({
+                              title: "Please select required date",
+                              status: "error",
+                              duration: 3000,
+                            });
+                            return;
+                          }
+
+                          const selectedDate = new Date(requiredDateAt);
+                          const today = new Date();
+
+                          // 🔥 normalize (remove time part)
+                          today.setHours(0, 0, 0, 0);
+                          selectedDate.setHours(0, 0, 0, 0);
+
+                          // ❌ block past + today
+                          if (selectedDate <= today) {
+                            toast({
+                              title: `Please select a future date in "Date Required" field for booking`,
+                              status: "error",
+                              duration: 3000,
+                            });
+                            return;
+                          }
+
+                          // ✅ only future allowed
                           handleProcessAndBook();
                         }}
                       >
