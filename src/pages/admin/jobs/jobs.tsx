@@ -52,7 +52,6 @@ import {
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import dynamic from "next/dynamic";
-import Router from "next/router";
 import { destroyCookie, parseCookies, setCookie } from "nookies";
 import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { downloadExcel } from "react-export-table-to-excel";
@@ -891,16 +890,6 @@ export default function JobIndex({}: // initialLoadOnly = false,
           columns={{ sm: 1 }}
           spacing={{ base: "20px", xl: "20px" }}
         >
-         { isAdmin && (
-          <Button
-            onClick={() => Router.push("/admin/jobs/drivercheck")}
-            className="!h-[30px] ml-2"
-            variant="smallGreySquare"
-            bg={"none"}
-          >
-            driver check
-          </Button>
-          )}
           <JobHeader
             isAdmin={isAdmin}
             isCompany={isCompany}

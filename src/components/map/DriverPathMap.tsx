@@ -43,7 +43,7 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       center: optimizedPoints[0],
       zoom: 14,
       gestureHandling: "greedy",
-        mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || undefined
+      mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || undefined,
     });
 
     // ✅ Fit bounds
@@ -95,11 +95,6 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     // =========================
     // 🎯 Moving Marker
     // =========================
-    const movingDiv = document.createElement("div");
-    movingDiv.style.width = "10px";
-    movingDiv.style.height = "10px";
-    movingDiv.style.background = "red";
-    movingDiv.style.borderRadius = "50%";
 
     const movingContainer = document.createElement("div");
 
@@ -108,12 +103,21 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     movingContainer.style.alignItems = "center";
 
     const label = document.createElement("div");
-    label.style.background = "red";
-    label.style.color = "white";
+    label.style.background = "white";
+    label.style.color = "black";
     label.style.padding = "4px 6px";
     label.style.borderRadius = "6px";
     label.style.fontSize = "12px";
     label.style.marginBottom = "4px";
+
+    // 🔻 pointer triangle (optional nice touch)
+    const arrow = document.createElement("div");
+    arrow.style.width = "0";
+    arrow.style.height = "0";
+    arrow.style.borderLeft = "5px solid transparent";
+    arrow.style.borderRight = "5px solid transparent";
+    arrow.style.borderTop = "6px solid #2563eb";
+    arrow.style.marginTop = "-2px";
 
     const dot = document.createElement("div");
     dot.style.width = "10px";
@@ -122,6 +126,7 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     dot.style.borderRadius = "50%";
 
     movingContainer.appendChild(label);
+    movingContainer.appendChild(arrow);
     movingContainer.appendChild(dot);
 
     const movingMarker = new google.maps.marker.AdvancedMarkerElement({
@@ -130,10 +135,10 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
       content: movingContainer,
     });
 
-    const playbackInfo = new google.maps.InfoWindow();
+    // const playbackInfo = new google.maps.InfoWindow();
 
     // ✅ OPEN ONLY ONCE (fix blinking)
-    playbackInfo.open(map, movingMarker);
+    // playbackInfo.open(map, movingMarker);
 
     // =========================
     // 🎯 Hover (optimized)
@@ -215,9 +220,9 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
 
       // 🔥 NO BLINK (only update)
       label.innerHTML = `
-          <b>${p.time}</b><br/>
-          ${p.suburb ?? ""}
-        `;
+        <div style="font-size:18px; font-weight: bold;">${p.time}</div>
+        <div style="font-size:18px; opacity:0.9;">${p.suburb ?? ""}</div>
+      `;
 
       // 📍 keep in view
       const bounds = map.getBounds();
@@ -252,11 +257,16 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
     restartPlaybackRef.current = restartPlayback;
 
     // startPlayback();
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       startPlayback();
     }, 500);
 
-    return () => pausePlayback();
+    return () => {
+      clearTimeout(timer);
+      pausePlayback();
+    };
+
+    // return () => pausePlayback();
   }, [points]);
 
   return (
@@ -287,9 +297,9 @@ export default function DriverPathMap({ points }: { points: Point[] }) {
           <label style={{ fontSize: "12px" }}>Speed: {speed}x</label>
           <input
             type="range"
-            min="0.5"
+            min="0.1"
             max="5"
-            step="0.5"
+            step="0.1"
             value={speed}
             onChange={(e) => setSpeed(Number(e.target.value))}
           />

@@ -1,0 +1,171 @@
+"use client";
+
+import { useLazyQuery } from "@apollo/client";
+import { Box, Button, Text } from "@chakra-ui/react";
+import DriverPathMap from "components/map/DriverPathMap";
+import { DRIVER_LOGS_QUERY } from "graphql/route";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import {  useState } from "react";
+
+type Point = {
+  lat: number;
+  lng: number;
+  time: string;
+  suburb?: string;
+};
+
+export default function DriverPathPage() {
+  const router = useRouter();
+  const [fromTime, setFromTime] = useState("05:00"); // 5 AM
+  const [toTime, setToTime] = useState("18:00"); // 6 PM
+  const [points, setPoints] = useState<Point[]>([]);
+  const [driverId, setDriverId] = useState("1216");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const [getLogs, { loading }] = useLazyQuery(DRIVER_LOGS_QUERY, {
+    fetchPolicy: "network-only",
+    onCompleted: (data) => {
+      const logs = data?.driverLogsList?.data ?? [];
+
+      if (!logs.length) {
+        setPoints([]);
+        setErrorMsg(
+          "Driver ID may be invalid or no records found for the selected date.",
+        );
+        return;
+      }
+
+      setErrorMsg("");
+
+      const sorted = [...logs].sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+
+      const formatted: Point[] = sorted.map((log: any) => ({
+        lat: log.lat,
+        lng: log.lng,
+        time: moment(log.created_at_au).format("hh:mm A"),
+        suburb: log.suburb,
+      }));
+
+      setPoints(formatted);
+    },
+  });
+const handleLoad = () => {
+  if (!driverId) return alert("Enter driver ID");
+
+  const today = moment().format("YYYY-MM-DD");
+
+  if (fromTime > toTime) {
+    return alert("From time cannot be greater than To time");
+  }
+
+  setErrorMsg("");
+
+  getLogs({
+    variables: {
+      driver_id: Number(driverId),
+      first: 10000,
+      page: 1,
+      between_at: {
+        from_at: `${today} ${fromTime}:00`,
+        to_at: `${today} ${toTime}:59`,
+      },
+    },
+  });
+};
+
+  return (
+    <div style={{ position: "relative" }}>
+      {/* 🔥 TOP CONTROL PANEL */}
+      <Box
+        position="absolute"
+        top="16px"
+        left="16px"
+        zIndex="1000"
+        bg="white"
+        p="14px"
+        borderRadius="10px"
+        boxShadow="lg"
+        display="flex"
+        flexDirection="column"
+        gap="10px"
+        minW="320px"
+      >
+        {/* 🔙 Back Button */}
+        <Button size="sm" onClick={() => router.back()}>
+          ← Back
+        </Button>
+
+        {/* Driver ID */}
+        <Box>
+          <Text fontSize="12px" mb="4px" color="gray.600">
+            Driver ID
+          </Text>
+          <input
+            value={driverId}
+            onChange={(e) => setDriverId(e.target.value)}
+            style={{
+              padding: "6px",
+              width: "100%",
+              border: "1px solid #ccc",
+              borderRadius: "6px",
+            }}
+          />
+        </Box>
+
+        {/* Date Picker */}
+        <Box>
+          <Text fontSize="12px" mb="4px" color="gray.600">
+            Time Range (Today)
+          </Text>
+
+          <div style={{ display: "flex", gap: "6px" }}>
+            <input
+              type="time"
+              value={fromTime}
+              onChange={(e) => setFromTime(e.target.value)}
+              style={{
+                padding: "6px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            />
+
+            <input
+              type="time"
+              value={toTime}
+              onChange={(e) => setToTime(e.target.value)}
+              style={{
+                padding: "6px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+            />
+          </div>
+
+          <Text fontSize="11px" color="gray.400" mt="2px">
+            Default: 5:00 AM – 6:00 PM
+          </Text>
+        </Box>
+
+        {/* Load Button */}
+        <Button colorScheme="blue" onClick={handleLoad} isLoading={loading}>
+          Load Route
+        </Button>
+
+        {/* Error Message */}
+        {errorMsg && (
+          <Text fontSize="12px" color="red.500">
+            {errorMsg}
+          </Text>
+        )}
+      </Box>
+
+      {/* 🗺️ MAP */}
+      {points.length > 0 && <DriverPathMap points={points} />}
+    </div>
+  );
+}

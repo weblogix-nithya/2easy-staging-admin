@@ -41,6 +41,7 @@ import { australianStates, getMapIcon, jobTypes, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import moment from "moment";
+import Router from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -56,7 +57,7 @@ import { RootState } from "store/store";
 export default function JobAllocationIndex() {
   let menuBg = useColorModeValue("white", "navy.800");
   const state = useSelector((state: RootState) => state.user.state);
-
+  const { isAdmin } = useSelector((state: RootState) => state.user);
   const rightSideBarJob = useSelector(
     (state: RootState) => state.rightSideBar.job,
   );
@@ -492,6 +493,17 @@ export default function JobAllocationIndex() {
               <Spacer />
               {/* Vehicle and driver selector */}
               <Center>
+                <Box p="2" width="350px" minW={0}>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => Router.push("/admin/job-allocations/drivertrack")}
+                      variant="primary"
+                      className="mr-2"
+                    >
+                      Track  Driver
+                    </Button>
+                  )}
+                </Box>
                 <Box p="2" width="250px" minW={0}>
                   <Select
                     isMulti={true}
