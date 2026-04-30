@@ -42,6 +42,10 @@ export const GET_DRIVERS_QUERY = gql`
         license_no
         license_state
         license_expire_at
+        insurance_name
+        insurance_number
+        insurance_expire_at
+        earning_toggle
         is_inducted
         is_vehicle_roadworthy
         is_tailgated
@@ -219,6 +223,10 @@ export const GET_DRIVER_QUERY = gql`
       license_no
       license_state
       license_expire_at
+      insurance_name
+      insurance_number
+      insurance_expire_at
+      earning_toggle
       is_inducted
       is_vehicle_roadworthy
       is_tailgated
@@ -262,6 +270,13 @@ export const GET_DRIVER_QUERY = gql`
         collection_name
         file_name
       }
+      insurance_media {
+        id
+        name
+        downloadable_url
+        collection_name
+        file_name
+      }
       vehicle_media {
         id
         name
@@ -297,6 +312,10 @@ export const CREATE_DRIVER_MUTATION = gql`
       license_no
       license_state
       license_expire_at
+      insurance_name
+      insurance_number
+      insurance_expire_at
+      earning_toggle
       is_inducted
       is_vehicle_roadworthy
       is_tailgated
@@ -361,6 +380,10 @@ export const UPDATE_DRIVER_MUTATION = gql`
       license_no
       license_state
       license_expire_at
+      insurance_name
+      insurance_number
+      insurance_expire_at
+      earning_toggle
       is_inducted
       is_vehicle_roadworthy
       is_tailgated
@@ -465,6 +488,10 @@ export interface UpdateDriverInput {
   address_country: string;
   lat: number;
   lng: number;
+  insurance_name: string;
+  insurance_number: string;
+  insurance_expire_at: Date;
+  earning_toggle: boolean;
 }
 
 export interface CreateDriverInput {
@@ -523,7 +550,11 @@ export interface CreateDriverInput {
   address_country: string;
   lat: number;
   lng: number;
-}
+  insurance_name: string;
+  insurance_number: string;
+  insurance_expire_at: string;
+  earning_toggle: boolean;
+};
 
 export type Driver = {
   id: number | null;
@@ -584,9 +615,14 @@ export type Driver = {
   lng: number | null;
   media_url: string | null;
   license_media: any[] | null;
+  insurance_media: any[] | null;
   vehicle_media: any[] | null;
   remaining_time: string | null;
   current_occupied_capacity: string | null;
+  insurance_name: string | null;
+  insurance_number: string | null;
+  insurance_expire_at: string | null;
+  earning_toggle: boolean | null;
 };
 
 export const defaultDriver: Driver = {
@@ -649,6 +685,11 @@ export const defaultDriver: Driver = {
   media_url: "",
   license_media: [],
   vehicle_media: [],
+  insurance_media: [],
   remaining_time: "",
   current_occupied_capacity: "",
+  insurance_name: "",
+  insurance_number: "",
+  insurance_expire_at: "",
+  earning_toggle: false,
 };

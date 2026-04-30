@@ -168,13 +168,14 @@ function DriverEdit() {
     },
   });
 
-  const [handleUpdateDriver, {}] = useMutation(UPDATE_DRIVER_MUTATION, {
+  const [handleUpdateDriver, { }] = useMutation(UPDATE_DRIVER_MUTATION, {
     variables: {
       input: {
         ...driver,
         media_url: undefined,
         full_name: undefined,
         license_media: undefined,
+        insurance_media: undefined,
         vehicle_media: undefined,
         remaining_time: undefined,
         current_occupied_capacity: undefined,
@@ -193,7 +194,7 @@ function DriverEdit() {
     },
   });
 
-  const [handleDeleteDriver, {}] = useMutation(DELETE_DRIVER_MUTATION, {
+  const [handleDeleteDriver, { }] = useMutation(DELETE_DRIVER_MUTATION, {
     variables: {
       id: id,
     },
@@ -646,7 +647,7 @@ function DriverEdit() {
                         size="lg"
                       />
                     </Flex>
-                     <Flex alignItems="center" mb="16px">
+                    <Flex alignItems="center" mb="16px">
                       <FormLabel
                         display="flex"
                         mb="0"
@@ -970,26 +971,26 @@ function DriverEdit() {
                         {
                           // loop to show images
                           driver.license_media &&
-                            driver.license_media.map((image, index) => (
-                              <Flex
-                                key={index}
-                                alignItems="center"
-                                justifyContent="center"
-                                width="130px"
-                                height="130px"
-                                border="1px solid #E2E8F0"
-                                borderRadius="4px"
-                                mr="4"
-                              >
-                                <Image
-                                  src={image.downloadable_url}
-                                  alt={image.name}
-                                  width="100%"
-                                  height="100%"
-                                  objectFit="cover"
-                                />
-                              </Flex>
-                            ))
+                          driver.license_media.map((image, index) => (
+                            <Flex
+                              key={index}
+                              alignItems="center"
+                              justifyContent="center"
+                              width="130px"
+                              height="130px"
+                              border="1px solid #E2E8F0"
+                              borderRadius="4px"
+                              mr="4"
+                            >
+                              <Image
+                                src={image.downloadable_url}
+                                alt={image.name}
+                                width="100%"
+                                height="100%"
+                                objectFit="cover"
+                              />
+                            </Flex>
+                          ))
                         }
                         <FileInput
                           width="130px"
@@ -1005,7 +1006,173 @@ function DriverEdit() {
 
                     <Divider />
 
+                    <h3 className="mt-6 mb-4">Insurance Details</h3>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Insurance Name
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="text"
+                        name="insurance_name"
+                        value={driver.insurance_name}
+                        onChange={(e) =>
+                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Insurance Number
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="text"
+                        name="insurance_number"
+                        value={driver.insurance_number}
+                        onChange={(e) =>
+                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Expire
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="date"
+                        name="insurance_expire_at"
+                        value={driver.insurance_expire_at}
+                        onChange={(e) =>
+                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
+
+                    {/* Photo of insurance - license maathiri */}
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Photo of insurance
+                      </FormLabel>
+                      <Flex width="100%">
+                        {driver.insurance_media &&
+                          driver.insurance_media.map((image, index) => (
+                            <Flex
+                              key={index}
+                              alignItems="center"
+                              justifyContent="center"
+                              width="130px"
+                              height="130px"
+                              border="1px solid #E2E8F0"
+                              borderRadius="4px"
+                              mr="4"
+                            >
+                              <Image
+                                src={image.downloadable_url}
+                                alt={image.name}
+                                width="100%"
+                                height="100%"
+                                objectFit="cover"
+                              />
+                            </Flex>
+                          ))}
+                        <FileInput
+                          width="130px"
+                          height="130px"
+                          entity="Driver"
+                          description="Upload insurance"
+                          entityId={driver.id}
+                          onUpload={() => getDriver()}
+                          collection_name="insurance"
+                        ></FileInput>
+                      </Flex>
+                    </Flex>
+
+                    <Divider />
+
                     <h3 className="mt-6 mb-4">Admin</h3>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Do you want to show earning price on mobile app?
+                      </FormLabel>
+                      <Flex width="100%">
+                        <RadioGroup
+                          defaultValue={driver.earning_toggle ? "1" : "0"}
+                          onChange={(e) => {
+                            setDriver({
+                              ...driver,
+                              earning_toggle: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row">
+                            <Radio value="1">Yes</Radio>
+                            <Radio value="0">No</Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
+                    </Flex>
 
                     <Flex alignItems="center" mb="16px">
                       <FormLabel
@@ -1618,26 +1785,26 @@ function DriverEdit() {
                         {
                           // loop to show images
                           driver.vehicle_media &&
-                            driver.vehicle_media.map((image, index) => (
-                              <Flex
-                                key={index}
-                                alignItems="center"
-                                justifyContent="center"
-                                width="130px"
-                                height="130px"
-                                border="1px solid #E2E8F0"
-                                borderRadius="4px"
-                                mr="4"
-                              >
-                                <Image
-                                  src={image.downloadable_url}
-                                  alt={image.name}
-                                  width="100%"
-                                  height="100%"
-                                  objectFit="cover"
-                                />
-                              </Flex>
-                            ))
+                          driver.vehicle_media.map((image, index) => (
+                            <Flex
+                              key={index}
+                              alignItems="center"
+                              justifyContent="center"
+                              width="130px"
+                              height="130px"
+                              border="1px solid #E2E8F0"
+                              borderRadius="4px"
+                              mr="4"
+                            >
+                              <Image
+                                src={image.downloadable_url}
+                                alt={image.name}
+                                width="100%"
+                                height="100%"
+                                objectFit="cover"
+                              />
+                            </Flex>
+                          ))
                         }
                         <FileInput
                           width="130px"

@@ -11,6 +11,9 @@ import {
   Grid,
   GridItem,
   Input,
+  Radio,
+  RadioGroup,
+  Stack,
   Textarea,
   useColorModeValue,
   useToast,
@@ -55,7 +58,7 @@ function DriverCreate() {
     },
   });
 
-  const [handleDriverCreate, {}] = useMutation(CREATE_DRIVER_MUTATION, {
+  const [handleDriverCreate, { }] = useMutation(CREATE_DRIVER_MUTATION, {
     variables: {
       input: {
         ...driver,
@@ -63,6 +66,7 @@ function DriverCreate() {
         media_url: undefined,
         full_name: undefined,
         license_media: undefined,
+        insurance_media: undefined,
         vehicle_media: undefined,
         remaining_time: undefined,
         current_occupied_capacity: undefined,
@@ -722,9 +726,133 @@ function DriverCreate() {
                       />
                     </Flex>
 
+                    {/* After the License Details Divider and before Admin section */}
+
+                    <Divider />
+
+                    <h3 className="mt-6 mb-4">Insurance Details</h3>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Insurance Name
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="text"
+                        name="insurance_name"
+                        value={driver.insurance_name}
+                        onChange={(e) =>
+                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Insurance Number
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="text"
+                        name="insurance_number"
+                        value={driver.insurance_number}
+                        onChange={(e) =>
+                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Expire
+                      </FormLabel>
+                      <Input
+                        isRequired={true}
+                        variant="main"
+                        fontSize="sm"
+                        ms={{ base: "0px", md: "0px" }}
+                        type="date"
+                        name="insurance_expire_at"
+                        value={driver.insurance_expire_at}
+                        onChange={(e) =>
+                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                        }
+                        placeholder=""
+                        mb="0"
+                        fontWeight="500"
+                        size="lg"
+                      />
+                    </Flex>
+
                     <Divider />
 
                     <h3 className="mt-6 mb-4">Admin</h3>
+
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Do you want to show earning price on mobile app?
+                      </FormLabel>
+                      <Flex width="100%">
+                        <RadioGroup
+                          defaultValue={driver.earning_toggle ? "1" : "0"}
+                          onChange={(e) => {
+                            setDriver({
+                              ...driver,
+                              earning_toggle: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row">
+                            <Radio value="1">Yes</Radio>
+                            <Radio value="0">No</Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
+                    </Flex>
+
+
 
                     <Flex alignItems="center" mb="16px">
                       <FormLabel
