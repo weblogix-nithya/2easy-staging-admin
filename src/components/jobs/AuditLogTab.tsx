@@ -4,6 +4,7 @@ import PaginationTable from "components/table/PaginationTable";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
 import { GET_JOB_LOGS_QUERY } from "graphql/job";
 import { GET_JOB_STATUSES_QUERY } from "graphql/jobStatus";
+import moment from "moment";
 import { useRouter } from "next/router";
 import React, { useMemo, useState } from "react";
 
@@ -13,12 +14,14 @@ export default function InvoiceTab(props: {
   activeTab: any;
 }) {
   const { jobObjectId, activeTab } = props;
-  console.log(jobObjectId, activeTab, "jobObjectId,t");
+  // console.log(jobObjectId, activeTab, "jobObjectId,t");
   const router = useRouter();
   const [_queryPageIndex, setQueryPageIndex] = useState(0);
   const [_queryPageSize, setQueryPageSize] = useState(100);
   const [jobStatuses, setJobStatuses] = useState<Record<number, string>>({});
-  const [invoiceStatuses, setInvoiceStatuses] = useState<Record<number, string>>({});
+  const [invoiceStatuses, setInvoiceStatuses] = useState<
+    Record<number, string>
+  >({});
 
   const columns = useMemo(
     () => [
@@ -52,34 +55,47 @@ export default function InvoiceTab(props: {
         falseLabel: "No",
       },
 
-      { Header: "Date", accessor: "created_at" },
+      {
+        Header: "Date",
+        accessor: "created_at",
+        Cell: ({ value }: any) => {
+          if (!value) return "-";
+
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+          return `${moment
+            .utc(value, "YYYY-MM-DD HH:mm:ss")
+            .local()
+            .format("DD MMM YYYY, hh:mm A")} (${tz})`;
+        },
+      },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [jobStatuses],
   );
 
   const formatValue = (field: string, value: any) => {
-  if (value === null || value === undefined) return "-";
+    if (value === null || value === undefined) return "-";
 
-  if (field?.includes("job_status_id")) {
-    return jobStatuses[Number(value)] || `Unknown (${value})`;
-  }
+    if (field?.includes("job_status_id")) {
+      return jobStatuses[Number(value)] || `Unknown (${value})`;
+    }
 
     if (field?.includes("invoice_status_id")) {
-    return invoiceStatuses[Number(value)] || `Unknown (${value})`;
-  }
-  return value;
+      return invoiceStatuses[Number(value)] || `Unknown (${value})`;
+    }
+    return value;
   };
 
-    useQuery(GET_INVOICE_STATUSES_QUERY, {
-      variables: {
-        query: "",
-        page: 1,
-        first: 100,
-        orderByColumn: "id",
-        orderByOrder: "ASC",
-      },
-      onCompleted: (data) => {
+  useQuery(GET_INVOICE_STATUSES_QUERY, {
+    variables: {
+      query: "",
+      page: 1,
+      first: 100,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
+    },
+    onCompleted: (data) => {
       const map = data?.invoiceStatuses?.data?.reduce(
         (acc: Record<number, string>, item: any) => {
           acc[Number(item.id)] = item.name;
@@ -90,7 +106,7 @@ export default function InvoiceTab(props: {
 
       setInvoiceStatuses(map);
     },
-    });
+  });
 
   useQuery(GET_JOB_STATUSES_QUERY, {
     variables: {
