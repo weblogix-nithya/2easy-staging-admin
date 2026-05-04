@@ -6,7 +6,7 @@ import DriverPathMap from "components/map/DriverPathMap";
 import { DRIVER_LOGS_QUERY } from "graphql/route";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import {  useState } from "react";
+import { useEffect, useState } from "react";
 
 type Point = {
   lat: number;
@@ -22,6 +22,12 @@ export default function DriverPathPage() {
   const [points, setPoints] = useState<Point[]>([]);
   const [driverId, setDriverId] = useState("1216");
   const [errorMsg, setErrorMsg] = useState("");
+  const [timezone, setTimezone] = useState("");
+
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setTimezone(tz);
+  }, []);
 
   const [getLogs, { loading }] = useLazyQuery(DRIVER_LOGS_QUERY, {
     fetchPolicy: "network-only",
@@ -46,36 +52,40 @@ export default function DriverPathPage() {
       const formatted: Point[] = sorted.map((log: any) => ({
         lat: log.lat,
         lng: log.lng,
-        time: moment(log.created_at_au).format("hh:mm A"),
+        time: moment
+          .utc(log.created_at, "YYYY-MM-DD HH:mm:ss")
+          .local()
+          .format("hh:mm A"),
         suburb: log.suburb,
       }));
 
       setPoints(formatted);
     },
   });
-const handleLoad = () => {
-  if (!driverId) return alert("Enter driver ID");
+  const handleLoad = () => {
+    if (!driverId) return alert("Enter driver ID");
 
-  const today = moment().format("YYYY-MM-DD");
+    const today = moment().format("YYYY-MM-DD");
 
-  if (fromTime > toTime) {
-    return alert("From time cannot be greater than To time");
-  }
+    if (fromTime > toTime) {
+      return alert("From time cannot be greater than To time");
+    }
 
-  setErrorMsg("");
+    setErrorMsg("");
 
-  getLogs({
-    variables: {
-      driver_id: Number(driverId),
-      first: 10000,
-      page: 1,
-      between_at: {
-        from_at: `${today} ${fromTime}:00`,
-        to_at: `${today} ${toTime}:59`,
+    getLogs({
+      variables: {
+        driver_id: Number(driverId),
+        first: 10000,
+        page: 1,
+        between_at: {
+          from_at: `${today} ${fromTime}:00`,
+          to_at: `${today} ${toTime}:59`,
+          timezone: timezone,
+        },
       },
-    },
-  });
-};
+    });
+  };
 
   return (
     <div style={{ position: "relative" }}>
