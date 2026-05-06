@@ -1443,7 +1443,7 @@ function DriverEdit() {
                         onChange={(e) =>
                           setDriver({
                             ...driver,
-                            [e.target.name]: parseInt(e.target.value),
+                            [e.target.name]: parseFloat(e.target.value),
                           })
                         }
                         placeholder=""
@@ -1475,9 +1475,9 @@ function DriverEdit() {
                           name="no_max_capacity"
                           value={driver.no_max_capacity}
                           onChange={(e) =>
-                            setDriver({
+                           setDriver({
                               ...driver,
-                              [e.target.name]: parseInt(e.target.value),
+                              [e.target.name]: parseFloat(e.target.value),
                             })
                           }
                           placeholder=""
@@ -1524,7 +1524,7 @@ function DriverEdit() {
                           onChange={(e) =>
                             setDriver({
                               ...driver,
-                              [e.target.name]: parseInt(e.target.value),
+                              [e.target.name]: parseFloat(e.target.value),
                             })
                           }
                           placeholder=""
