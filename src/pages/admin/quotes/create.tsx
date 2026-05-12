@@ -96,29 +96,46 @@ export default function QuoteCreate() {
     }
   };
 
-  useEffect(() => {
-    if (isAdmin) return;
-    if (isCompanyAdmin) {
-      setQuote({
-        ...quote,
-        // customer_name: userName,
-        // customer_id: customerId,
-        company_id: companyId,
-        // ...(companyId ? {  } : {}),
-      });
-    } else {
-      setQuote({
-        ...quote,
-        customer_name: userName,
-        customer_id: customerId,
-        company_id: companyId,
-        // ...(companyId ? { company_id: companyId } : {}),
-      });
-    }
-    // console.log(isCustomer, companyId, "iscust,comp");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId, isCustomer]);
+  // useEffect(() => {
+  //   if (isAdmin) return;
+  //   if (isCompanyAdmin) {
+  //     setQuote({
+  //       ...quote,
+  //       // customer_name: userName,
+  //       // customer_id: customerId,
+  //       company_id: companyId,
+  //       // ...(companyId ? {  } : {}),
+  //     });
+  //   } else {
+  //     setQuote({
+  //       ...quote,
+  //       customer_name: userName,
+  //       customer_id: customerId,
+  //       company_id: companyId,
+  //       // ...(companyId ? { company_id: companyId } : {}),
+  //     });
+  //   }
+  //   // console.log(isCustomer, companyId, "iscust,comp");
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [companyId, isCustomer]);
 
+  useEffect(() => {
+  if (isAdmin) return;
+
+  if (isCompanyAdmin) {
+    setQuote((prev) => ({
+      ...prev,
+      company_id: companyId,
+    }));
+  } else {
+    setQuote((prev) => ({
+      ...prev,
+      company_id: companyId,
+      customer_id: customerId,
+      customer_name: userName,
+    }));
+  }
+}, [isAdmin, isCompanyAdmin, companyId, customerId, userName]);
   useQuery(GET_QUOTE_CATEGORIES_QUERY, {
     onCompleted: (data) => {
       setCategories([]);
@@ -197,7 +214,7 @@ export default function QuoteCreate() {
       first: 1000,
       orderByColumn: "id",
       orderByOrder: "ASC",
-      company_id: undefined,
+      company_id: isAdmin ? undefined : companyId || undefined,
     },
     skip: !isAdmin,
     onCompleted: (data) => {
@@ -206,65 +223,100 @@ export default function QuoteCreate() {
     },
   });
 
+  // useEffect(() => {
+  //   if (quote.company_id && isAdmin) {
+  //     setCustomerOptions([]); // Clear previous options
+  //     getCustomers({ query: "", company_id: quote.company_id }).then(
+  //       ({ data }) => {
+  //         if (data?.customers?.data) {
+  //           setCustomerOptions(
+  //             formatToSelect(
+  //               data.customers.data.filter(
+  //                 (customer: { company_id: number }) =>
+  //                   customer.company_id == quote.company_id,
+  //               ),
+  //               "id",
+  //               "full_name",
+  //             ),
+  //           );
+  //           console.log(
+  //             setCustomerOptions(
+  //               formatToSelect(
+  //                 data.customers.data.filter(
+  //                   (customer: { company_id: number }) =>
+  //                     customer.company_id == quote.company_id,
+  //                 ),
+  //                 "id",
+  //                 "full_name",
+  //               ),
+  //             ),
+  //             "l",
+  //           );
+  //         }
+  //       },
+  //     );
+  //   }
+  //   if (!isAdmin) {
+  //     setCustomerOptions([]);
+
+  //     getCustomers({ query: "", company_id: companyId }).then(({ data }) => {
+  //       if (data?.customers?.data) {
+  //         setCustomerOptions(
+  //           formatToSelect(
+  //             data.customers.data, // ✅ already filtered from API
+  //             "id",
+  //             "full_name",
+  //           ),
+  //         );
+
+  //         console.log(
+  //           formatToSelect(
+  //             data.customers.data, // ✅ already filtered from API
+  //             "id",
+  //             "full_name",
+  //           ),
+  //           "l",
+  //         );
+  //       }
+  //     });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [quote.company_id, getCustomers]);
+
   useEffect(() => {
-    if (quote.company_id && isAdmin) {
-      setCustomerOptions([]); // Clear previous options
-      getCustomers({ query: "", company_id: quote.company_id }).then(
-        ({ data }) => {
-          if (data?.customers?.data) {
-            setCustomerOptions(
-              formatToSelect(
-                data.customers.data.filter(
-                  (customer: { company_id: number }) =>
-                    customer.company_id === quote.company_id,
-                ),
-                "id",
-                "full_name",
-              ),
-            );
-            console.log(
-              setCustomerOptions(
-                formatToSelect(
-                  data.customers.data.filter(
-                    (customer: { company_id: number }) =>
-                      customer.company_id === quote.company_id,
-                  ),
-                  "id",
-                  "full_name",
-                ),
-              ),
-              "l",
-            );
-          }
-        },
-      );
-    }
-    if (!isAdmin) {
+  // Admin: fetch customers when company changes
+  if (isAdmin) {
+    if (!quote.company_id) {
       setCustomerOptions([]);
-
-      getCustomers({ query: "", company_id: companyId }).then(({ data }) => {
-        if (data?.customers?.data) {
-          setCustomerOptions(
-            formatToSelect(
-              data.customers.data, // ✅ already filtered from API
-              "id",
-              "full_name",
-            ),
-          );
-
-          console.log(
-            formatToSelect(
-              data.customers.data, // ✅ already filtered from API
-              "id",
-              "full_name",
-            ),
-            "l",
-          );
-        }
-      });
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quote.company_id, getCustomers]);
+
+    getCustomers({
+      query: "",
+      company_id: quote.company_id,
+    }).then(({ data }) => {
+      if (data?.customers?.data) {
+        setCustomerOptions(
+          formatToSelect(data.customers.data, "id", "full_name"),
+        );
+      } else {
+        setCustomerOptions([]);
+      }
+    });
+
+    return;
+  }
+
+  // Non-admin: no dropdown options list needed
+  // just bind stored customer/company into quote
+  if (companyId) {
+    setQuote((prev) => ({
+      ...prev,
+      company_id: companyId,
+      ...(customerId ? { customer_id: customerId } : {}),
+    }));
+  }
+}, [isAdmin, quote.company_id, companyId, customerId, getCustomers]);
 
   useQuery(GET_COMPANYS_QUERY, {
     variables: {
@@ -407,25 +459,11 @@ export default function QuoteCreate() {
                   />
                 ) : (
                   <CustomInputField
-                  isSelect={true}
                     label="Customer Name"
-                    optionsArray={customerOptions}
                     placeholder=""
                     name="customer_name"
-                    // value={quote.customer_name}
-                    value={
-                      customerOptions.find(
-                        (entity) => entity.value == quote.customer_id,
-                      ) || { value: null, label: "" }
-                    }
-                    onChange={(e) =>
-                      setQuote({
-                        ...quote,
-                        customer_id: e.value || null,
-                        customer_name: e.label || null,
-                      })
-                    }
-                    // isDisabled={true}
+                    value={quote.customer_name || userName || ""}
+                    isDisabled={true}
                   />
                 )}
                 {isAdmin && (
