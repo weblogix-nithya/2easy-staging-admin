@@ -570,7 +570,9 @@ export default function QuoteEdit() {
       quote_url: undefined,
       company_id: quote.company_id,
       customer_id: quote.customer_id,
-      date_required: quote.date_required,
+      // date_required: quote.date_required,
+      date_required: formatDateTimeToDB(requiredDateAt, dropAt),
+      ready_at: formatDateTimeToDB(requiredDateAt, readyAt),
       quote_items: undefined,
       media: undefined,
       is_approved: undefined,
@@ -2225,6 +2227,24 @@ export default function QuoteEdit() {
                           ) {
                             toast({
                               title: "Please add at least one delivery address",
+                              status: "error",
+                              duration: 3000,
+                            });
+                            return;
+                          }
+
+                          // ✅ NEW: validate each destination address
+                          const hasInvalidDestination = quoteDestinations.some(
+                            (dest) =>
+                              !dest?.address ||
+                              dest.address.trim() === "" ||
+                              !dest?.lat ||
+                              !dest?.lng,
+                          );
+
+                          if (hasInvalidDestination) {
+                            toast({
+                              title: "Please complete all delivery addresses",
                               status: "error",
                               duration: 3000,
                             });
