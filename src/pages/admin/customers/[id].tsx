@@ -16,7 +16,8 @@ import {
   Stack,
   Textarea,
   useColorModeValue,
-  useToast} from "@chakra-ui/react";
+  useToast,
+} from "@chakra-ui/react";
 // Font awesome icons
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { faMapLocationDot } from "@fortawesome/free-solid-svg-icons";
@@ -38,7 +39,9 @@ import AdminLayout from "layouts/admin";
 // import debounce from "lodash.debounce";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState} from "react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "store/store";
 
 function CustomerEdit() {
   const toast = useToast();
@@ -49,7 +52,7 @@ function CustomerEdit() {
   const [tabId, setTabId] = useState(0);
   const router = useRouter();
   const { id } = router.query;
-
+  const { isAdmin } = useSelector((state: RootState) => state.user);
   const {
     loading: customerLoading,
     // data: customerData,
@@ -116,9 +119,6 @@ function CustomerEdit() {
   //     setQueryPageIndex(0);
   //   }, 300);
   // }, []);
-
-
-
 
   return (
     <AdminLayout>
@@ -204,7 +204,7 @@ function CustomerEdit() {
                   <Textarea
                     fontSize="sm"
                     name="base_notes"
-                    value={customer.base_notes|| ""}
+                    value={customer.base_notes || ""}
                     onChange={(e) =>
                       setCustomer({
                         ...customer,
@@ -252,7 +252,6 @@ function CustomerEdit() {
                     <FontAwesomeIcon icon={faMapLocationDot} className="mr-1" />
                     Addresses
                   </Button>
-                 
 
                   <Button
                     disabled={tabId == 2}
@@ -311,9 +310,11 @@ function CustomerEdit() {
                       <h2 className="mb-0">Profile</h2>
 
                       <Flex>
-                        <AreYouSureAlert
-                          onDelete={handleDeleteCustomer}
-                        ></AreYouSureAlert>
+                        {isAdmin && (
+                          <AreYouSureAlert
+                            onDelete={handleDeleteCustomer}
+                          ></AreYouSureAlert>
+                        )}
                         <Button
                           fontSize="sm"
                           variant="brand"
@@ -685,10 +686,7 @@ function CustomerEdit() {
                         </RadioGroup>
                       </Flex>
                     </Flex>
-
-                   
-                </FormControl>
-
+                  </FormControl>
                 )}
 
                 {tabId == 1 && (
@@ -706,8 +704,6 @@ function CustomerEdit() {
                     customer={customer}
                   ></CustomerVehicleHiresTab>
                 )}
-
-              
               </GridItem>
             </Grid>
           )}
