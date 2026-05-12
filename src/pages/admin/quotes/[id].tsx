@@ -38,6 +38,8 @@ import QuoteAddressesSection from "components/quote/QuoteAddressesSection";
 import QuoteItemsTable from "components/quote/QuoteItemsTable";
 import PaginationTable from "components/table/PaginationTable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
+import { GET_COMPANYS_QUERY } from "graphql/company";
+import { GET_CUSTOMERS_QUERY } from "graphql/customer";
 import { GET_CUSTOMER_ADDRESSES_QUERY } from "graphql/customerAddress";
 import { GET_ITEM_TYPES_QUERY } from "graphql/itemType";
 import { SEND_CONSIGNMENT_DOCKET } from "graphql/job";
@@ -82,6 +84,7 @@ import {
   today,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
+import debounce from "lodash.debounce";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -98,7 +101,7 @@ export default function QuoteEdit() {
   );
 
   // let menuBg = useColorModeValue("white", "navy.800");
-  const { isAdmin, isCustomer, isCompany } = useSelector(
+  const { isAdmin, isCustomer, companyId, userName, customerId } = useSelector(
     (state: RootState) => state.user,
   );
   const [isUpdatingMedia, setIsUpdatingMedia] = useState(false);
@@ -140,7 +143,16 @@ export default function QuoteEdit() {
     defaultQuoteDestination,
   );
   const [savedAddressesSelect, setSavedAddressesSelect] = useState([]);
+  const [companiesOptions, setCompaniesOptions] = useState([]);
+  const [customerOptions, setCustomerOptions] = useState([]);
+  // const [customers, setCustomers] = useState([]);
 
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const onChangeSearchQuery = useMemo(() => {
+    return debounce((e) => {
+      setDebouncedSearch(e);
+    }, 300);
+  }, []);
   const {
     loading: quoteLoading,
     // data: quoteData,
@@ -155,8 +167,10 @@ export default function QuoteEdit() {
       if (data?.quote == null) {
         router.push("/admin/quotes");
       }
+      console.log(data?.quote, "ss");
       if (!isUpdatingMedia) {
         setQuote({ ...quote, ...data?.quote, media: data?.quote.media });
+
         setRateCardUrl(data?.quote.customer.rate_card_url);
         // quoteDestinations without is_pickup
         let _quoteDestinations = data.quote.quote_destinations.filter(
@@ -202,6 +216,83 @@ export default function QuoteEdit() {
       console.log(error);
     },
   });
+
+  useQuery(GET_COMPANYS_QUERY, {
+    variables: {
+      query: debouncedSearch,
+      page: 1,
+      first: 100,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
+    },
+    onCompleted: (data) => {
+      setCompaniesOptions([]);
+      data.companys.data.map((_entity: any) => {
+        setCompaniesOptions((companys) => [
+          ...companys,
+          {
+            value: parseInt(_entity.id),
+            label: _entity.name,
+          },
+        ]);
+      });
+    },
+  });
+  const {
+    // loading,
+    // error,
+    // data,
+    refetch: getCustomers,
+  } = useQuery(GET_CUSTOMERS_QUERY, {
+    variables: {
+      query: "",
+      page: 1,
+      first: 1000,
+      orderByColumn: "id",
+      orderByOrder: "ASC",
+      company_id: isAdmin ? undefined : companyId || undefined,
+    },
+    skip: !isAdmin,
+    onCompleted: (data) => {
+      setCustomerOptions([]);
+      setCustomerOptions(data.customers?.data);
+    },
+  });
+
+  useEffect(() => {
+    // Admin: fetch customers when company changes
+    if (isAdmin) {
+      if (!quote.company_id) {
+        setCustomerOptions([]);
+        return;
+      }
+
+      getCustomers({
+        query: "",
+        company_id: quote.company_id,
+      }).then(({ data }) => {
+        if (data?.customers?.data) {
+          setCustomerOptions(
+            formatToSelect(data.customers.data, "id", "full_name"),
+          );
+        } else {
+          setCustomerOptions([]);
+        }
+      });
+
+      return;
+    }
+
+    // Non-admin: no dropdown options list needed
+    // just bind stored customer/company into quote
+    if (companyId) {
+      setQuote((prev) => ({
+        ...prev,
+        company_id: companyId,
+        ...(customerId ? { customer_id: customerId } : {}),
+      }));
+    }
+  }, [isAdmin, quote.company_id, companyId, customerId, getCustomers]);
 
   const [handleGenerateQuotePdf] = useMutation(GENERATE_QUOTE_PDF_MUTATION, {
     variables: {
@@ -473,26 +564,51 @@ export default function QuoteEdit() {
   );
   // End of Addresses Function
 
+  const buildUpdateInput = () => ({
+    input: {
+      ...quote,
+      quote_url: undefined,
+      company_id: quote.company_id,
+      customer_id: quote.customer_id,
+      // date_required: quote.date_required,
+      date_required: formatDateTimeToDB(requiredDateAt, dropAt),
+      ready_at: formatDateTimeToDB(requiredDateAt, readyAt),
+      quote_items: undefined,
+      media: undefined,
+      is_approved: undefined,
+      is_quote_send: undefined,
+      pick_up_destination: undefined,
+      quote_destinations: undefined,
+      company: quote.company ? undefined : undefined,
+      customer: quote.customer ? undefined : undefined,
+      job: undefined,
+      quote_status: undefined,
+      quote_line_items: undefined,
+    },
+  });
   const [handleUpdateQuote, { loading: isSaving }] = useMutation(
     UPDATE_QUOTE_MUTATION,
     {
-      variables: {
-        input: {
-          ...quote,
-          quote_url: undefined,
-          quote_items: undefined,
-          media: undefined,
-          is_approved: undefined,
-          is_quote_send: undefined,
-          pick_up_destination: undefined,
-          quote_destinations: undefined,
-          customer: undefined,
-          job: undefined,
-          quote_status: undefined,
-          quote_line_items: undefined,
-          company: undefined,
-        },
-      },
+      // variables: {
+      //   input: {
+      //     ...quote,
+      //     quote_url: undefined,
+      //     company_id: quote.company_id,
+      //     customer_id: quote.customer_id,
+      //     date_required: quote.date_required,
+      //     quote_items: undefined,
+      //     media: undefined,
+      //     is_approved: undefined,
+      //     is_quote_send: undefined,
+      //     pick_up_destination: undefined,
+      //     quote_destinations: undefined,
+      //     // customer: undefined,
+      //     job: undefined,
+      //     quote_status: undefined,
+      //     quote_line_items: undefined,
+      //     // company: undefined,
+      //   },
+      // },
       onCompleted: async (data) => {
         const updatePromises = [];
         //update quote destinations
@@ -701,6 +817,20 @@ export default function QuoteEdit() {
       showGraphQLErrorToast(error);
     },
   });
+  const handleUpdateThenProcessAndBook = async () => {
+    try {
+      const res = await handleUpdateQuote({
+        variables: buildUpdateInput(),
+      });
+      console.log(res, "r");
+      // 🔥 WAIT for your destination + items logic
+      // (since you already handle inside onCompleted)
+
+      handleProcessAndBook();
+    } catch (error) {
+      // showGraphQLErrorToast(error);
+    }
+  };
   const [handleProcessAndBook, { loading: isProcessBooking }] = useMutation(
     PROCESS_QUOTE_AND_BOOK_MUTATION,
     {
@@ -1038,21 +1168,88 @@ export default function QuoteEdit() {
 
                 {/* Fields */}
                 <Box mb="16px">
-                  {!isCompany && (
+                  {isAdmin ? (
                     <CustomInputField
-                      label="Company Name"
+                      isSelect={true}
+                      optionsArray={companiesOptions}
+                      label="Company:"
+                      value={companiesOptions.find(
+                        (entity) => entity.value == quote.company_id,
+                      )}
                       placeholder=""
-                      name="client_name"
-                      value={quote.company?.name}
-                      isDisabled={true}
+                      onInputChange={(e) => {
+                        onChangeSearchQuery(e);
+                      }}
+                      onChange={(e) => {
+                        setQuote({
+                          ...quote,
+                          company_id: e.value || null,
+                        });
+                      }}
+                    />
+                  ) : (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={companiesOptions}
+                      label="Company:"
+                      value={companiesOptions.find(
+                        (entity) => entity.value == companyId,
+                      )}
+                      placeholder=""
+                      isDisabled={!isAdmin}
                     />
                   )}
-                  <CustomInputField
+                  {/* <CustomInputField
                     label="Customer Name"
                     placeholder=""
                     name="client_name"
                     value={quote.customer_name}
-                    isDisabled={true}
+                    // isDisabled={true}
+                  /> */}
+                  {isAdmin ? (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={customerOptions}
+                      label="Customer Name"
+                      placeholder=""
+                      name="customer_name"
+                      value={
+                        customerOptions.find(
+                          (entity) => entity.value == quote.customer_id,
+                        ) || { value: null, label: "" }
+                      }
+                      onChange={(e) =>
+                        setQuote({
+                          ...quote,
+                          customer_id: e.value || null,
+                          customer_name: e.label || null,
+                        })
+                      }
+                    />
+                  ) : (
+                    <CustomInputField
+                      label="Customer Name"
+                      placeholder=""
+                      name="customer_name"
+                      value={quote.customer_name || userName || ""}
+                      isDisabled={true}
+                    />
+                  )}
+                  <CustomInputField
+                    isSelect={true}
+                    optionsArray={categories}
+                    label="Category"
+                    value={categories.find(
+                      (entity) => entity.value == quote.quote_category_id,
+                    )}
+                    placeholder=""
+                    onChange={(e) => {
+                      setQuote({
+                        ...quote,
+                        quote_category_id: e.value || null,
+                      });
+                    }}
+                    isDisabled={!isEnableEdit}
                   />
                   {isAdmin && (
                     <Flex alignItems="center" mb="16px">
@@ -2010,6 +2207,49 @@ export default function QuoteEdit() {
                         //   handleProcessAndBook();
                         // }}
                         onClick={() => {
+                          // ✅ check pickup
+                          if (
+                            !pickUpDestination ||
+                            !pickUpDestination.address
+                          ) {
+                            toast({
+                              title: "Please add pickup address",
+                              status: "error",
+                              duration: 3000,
+                            });
+                            return;
+                          }
+
+                          // ✅ check at least 1 delivery
+                          if (
+                            !quoteDestinations ||
+                            quoteDestinations.length === 0
+                          ) {
+                            toast({
+                              title: "Please add at least one delivery address",
+                              status: "error",
+                              duration: 3000,
+                            });
+                            return;
+                          }
+
+                          // ✅ NEW: validate each destination address
+                          const hasInvalidDestination = quoteDestinations.some(
+                            (dest) =>
+                              !dest?.address ||
+                              dest.address.trim() === "" ||
+                              !dest?.lat ||
+                              !dest?.lng,
+                          );
+
+                          if (hasInvalidDestination) {
+                            toast({
+                              title: "Please complete all delivery addresses",
+                              status: "error",
+                              duration: 3000,
+                            });
+                            return;
+                          }
                           if (!requiredDateAt) {
                             toast({
                               title: "Please select required date",
@@ -2037,7 +2277,7 @@ export default function QuoteEdit() {
                           }
 
                           // ✅ only future allowed
-                          handleProcessAndBook();
+                          handleUpdateThenProcessAndBook();
                         }}
                       >
                         {isProcessBooking
@@ -2072,7 +2312,10 @@ export default function QuoteEdit() {
                         variant="primary"
                         isDisabled={isSaving}
                         onClick={() => {
-                          handleUpdateQuote();
+                          // handleUpdateQuote();
+                          handleUpdateQuote({
+                            variables: buildUpdateInput(),
+                          });
                         }}
                       >
                         {isSaving ? "Saving Changes..." : "Save Changes"}
