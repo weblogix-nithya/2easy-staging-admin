@@ -169,7 +169,30 @@ export function outputDynamicTableBody(
 }
 
 export function getValueFromRow(row: any, columnName: string): any {
-  // Split column name with dot (.) for nested access
+  // 🔥 HANDLE TOTAL PRICE (CUSTOM LOGIC)
+  if (columnName === "job_price_calculation_detail.total") {
+    const subTotal = Number(row?.job?.price_summary?.sub_total || 0);
+    const tax = Number(row?.job?.price_summary?.tax || 0);
+    const total = Number(row?.job?.price_summary?.total || 0);
+    const driverPay = Number(row?.job?.driver_pay || 0);
+    const driverId = row?.job?.driver_id;
+
+    const isAllZero = subTotal === 0 && tax === 0 && total === 0;
+
+    const invoiceText = isAllZero
+      ? "Invoice: 0"
+      : `Invoice: ${subTotal} + ${tax} = $${total}`;
+
+    const driverText =
+      driverId !== null && driverId !== undefined
+        ? `Driver Pay: $${driverPay}`
+        : "";
+
+    // return [invoiceText, driverText].filter(Boolean).join("\n");
+    return `${invoiceText} | ${driverText}`;
+  }
+
+  // 🔥 DEFAULT LOGIC (unchanged)
   const parts = columnName.split(".");
   let currentData = row;
 
@@ -177,9 +200,10 @@ export function getValueFromRow(row: any, columnName: string): any {
     if (currentData && part in currentData) {
       currentData = currentData[part];
     } else {
-      return "-"; // Handle missing nested keys (return default value)
+      return "-";
     }
   }
+
   return currentData;
 }
 
@@ -318,6 +342,27 @@ export const csvColumns: Record<string, (row: any) => any> = {
 
   "job_items.volume": (row) =>
     row?.job?.job_items?.map((i) => i.volume).join(", ") ?? "-",
+  "total_price": (row) => {
+    const subTotal = Number(row?.job?.price_summary?.sub_total || 0);
+    const tax = Number(row?.job?.price_summary?.tax || 0);
+    const total = Number(row?.job?.price_summary?.total || 0);
+    const driverPay = Number(row?.job?.driver_pay || 0);
+    const driverId = row?.job?.driver_id;
+
+    const isAllZero = subTotal === 0 && tax === 0 && total === 0;
+
+    const invoiceText = isAllZero
+      ? "Invoice: 0"
+      : `Invoice: ${subTotal} + ${tax} = $${total}`;
+
+    const driverText =
+      driverId !== null && driverId !== undefined
+        ? `Driver Pay: $${driverPay}`
+        : "";
+
+    // 🔥 combine both in same cell (new line)
+    return [invoiceText, driverText].filter(Boolean).join("\n");
+  },
 };
 
 export function formatCurrency(
