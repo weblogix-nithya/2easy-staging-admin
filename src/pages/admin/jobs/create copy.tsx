@@ -776,6 +776,11 @@ function JobPage() {
               toll_applied: calculationData.toll_applied ?? false,
               toll_type: calculationData.toll_type ?? null,
               toll_amount: Number(calculationData.toll_amount ?? 0),
+              toll_levy_type: null,
+              fuel_levy_percentage: 0,
+              toll_levy_percentage: 0,
+              fuel_levy_amount: 0,
+              toll_levy_amount: 0
             });
           } catch (err) {
             console.error("Error in price calculation", err);

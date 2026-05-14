@@ -21,6 +21,11 @@ export const GET_JOB_PRICE_CALCULATION_DETAIL_QUERY = gql`
       toll_applied
       toll_type
       toll_amount
+      fuel_levy_percentage
+      toll_levy_percentage
+      fuel_levy_amount
+      toll_levy_amount
+      toll_levy_type
     }
   }
 `;
@@ -55,6 +60,11 @@ export const GET_JOB_PRICE_CALCULATION_DETAILS_QUERY = gql`
         toll_applied
         toll_type
         toll_amount
+      fuel_levy_percentage
+      toll_levy_percentage
+      fuel_levy_amount
+      toll_levy_amount
+      toll_levy_type
       }
       paginatorInfo {
         count
@@ -89,6 +99,11 @@ export const CREATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
       toll_applied
       toll_type
       toll_amount
+      fuel_levy_percentage
+      toll_levy_percentage
+      fuel_levy_amount
+      toll_levy_amount
+      toll_levy_type
     }
   }
 `;
@@ -115,6 +130,11 @@ export const UPDATE_JOB_PRICE_CALCULATION_DETAIL_MUTATION = gql`
       toll_applied
       toll_type
       toll_amount
+      fuel_levy_percentage
+      toll_levy_percentage
+      fuel_levy_amount
+      toll_levy_amount
+      toll_levy_type
     }
   }
 `;
@@ -144,6 +164,7 @@ export const CALCULATE_SEA_FREIGHT_QUERY = gql`
       toll_type
       toll_amount
       total
+      toll_levy_type
     }
   }
 `;
@@ -167,6 +188,11 @@ export interface JobPriceCalculationDetail {
   toll_amount: number | null,
   toll_applied: boolean | null,
   toll_type: string | null,
+  fuel_levy_percentage: number | null,
+  toll_levy_percentage: number | null,
+  fuel_levy_amount: number | null,
+  toll_levy_amount: number | null,
+  toll_levy_type: string | null;
 }
 
 
@@ -186,6 +212,11 @@ export interface CreateJobPriceCalculationDetailInput {
   toll_applied: boolean;
   toll_type: string;
   toll_amount: number;
+  fuel_levy_percentage: number;
+  toll_levy_percentage: number;
+  fuel_levy_amount: number;
+  toll_levy_amount: number;
+  toll_levy_type: string;
 }
 
 export interface UpdateJobPriceCalculationDetailInput {
@@ -204,6 +235,11 @@ export interface UpdateJobPriceCalculationDetailInput {
   toll_applied?: boolean;
   toll_type?: string;
   toll_amount?: number;
+  fuel_levy_percentage?: number;
+  toll_levy_percentage?: number;
+  fuel_levy_amount?: number;
+  toll_levy_amount?: number;
+  toll_levy_type?: string;
 }
 
 // Default JobPriceCalculationDetail
@@ -225,4 +261,9 @@ export const defaultJobPriceCalculationDetail: JobPriceCalculationDetail = {
   toll_applied: false,
   toll_type: null,
   toll_amount: 0,
+  fuel_levy_percentage: null,
+  toll_levy_percentage: null,
+  fuel_levy_amount: null,
+  toll_levy_amount: null,
+  toll_levy_type: null,
 };

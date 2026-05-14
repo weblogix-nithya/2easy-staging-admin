@@ -564,55 +564,55 @@ function CompanyEdit() {
   const [createCompanyRate] = useMutation(CREATE_COMPANY_RATE_MUTATION);
   const [updateCompanyRate] = useMutation(UPDATE_COMPANY_RATE_MUTATION);
 
-  const [handleUpdateCompany, {}] = useMutation(UPDATE_COMPANY_MUTATION, {
+  const [handleUpdateCompany, { }] = useMutation(UPDATE_COMPANY_MUTATION, {
     variables: {
       input: { ...company, rate_card_url: undefined, logo_url: undefined },
     },
     onCompleted: async (_data) => {
       // try {
-        // if (companyRatesData?.companyRate) {
-        //   // Update existing rate
-        //   await updateCompanyRate({
-        //     variables: {
-        //       id: companyRatesData.companyRate.id,
-        //       input: {
-        //         company_id: data.company.id,
-        //         state: companyRate.state,
-        //         seafreight_id: companyRate.seafreight_id || null,
-        //         area: companyRate.area || "",
-        //         cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
-        //         minimum_charge: parseFloat(
-        //           companyRate.minimum_charge?.toString() || "0",
-        //         ),
-        //       },
-        //     },
-        //   });
-        // } else {
-        //   // Create new rate
-        //   await createCompanyRate({
-        //     variables: {
-        //       input: {
-        //         company_id: data.company.id,
-        //         state: companyRate.state || "",
-        //         seafreight_id: companyRate.seafreight_id || null,
-        //         area: companyRate.area || "",
-        //         cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
-        //         minimum_charge: parseFloat(
-        //           companyRate.minimum_charge?.toString() || "0",
-        //         ),
-        //       },
-        //     },
-        //   });
-        // }
+      // if (companyRatesData?.companyRate) {
+      //   // Update existing rate
+      //   await updateCompanyRate({
+      //     variables: {
+      //       id: companyRatesData.companyRate.id,
+      //       input: {
+      //         company_id: data.company.id,
+      //         state: companyRate.state,
+      //         seafreight_id: companyRate.seafreight_id || null,
+      //         area: companyRate.area || "",
+      //         cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
+      //         minimum_charge: parseFloat(
+      //           companyRate.minimum_charge?.toString() || "0",
+      //         ),
+      //       },
+      //     },
+      //   });
+      // } else {
+      //   // Create new rate
+      //   await createCompanyRate({
+      //     variables: {
+      //       input: {
+      //         company_id: data.company.id,
+      //         state: companyRate.state || "",
+      //         seafreight_id: companyRate.seafreight_id || null,
+      //         area: companyRate.area || "",
+      //         cbm_rate: parseFloat(companyRate.cbm_rate?.toString() || "0"),
+      //         minimum_charge: parseFloat(
+      //           companyRate.minimum_charge?.toString() || "0",
+      //         ),
+      //       },
+      //     },
+      //   });
+      // }
 
-        toast({
-          title: "Company updated successfully",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
+      toast({
+        title: "Company updated successfully",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
 
-        // router.push("/admin/companies");
+      // router.push("/admin/companies");
       // } catch (error) {
       //   showGraphQLErrorToast(error as any);
       // }
@@ -790,7 +790,7 @@ function CompanyEdit() {
     },
   });
 
-  const [addCustomerToCompany, {}] = useMutation(UPDATE_CUSTOMER_MUTATION, {
+  const [addCustomerToCompany, { }] = useMutation(UPDATE_CUSTOMER_MUTATION, {
     variables: {
       input: {
         id: selectCustomerId,
@@ -813,7 +813,7 @@ function CompanyEdit() {
     },
   });
 
-  const [removeCustomerFromCompany, {}] = useMutation(
+  const [removeCustomerFromCompany, { }] = useMutation(
     UPDATE_CUSTOMER_MUTATION,
     {
       variables: {
@@ -1145,6 +1145,102 @@ function CompanyEdit() {
                           variant="main"
                           fontSize="sm"
                           ms={{ base: "0px", md: "0px" }}
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Fuel Levy %
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="fuel_levy_percentage"
+                          value={company.fuel_levy_percentage ?? 25.5}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              fuel_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          QLD Toll Levy %
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="qld_toll_levy_percentage"
+                          value={company.qld_toll_levy_percentage ?? 8}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              qld_toll_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          VIC Toll Levy %
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="vic_toll_levy_percentage"
+                          value={company.vic_toll_levy_percentage ?? 12}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              vic_toll_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
                           mb="0"
                           fontWeight="500"
                           size="lg"
@@ -1822,7 +1918,7 @@ function CompanyEdit() {
                                 )}
                                 options={
                                   (groupedSeafreights as Record<string, any[]>)[
-                                    selectedState
+                                  selectedState
                                   ] || []
                                 }
                                 onChange={handleRegionChange}
@@ -1869,7 +1965,7 @@ function CompanyEdit() {
                       <Divider />
 
                       <h3 className="mt-6 mb-4">Notifications</h3>
-                        <Flex className="w-full" alignItems="center">
+                      <Flex className="w-full" alignItems="center">
                         <FormLabel
                           display="flex"
                           mb="0"
@@ -1898,7 +1994,7 @@ function CompanyEdit() {
                           </Stack>
                         </RadioGroup>
                       </Flex>
-                        <Flex className="w-full" alignItems="center">
+                      <Flex className="w-full" alignItems="center">
                         <FormLabel
                           display="flex"
                           mb="0"

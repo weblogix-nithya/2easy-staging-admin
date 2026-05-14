@@ -484,6 +484,103 @@ function CompanyCreate() {
                 size="lg"
               />
             </Flex>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                width="200px"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                color={textColor}
+              >
+                Fuel Levy %
+              </FormLabel>
+
+              <Input
+                type="number"
+                step="0.01"
+                name="fuel_levy_percentage"
+                value={company.fuel_levy_percentage ?? 25.5}
+                onChange={(e) =>
+                  setCompany({
+                    ...company,
+                    fuel_levy_percentage: parseFloat(e.target.value),
+                  })
+                }
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                width="200px"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                color={textColor}
+              >
+                QLD Toll Levy %
+              </FormLabel>
+
+              <Input
+                type="number"
+                step="0.01"
+                name="qld_toll_levy_percentage"
+                value={company.qld_toll_levy_percentage ?? 8}
+                onChange={(e) =>
+                  setCompany({
+                    ...company,
+                    qld_toll_levy_percentage: parseFloat(e.target.value),
+                  })
+                }
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
+            <Flex alignItems="center" mb="16px">
+              <FormLabel
+                display="flex"
+                width="200px"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                color={textColor}
+              >
+                VIC Toll Levy %
+              </FormLabel>
+
+              <Input
+                type="number"
+                step="0.01"
+                name="vic_toll_levy_percentage"
+                value={company.vic_toll_levy_percentage ?? 12}
+                onChange={(e) =>
+                  setCompany({
+                    ...company,
+                    vic_toll_levy_percentage: parseFloat(e.target.value),
+                  })
+                }
+                className="max-w-md"
+                variant="main"
+                fontSize="sm"
+                mb="0"
+                fontWeight="500"
+                size="lg"
+              />
+            </Flex>
+
             <Flex className="w-full" alignItems="center">
               <FormLabel
                 display="flex"

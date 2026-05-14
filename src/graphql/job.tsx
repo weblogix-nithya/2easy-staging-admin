@@ -1175,14 +1175,14 @@ export type Job = {
   media_admin?: any[] | null;
   is_stackable_required?: boolean;
   [key: string]:
-    | string
-    | number
-    | null
-    | boolean
-    | undefined
-    | Date
-    | any[]
-    | any;
+  | string
+  | number
+  | null
+  | boolean
+  | undefined
+  | Date
+  | any[]
+  | any;
 };
 
 export const defaultJob: Job = {
@@ -1287,6 +1287,7 @@ export type JobQuoteData = {
   area: string;
   company_rates: any[];
   toll_enabled: boolean;
+  toll_levy_type: string | null;
   timeslot_depots: string | null;
   pick_up_state: string;
   pick_up_stateCode: string;
@@ -1338,6 +1339,7 @@ const defaultJobQuoteData: JobQuoteData = {
     stackable: null,
   },
   job_items: [],
+  toll_levy_type: null,
 };
 
 export default defaultJobQuoteData;
