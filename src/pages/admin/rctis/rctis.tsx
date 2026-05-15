@@ -31,8 +31,7 @@ export default function InvoiceIndex() {
     { id: 1, name: "Pending", tabName: "Pending", hash: "pending" },
     { id: 6, name: "Processed", tabName: "Processed", hash: "processed" },
   ]);
-  const { isAdmin } =
-    useSelector((state: RootState) => state.user);
+  const { isAdmin } = useSelector((state: RootState) => state.user);
   // const [date, setDate] = useState("");
   const [rangeDate, setRangeDate] = useState([null, null]);
   const [tabId, setActiveTab] = useState(isAdmin == true ? 1 : 2);
@@ -45,7 +44,7 @@ export default function InvoiceIndex() {
     )?.isPrivate || false;
   useEffect(() => {
     if (isPrivateRoute && isAdmin) onOpen();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPrivateRoute]);
 
   const onChangeSearchQuery = useMemo(() => {
@@ -116,7 +115,7 @@ export default function InvoiceIndex() {
 
   useEffect(() => {
     onChangeSearchQuery.cancel();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   });
 
   return (
@@ -203,7 +202,11 @@ export default function InvoiceIndex() {
           )}
         </SimpleGrid>
       </Box>
-      <PrivateAccessModal isOpen={isOpen} onClose={onClose} />
+      <PrivateAccessModal
+        isOpen={isOpen}
+        onClose={onClose}
+        requiredPassword={process.env.NEXT_PUBLIC_SPECIAL_PAGE_PASSWORD}
+      />
     </AdminLayout>
   );
 }
