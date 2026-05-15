@@ -1,4 +1,4 @@
- import {
+import {
   Button,
   Flex,
   FormControl,
@@ -13,16 +13,23 @@
   ModalHeader,
   ModalOverlay,
   Text,
- } from "@chakra-ui/react";
+} from "@chakra-ui/react";
 import { useRouter } from "next/router";
-import React, {  useState } from "react";
+import React, { useState } from "react";
 
 type PrivateAccessModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  requiredPassword?: string;
+  redirectPath?: string;
 };
 
-export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessModalProps) {
+export default function PrivateAccessModal({
+  isOpen,
+  onClose,
+  requiredPassword,
+  redirectPath = "/admin/dashboard",
+}: PrivateAccessModalProps) {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<boolean>(false);
   const [show, setShow] = useState(false);
@@ -30,7 +37,10 @@ export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessMod
   const router = useRouter();
 
   const handleAccess = () => {
-    if (password === "" || password !== process.env.NEXT_PUBLIC_MENU_PASSWORD) {
+    const activePassword =
+      requiredPassword || process.env.NEXT_PUBLIC_MENU_PASSWORD;
+
+    if (password === "" || password !== activePassword) {
       setError(true);
     } else {
       resetForm();
@@ -39,7 +49,7 @@ export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessMod
 
   const handleClose = () => {
     resetForm();
-    router.push("/admin/dashboard");
+    router.push(redirectPath);
   };
 
   const resetForm = () => {
@@ -49,7 +59,12 @@ export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessMod
   };
 
   return (
-    <Modal isCentered isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false}>
+    <Modal
+      isCentered
+      isOpen={isOpen}
+      onClose={onClose}
+      closeOnOverlayClick={false}
+    >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
       <ModalContent>
         <ModalHeader>Password required</ModalHeader>
@@ -72,11 +87,11 @@ export default function PrivateAccessModal({ isOpen, onClose }: PrivateAccessMod
                   setError(false);
                   setPassword(e.target.value);
                 }}
-                  onKeyDown={(e) => {
-    if (e.key === "Enter") {
-      handleAccess();
-    }
-  }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAccess();
+                  }
+                }}
                 name="password"
                 className="max-w-md"
                 fontSize="sm"

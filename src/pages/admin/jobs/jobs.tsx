@@ -111,6 +111,10 @@ export function outputDynamicTableCSVHeader(dynamicTableUsers: any[]) {
     .map((u) => u.dynamic_table.name.toUpperCase());
 }
 
+const columnKeyMap: Record<string, string> = {
+  "job_price_calculation_detail.total": "total_price",
+};
+
 export function outputDynamicTableCSVBody(
   dynamicTableUsers: any[],
   rows: any[],
@@ -122,8 +126,9 @@ export function outputDynamicTableCSVBody(
     return dynamicTableUsers
       .filter((u) => u.is_active)
       .map((u) => {
-        const colKey = u.dynamic_table.column_name;
-
+        // const colKey = u.dynamic_table.column_name;
+        const rawKey = u.dynamic_table.column_name;
+        const colKey = columnKeyMap[rawKey] || rawKey;
         // If multiple columns ("a,b,c")
         if (colKey.includes(",")) {
           const keys = colKey.split(",");
