@@ -314,7 +314,7 @@ function JobEdit() {
     () => [
       {
         Header: "Document",
-        accessor: "name" as const,
+        accessor: "file_name" as const,
       },
       {
         Header: "uploaded by",
