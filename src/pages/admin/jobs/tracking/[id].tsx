@@ -46,6 +46,18 @@ export default function TrackingJob() {
   const Columns = useMemo(
     () => [
       {
+        id: "sort_order",
+        Header: "Sort Order",
+        Cell: ({ row }: any) => {
+          const dSortId = row.original?.d_sort_id;
+          return dSortId !== null && dSortId !== undefined ? (
+            <Badge colorScheme="green">#{dSortId}</Badge>
+          ) : (
+            <Badge colorScheme="orange">Not Sorted</Badge>
+          );
+        },
+      },
+      { 
         id: "name",
         Header: "Delivery ID",
         Cell: ({ row }: any) => <DeliveryTrackingCell row={row} />,
@@ -58,7 +70,7 @@ export default function TrackingJob() {
       {
         id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
         Header: "Pickup Address and Name ",
-        Cell: PickupAddressWithTimewithoutMediacustomerCell, 
+        Cell: PickupAddressWithTimewithoutMediacustomerCell,
       },
       {
         id: "job_destinations.address,job_destinations.address_business_name",
@@ -178,17 +190,28 @@ export default function TrackingJob() {
     },
   });
 
-const groupedJobs = Object.values(
-  routePoints.reduce((acc: Record<string, any>, point: any) => {
-    const jobId = point?.job?.id;
+  const groupedJobs = Object.values(
+    routePoints.reduce((acc: Record<string, any>, point: any) => {
+      const jobId = point?.job?.id;
+      if (!jobId) return acc;
 
-    if (!acc[jobId]) {
-      acc[jobId] = point.job; // ✅ only job object
-    }
+      if (!acc[jobId]) {
+        acc[jobId] = {
+          ...point.job,
+        };
+      }
+      return acc;
+    }, {}),
+  ).sort((a: any, b: any) => {
+    const aSort = (a as any).d_sort_id ?? Infinity;
+    const bSort = (b as any).d_sort_id ?? Infinity;
+    return aSort - bSort;
+  });
 
-    return acc;
-  }, {})
-);
+  // ✅ Single flag — true if ANY job has no sort order
+  const hasUnsortedJobs = groupedJobs.some(
+    (job: any) => job.d_sort_id === null,
+  );
 
   console.log(groupedJobs, "gr");
   return (
@@ -233,6 +256,11 @@ const groupedJobs = Object.values(
                 </Box>
               </Flex>
 
+              {hasUnsortedJobs && (
+                <Badge colorScheme="orange" mb={2}>
+                  ⚠ Some jobs have not been sorted yet
+                </Badge>
+              )}
               <Grid
                 templateAreas={`"nav main"`}
                 gridTemplateRows={"1fr 30px"}
@@ -355,7 +383,7 @@ const groupedJobs = Object.values(
                     {/* ROUTE POINTS */}
                     {/* {!loadingDriverCurrentRoutes && routePoints.length > 0 && ( */}
                     <Flex className="flex-col mt-4 job-destination-card-wrap">
-                    {!jobLoading && groupedJobs?.length > 0 ? (
+                      {!jobLoading && groupedJobs?.length > 0 ? (
                         <PaginationTable
                           columns={Columns}
                           data={groupedJobs ?? []}

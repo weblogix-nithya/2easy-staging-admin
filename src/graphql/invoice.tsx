@@ -212,6 +212,7 @@ export const CREATE_INVOICE_MUTATION = gql`
     createInvoice(input: $input) {
       id
       name
+      invoice_status_id
     }
   }
 `;

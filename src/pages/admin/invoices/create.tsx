@@ -34,6 +34,7 @@ import {
   CREATE_INVOICE_MUTATION,
   defaultInvoice,
   GENERATE_INVOICE_PDF_MUTATION,
+  SEND_INVOICE_MUTATION,
 } from "graphql/invoice";
 import { CREATE_INVOICE_LINE_ITEM_MUTATION } from "graphql/invoiceLineItem";
 import { GET_INVOICE_STATUSES_QUERY } from "graphql/invoiceStatus";
@@ -249,8 +250,28 @@ function InvoiceCreate() {
         duration: 3000,
         isClosable: true,
       });
-
+      if (String(data.createInvoice.invoice_status_id) === "2") {
+        await handleSendInvoice({
+          variables: {
+            id: data.createInvoice.id,
+          },
+        });
+      }
       router.push(`/admin/invoices/${data.createInvoice.id}`);
+    },
+    onError: (error) => {
+      showGraphQLErrorToast(error);
+    },
+  });
+
+  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+    onCompleted: (_data) => {
+      toast({
+        title: "Invoice sent to the customer",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     },
     onError: (error) => {
       showGraphQLErrorToast(error);
@@ -423,7 +444,7 @@ function InvoiceCreate() {
                   Company
                 </FormLabel>
 
-                {!isCompany && (
+                {isAdmin && (
                   <CustomInputField
                     isSelect={true}
                     maxWidth={"500px"}
@@ -449,11 +470,11 @@ function InvoiceCreate() {
                       setSelectedPaymentTerm(e.term);
                       setInvoice((prev) => ({
                         ...prev,
-                        issued_at:jobDateAt,
+                        issued_at: jobDateAt,
                         due_at: addDays(
                           prev.issued_at,
                           getDaysFromTerm(e.term),
-                        ),                        
+                        ),
                       }));
                     }}
                   />
@@ -488,7 +509,8 @@ function InvoiceCreate() {
                   >
                     <InfoOutlineIcon mr={2} />
                     <span>
-                      Selected Company&apos;s Payment Term: {selectedPaymentTerm}
+                      Selected Company&apos;s Payment Term:{" "}
+                      {selectedPaymentTerm}
                     </span>
                   </Flex>
                 )}
@@ -526,7 +548,7 @@ function InvoiceCreate() {
                     ) || { value: 0, label: "" }
                   }
                   placeholder=""
-                  isDisabled={isCompany || isCompanyAdmin}
+                  isDisabled={!isAdmin}
                   onChange={(e) => {
                     if (isCompany && isCompanyAdmin) return;
 
