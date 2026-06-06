@@ -90,6 +90,7 @@ export const GET_DRIVER_CURRENT_ROUTE_QUERY = gql`
             id
             name
             timeslot
+            d_sort_id
             job_status {
               id
               name
