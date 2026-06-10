@@ -62,10 +62,12 @@ export default function DriverPathPage() {
       setPoints(formatted);
     },
   });
-  const handleLoad = () => {
+  const handleLoad = (dayType: "today" | "yesterday" = "today") => {
     if (!driverId) return alert("Enter driver ID");
-
-    const today = moment().format("YYYY-MM-DD");
+    const selectedDate = moment()
+      .subtract(dayType === "yesterday" ? 1 : 0, "day")
+      .format("YYYY-MM-DD");
+    // const today = moment().format("YYYY-MM-DD");
 
     if (fromTime > toTime) {
       return alert("From time cannot be greater than To time");
@@ -79,8 +81,8 @@ export default function DriverPathPage() {
         first: 10000,
         page: 1,
         between_at: {
-          from_at: `${today} ${fromTime}:00`,
-          to_at: `${today} ${toTime}:59`,
+          from_at: `${selectedDate} ${fromTime}:00`,
+          to_at: `${selectedDate} ${toTime}:59`,
           timezone: timezone,
         },
       },
@@ -162,10 +164,21 @@ export default function DriverPathPage() {
         </Box>
 
         {/* Load Button */}
-        <Button colorScheme="blue" onClick={handleLoad} isLoading={loading}>
-          Load Route
+        <Button
+          colorScheme="blue"
+          onClick={() => handleLoad("today")}
+          isLoading={loading}
+        >
+          Load today&apos;s Route
         </Button>
 
+        <Button
+          colorScheme="blue"
+          onClick={() => handleLoad("yesterday")}
+          isLoading={loading}
+        >
+          Load yesterday&apos;s Route
+        </Button>
         {/* Error Message */}
         {errorMsg && (
           <Text fontSize="12px" color="red.500">
