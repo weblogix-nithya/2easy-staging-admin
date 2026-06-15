@@ -119,7 +119,7 @@ export default function AssignJobsModal({
 
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
-  // ✅ FIX: useMemo — drag ஒவ்வொரு step-லயும் recalculate ஆகாது
+  // ✅ FIX: useMemo — drag  step- recalculate 
   const sortedBulkAssignJobs = useMemo(
     () =>
       localJobs.map((item, index) => {
@@ -133,14 +133,14 @@ export default function AssignJobsModal({
           name: item.original.job.name,
           d_sort_id: Number(index + 1),
           sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
-          job_type_id: item.original.job.job_type.id,
+          job_type_id: item.original.job.job_type_id,
         };
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [localJobs, driver?.id, driver?.value],
   );
 
-  // ✅ FIX: variables இங்க pass பண்ணாதே — confirm click-ல் மட்டும் pass பண்ணு
+  // ✅ FIX: variables  pass  — confirm click-ல் மட்டும் pass 
   const [handleBulkAssignJobs] = useMutation(BULK_UPDATE_JOB_MUTATION, {
     onCompleted: () => {
       toast({
@@ -260,7 +260,7 @@ export default function AssignJobsModal({
               >
                 Cancel
               </Button>
-              {/* ✅ FIX: variables இங்க pass பண்றோம் — every render-ல் mutation re-register ஆகாது */}
+              {/* ✅ FIX: variables  pass  — confirm click-ல் மட்டும் pass */}
               <Button
                 isDisabled={isSaving || jobsLoading || localJobs.length === 0}
                 variant="primary"
