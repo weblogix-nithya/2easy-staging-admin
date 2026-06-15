@@ -47,7 +47,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   driver: any;
   isOpen: boolean;
   onClose: () => void;
-  selectedJobs: any[];
+  // selectedJobs: any[];
   columns: any[];
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
@@ -66,7 +66,6 @@ export default function AssignJobsModal({
   const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-
   const [localJobs, setLocalJobs] = useState<any[]>([]);
 
   const [fetchDriverJobs, { loading: jobsLoading }] = useLazyQuery(
@@ -115,11 +114,11 @@ export default function AssignJobsModal({
   }, [isOpen, driver?.id, driver?.value]);
 
   const getIndex = (id: UniqueIdentifier) =>
-    localJobs?.findIndex((job: any) => job.id == id);
+    localJobs?.findIndex((job: any) => job.id === Number(id));
 
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
-  // ✅ FIX: useMemo — drag  step- recalculate 
+  // ✅ useMemo — drag step recalculate
   const sortedBulkAssignJobs = useMemo(
     () =>
       localJobs.map((item, index) => {
@@ -140,7 +139,7 @@ export default function AssignJobsModal({
     [localJobs, driver?.id, driver?.value],
   );
 
-  // ✅ FIX: variables  pass  — confirm click-ல் மட்டும் pass 
+  // ✅ variables pass — confirm click pass
   const [handleBulkAssignJobs] = useMutation(BULK_UPDATE_JOB_MUTATION, {
     onCompleted: () => {
       toast({
@@ -179,7 +178,6 @@ export default function AssignJobsModal({
         <ModalCloseButton />
 
         <ModalBody p="4">
-          {/* Loading */}
           {jobsLoading ? (
             <Box textAlign="center" py={10}>
               <Spinner size="lg" color="blue.500" />
@@ -188,12 +186,10 @@ export default function AssignJobsModal({
               </Text>
             </Box>
           ) : localJobs.length === 0 ? (
-            // Empty
             <Box textAlign="center" py={10} color="gray.500">
               No pre-allocated jobs found for this driver.
             </Box>
           ) : (
-            // Table
             <VStack
               overflowX="auto"
               spacing={4}
@@ -237,7 +233,7 @@ export default function AssignJobsModal({
                     <SortableContext items={localJobs}>
                       {localJobs.map((item) => (
                         <JobBulkAssignRow
-                          key={item.original.job.id}
+                          key={item.id}
                           columns={columns}
                           item={item}
                         />
@@ -260,7 +256,6 @@ export default function AssignJobsModal({
               >
                 Cancel
               </Button>
-              {/* ✅ FIX: variables  pass  — confirm click-ல் மட்டும் pass */}
               <Button
                 isDisabled={isSaving || jobsLoading || localJobs.length === 0}
                 variant="primary"

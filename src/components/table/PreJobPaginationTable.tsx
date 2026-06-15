@@ -30,7 +30,7 @@ import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
 import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
   Column,
@@ -100,28 +100,28 @@ type PaginationTableProps<T extends object> = {
   refetchJobs?: () => void;
   onContextMenu?: (e: React.MouseEvent, job: any) => void;
 } & (
-  | {
+    | {
       isServerSide?: false;
       setQueryPageIndex?: never;
       setQueryPageSize?: never;
     }
-  | {
+    | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-) &
+  ) &
   (
     | {
-        showRowSelection?: false;
-        setSelectedRow?: never;
-        isFilterRowSelected?: never;
-      }
+      showRowSelection?: false;
+      setSelectedRow?: never;
+      isFilterRowSelected?: never;
+    }
     | {
-        showRowSelection: true;
-        setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
-        isFilterRowSelected: boolean;
-      }
+      showRowSelection: true;
+      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+      isFilterRowSelected: boolean;
+    }
   );
 const PaginationTable = <T extends object>({
   columns,
@@ -146,8 +146,8 @@ const PaginationTable = <T extends object>({
   restyleTable = false,
   onContextMenu,
 }: // restyleTable = false,
-// autoResetSelectedRows= false,
-PaginationTableProps<T>) => {
+  // autoResetSelectedRows= false,
+  PaginationTableProps<T>) => {
   const router = useRouter();
   // const [pageRows, setPageRows] = useState([]);
 
@@ -278,10 +278,17 @@ PaginationTableProps<T>) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
+  const toggleAllRowsSelectedRef = useRef(toggleAllRowsSelected);
   useEffect(() => {
-    if (!isChecked) toggleAllRowsSelected(isChecked);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    toggleAllRowsSelectedRef.current = toggleAllRowsSelected;
+  }); // ← no dependency = every render sync 
+
+  useEffect(() => {
+    toggleAllRowsSelectedRef.current(false);
+    optimisticSelRef.current.clear();
+    forceUpdate();
   }, [isChecked]);
+
   // console.log("Rendering PaginationTable", pageRows.map((r) => r.original?.job?.name));
   return (
     <VStack w="full" align="start" spacing={4}>
@@ -531,10 +538,10 @@ PaginationTableProps<T>) => {
                     if (EXCLUDED_IDS.has(colId)) return;
                     toggleOptimisticRow(row); // instant
                   }}
-                  // className="css-en-xlrwr4"
-                  // onClick={
-                  // isChecked ? () => row.toggleRowSelected() : undefined
-                  // }
+                // className="css-en-xlrwr4"
+                // onClick={
+                // isChecked ? () => row.toggleRowSelected() : undefined
+                // }
                 >
                   {row?.cells?.map((cell, cellIndex) => {
                     // ✅ Renamed inner index to 'cellIndex' for clarity
@@ -590,10 +597,10 @@ PaginationTableProps<T>) => {
                         <Td
                           key={`action-${cellIndex}`} // ✅ Use cellIndex
                           data-column-id="actions"
-                          // paddingLeft={restyleTable && 1}
-                          // paddingInlineStart={restyleTable && 1}
-                          // paddingRight={restyleTable && 2}
-                          // paddingInlineEnd={restyleTable && 2}
+                        // paddingLeft={restyleTable && 1}
+                        // paddingInlineStart={restyleTable && 1}
+                        // paddingRight={restyleTable && 2}
+                        // paddingInlineEnd={restyleTable && 2}
                         >
                           <Flex gap={2} wrap="wrap" align="center">
                             {
@@ -612,8 +619,8 @@ PaginationTableProps<T>) => {
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faDownload}
@@ -630,9 +637,8 @@ PaginationTableProps<T>) => {
                                 //@ts-expect-error
                                 cell.column.isEdit) && (
                                 <Link
-                                  href={`${path || router.pathname}/${
-                                    cell.row.original.job.id
-                                  }`}
+                                  href={`${path || router.pathname}/${cell.row.original.job.id
+                                    }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -642,8 +648,8 @@ PaginationTableProps<T>) => {
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faPen}
@@ -658,9 +664,8 @@ PaginationTableProps<T>) => {
                               //@ts-expect-error
                               cell.column.isView && (
                                 <Link
-                                  href={`${path || router.pathname}/${
-                                    cell.row.original.job.id
-                                  }`}
+                                  href={`${path || router.pathname}/${cell.row.original.job.id
+                                    }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -671,8 +676,8 @@ PaginationTableProps<T>) => {
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[var(--chakra-colors-black-400)]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     <FontAwesomeIcon
                                       icon={faEye}
@@ -687,9 +692,8 @@ PaginationTableProps<T>) => {
                               //@ts-expect-error
                               cell.column.isTracking && (
                                 <Link
-                                  href={`${path || router.pathname}/tracking/${
-                                    cell.row.original.job.id
-                                  }`}
+                                  href={`${path || router.pathname}/tracking/${cell.row.original.job.id
+                                    }`}
                                   fontWeight="700"
                                   data-no-row-toggle
                                   onClick={(e) => e.stopPropagation()}
@@ -700,8 +704,8 @@ PaginationTableProps<T>) => {
                                     fontSize="sm"
                                     // fontWeight="500"
                                     className="!text-[#3B68DB]"
-                                    // color={textColorSecondary}
-                                    // borderRadius="7px"
+                                  // color={textColorSecondary}
+                                  // borderRadius="7px"
                                   >
                                     Track
                                   </Button>
@@ -720,8 +724,8 @@ PaginationTableProps<T>) => {
                                   onClick={() => {
                                     onDelete(cell.row.original.job.id);
                                   }}
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
+                                // color={textColorSecondary}
+                                // borderRadius="7px"
                                 >
                                   <FontAwesomeIcon
                                     icon={
@@ -797,12 +801,12 @@ PaginationTableProps<T>) => {
                           pr="20px"
                           bg={
                             cell.column.id === "timeslot" &&
-                            !["6", "7", "8", "9", "10"].includes(
-                              row?.original?.job?.job_status?.id,
-                            )
+                              !["6", "7", "8", "9", "10"].includes(
+                                row?.original?.job?.job_status?.id,
+                              )
                               ? (getTimeslotBgColor(
-                                  row?.original?.job?.timeslot,
-                                ) ?? "transparent")
+                                row?.original?.job?.timeslot,
+                              ) ?? "transparent")
                               : cell.column.id === "total_weight"
                                 ? (row.original?.job?.weight_color ??
                                   "transparent")

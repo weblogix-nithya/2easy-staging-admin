@@ -16,6 +16,8 @@ export function JobBulkAssignRow(props: { columns: any[]; item: any }) {
   return (
     <Tr key={item?.original?.id} ref={setNodeRef} style={style}>
       {columns.map((column) => {
+        const CellComponent = column.Cell;
+
         const isWeight = column.id === "total_weight";
         const isVolume = column.id === "total_volume";
 
@@ -27,9 +29,9 @@ export function JobBulkAssignRow(props: { columns: any[]; item: any }) {
 
         return (
           <Td key={column.id} bg={bgColor}>
-            <div  {...attributes} {...listeners}> {/* className="flex justify-left" */}
-              {column.Cell ? (
-                column.Cell({ row: item })
+            <div {...attributes} {...listeners}>
+              {CellComponent ? (
+                <CellComponent row={item} />
               ) : column?.type === "date" ? (
                 <Text>
                   {item.original[column.accessor]

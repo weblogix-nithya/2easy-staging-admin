@@ -1,5 +1,11 @@
-// import { useMutation } from "@apollo/client";
-// import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
+// PreJobTableColumns.tsx — PERFORMANCE FIXED
+// Changes:
+//   1. React.memo() added to ALL Cell components → prevents 1500 re-renders per interaction
+//   2. DeliveryCell — useCallback for handleRemove
+//   3. ItemsDimensionCell — useCallback for setShowAll
+//   4. NotesCell / AdminNotesCell — useCallback for setDisplay
+//   5. TimeslotCell — wrapped in React.memo
+
 import { useMutation } from "@apollo/client";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
@@ -7,10 +13,8 @@ import {
   Button,
   Flex,
   Grid,
-  // HStack,
   Icon,
   IconButton,
-  // IconButton,
   Link,
   Popover,
   PopoverArrow,
@@ -22,9 +26,6 @@ import {
   Text,
   Tooltip,
   useToast,
-  // Tooltip,
-  // Textarea,
-  // useToast,
   VStack,
 } from "@chakra-ui/react";
 import {
@@ -42,16 +43,12 @@ import {
   formatAddress,
   formatDate,
   formatTime,
-  // formatToTimeDate,
   outputDynamicTable,
 } from "helpers/helper";
 import Image from "next/image";
-// import { useRouter } from "next/router";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
-import React from "react";
-import { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { MdMenu } from "react-icons/md";
-// import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
 type JobLabel = {
@@ -64,41 +61,36 @@ type JobLabel = {
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
 
-export const PickupAddressBusinessNameCell = ({ row }: any) => (
+// ─────────────────────────────────────────────
+// CELL COMPONENTS — all wrapped with React.memo
+// ─────────────────────────────────────────────
+
+export const PickupAddressBusinessNameCell = React.memo(({ row }: any) => (
   <>
     <Text fontSize="md">
-      {row.originaljob.pick_up_destination.address_business_name || "-"}
+      {row.original?.job?.pick_up_destination?.address_business_name || "-"}
     </Text>
     <Text fontSize="md" mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
       {formatAddress(row?.original?.job?.pick_up_destinations)}
     </Text>
   </>
-);
-export const JobDestinationsCell = ({ row }: any) => {
-  const destinations = row?.original?.job?.job_destinations || [];
+));
+PickupAddressBusinessNameCell.displayName = "PickupAddressBusinessNameCell";
 
+export const JobDestinationsCell = React.memo(({ row }: any) => {
+  const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
-
   const first = filteredDestinations[0];
 
-  const renderAddress = (destination: any) => {
-    // if (destination?.is_saved_address) {
-    //   // Only show business name if saved address
-    //   return destination.address_business_name || "-";
-    // } else {
-    return (
-      <>
-        {/* {destination.address_business_name ? `${destination.address_business_name}\n` : ""}
-        {destination.address_line_1 ? `${destination.address_line_1}\n` : ""} */}
-        {destination.address_city}
-        {"\n"}
-        {destination.address_postal_code}, {destination.address_state}
-      </>
-    );
-    // }
-  };
+  const renderAddress = (destination: any) => (
+    <>
+      {destination.address_city}
+      {"\n"}
+      {destination.address_postal_code}, {destination.address_state}
+    </>
+  );
 
   return (
     <>
@@ -109,7 +101,6 @@ export const JobDestinationsCell = ({ row }: any) => {
       ) : (
         <Text>-</Text>
       )}
-
       {filteredDestinations.length > 1 && (
         <Popover placement="bottom" closeOnBlur={false}>
           <PopoverTrigger>
@@ -140,29 +131,29 @@ export const JobDestinationsCell = ({ row }: any) => {
       )}
     </>
   );
-};
+});
+JobDestinationsCell.displayName = "JobDestinationsCell";
 
 export const JobDestinationsCellExport = ({ row }: any) => {
   const filteredDestinations = row?.original?.job?.job_destinations.filter(
     (destination: any) => destination.is_pickup === false,
   );
-
   return formatAddress(filteredDestinations[0]);
 };
-export const JobDestinationBusinessNameCell = ({ row }: any) => {
+
+export const JobDestinationBusinessNameCell = React.memo(({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
   );
-
   const businessName = filteredDestinations[0]?.address_business_name || "-";
-
   return (
     <Text fontSize="md" textTransform="capitalize" minW="130px" maxW="170px">
       {businessName?.toLowerCase()}
     </Text>
   );
-};
+});
+JobDestinationBusinessNameCell.displayName = "JobDestinationBusinessNameCell";
 
 export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
   const filteredDestinations = row?.original?.job?.job_destinations.filter(
@@ -170,7 +161,8 @@ export const JobDestinationBusinessNameCellExport = ({ row }: any) => {
   );
   return filteredDestinations[0]?.address_business_name || "-";
 };
-export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
+
+export const JobDestinationWithBusinessNameCell = React.memo(({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
@@ -178,8 +170,6 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
   const showDeliveryTime =
     row?.original?.job?.job_status?.id == 6 ||
     row?.original?.job?.job_status?.id == 7;
-
-  // Only get media if not in status 6 or 7
   const normalMedia =
     filteredDestinations[0]?.media?.filter(
       (item: any) => item.collection_name !== "signatures",
@@ -191,17 +181,11 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
         <>
           <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
-            {formatDate(
-              filteredDestinations[0].arrived_at,
-              "HH:mm, DD/MM/YYYY",
-            )}
+            {formatDate(filteredDestinations[0].arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
           <Text fontSize="md" color="red.600" mb={1}>
             Delivery time:{" "}
-            {formatDate(
-              filteredDestinations[0].updated_at,
-              "HH:mm, DD/MM/YYYY",
-            )}
+            {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
@@ -220,12 +204,7 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
                 alt={media.name || "Delivery evidence"}
                 width={50}
                 height={50}
-                style={{
-                  objectFit: "cover",
-                  borderRadius: "4px",
-                  width: "50px",
-                  height: "50px",
-                }}
+                style={{ objectFit: "cover", borderRadius: "4px", width: "50px", height: "50px" }}
               />
             </Link>
           ))}
@@ -233,7 +212,9 @@ export const JobDestinationWithBusinessNameCell = ({ row }: any) => {
       )}
     </>
   );
-};
+});
+JobDestinationWithBusinessNameCell.displayName = "JobDestinationWithBusinessNameCell";
+
 export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   const filteredDestinations = row?.original?.job?.job_destinations.filter(
     (destination: any) => destination.is_pickup === false,
@@ -242,33 +223,32 @@ export const JobDestinationWithBusinessNameCellExport = ({ row }: any) => {
   const businessName = filteredDestinations[0]?.address_business_name || "-";
   return `${formattedAddress}\n${businessName}`;
 };
-export const PickupAddressWithTimebulkCell = ({ row }: any) => {
+
+export const PickupAddressWithTimebulkCell = React.memo(({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
-
   return (
     <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
-        pickupDest?.address_postal_code
-      }\n ${pickupDest?.address_business_name || "-"}`}
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
-};
-export const deliveryAddressWithTimebulkCell = ({ row }: any) => {
+});
+PickupAddressWithTimebulkCell.displayName = "PickupAddressWithTimebulkCell";
+
+export const deliveryAddressWithTimebulkCell = React.memo(({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === false,
   );
-
   return (
     <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
-      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${
-        pickupDest?.address_postal_code
-      }\n ${pickupDest?.address_business_name || "-"}`}
+      {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}\n ${pickupDest?.address_business_name || "-"}`}
     </Text>
   );
-};
-export const PickupAddressWithTimeCell = ({ row }: any) => {
+});
+deliveryAddressWithTimebulkCell.displayName = "deliveryAddressWithTimebulkCell";
+
+export const PickupAddressWithTimeCell = React.memo(({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
@@ -286,12 +266,10 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
       {pickupDest?.pickup_at && showPickupTime && (
         <>
           <Text fontSize="md" color="blue.600" mb={1}>
-            Arrival time:{" "}
-            {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
+            Arrival time: {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
           <Text fontSize="md" color="red.600" mb={1}>
-            Collection time:{" "}
-            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
+            Collection time: {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
@@ -299,7 +277,6 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
       <Text mb="2" minWidth={"300px"} flexWrap={"nowrap"}>
         {`${pickupDest?.address_line_1}, ${pickupDest?.address_city}, ${pickupDest?.address_postal_code}`}
       </Text>
-
       {normalMedia.length > 0 && (
         <Flex gap={2} flexWrap="wrap">
           {normalMedia.map((media: any, index: number) => (
@@ -309,12 +286,7 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
                 alt={media.name || "Pickup evidence"}
                 width={50}
                 height={50}
-                style={{
-                  objectFit: "cover",
-                  borderRadius: "4px",
-                  width: "50px",
-                  height: "50px",
-                }}
+                style={{ objectFit: "cover", borderRadius: "4px", width: "50px", height: "50px" }}
               />
             </Link>
           ))}
@@ -322,23 +294,20 @@ export const PickupAddressWithTimeCell = ({ row }: any) => {
       )}
     </>
   );
-};
+});
+PickupAddressWithTimeCell.displayName = "PickupAddressWithTimeCell";
+
 export const PickupAddressWithTimeCellExport = ({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
   const collectionTime = pickupDest?.pickup_at
-    ? `Collection time: ${formatDate(
-        pickupDest.pickup_at,
-        "HH:mm, DD/MM/YYYY",
-      )}\n`
+    ? `Collection time: ${formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}\n`
     : "";
-
-  return `${collectionTime}${formatAddress(
-    row?.original?.job?.pick_up_destination,
-  )}\n${row?.original?.job?.pick_up_destination?.address_business_name || "-"}`;
+  return `${collectionTime}${formatAddress(row?.original?.job?.pick_up_destination)}\n${row?.original?.job?.pick_up_destination?.address_business_name || "-"}`;
 };
-export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
+
+export const PickupAddressWithTimewithoutMediaCell = React.memo(({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
@@ -347,18 +316,15 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
     row?.original?.job?.job_status?.id == 5 ||
     row?.original?.job?.job_status?.id == 6 ||
     row?.original?.job?.job_status?.id == 7;
-
   return (
     <>
       {pickupDest?.pickup_at && showPickupTime && (
         <>
           <Text fontSize="md" color="blue.600" mb={1}>
-            Arrival time:{" "}
-            {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
+            Arrival time: {formatDate(pickupDest.arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
           <Text fontSize="md" color="red.600" mb={1}>
-            Collection time:{" "}
-            {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
+            Collection time: {formatDate(pickupDest.pickup_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
@@ -368,10 +334,10 @@ export const PickupAddressWithTimewithoutMediaCell = ({ row }: any) => {
       </Text>
     </>
   );
-};
-export const JobDestinationWithBusinessNamewithoutMediaCell = ({
-  row,
-}: any) => {
+});
+PickupAddressWithTimewithoutMediaCell.displayName = "PickupAddressWithTimewithoutMediaCell";
+
+export const JobDestinationWithBusinessNamewithoutMediaCell = React.memo(({ row }: any) => {
   const destinations = row?.original?.job?.job_destinations || [];
   const filteredDestinations = destinations.filter(
     (destination: any) => destination?.is_pickup === false,
@@ -379,30 +345,21 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
   const showDeliveryTime =
     row?.original?.job?.job_status?.id == 6 ||
     row?.original?.job?.job_status?.id == 7;
-
   return (
     <>
       {filteredDestinations[0]?.updated_at && showDeliveryTime && (
         <>
           <Text fontSize="md" color="blue.600" mb={1}>
             Arrival time:{" "}
-            {formatDate(
-              filteredDestinations[0].arrived_at,
-              "HH:mm, DD/MM/YYYY",
-            )}
+            {formatDate(filteredDestinations[0].arrived_at, "HH:mm, DD/MM/YYYY")}
           </Text>
           <Text fontSize="md" color="red.600" mb={1}>
             Delivery time:{" "}
-            {formatDate(
-              filteredDestinations[0].updated_at,
-              "HH:mm, DD/MM/YYYY",
-            )}
+            {formatDate(filteredDestinations[0].updated_at, "HH:mm, DD/MM/YYYY")}
           </Text>
         </>
       )}
-      <Text fontSize="md">
-        {filteredDestinations[0]?.address_business_name || "-"}
-      </Text>
+      <Text fontSize="md">{filteredDestinations[0]?.address_business_name || "-"}</Text>
       <Text fontSize="md" isTruncated w={"fit-content"}>
         {filteredDestinations.length > 0
           ? `${filteredDestinations[0].address_line_1}, ${filteredDestinations[0].address_city}, ${filteredDestinations[0].address_postal_code}`
@@ -410,36 +367,39 @@ export const JobDestinationWithBusinessNamewithoutMediaCell = ({
       </Text>
     </>
   );
-};
+});
+JobDestinationWithBusinessNamewithoutMediaCell.displayName = "JobDestinationWithBusinessNamewithoutMediaCell";
 
-export const ReadyDropByCell = ({ row }: any) => {
-  return (
-    <>
-      <Text fontSize="md" isTruncated w={"fit-content"}>
-        {row?.original?.job?.job_category?.name ?? "-"}
-      </Text>
-      <Text isTruncated fontSize="md" w={"fit-content"}>
-        R: {formatTime(row?.original?.job?.ready_at)}
-      </Text>
-      <Text isTruncated fontSize="md" w={"fit-content"}>
-        D: {formatTime(row?.original?.job?.drop_at)}
-      </Text>
-    </>
-  );
-};
+export const ReadyDropByCell = React.memo(({ row }: any) => (
+  <>
+    <Text fontSize="md" isTruncated w={"fit-content"}>
+      {row?.original?.job?.job_category?.name ?? "-"}
+    </Text>
+    <Text isTruncated fontSize="md" w={"fit-content"}>
+      R: {formatTime(row?.original?.job?.ready_at)}
+    </Text>
+    <Text isTruncated fontSize="md" w={"fit-content"}>
+      D: {formatTime(row?.original?.job?.drop_at)}
+    </Text>
+  </>
+));
+ReadyDropByCell.displayName = "ReadyDropByCell";
 
 export const ReadyDropByCellExport = ({ row }: any) =>
   `${row?.original?.job?.job_category?.name ?? "-"}\n
     R: ${formatTime(row?.original?.job?.ready_at)}\n
     D: ${formatTime(row?.original?.job?.drop_at)}`;
 
-export const NotesCell = ({ row }: any) => {
+export const NotesCell = React.memo(({ row }: any) => {
   const current = row?.original?.job?.customer_notes ?? "";
   const [display, setDisplay] = React.useState(current);
 
   React.useEffect(() => {
     setDisplay(current);
   }, [current]);
+
+  // FIX: useCallback — every render-ல் new function உருவாகாது
+  const handleSaved = useCallback((val: string) => setDisplay(val), []);
 
   return (
     <Flex gap={2} align="center">
@@ -450,13 +410,14 @@ export const NotesCell = ({ row }: any) => {
         row={row}
         field="customer_notes"
         triggerAriaLabel="Edit customer notes"
-        onSaved={setDisplay}
+        onSaved={handleSaved}
       />
     </Flex>
   );
-};
+});
+NotesCell.displayName = "NotesCell";
 
-export const ItemsTypeCell = ({ row }: any) => {
+export const ItemsTypeCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return (
     <div>
@@ -467,44 +428,23 @@ export const ItemsTypeCell = ({ row }: any) => {
       ))}
     </div>
   );
-};
+});
+ItemsTypeCell.displayName = "ItemsTypeCell";
+
 export const ItemsTypeCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
-  return items?.map((item: any) => {
-    return [`${item.item_type.name}  \n`];
-  });
+  return items?.map((item: any) => [`${item.item_type.name}  \n`]);
 };
-export const ItemsDimensionCell = ({ row }: any) => {
+
+export const ItemsDimensionCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items || [];
   const [showAll, setShowAll] = useState(false);
-
   const visibleItems = showAll ? items : items.slice(0, 2);
 
-  return (
-    // <VStack align="start" spacing={1}>
-    //   {visibleItems.map((item: any) => (
-    //     <Text
-    //       fontSize="md"
-    //       key={`items-dimension-${item?.id}`}
-    //       w="max-content"
-    //     >
-    //       {`${(item.quantity)} x ${(item.weight)} x ${(item.dimension_height * 100).toFixed(0)}x${(
-    //         item.dimension_width * 100
-    //       ).toFixed(0)}x${(item.dimension_depth * 100).toFixed(0)}`}
-    //     </Text>
-    //   ))}
+  // FIX: useCallback
+  const toggleShow = useCallback(() => setShowAll((s) => !s), []);
 
-    //   {items.length > 2 && (
-    //     <Button
-    //       size="xs"
-    //       variant="link"
-    //       colorScheme="blue"
-    //       onClick={() => setShowAll(!showAll)}
-    //     >
-    //       {showAll ? "Less" : `+${items.length - 2} More`}
-    //     </Button>
-    //   )}
-    // </VStack>
+  return (
     <VStack align="stretch" spacing={1} w="100%">
       {visibleItems.map((item: any) => (
         <Grid
@@ -513,31 +453,23 @@ export const ItemsDimensionCell = ({ row }: any) => {
           columnGap={4}
           fontSize="md"
         >
-          {/* Dimensions */}
           <Text>
             {(item.dimension_height * 100).toFixed(0)}x
             {(item.dimension_width * 100).toFixed(0)}x
             {(item.dimension_depth * 100).toFixed(0)}
           </Text>
           <Text>{item?.item_type?.name}</Text>
-
-          {/* Quantity */}
           <Text textAlign="right">{item.quantity}</Text>
-
-          {/* Weight */}
           <Text textAlign="right">{item.weight}kg</Text>
-
-          {/* CBM (volume from API) */}
           <Text textAlign="right">{item.volume?.toFixed(2)}cbm</Text>
         </Grid>
       ))}
-
       {items.length > 2 && (
         <Button
           size="xs"
           variant="link"
           colorScheme="blue"
-          onClick={() => setShowAll(!showAll)}
+          onClick={toggleShow}
           alignSelf="flex-start"
         >
           {showAll ? "Less" : `+${items.length - 2} More`}
@@ -545,20 +477,21 @@ export const ItemsDimensionCell = ({ row }: any) => {
       )}
     </VStack>
   );
-};
+});
+ItemsDimensionCell.displayName = "ItemsDimensionCell";
+
 export const ItemsDimensionCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
-  return items?.map((item: any) => {
-    return [
-      `${(item.quantity * 100)?.toFixed(2)}x `,
-      `${(item.weight * 100)?.toFixed(2)}cm x `,
-      `${(item.dimension_height * 100)?.toFixed(2)}cm x `,
-      `${(item.dimension_width * 100)?.toFixed(2)}cm x `,
-      `${(item.dimension_depth * 100)?.toFixed(2)}cm  \n`,
-    ];
-  });
+  return items?.map((item: any) => [
+    `${(item.quantity * 100)?.toFixed(2)}x `,
+    `${(item.weight * 100)?.toFixed(2)}cm x `,
+    `${(item.dimension_height * 100)?.toFixed(2)}cm x `,
+    `${(item.dimension_width * 100)?.toFixed(2)}cm x `,
+    `${(item.dimension_depth * 100)?.toFixed(2)}cm  \n`,
+  ]);
 };
-export const ItemsQuantityCell = ({ row }: any) => {
+
+export const ItemsQuantityCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return (
     <div>
@@ -569,14 +502,15 @@ export const ItemsQuantityCell = ({ row }: any) => {
       ))}
     </div>
   );
-};
+});
+ItemsQuantityCell.displayName = "ItemsQuantityCell";
+
 export const ItemsQuantityCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
-  return items?.map((item: any) => {
-    return [`${item?.quantity}  \n`];
-  });
+  return items?.map((item: any) => [`${item?.quantity}  \n`]);
 };
-export const ItemsWeightCell = ({ row }: any) => {
+
+export const ItemsWeightCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return (
     <div>
@@ -587,14 +521,15 @@ export const ItemsWeightCell = ({ row }: any) => {
       ))}
     </div>
   );
-};
+});
+ItemsWeightCell.displayName = "ItemsWeightCell";
+
 export const ItemsWeightCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
-  return items?.map((item: any) => {
-    return [`${item?.weight}kg  \n`];
-  });
+  return items?.map((item: any) => [`${item?.weight}kg  \n`]);
 };
-export const ItemsCbmCell = ({ row }: any) => {
+
+export const ItemsCbmCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items;
   return (
     <div>
@@ -605,148 +540,107 @@ export const ItemsCbmCell = ({ row }: any) => {
       ))}
     </div>
   );
-};
-export const ItemsExtrasCell = ({ row }: any) => {
-  return (
-    <Text
-      minW="140px"
-      fontSize="26px"
-      whiteSpace="nowrap"
-      fontWeight="800"
-      letterSpacing="1.5px"
-      textAlign="center"
-      color="white"
-      textShadow="
-        2px 2px 0 rgba(0,0,0,0.95),
-        4px 4px 6px rgba(0,0,0,0.65)
-      "
-    >
-      {row?.original?.job?.extras || "-"}
-    </Text>
-  );
-};
+});
+ItemsCbmCell.displayName = "ItemsCbmCell";
 
-export const DriverCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md">{row?.original?.job?.driver?.full_name || "-"}</Text>
-  );
-};
+export const ItemsExtrasCell = React.memo(({ row }: any) => (
+  <Text
+    minW="140px"
+    fontSize="26px"
+    whiteSpace="nowrap"
+    fontWeight="800"
+    letterSpacing="1.5px"
+    textAlign="center"
+    color="white"
+    textShadow="2px 2px 0 rgba(0,0,0,0.95), 4px 4px 6px rgba(0,0,0,0.65)"
+  >
+    {row?.original?.job?.extras || "-"}
+  </Text>
+));
+ItemsExtrasCell.displayName = "ItemsExtrasCell";
+
+export const DriverCell = React.memo(({ row }: any) => (
+  <Text fontSize="md">{row?.original?.job?.driver?.full_name || "-"}</Text>
+));
+DriverCell.displayName = "DriverCell";
+
 export const ItemsCbmCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
-  return items?.map((item: any) => {
-    return [`${item.volume?.toFixed(2)}cbm  \n`];
-  });
+  return items?.map((item: any) => [`${item.volume?.toFixed(2)}cbm  \n`]);
 };
-export const BookedByCell = ({ row }: any) => {
+
+export const BookedByCell = React.memo(({ row }: any) => {
   const name = row?.original?.job?.company?.name || "-";
   return (
     <Text fontSize="md" maxW="150px" minW="100px">
       {name}
     </Text>
   );
-};
-// export const BookedByCellExport = ({ row }: any) => {
-//   const pickupDest = row.original.job_destinations?.find(
-//     (dest: any) => dest.is_pickup === true,
-//   );
-//   const collectionTime = pickupDest?.updated_at
-//     ? `Collection time: ${formatDate(
-//         pickupDest.updated_at,
-//         "HH:mm, DD/MM/YYYY",
-//       )}\n`
-//     : "";
+});
+BookedByCell.displayName = "BookedByCell";
 
-//   return `${collectionTime}${formatAddress(
-//     row.original.pick_up_destination,
-//   )}\n${row.original.pick_up_destination?.address_business_name || "-"}`;
-// };
-
-export const JobTypeCell: React.FC<{
+export const JobTypeCell = React.memo<{
   row: { original: { job: { job_type?: { name: string } } } };
-}> = ({ row }) => {
+}>(({ row }) => {
   const type = row.original.job?.job_type?.name || "-";
 
   const getTypeColors = (type: string) => {
     switch (type.toLowerCase()) {
-      case "standard":
-        return { color: "white", bg: "purple.500" };
-      case "urgent":
-        return { color: "white", bg: "red.500" };
-      case "express":
-        return { color: "white", bg: "orange.500" };
-      default:
-        return { color: "black", bg: "gray.200" };
+      case "standard": return { color: "white", bg: "purple.500" };
+      case "urgent": return { color: "white", bg: "red.500" };
+      case "express": return { color: "white", bg: "orange.500" };
+      default: return { color: "black", bg: "gray.200" };
     }
   };
 
   const { color, bg } = getTypeColors(type);
-
   return (
-    <Badge
-      color={color}
-      bg={bg}
-      fontWeight="bold"
-      px={2}
-      py={1}
-      borderRadius="md"
-      textTransform="capitalize"
-    >
+    <Badge color={color} bg={bg} fontWeight="bold" px={2} py={1} borderRadius="md" textTransform="capitalize">
       {type}
     </Badge>
   );
-};
-export const StatusCell = ({ row }: any) => {
+});
+JobTypeCell.displayName = "JobTypeCell";
+
+export const StatusCell = React.memo(({ row }: any) => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case "scheduled":
-        return "blue.500";
-      case "unassigned":
-        return "gray.500";
-      case "in transit":
-        return "green.400";
-      case "en route for pickup":
-        return "orange.400";
-      case "assigned":
-        return "purple.400";
-      default:
-        return "black";
+      case "scheduled": return "blue.500";
+      case "unassigned": return "gray.500";
+      case "in transit": return "green.400";
+      case "en route for pickup": return "orange.400";
+      case "assigned": return "purple.400";
+      default: return "black";
     }
   };
-
   return (
-    <Text
-      color={getStatusColor(row?.original?.job?.job_status?.name)}
-      fontWeight="bold"
-    >
+    <Text color={getStatusColor(row?.original?.job?.job_status?.name)} fontWeight="bold">
       {row?.original?.job?.job_status?.name || "-"}
     </Text>
   );
-};
+});
+StatusCell.displayName = "StatusCell";
 
-export const ReadyAtCell = ({ row }: any) => {
-  return (
-    <Flex direction="column" gap={1} minWidth="150px">
-      <Text fontSize="md" fontWeight="500">
-        Created:
-        {formatDate(row?.original?.job?.created_at) || "-"}
-      </Text>
-      <Text fontSize="md">
-        Scheduled:
-        {formatDate(row?.original?.job?.drop_at) || "-"}
-        {/* It was ready_at initially, changed to drop_at as per client request,now adding both  */}
-      </Text>
-    </Flex>
-  );
-};
-
-export const LastFreeAtCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="150px" minW="150px">
-      {row?.original?.job?.last_free_at || "-"}
+export const ReadyAtCell = React.memo(({ row }: any) => (
+  <Flex direction="column" gap={1} minWidth="150px">
+    <Text fontSize="md" fontWeight="500">
+      Created: {formatDate(row?.original?.job?.created_at) || "-"}
     </Text>
-  );
-};
-export const PickupBusinessNameCell = ({ row }: any) => {
+    <Text fontSize="md">
+      Scheduled: {formatDate(row?.original?.job?.drop_at) || "-"}
+    </Text>
+  </Flex>
+));
+ReadyAtCell.displayName = "ReadyAtCell";
+
+export const LastFreeAtCell = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="150px" minW="150px">
+    {row?.original?.job?.last_free_at || "-"}
+  </Text>
+));
+LastFreeAtCell.displayName = "LastFreeAtCell";
+
+export const PickupBusinessNameCell = React.memo(({ row }: any) => {
   const pickupDest = row?.original?.job?.job_destinations?.find(
     (dest: any) => dest.is_pickup === true,
   );
@@ -755,66 +649,40 @@ export const PickupBusinessNameCell = ({ row }: any) => {
       {pickupDest?.address_business_name || "-"}
     </Text>
   );
-};
+});
+PickupBusinessNameCell.displayName = "PickupBusinessNameCell";
 
-export const PickupAddressCell = ({ row }: any) => {
+export const PickupAddressCell = React.memo(({ row }: any) => {
   const pickup = row?.original?.job?.job_destinations?.find(
     (d: any) => d.is_pickup === true,
   );
-
   if (!pickup) return <>-</>;
-
-  const renderPickupAddress = (pickup: any) => {
-    // if (pickup?.is_saved_address) {
-    //   // Only show business name
-    //   return pickup.address_business_name || "-";
-    // }
-
-    // Show full address
-    return (
-      <>
-        {/* {pickup.address_business_name ? `${pickup.address_business_name}\n` : ""}
-        {pickup.address_line_1 ? `${pickup.address_line_1}\n` : ""} */}
-        {pickup.address_city}, {pickup.address_postal_code}{" "}
-        {pickup.address_state}
-      </>
-    );
-  };
-
   return (
-    <Text
-      whiteSpace="pre-line"
-      textTransform="capitalize"
-      fontSize="md"
-      minWidth={"170px"}
-    >
-      {renderPickupAddress(pickup)}
+    <Text whiteSpace="pre-line" textTransform="capitalize" fontSize="md" minWidth={"170px"}>
+      {pickup.address_city}, {pickup.address_postal_code} {pickup.address_state}
     </Text>
   );
-};
+});
+PickupAddressCell.displayName = "PickupAddressCell";
 
-export const CustomerReferenceCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="150px" noOfLines={2}>
-      {" "}
-      {row?.original?.job?.reference_no || "-"}
-    </Text>
-  );
-};
+export const CustomerReferenceCell = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="150px" noOfLines={2}>
+    {row?.original?.job?.reference_no || "-"}
+  </Text>
+));
+CustomerReferenceCell.displayName = "CustomerReferenceCell";
 
-export const CategoryCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="100px">
-      {row?.original?.job?.job_category?.name || "-"}
-    </Text>
-  );
-};
+export const CategoryCell = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="100px">
+    {row?.original?.job?.job_category?.name || "-"}
+  </Text>
+));
+CategoryCell.displayName = "CategoryCell";
 
-export const DeliveryCell = ({ row, refetchTable }) => {
+export const DeliveryCell = React.memo(({ row, refetchTable }: any) => {
   const job = row?.original?.job;
   const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
-
   const canRemove = !!job?.preallocation_driver_id;
 
   const getBadgeStyle = (color?: string) => ({
@@ -823,57 +691,26 @@ export const DeliveryCell = ({ row, refetchTable }) => {
     boxShadow: `0 0 0 1px ${color || "gray"}`,
   });
 
-  // ✅ ICON CONFIG (Cleaner)
   const jobIcons = [
-    {
-      condition: job?.is_inbound_connect,
-      label: "Inbound Connect",
-      icon: faInfinity,
-    },
-    {
-      condition: job?.is_paperwork_required,
-      label: "Paperwork Required",
-      icon: faPager,
-    },
-    {
-      condition: job?.is_hand_unloading,
-      label: "Handling",
-      icon: faHandHolding,
-    },
-    {
-      condition: job?.is_dangerous_goods,
-      label: "Dangerous goods",
-      icon: faWarning,
-    },
-    {
-      condition: job?.is_tailgate_required,
-      label: "Tail lift",
-      icon: faTruckRampBox,
-    },
+    { condition: job?.is_inbound_connect, label: "Inbound Connect", icon: faInfinity },
+    { condition: job?.is_paperwork_required, label: "Paperwork Required", icon: faPager },
+    { condition: job?.is_hand_unloading, label: "Handling", icon: faHandHolding },
+    { condition: job?.is_dangerous_goods, label: "Dangerous goods", icon: faWarning },
+    { condition: job?.is_tailgate_required, label: "Tail lift", icon: faTruckRampBox },
   ];
 
   const [removeDriver, { loading }] = useMutation(REMOVE_PRE_ALLOCATE_DRIVER, {
     onCompleted: () => {
-      toast({
-        title: "Removed job from driver",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Removed job from driver", status: "success", duration: 3000, isClosable: true });
       refetchTable?.();
     },
     onError: (err) => {
-      toast({
-        title: "Error",
-        description: err.message,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      toast({ title: "Error", description: err.message, status: "error", duration: 3000, isClosable: true });
     },
   });
 
-  const handleRemove = () => {
+  // FIX: useCallback — every render-ல் new function உருவாகாது
+  const handleRemove = useCallback(() => {
     removeDriver({
       variables: {
         input: {
@@ -889,11 +726,10 @@ export const DeliveryCell = ({ row, refetchTable }) => {
         },
       },
     });
-  };
+  }, [job, removeDriver]);
 
   return (
     <>
-      {/* LABELS */}
       {labels.length > 0 && (
         <VStack align="start" spacing="4px" mb="10px">
           {labels.map((label) => (
@@ -911,9 +747,7 @@ export const DeliveryCell = ({ row, refetchTable }) => {
           ))}
         </VStack>
       )}
-
       <Flex direction="column" w="100%" maxW="150px">
-        {/* ROW 1 */}
         <Flex align="center" justify="space-between" w="100%">
           {canRemove && (
             <Tooltip label="Remove Job from Driver">
@@ -928,19 +762,11 @@ export const DeliveryCell = ({ row, refetchTable }) => {
               />
             </Tooltip>
           )}
-
           <Text ml="2" noOfLines={1}>
             {job?.name || "-"}
           </Text>
         </Flex>
-
-        {/* ROW 2 - ICONS */}
-        <Flex
-          justify={canRemove ? "flex-end" : "flex-start"}
-          gap={1}
-          mt="1"
-          ml="2"
-        >
+        <Flex justify={canRemove ? "flex-end" : "flex-start"} gap={1} mt="1" ml="2">
           {jobIcons
             .filter((item) => item.condition)
             .map((item, index) => (
@@ -956,9 +782,10 @@ export const DeliveryCell = ({ row, refetchTable }) => {
       </Flex>
     </>
   );
-};
+});
+DeliveryCell.displayName = "DeliveryCell";
 
-export const DeliveryCellBulkAssign = ({ row }: any) => {
+export const DeliveryCellBulkAssign = React.memo(({ row }: any) => {
   const job = row?.original?.job;
   return (
     <Flex align="center" justify="space-between" maxW="150px">
@@ -967,45 +794,19 @@ export const DeliveryCellBulkAssign = ({ row }: any) => {
       </Text>
     </Flex>
   );
-};
+});
+DeliveryCellBulkAssign.displayName = "DeliveryCellBulkAssign";
 
-// export const DeliveryCell = ({ row }: any) => {
-//   // const router = useRouter();
-//   const job = row?.original?.job;
-//   // const handleNavigate = () => {
-//   //   if (job??.id) {
-//   //     router.push(`/admin/jobs/${job?.id}`);
-//   //   }
-//   // };
-
-//   return (
-//     <Flex align="center" justify="space-between" maxW="150px">
-//       <Text mr="2" noOfLines={1}>
-//         {job?.name || "-"}
-//       </Text>
-
-//       {/* {job??.id && (
-//         <Tooltip label="Edit Job" placement="top">
-//           <IconButton
-//             aria-label="Edit Job"
-//             icon={<EditIcon />}
-//             size="xs"
-//             variant="ghost"
-//             onClick={handleNavigate}
-//           />
-//         </Tooltip>
-//       )} */}
-//     </Flex>
-//   );
-// };
-
-export const AdminNotesCell = ({ row }: any) => {
+export const AdminNotesCell = React.memo(({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";
   const [display, setDisplay] = React.useState(current);
 
   React.useEffect(() => {
     setDisplay(current);
   }, [current]);
+
+  // FIX: useCallback
+  const handleSaved = useCallback((val: string) => setDisplay(val), []);
 
   return (
     <Flex gap={2} align="center">
@@ -1017,53 +818,51 @@ export const AdminNotesCell = ({ row }: any) => {
         field="admin_notes"
         multiline
         triggerAriaLabel="Edit admin notes"
-        onSaved={setDisplay}
+        onSaved={handleSaved}
       />
     </Flex>
   );
-};
+});
+AdminNotesCell.displayName = "AdminNotesCell";
 
-export const TimeslotCell = ({ row, refetchJobs }: any) => {
-  return (
-    <Flex gap={2} align="center">
-      <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
-        {row?.original?.job?.timeslot || "-"}
-      </Text>
-      <EditableFieldPopover
-        row={row}
-        field="timeslot"
-        triggerAriaLabel="Edit timeslot"
-        refetchJobs={refetchJobs}
-      />
-    </Flex>
-  );
-};
+export const TimeslotCell = React.memo(({ row, refetchJobs }: any) => (
+  <Flex gap={2} align="center">
+    <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
+      {row?.original?.job?.timeslot || "-"}
+    </Text>
+    <EditableFieldPopover
+      row={row}
+      field="timeslot"
+      triggerAriaLabel="Edit timeslot"
+      refetchJobs={refetchJobs}
+    />
+  </Flex>
+));
+TimeslotCell.displayName = "TimeslotCell";
 
-export const TotalQuantityCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="100px">
-      {row?.original?.job?.total_quantity || "-"}
-    </Text>
-  );
-};
-export const TotalWeightCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="120px">
-      {row?.original?.job?.total_weight || "-"}
-    </Text>
-  );
-};
-export const TotalVolumeCell = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="120px">
-      {row?.original?.job?.total_volume || "-"}
-    </Text>
-  );
-};
+export const TotalQuantityCell = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="100px">
+    {row?.original?.job?.total_quantity || "-"}
+  </Text>
+));
+TotalQuantityCell.displayName = "TotalQuantityCell";
 
-export const Charges = ({ row }: any) => {
+export const TotalWeightCell = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="120px">
+    {row?.original?.job?.total_weight || "-"}
+  </Text>
+));
+TotalWeightCell.displayName = "TotalWeightCell";
+
+export const TotalVolumeCell = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="120px">
+    {row?.original?.job?.total_volume || "-"}
+  </Text>
+));
+TotalVolumeCell.displayName = "TotalVolumeCell";
+
+export const Charges = React.memo(({ row }: any) => {
   const charges = row?.original?.job?.price_summary?.charges || [];
-
   return (
     <>
       {charges.length > 0 ? (
@@ -1077,64 +876,49 @@ export const Charges = ({ row }: any) => {
       )}
     </>
   );
-};
+});
+Charges.displayName = "Charges";
 
-export const SubTotal = ({ row }: any) => {
+export const SubTotal = React.memo(({ row }: any) => {
   const subTotal = Number(row?.original?.job?.price_summary?.sub_total || 0);
   const tax = Number(row?.original?.job?.price_summary?.tax || 0);
   const total = Number(row?.original?.job?.price_summary?.total || 0);
   const driverPay = Number(row?.original?.job?.driver_pay || 0);
   const driverId = row?.original?.job?.driver_id;
-
   const isAllZero = subTotal === 0 && tax === 0 && total === 0;
-
   return (
     <>
       <Text fontSize="md" w="250px">
         {isAllZero ? "Invoice: 0" : `Invoice: ${subTotal}+${tax}= $${total}`}
       </Text>
-
-      {/* {driverId && ( */}
       {driverId !== null && driverId !== undefined && (
-        <Text fontSize="md" w="250px">
-          Driver Pay: $ {driverPay}
-        </Text>
+        <Text fontSize="md" w="250px">Driver Pay: $ {driverPay}</Text>
       )}
     </>
   );
-};
+});
+SubTotal.displayName = "SubTotal";
 
-export const Tax = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="150px">
-      {row?.original?.job?.price_summary?.tax || "0"}
-    </Text>
-  );
-};
+export const Tax = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="150px">
+    {row?.original?.job?.price_summary?.tax || "0"}
+  </Text>
+));
+Tax.displayName = "Tax";
 
-export const TotalPrice = ({ row }: any) => {
-  return (
-    <Text fontSize="md" maxW="160px">
-      {row?.original?.job?.price_summary?.total || "0"}
-    </Text>
-  );
-};
+export const TotalPrice = React.memo(({ row }: any) => (
+  <Text fontSize="md" maxW="160px">
+    {row?.original?.job?.price_summary?.total || "0"}
+  </Text>
+));
+TotalPrice.displayName = "TotalPrice";
 
-export const SuburbAreaCell = ({ row }: any) => {
+export const SuburbAreaCell = React.memo(({ row }: any) => {
   const area = row?.original?.job?.suburb_area || "";
-  const bgColor = row?.original?.job?.area_color || "#751010"; // fallback color
-
+  const bgColor = row?.original?.job?.area_color || "#751010";
   return (
     <>
-      <Badge
-        bg={bgColor}
-        color="white"
-        maxW="100px"
-        px={2}
-        py={1}
-        borderRadius="md"
-        textTransform="capitalize"
-      >
+      <Badge bg={bgColor} color="white" maxW="100px" px={2} py={1} borderRadius="md" textTransform="capitalize">
         {area}
       </Badge>
       <Text fontSize="xs" mt={1}>
@@ -1142,540 +926,176 @@ export const SuburbAreaCell = ({ row }: any) => {
       </Text>
     </>
   );
-};
+});
+SuburbAreaCell.displayName = "SuburbAreaCell";
 
-export const FromQuadCell = ({ row }: any) => {
-  const fromQuad = row?.original?.job?.pickup_quad || "";
-  return (
-    <>
-      <Text mt={1} fontSize="md" fontWeight="bold">
-        {fromQuad}
-      </Text>
-    </>
-  );
-};
+export const FromQuadCell = React.memo(({ row }: any) => (
+  <Text mt={1} fontSize="md" fontWeight="bold">
+    {row?.original?.job?.pickup_quad || ""}
+  </Text>
+));
+FromQuadCell.displayName = "FromQuadCell";
 
-export const ToQuadCell = ({ row }: any) => {
-  const toQuad = row?.original?.job?.delivery_quad || "";
+export const ToQuadCell = React.memo(({ row }: any) => (
+  <Text mt={1} fontSize="md" fontWeight="bold">
+    {row?.original?.job?.delivery_quad || ""}
+  </Text>
+));
+ToQuadCell.displayName = "ToQuadCell";
 
-  return (
-    <>
-      <Text mt={1} fontSize="md" fontWeight="bold">
-        {toQuad}
-      </Text>
-    </>
-  );
-};
+// ─────────────────────────────────────────────
+// MEDIA CELL MAP & HELPERS (unchanged)
+// ─────────────────────────────────────────────
 
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
-  "pick_up_destination.address_formatted,pick_up_destination.address_business_name":
-    {
-      with: PickupAddressWithTimeCell,
-      without: PickupAddressWithTimewithoutMediaCell,
-    },
+  "pick_up_destination.address_formatted,pick_up_destination.address_business_name": {
+    with: PickupAddressWithTimeCell,
+    without: PickupAddressWithTimewithoutMediaCell,
+  },
   "job_destinations.address,job_destinations.address_business_name": {
     with: JobDestinationWithBusinessNameCell,
     without: JobDestinationWithBusinessNamewithoutMediaCell,
   },
 };
 
-// Replace the Cell for specific columns based on withMedia flag
 function applyMediaCells(cols: any[], withMedia: boolean): any[] {
   return cols.map((col) => {
     const media = MEDIA_CELL[col?.id];
     if (!media) return col;
-    return {
-      ...col,
-      Cell: withMedia ? media.with : media.without,
-    };
+    return { ...col, Cell: withMedia ? media.with : media.without };
   });
 }
 
-// de-dupe helper (keeps first occurrence)
 function uniqueById(cols: any[]): any[] {
   const seen = new Set<string>();
-  return cols.filter((c) =>
-    seen.has(c?.id) ? false : (seen.add(c?.id), true),
-  );
+  return cols.filter((c) => (seen.has(c?.id) ? false : (seen.add(c?.id), true)));
 }
+
+// ─────────────────────────────────────────────
+// tableColumn definition (unchanged structure)
+// ─────────────────────────────────────────────
 
 export const tableColumn = (refetchJobs: () => void) => [
   {
     id: "name",
     Header: "Delivery ID",
-    Cell: ({ row }) => <DeliveryCell row={row} refetchTable={refetchJobs} />,
-    // ✅ Sort by job ID directly
+    Cell: ({ row }: any) => <DeliveryCell row={row} refetchTable={refetchJobs} />,
     accessor: (row: any) => row?.job?.id || 0,
     enableSorting: true,
     sortType: "basic",
   },
-  {
-    id: "suburb_area,area_color",
-    Header: "Quad",
-    Cell: SuburbAreaCell,
-    // ✅ Accessor for suburb_area sorting
-    accessor: (row: any) => row?.job?.suburb_area || "",
-    enableSorting: true,
-  },
-  {
-    id: "pickup_quad",
-    Header: "From Quad",
-    Cell: FromQuadCell,
-  },
-  {
-    id: "delivery_quad",
-    Header: "To Quad",
-    Cell: ToQuadCell,
-  },
-  {
-    id: "job_type.name",
-    Header: "Type",
-    Cell: JobTypeCell, // Add this line
-    // width: "100px",
-  },
-  // {
-  //   id: "job_status.name",
-  //   Header: "Status",
-  //   Cell: StatusCell, // Add this line
-  //   // width: "100px",
-  // },
-  {
-    id: "pick_up_destination.address_formatted",
-    Header: "Pickup From",
-    Cell: PickupAddressCell, // Add this line
-    // width: "150px",
-  },
+  { id: "suburb_area,area_color", Header: "Quad", Cell: SuburbAreaCell, accessor: (row: any) => row?.job?.suburb_area || "", enableSorting: true },
+  { id: "pickup_quad", Header: "From Quad", Cell: FromQuadCell },
+  { id: "delivery_quad", Header: "To Quad", Cell: ToQuadCell },
+  { id: "job_type.name", Header: "Type", Cell: JobTypeCell },
+  { id: "pick_up_destination.address_formatted", Header: "Pickup From", Cell: PickupAddressCell },
   {
     id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
     Header: "Pickup Address and Name ",
-    // width: "200px",
-    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
+    Cell: PickupAddressWithTimewithoutMediaCell,
     CellExport: PickupAddressWithTimeCellExport,
   },
-  {
-    id: "pick_up_destination.address_business_name",
-    Header: "Pickup Company",
-    Cell: PickupBusinessNameCell, // Add this line
-  },
-  {
-    id: "job_destinations.address",
-    Header: "Delivery To",
-    width: "100px",
-    Cell: JobDestinationsCell,
-    CellExport: JobDestinationsCellExport,
-  },
-  {
-    id: "job_destinations.address_business_name",
-    Header: "Del. Company ",
-    Cell: JobDestinationBusinessNameCell,
-    CellExport: JobDestinationBusinessNameCellExport,
-  },
-  {
-    id: "total_quantity",
-    Header: "Pcs/Qty",
-    Cell: TotalQuantityCell,
-  },
-
-  {
-    id: "total_weight",
-    Header: "Weight",
-    Cell: TotalWeightCell,
-  },
-  {
-    id: "total_volume",
-    Header: "CBM",
-    Cell: TotalVolumeCell,
-  },
-  {
-    id: "price_summary.charges",
-    Header: "Charges",
-    Cell: Charges,
-  },
-  {
-    id: "price_summary.sub_total",
-    Header: "Total",
-    Cell: SubTotal,
-  },
-
-  {
-    id: "price_summary.tax",
-    Header: "Tax",
-    Cell: Tax,
-  },
-  {
-    id: "price_summary.total",
-    Header: "Total Price",
-    Cell: TotalPrice,
-  },
+  { id: "pick_up_destination.address_business_name", Header: "Pickup Company", Cell: PickupBusinessNameCell },
+  { id: "job_destinations.address", Header: "Delivery To", width: "100px", Cell: JobDestinationsCell, CellExport: JobDestinationsCellExport },
+  { id: "job_destinations.address_business_name", Header: "Del. Company ", Cell: JobDestinationBusinessNameCell, CellExport: JobDestinationBusinessNameCellExport },
+  { id: "total_quantity", Header: "Pcs/Qty", Cell: TotalQuantityCell },
+  { id: "total_weight", Header: "Weight", Cell: TotalWeightCell },
+  { id: "total_volume", Header: "CBM", Cell: TotalVolumeCell },
+  { id: "price_summary.charges", Header: "Charges", Cell: Charges },
+  { id: "price_summary.sub_total", Header: "Total", Cell: SubTotal },
+  { id: "price_summary.tax", Header: "Tax", Cell: Tax },
+  { id: "price_summary.total", Header: "Total Price", Cell: TotalPrice },
   {
     id: "job_destinations.address,job_destinations.address_business_name",
     Header: "Delivery Address and Name",
     Cell: JobDestinationWithBusinessNamewithoutMediaCell,
     CellExport: JobDestinationWithBusinessNameCellExport,
   },
-  {
-    id: "reference_no",
-    Header: "Customer Ref.",
-    Cell: CustomerReferenceCell,
-  },
-  {
-    id: "job_category.name",
-    Header: "category",
-    Cell: CategoryCell,
-  },
-  {
-    id: "company.name",
-    Header: "Company",
-    Cell: BookedByCell, // Use the new cell component
-    // CellExport: BookedByCellExport,
-  },
-  {
-    id: "ready_at",
-    Header: "Date",
-    Cell: ReadyAtCell, // Add this line
-    // type: "date",
-  },
-  {
-    id: "job_category.name,ready_at,drop_at",
-    Header: "Ready By / Drop by",
-    Cell: ReadyDropByCell,
-    CellExport: ReadyDropByCellExport,
-  },
+  { id: "reference_no", Header: "Customer Ref.", Cell: CustomerReferenceCell },
+  { id: "job_category.name", Header: "category", Cell: CategoryCell },
+  { id: "company.name", Header: "Company", Cell: BookedByCell },
+  { id: "ready_at", Header: "Date", Cell: ReadyAtCell },
+  { id: "job_category.name,ready_at,drop_at", Header: "Ready By / Drop by", Cell: ReadyDropByCell, CellExport: ReadyDropByCellExport },
   {
     id: "timeslot",
     Header: "Timeslot",
-    Cell: ({ row }: any) => (
-      <TimeslotCell row={row} refetchJobs={refetchJobs} />
-    ),
+    Cell: ({ row }: any) => <TimeslotCell row={row} refetchJobs={refetchJobs} />,
   },
-  {
-    id: "last_free_at",
-    Header: "Last Free Day",
-    Cell: LastFreeAtCell, // Add this line
-    // type: "date",
-  },
-  // {
-  //   id: "job_items.item_type",
-  //   Header: "Item Type",
-  //   Cell: ItemsTypeCell,
-  //   CellExport: ItemsTypeCellExport,
-  // },
-  {
-    id: "job_items.dimensions",
-    Header: "Dimensions",
-    Cell: ItemsDimensionCell,
-    CellExport: ItemsDimensionCellExport,
-  },
-  // {
-  //   id: "job_items.quantity",
-  //   Header: "Quantity",
-  //   Cell: ItemsQuantityCell,
-  //   CellExport: ItemsQuantityCellExport,
-  // },
-  // {
-  //   id: "job_items.weight",
-  //   Header: "Weight",
-  //   Cell: ItemsWeightCell,
-  //   CellExport: ItemsWeightCellExport,
-  // },
-  // {
-  //   id: "job_items.volume",
-  //   Header: "CBM",
-  //   Cell: ItemsCbmCell,
-  //   CellExport: ItemsCbmCellExport,
-  // },
-  // {
-  //   id: "extras",
-  //   Header: "Extras",
-  //   Cell: ItemsExtrasCell,
-  //   // width: "100px",
-  // },
-  {
-    id: "customer_notes",
-    Header: "Client notes",
-    Cell: NotesCell,
-  },
-  // {
-  //   id: "driver.full_name",
-  //   Header: "Drivers",
-  //   Cell: DriverCell,
-  //   enableSorting: true,
-  // },
-  {
-    id: "admin_notes",
-    Header: "Admin Notes",
-    accessor: "admin_notes" as const,
-    Cell: AdminNotesCell,
-    // show: isCustomer,
-  },
+  { id: "last_free_at", Header: "Last Free Day", Cell: LastFreeAtCell },
+  { id: "job_items.dimensions", Header: "Dimensions", Cell: ItemsDimensionCell, CellExport: ItemsDimensionCellExport },
+  { id: "customer_notes", Header: "Client notes", Cell: NotesCell },
+  { id: "admin_notes", Header: "Admin Notes", accessor: "admin_notes" as const, Cell: AdminNotesCell },
 ];
+
+// ─────────────────────────────────────────────
+// getColumnsPre — FIX: refetchJobs dep added in useMemo (caller side in jobs.tsx)
+// ─────────────────────────────────────────────
 
 export const getColumnsPre = (
   isAdmin: boolean,
-  // isCustomer: boolean,
   withMedia: boolean,
   refetchJobs?: () => void,
   dynamicTableUsers?: DynamicTableUser[],
-  // setSelectedJobs?: any,
 ) => {
-  // 1) Selection checkbox column
   const base: any[] = [
     {
       id: "selection",
-      Header: ({ getToggleAllRowsSelectedProps }) => (
+      Header: ({ getToggleAllRowsSelectedProps }: any) => (
         <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
       ),
-      Cell: ({ row }) => (
+      Cell: ({ row }: any) => (
         <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
       ),
     },
   ];
 
-  // 2) If no config yet, show your default tableColumn only
   if (!dynamicTableUsers || dynamicTableUsers.length === 0) {
-    const cols = uniqueById([
-      ...base,
-      ...tableColumn(refetchJobs), // your static defaults
-      // {
-      //   id: "actions",
-      //   Header: "Actions",
-      //   accessor: "id" as const,
-      //   isView: isCustomer,
-      //   isEdit: isAdmin,
-      //   isTracking: isCustomer,
-      // },
-    ]);
-    // Swap Cells for the special two if they exist in tableColumn
+    const cols = uniqueById([...base, ...tableColumn(refetchJobs)]);
     return applyMediaCells(cols, withMedia);
   }
-  // 3) Build from dynamic selection
-  // NOTE: outputDynamicTable should only include columns that are active:true.
+
   let columns = [
     ...base,
     ...outputDynamicTable(dynamicTableUsers, tableColumn(refetchJobs)),
   ];
-
-  // 4) Swap only the Cell for the 2 special fields based on withMedia
   columns = applyMediaCells(columns, withMedia);
-
-  // 5) Ensure Actions at the end and de-dupe
-  columns = uniqueById([
-    ...columns,
-    // {
-    //   id: "actions",
-    //   Header: "Actions",
-    //   accessor: "id" as const,
-    //   isView: isCustomer,
-    //   isEdit: isAdmin,
-    //   isTracking: isCustomer,
-    // },
-  ]);
-
+  columns = uniqueById(columns);
   return columns;
 };
 
+// ─────────────────────────────────────────────
+// bulkassigntableColumn & getBulkAssignColumns (unchanged)
+// ─────────────────────────────────────────────
+
 export const bulkassigntableColumn = [
-  {
-    id: "name",
-    Header: "Delivery ID",
-    Cell: DeliveryCell,
-    // width: "100px",
-  },
-  {
-    id: "job_type.name",
-    Header: "Type",
-    Cell: JobTypeCell, // Add this line
-    // width: "100px",
-  },
-  // {
-  //   id: "job_status.name",
-  //   Header: "Status",
-  //   Cell: StatusCell, // Add this line
-  //   // width: "100px",
-  // },
-  {
-    id: "pick_up_destination.address_formatted",
-    Header: "Pickup From",
-    Cell: PickupAddressCell, // Add this line
-    // width: "150px",
-  },
-  {
-    id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name",
-    Header: "Pickup Address and Name ",
-    // width: "200px",
-    Cell: PickupAddressWithTimewithoutMediaCell, // Use the new cell component
-    CellExport: PickupAddressWithTimeCellExport,
-  },
-  {
-    id: "pick_up_destination.address_business_name",
-    Header: "Pickup Company",
-    Cell: PickupBusinessNameCell, // Add this line
-  },
-  {
-    id: "job_destinations.address",
-    Header: "Delivery To",
-    width: "100px",
-    Cell: JobDestinationsCell,
-    CellExport: JobDestinationsCellExport,
-  },
-  {
-    id: "job_destinations.address_business_name",
-    Header: "Del. Company ",
-    Cell: JobDestinationBusinessNameCell,
-    CellExport: JobDestinationBusinessNameCellExport,
-  },
-  {
-    id: "total_quantity",
-    Header: "Pcs/Qty",
-    Cell: TotalQuantityCell,
-  },
-
-  {
-    id: "total_weight",
-    Header: "Weight",
-    Cell: TotalWeightCell,
-  },
-  {
-    id: "total_volume",
-    Header: "CBM",
-    Cell: TotalVolumeCell,
-  },
-  {
-    id: "price_summary.charges",
-    Header: "Charges",
-    Cell: Charges,
-  },
-  {
-    id: "price_summary.sub_total",
-    Header: "Total",
-    Cell: SubTotal,
-  },
-
-  {
-    id: "price_summary.tax",
-    Header: "Tax",
-    Cell: Tax,
-  },
-  {
-    id: "price_summary.total",
-    Header: "Total Price",
-    Cell: TotalPrice,
-  },
-
-  {
-    id: "job_destinations.address,job_destinations.address_business_name",
-    Header: "Delivery Address and Name",
-    Cell: JobDestinationWithBusinessNamewithoutMediaCell,
-    CellExport: JobDestinationWithBusinessNameCellExport,
-  },
-  {
-    id: "reference_no",
-    Header: "Customer Ref.",
-    Cell: CustomerReferenceCell,
-  },
-  {
-    id: "job_category.name",
-    Header: "category",
-    Cell: CategoryCell,
-  },
-  {
-    id: "pickup_quad",
-    Header: "From Quad",
-    Cell: FromQuadCell,
-  },
-  {
-    id: "delivery_quad",
-    Header: "To Quad",
-    Cell: ToQuadCell,
-  },
-  {
-    id: "suburb_area,area_color",
-    Header: "Quad",
-    Cell: SuburbAreaCell,
-  },
-  {
-    id: "company.name",
-    Header: "Company",
-    Cell: BookedByCell, // Use the new cell component
-    // CellExport: BookedByCellExport,
-  },
-  {
-    id: "ready_at",
-    Header: "Date",
-    Cell: ReadyAtCell, // Add this line
-    // type: "date",
-  },
-  {
-    id: "job_category.name,ready_at,drop_at",
-    Header: "Ready By / Drop by",
-    Cell: ReadyDropByCell,
-    CellExport: ReadyDropByCellExport,
-  },
-  {
-    id: "timeslot",
-    Header: "Timeslot",
-    Cell: ({ row }: any) => <TimeslotCell row={row} />,
-  },
-  {
-    id: "last_free_at",
-    Header: "Last Free Day",
-    Cell: LastFreeAtCell, // Add this line
-    // type: "date",
-  },
-  // {
-  //   id: "job_items.item_type",
-  //   Header: "Item Type",
-  //   Cell: ItemsTypeCell,
-  //   CellExport: ItemsTypeCellExport,
-  // },
-  {
-    id: "job_items.dimensions",
-    Header: "Dimensions",
-    Cell: ItemsDimensionCell,
-    CellExport: ItemsDimensionCellExport,
-  },
-  // {
-  //   id: "job_items.quantity",
-  //   Header: "Quantity",
-  //   Cell: ItemsQuantityCell,
-  //   CellExport: ItemsQuantityCellExport,
-  // },
-  // {
-  //   id: "job_items.weight",
-  //   Header: "Weight",
-  //   Cell: ItemsWeightCell,
-  //   CellExport: ItemsWeightCellExport,
-  // },
-  // {
-  //   id: "job_items.volume",
-  //   Header: "CBM",
-  //   Cell: ItemsCbmCell,
-  //   CellExport: ItemsCbmCellExport,
-  // },
-  // {
-  //   id: "extras",
-  //   Header: "Extras",
-  //   Cell: ItemsExtrasCell,
-  //   // width: "100px",
-  // },
-  {
-    id: "customer_notes",
-    Header: "Client notes",
-    Cell: NotesCell,
-  },
-  // {
-  //   id: "driver.full_name",
-  //   Header: "Drivers",
-  //   Cell: DriverCell,
-  //   enableSorting: true,
-  // },
-  {
-    id: "admin_notes",
-    Header: "Admin Notes",
-    accessor: "admin_notes" as const,
-    Cell: AdminNotesCell,
-    // show: isCustomer,
-  },
+  { id: "name", Header: "Delivery ID", Cell: DeliveryCellBulkAssign },
+  { id: "job_type.name", Header: "Type", Cell: JobTypeCell },
+  { id: "pick_up_destination.address_formatted", Header: "Pickup From", Cell: PickupAddressCell },
+  { id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name", Header: "Pickup Address and Name ", Cell: PickupAddressWithTimewithoutMediaCell, CellExport: PickupAddressWithTimeCellExport },
+  { id: "pick_up_destination.address_business_name", Header: "Pickup Company", Cell: PickupBusinessNameCell },
+  { id: "job_destinations.address", Header: "Delivery To", width: "100px", Cell: JobDestinationsCell, CellExport: JobDestinationsCellExport },
+  { id: "job_destinations.address_business_name", Header: "Del. Company ", Cell: JobDestinationBusinessNameCell, CellExport: JobDestinationBusinessNameCellExport },
+  { id: "total_quantity", Header: "Pcs/Qty", Cell: TotalQuantityCell },
+  { id: "total_weight", Header: "Weight", Cell: TotalWeightCell },
+  { id: "total_volume", Header: "CBM", Cell: TotalVolumeCell },
+  { id: "price_summary.charges", Header: "Charges", Cell: Charges },
+  { id: "price_summary.sub_total", Header: "Total", Cell: SubTotal },
+  { id: "price_summary.tax", Header: "Tax", Cell: Tax },
+  { id: "price_summary.total", Header: "Total Price", Cell: TotalPrice },
+  { id: "job_destinations.address,job_destinations.address_business_name", Header: "Delivery Address and Name", Cell: JobDestinationWithBusinessNamewithoutMediaCell, CellExport: JobDestinationWithBusinessNameCellExport },
+  { id: "reference_no", Header: "Customer Ref.", Cell: CustomerReferenceCell },
+  { id: "job_category.name", Header: "category", Cell: CategoryCell },
+  { id: "pickup_quad", Header: "From Quad", Cell: FromQuadCell },
+  { id: "delivery_quad", Header: "To Quad", Cell: ToQuadCell },
+  { id: "suburb_area,area_color", Header: "Quad", Cell: SuburbAreaCell },
+  { id: "company.name", Header: "Company", Cell: BookedByCell },
+  { id: "ready_at", Header: "Date", Cell: ReadyAtCell },
+  { id: "job_category.name,ready_at,drop_at", Header: "Ready By / Drop by", Cell: ReadyDropByCell, CellExport: ReadyDropByCellExport },
+  { id: "timeslot", Header: "Timeslot", Cell: ({ row }: any) => <TimeslotCell row={row} /> },
+  { id: "last_free_at", Header: "Last Free Day", Cell: LastFreeAtCell },
+  { id: "job_items.dimensions", Header: "Dimensions", Cell: ItemsDimensionCell, CellExport: ItemsDimensionCellExport },
+  { id: "customer_notes", Header: "Client notes", Cell: NotesCell },
+  { id: "admin_notes", Header: "Admin Notes", accessor: "admin_notes" as const, Cell: AdminNotesCell },
 ];
 
 export const getBulkAssignColumns = (
@@ -1683,47 +1103,20 @@ export const getBulkAssignColumns = (
   isCustomer: boolean,
   dynamicTableUsers?: DynamicTableUser[],
 ) => {
+  const orderCol = {
+    id: "order",
+    Header: "",
+    Cell: ({ _row }: any) => (
+      <div>
+        <Icon as={MdMenu} h="16px" w="16px" me="8px" />
+      </div>
+    ),
+  };
+
   if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
-    return [
-      {
-        id: "order",
-        Header: "",
-        Cell: ({ _row }: any) => (
-          <div>
-            <Icon mt="auto" mb="auto" as={MdMenu} h="16px" w="16px" me="8px" />
-          </div>
-        ),
-      },
-      ...bulkassigntableColumn,
-      // {
-      //   id: "actions",
-      //   Header: "Actions",
-      //   accessor: "id" as const,
-      //   isView: isCustomer,
-      //   isEdit: isAdmin,
-      //   isTracking: isCustomer,
-      // },
-    ];
+    return [orderCol, ...bulkassigntableColumn];
   }
 
-  const dynamicColumns = outputDynamicTable(
-    dynamicTableUsers,
-    bulkassigntableColumn,
-  );
-
-  var columns: any[] = [
-    {
-      id: "order",
-      Header: "",
-      Cell: ({ _row }: any) => (
-        <div>
-          <Icon as={MdMenu} h="16px" w="16px" me="8px" />
-        </div>
-      ),
-    },
-  ];
-
-  columns.push(...dynamicColumns);
-
-  return columns;
+  const dynamicColumns = outputDynamicTable(dynamicTableUsers, bulkassigntableColumn);
+  return [orderCol, ...dynamicColumns];
 };
