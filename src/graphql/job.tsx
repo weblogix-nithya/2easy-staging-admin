@@ -591,478 +591,677 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
   }
 `;
 
-export const GET_JOB_QUERY = gql`
-  query job($id: ID!) {
-    job(id: $id) {
-      id
-      name
-      driver_id
-      pick_up_state
-      company_area
-      media_admin {
+export const GET_PREALLOCATED_JOBS_BY_DRIVER_QUERY = gql`
+  query GetPreallocatedJobsByDriver(
+    $preallocation_driver_id: ID
+    $between_at: JobBetweenInput
+    $first: Int!
+    $page: Int!
+  ) {
+    jobs(
+      preallocation_driver_id: $preallocation_driver_id
+      between_at: $between_at
+      first: $first
+      page: $page
+    ) {
+      data {
         id
         name
-        downloadable_url
-        collection_name
-        file_name
-        uploaded_by
-        created_at
-      }
-      driver {
-        full_name
-        current_suburb
-        no_max_capacity
-      }
-      job_category_id
-      job_category {
-        name
-      }
-      job_status_id
-      job_status {
-        name
-      }
-      job_type_id
-      customer_id
-      customer {
-        id
-        full_name
-        phone_no
-        email
-      }
-      company_id
-      company {
-        id
-        name
-      }
-      admin_notes
-      transport_location
-      transport_type
-      timeslot_depots
-      # delivery_notes
-      pick_up_notes
-      base_notes
-      reference_no
-      booked_by
-      total_quantity
-      total_weight
-      total_volume
-      customer_notes
-      decline_notes
-      minutes_waited
-      pod_url
-      invoice_url
-      is_inbound_connect
-      is_hand_unloading
-      is_stackable_required
-      is_dangerous_goods
-      is_tailgate_required
-      is_paperwork_required
-      ready_at
-      drop_at
-      start_at
-      timeslot
-      last_free_at
-      job_cc_emails {
-        id
-        email
-      }
-      quote {
-        id
-        name
-      }
-      job_destinations {
-        id
-        name
-        label
-        address
-        address_business_name
-        address_line_1
-        address_line_2
-        address_postal_code
-        address_state
-        address_country
-        address_city
-        is_pickup
-        pickup_at
-        pick_up_name
+        pick_up_state
+        total_quantity
+        total_weight
+        total_volume
+        pick_up_lng
+        pick_up_lat
+        pick_up_address
         pick_up_notes
-        pick_up_condition
-        estimated_at
-        is_saved_address
-        job_id
-        lat
-        lng
-        notes
-        job_destination_status_id
-        updated_at
-        issue_reports {
-          id
-          name
-          notes
-          job_id
-          job_destination_id
-          vehicle_hire_id
-          issue_report_type_id
-          issue_report_type {
-            name
-          }
-          issue_report_status_id
-          issue_report_status {
-            name
-          }
-          sourceable {
-            __typename
-            ... on Driver {
-              id
-              full_name
-            }
-            ... on Customer {
-              id
-              full_name
-            }
-          }
-          sourceable_type
-          sourceable_id
-          updated_at
-        }
-        media {
-          id
-          name
-          downloadable_url
-          collection_name
-        }
-        route_point {
-          id
-          route_id
-        }
-      }
-      pick_up_destination {
-        id
-        name
-        label
-        address
-        address_business_name
-        address_line_1
-        address_line_2
-        address_postal_code
-        address_state
-        address_country
-        address_city
-        is_pickup
-        pickup_at
-        job_destination_status_id
         pick_up_name
-        pick_up_notes
-        pick_up_condition
-        is_saved_address
-        estimated_at
-        job_id
-        lat
-        lng
-        notes
-        updated_at
-      }
-      job_items {
-        id
-        name
-        quantity
-        weight
-        dimension_height
-        dimension_width
-        dimension_depth
-        volume
-        item_type_id
-        item_type {
-          name
-        }
-      }
-      media {
-        id
-        name
-        downloadable_url
-        collection_name
-        file_name
-        uploaded_by
-        created_at
-      }
-
-      chats {
-        id
-        name
-        chat_messages {
-          id
-          message
-          media_url
-          created_at
-          user {
-            driver {
-              id
-              full_name
-              first_name
-              last_name
-            }
-            customer {
-              id
-              full_name
-              first_name
-              last_name
-            }
-          }
-        }
-      }
-      customer_invoice {
-        id
-        name
-        period
-        job_id
-        vehicle_hire_id
+        pick_up_report
+        delivery_name
+        delivery_report
         driver_id
+
+        driver {
+          full_name
+          media_url
+          is_tailgated
+          registration_no
+          no_max_capacity
+          no_max_pallets
+          no_max_volume
+          phone_no
+        }
+
+        job_category_id
+        job_category {
+          name
+        }
+
+        job_status_id
+        job_status {
+          name
+        }
+
+        job_type_id
+        job_type {
+          name
+        }
+
         customer_id
         customer {
           id
           full_name
-          first_name
-          last_name
-          company {
+        }
+
+        company_id
+        company {
+          id
+          name
+        }
+
+        ready_at
+        drop_at
+        start_at
+        created_at
+        timeslot
+        last_free_at
+        pick_up_notes
+        base_notes
+        reference_no
+        booked_by
+        customer_notes
+        decline_notes
+        admin_notes
+
+        is_inbound_connect
+        is_hand_unloading
+        is_stackable_required
+        is_dangerous_goods
+        is_tailgate_required
+        is_paperwork_required
+
+        job_pickup_cities
+        job_destination_cities
+
+        job_destinations {
+          id
+          name
+          label
+          address
+          address_business_name
+          address_line_1
+          address_line_2
+          address_postal_code
+          address_state
+          address_country
+          address_city
+          is_pickup
+          pickup_at
+          notes
+          pick_up_name
+          pick_up_notes
+          estimated_at
+          arrived_at
+          job_id
+          lat
+          lng
+          updated_at
+
+          media {
             id
             name
+            downloadable_url
+            collection_name
           }
+
+          job_destination_status_id
+
+          route_point {
+            id
+            route_id
+          }
+
+          address_formatted
         }
-        company_id
-        invoice_status_id
-        is_rcti
-        issued_at
-        due_at
-        paid_at
-        line_amount_types
-        currency
-        sub_total
-        total_tax
-        total
-        amount_due
-        amount_paid
-        xero_invoice_id
-        xero_updated_at
-        invoice_line_items {
+
+        pick_up_destination {
+          id
           name
-          invoice_id
-          is_rate
-          is_surcharge
-          tax_type
-          quantity
-          unit_amount
-          tax_amount
-          line_amount
-          xero_line_item_id
+          label
+          address
+          address_business_name
+          address_line_1
+          address_line_2
+          address_postal_code
+          address_state
+          address_country
+          address_city
+          address_formatted
+          is_pickup
+          pickup_at
+          notes
+          pick_up_name
+          pick_up_notes
+          estimated_at
+          arrived_at
+          job_id
+          lat
+          lng
+          updated_at
         }
+
+        meta {
+          id
+          type
+          name
+          color
+        }
+
+        job_items {
+          id
+
+          item_type {
+            name
+          }
+
+          dimension_height
+          dimension_width
+          dimension_depth
+          quantity
+          weight
+          volume
+        }
+
+        created_at
+        extras
       }
-      quoted_price
-      created_at
+
+      paginatorInfo {
+        count
+        currentPage
+        firstItem
+        hasMorePages
+        lastItem
+        lastPage
+        perPage
+        total
+      }
     }
   }
+`;
+
+export const GET_JOB_QUERY = gql`
+  query job($id: ID!) {
+  job(id: $id) {
+    id
+    name
+    driver_id
+    pick_up_state
+    company_area
+      media_admin {
+      id
+      name
+      downloadable_url
+      collection_name
+      file_name
+      uploaded_by
+      created_at
+    }
+      driver {
+      full_name
+      current_suburb
+      no_max_capacity
+    }
+    job_category_id
+      job_category {
+      name
+    }
+    job_status_id
+      job_status {
+      name
+    }
+    job_type_id
+    customer_id
+      customer {
+      id
+      full_name
+      phone_no
+      email
+    }
+    company_id
+      company {
+      id
+      name
+    }
+    admin_notes
+    transport_location
+    transport_type
+    timeslot_depots
+      # delivery_notes
+    pick_up_notes
+    base_notes
+    reference_no
+    booked_by
+    total_quantity
+    total_weight
+    total_volume
+    customer_notes
+    decline_notes
+    minutes_waited
+    pod_url
+    invoice_url
+    is_inbound_connect
+    is_hand_unloading
+    is_stackable_required
+    is_dangerous_goods
+    is_tailgate_required
+    is_paperwork_required
+    ready_at
+    drop_at
+    start_at
+    timeslot
+    last_free_at
+      job_cc_emails {
+      id
+      email
+    }
+      quote {
+      id
+      name
+    }
+      job_destinations {
+      id
+      name
+      label
+      address
+      address_business_name
+      address_line_1
+      address_line_2
+      address_postal_code
+      address_state
+      address_country
+      address_city
+      is_pickup
+      pickup_at
+      pick_up_name
+      pick_up_notes
+      pick_up_condition
+      estimated_at
+      is_saved_address
+      job_id
+      lat
+      lng
+      notes
+      job_destination_status_id
+      updated_at
+        issue_reports {
+        id
+        name
+        notes
+        job_id
+        job_destination_id
+        vehicle_hire_id
+        issue_report_type_id
+          issue_report_type {
+          name
+        }
+        issue_report_status_id
+          issue_report_status {
+          name
+        }
+          sourceable {
+          __typename
+            ... on Driver {
+            id
+            full_name
+          }
+            ... on Customer {
+            id
+            full_name
+          }
+        }
+        sourceable_type
+        sourceable_id
+        updated_at
+      }
+        media {
+        id
+        name
+        downloadable_url
+        collection_name
+      }
+        route_point {
+        id
+        route_id
+      }
+    }
+      pick_up_destination {
+      id
+      name
+      label
+      address
+      address_business_name
+      address_line_1
+      address_line_2
+      address_postal_code
+      address_state
+      address_country
+      address_city
+      is_pickup
+      pickup_at
+      job_destination_status_id
+      pick_up_name
+      pick_up_notes
+      pick_up_condition
+      is_saved_address
+      estimated_at
+      job_id
+      lat
+      lng
+      notes
+      updated_at
+    }
+      job_items {
+      id
+      name
+      quantity
+      weight
+      dimension_height
+      dimension_width
+      dimension_depth
+      volume
+      item_type_id
+        item_type {
+        name
+      }
+    }
+      media {
+      id
+      name
+      downloadable_url
+      collection_name
+      file_name
+      uploaded_by
+      created_at
+    }
+
+      chats {
+      id
+      name
+        chat_messages {
+        id
+        message
+        media_url
+        created_at
+          user {
+            driver {
+            id
+            full_name
+            first_name
+            last_name
+          }
+            customer {
+            id
+            full_name
+            first_name
+            last_name
+          }
+        }
+      }
+    }
+      customer_invoice {
+      id
+      name
+      period
+      job_id
+      vehicle_hire_id
+      driver_id
+      customer_id
+        customer {
+        id
+        full_name
+        first_name
+        last_name
+          company {
+          id
+          name
+        }
+      }
+      company_id
+      invoice_status_id
+      is_rcti
+      issued_at
+      due_at
+      paid_at
+      line_amount_types
+      currency
+      sub_total
+      total_tax
+      total
+      amount_due
+      amount_paid
+      xero_invoice_id
+      xero_updated_at
+        invoice_line_items {
+        name
+        invoice_id
+        is_rate
+        is_surcharge
+        tax_type
+        quantity
+        unit_amount
+        tax_amount
+        line_amount
+        xero_line_item_id
+      }
+    }
+    quoted_price
+    created_at
+  }
+}
 `;
 
 export const CREATE_JOB_MUTATION = gql`
   mutation createJob($input: CreateJobInput!) {
-    createJob(input: $input) {
-      id
-      name
-    }
+  createJob(input: $input) {
+    id
+    name
   }
+}
 `;
 
 export const UPDATE_JOB_RIGHT_MUTATION = gql`
   mutation updateJob($input: UpdateJobInput!) {
-    updateJob(input: $input) {
-      id
-      driver_id
-      job_type_id
-      job_status_id
-      job_category_id
-      start_at
-      admin_notes
-      company_area
-    }
+  updateJob(input: $input) {
+    id
+    driver_id
+    job_type_id
+    job_status_id
+    job_category_id
+    start_at
+    admin_notes
+    company_area
   }
+}
 `;
 
 export const UPDATE_JOB_MUTATION = gql`
   mutation updateJob($input: UpdateJobInput!) {
-    updateJob(input: $input) {
-      id
-      name
-      reference_no
-      booked_by
-      notes
-      job_category_id
-      job_status_id
-      job_type_id
-      decline_reason_id
-      driver_id
-      region_id
-      customer_id
-      company_id
-      start_at
-      ready_at
-      drop_at
-      completed_at
-      pick_up_lng
-      pick_up_lat
-      pick_up_address
-      pick_up_state
-      pick_up_notes
-      pick_up_name
-      pick_up_report
-      delivery_name
-      delivery_report
-      customer_notes
-      base_notes
-      admin_notes
-      decline_notes
-      minutes_waited
-      is_inbound_connect
-      is_hand_unloading
-      is_stackable_required
-      is_dangerous_goods
-      is_tailgate_required
-      is_paperwork_required
-      timeslot
-      last_free_at
-      quoted_price
-      transport_type
-      transport_location
-      timeslot_depots
-      company_area
-      delete_reason
-    }
+  updateJob(input: $input) {
+    id
+    name
+    reference_no
+    booked_by
+    notes
+    job_category_id
+    job_status_id
+    job_type_id
+    decline_reason_id
+    driver_id
+    region_id
+    customer_id
+    company_id
+    start_at
+    ready_at
+    drop_at
+    completed_at
+    pick_up_lng
+    pick_up_lat
+    pick_up_address
+    pick_up_state
+    pick_up_notes
+    pick_up_name
+    pick_up_report
+    delivery_name
+    delivery_report
+    customer_notes
+    base_notes
+    admin_notes
+    decline_notes
+    minutes_waited
+    is_inbound_connect
+    is_hand_unloading
+    is_stackable_required
+    is_dangerous_goods
+    is_tailgate_required
+    is_paperwork_required
+    timeslot
+    last_free_at
+    quoted_price
+    transport_type
+    transport_location
+    timeslot_depots
+    company_area
+    delete_reason
   }
+}
 `;
 
 export const BULK_UPDATE_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
-    bulkUpdateJob(input: $input) {
-      id
-      name
-      driver_id
-      preallocation_driver_id
-      start_at
-      d_sort_id
-    }
+  bulkUpdateJob(input: $input) {
+    id
+    name
+    driver_id
+    preallocation_driver_id
+    start_at
+    d_sort_id
   }
+}
 `;
 
 export const PREALLOCATE_JOBS_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
-    bulkUpdateJob(input: $input) {
-      id
-      name
-      preallocation_driver_id
-      start_at
-      d_sort_id
-    }
+  bulkUpdateJob(input: $input) {
+    id
+    name
+    preallocation_driver_id
+    start_at
+    d_sort_id
   }
+}
 `;
 
 export const BULK_UPDATE_SORT_JOB_MUTATION = gql`
   mutation bulkUpdateJob($input: [UpdateJobInput]!) {
-    bulkUpdateJob(input: $input) {
-      id
-      name
-      start_at
-      d_sort_id
-    }
+  bulkUpdateJob(input: $input) {
+    id
+    name
+    start_at
+    d_sort_id
   }
+}
 `;
 
 export const DELETE_JOB_MUTATION = gql`
   mutation deleteJob($id: ID!) {
-    deleteJob(id: $id) {
-      id
-    }
+  deleteJob(id: $id) {
+    id
   }
+}
 `;
 
 export const SEND_CONSIGNMENT_DOCKET = gql`
   mutation sendConsignmentDocket($id: ID!) {
-    sendConsignmentDocket(id: $id) {
-      id
-    }
+  sendConsignmentDocket(id: $id) {
+    id
   }
+}
 `;
 
 export const GET_ALL_TIMESLOT_DEPOTS = gql`
   query {
     allTimeslotDepots {
-      id
-      depot_name
-      pincode
-      state_code
-      depot_price
-      is_active
-    }
+    id
+    depot_name
+    pincode
+    state_code
+    depot_price
+    is_active
   }
+}
 `;
 
 export const REMOVE_PRE_ALLOCATE_DRIVER = gql`
   mutation RemovePreallocationDriver($input: UpdateJobInput!) {
-    updateJob(input: $input) {
-      id
-      preallocation_driver_id
-    }
+  updateJob(input: $input) {
+    id
+    preallocation_driver_id
   }
+}
 `;
 
 export const CREATE_DRIVER_FREE_TEXT = gql`
   mutation CreateDriverFreeText($input: CreateDriverFreeTextInput!) {
-    createDriverFreeText(input: $input) {
-      id
-      driver_id
-      date
-      text
-    }
+  createDriverFreeText(input: $input) {
+    id
+    driver_id
+    date
+    text
   }
+}
 `;
 
 export const UPDATE_DRIVER_FREE_TEXT = gql`
   mutation UpdateDriverFreeText($input: UpdateDriverFreeTextInput!) {
-    updateDriverFreeText(input: $input) {
-      id
-      driver_id
-      date
-      text
-    }
+  updateDriverFreeText(input: $input) {
+    id
+    driver_id
+    date
+    text
   }
+}
 `;
 
 export const GET_JOB_LOGS_QUERY = gql`
   query jobLogs($job_id: Int, $first: Int!) {
-    jobLogs(job_id: $job_id, first: $first) {
+  jobLogs(job_id: $job_id, first: $first) {
       data {
-        id
-        job_id
+      id
+      job_id
         job {
-          name
-        }
-        user {
-          name
-          roles {
-            name
-          }
-        }
-        action
-        field
-        old_value
-        new_value
-        mail_sent
-        created_at
-        invoice_id
-        invoice {
-          name
-        }
-        status
+        name
       }
+        user {
+        name
+          roles {
+          name
+        }
+      }
+      action
+      field
+      old_value
+      new_value
+      mail_sent
+      created_at
+      invoice_id
+        invoice {
+        name
+      }
+      status
     }
   }
+}
 `;
 
 export interface UpdateJobInput {

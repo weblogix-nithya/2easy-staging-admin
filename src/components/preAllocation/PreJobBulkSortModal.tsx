@@ -26,22 +26,22 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { BULK_UPDATE_SORT_JOB_MUTATION } from "graphql/job";
 import { reorderArray } from "helpers/helper";
 import moment from "moment";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
+
 interface FilterJobsModalProps extends UseDisclosureProps {
   selectedJobs: any[];
   columns: any[];
-  // refreshPage: any;
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
 }
+
 export default function JobBulkSortModal({
   columns,
   isOpen,
   onClose,
   selectedJobs,
-  // refreshPage,
   setSelectedJobs,
   setIsChecked,
 }: FilterJobsModalProps) {
@@ -53,36 +53,33 @@ export default function JobBulkSortModal({
     selectedJobs?.findIndex(
       (dynamicTableUser: any) => dynamicTableUser.id == id,
     );
-  // console.log(selectedJobs, "sssss");
+
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
-  const sortedBulkSortJobs = selectedJobs.map((item, index) => {
-    // console.log(item, "te");
-    return {
-      id: item.original.job.id,
-      customer_id: item.original.job.customer.id,
-      company_id: item.original.job.company.id,
-      // driver_id: selectedDriver.id,
-      name: item.original.job.name,
-      d_sort_id: Number(index + 1),
-      sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
-      job_type_id: item.original.job.job_type.id,
-    };
-  });
-  // console.log(sortedBulkSortJobs,'sortedBulkAssignJobs')
-  const [handleBulkAssignJobs, { }] = useMutation(BULK_UPDATE_SORT_JOB_MUTATION, {
-    variables: {
-      input: sortedBulkSortJobs,
-    },
+  // ✅ FIX: useMemo — drag  step- recalculate 
+  const sortedBulkSortJobs = useMemo(
+    () =>
+      selectedJobs.map((item, index) => ({
+        id: item.original.job.id,
+        customer_id: item.original.job.customer.id,
+        company_id: item.original.job.company.id,
+        name: item.original.job.name,
+        d_sort_id: Number(index + 1),
+        sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
+        job_type_id: item.original.job.job_type.id,
+      })),
+    [selectedJobs],
+  );
+
+  // ✅ FIX: variables இங்க pass பண்ணாதே — confirm click-ல் மட்டும் pass பண்ணு
+  const [handleBulkAssignJobs] = useMutation(BULK_UPDATE_SORT_JOB_MUTATION, {
     onCompleted: () => {
-      // debugger
       toast({
         title: "Jobs sorted",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      // refreshPage();
       setIsChecked(false);
       setSelectedJobs([]);
       setIsSaving(false);
@@ -92,9 +89,7 @@ export default function JobBulkSortModal({
       showGraphQLErrorToast(error);
     },
   });
-  // useEffect(() => {
-  //   setSelectedDriver(defaultDriver);
-  // }, [isOpen]);
+
   return (
     <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose}>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
@@ -110,9 +105,7 @@ export default function JobBulkSortModal({
               alignItems="center"
               justifyContent="space-between"
               w={"full"}
-            >
-
-            </Flex>
+            />
             <Table>
               <Thead>
                 <Tr>
@@ -126,9 +119,7 @@ export default function JobBulkSortModal({
               <Tbody>
                 <DndContext
                   onDragStart={({ active }) => {
-                    if (!active) {
-                      return;
-                    }
+                    if (!active) return;
                     setActiveId(active.id);
                   }}
                   onDragEnd={({ over }) => {
@@ -136,7 +127,7 @@ export default function JobBulkSortModal({
                     if (over) {
                       const overIndex = getIndex(over.id);
                       if (activeIndex !== overIndex) {
-                        let newArray = reorderArray(
+                        const newArray = reorderArray(
                           selectedJobs,
                           activeIndex,
                           overIndex,
@@ -148,15 +139,13 @@ export default function JobBulkSortModal({
                   onDragCancel={() => setActiveId(null)}
                 >
                   <SortableContext items={selectedJobs}>
-                    {selectedJobs.map((item) => {
-                      return (
-                        <JobBulkAssignRow
-                          key={item.original.job.id}
-                          columns={columns}
-                          item={item}
-                        />
-                      );
-                    })}
+                    {selectedJobs.map((item) => (
+                      <JobBulkAssignRow
+                        key={item.original.job.id}
+                        columns={columns}
+                        item={item}
+                      />
+                    ))}
                   </SortableContext>
                 </DndContext>
               </Tbody>
@@ -173,12 +162,15 @@ export default function JobBulkSortModal({
               >
                 Cancel
               </Button>
+              {/* ✅ FIX: variables இங்க pass பண்றோம் — every render-ல் mutation re-register ஆகாது */}
               <Button
                 isDisabled={isSaving}
                 variant="primary"
                 onClick={() => {
                   setIsSaving(true);
-                  handleBulkAssignJobs();
+                  handleBulkAssignJobs({
+                    variables: { input: sortedBulkSortJobs },
+                  });
                 }}
                 className="ml-2"
               >

@@ -27,9 +27,10 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { PREALLOCATE_JOBS_MUTATION } from "graphql/job";
 import { reorderArray } from "helpers/helper";
 import moment from "moment";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
+
 interface FilterJobsModalProps extends UseDisclosureProps {
   selectedDriver: any;
   selectedJobs: any[];
@@ -38,6 +39,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
   setIsChecked: React.Dispatch<React.SetStateAction<any>>;
 }
+
 export default function PreAllocateModal({
   columns,
   isOpen,
@@ -56,30 +58,32 @@ export default function PreAllocateModal({
     selectedJobs?.findIndex(
       (dynamicTableUser: any) => dynamicTableUser?.id == id,
     );
-  // console.log(selectedJobs, "sssss");
+
   const activeIndex = activeId ? getIndex(activeId) : -1;
 
-  const sortedBulkAssignJobs = selectedJobs.map((item, index) => {
-    if (!selectedDriver?.id) return null; // skip if no driver
-    // console.log(item, "te");
-    return {
-      id: item?.original?.job?.id,
-      customer_id: item?.original?.job?.customer?.id,
-      company_id: item?.original?.job?.company?.id,
-      preallocation_driver_id: selectedDriver?.id,
-      name: item?.original?.job?.name,
-      d_sort_id: Number(index + 1),
-      sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"), // ⬅️ NEW
-      job_type_id: item?.original?.job?.job_type?.id,
-    };
-  });
-  // console.log(sortedBulkAssignJobs,'sortedBulkAssignJobs')
-  const [handleBulkAssignJobs, {}] = useMutation(PREALLOCATE_JOBS_MUTATION, {
-    variables: {
-      input: sortedBulkAssignJobs,
-    },
+  // ✅ FIX: useMemo — drag ஒவ்வொரு step-லயும் recalculate ஆகாது
+  const sortedBulkAssignJobs = useMemo(
+    () =>
+      selectedJobs.map((item, index) => {
+        if (!selectedDriver?.id) return null;
+        return {
+          id: item?.original?.job?.id,
+          customer_id: item?.original?.job?.customer?.id,
+          company_id: item?.original?.job?.company?.id,
+          preallocation_driver_id: selectedDriver?.id,
+          name: item?.original?.job?.name,
+          d_sort_id: Number(index + 1),
+          sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
+          job_type_id: item?.original?.job?.job_type?.id,
+        };
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedJobs, selectedDriver?.id],
+  );
+
+  // ✅ FIX: variables  pass  — confirm click-ல்  pass 
+  const [handleBulkAssignJobs] = useMutation(PREALLOCATE_JOBS_MUTATION, {
     onCompleted: () => {
-      // console.log(data);
       toast({
         title: "Jobs pre-allocated successfully",
         status: "success",
@@ -87,9 +91,6 @@ export default function PreAllocateModal({
         isClosable: true,
       });
       refreshPage();
-      // setIsChecked(false);
-      // setSelectedJobs([]);
-      // setIsSaving(false);
       onClose();
     },
     onError: (error) => {
@@ -97,9 +98,7 @@ export default function PreAllocateModal({
       showGraphQLErrorToast(error);
     },
   });
-  // useEffect(() => {
-  //   setSelectedDriver(defaultDriver);
-  // }, [isOpen]);
+
   return (
     <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose}>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
@@ -109,7 +108,6 @@ export default function PreAllocateModal({
             Pre-Allocation Jobs{" "}
             {selectedDriver?.full_name ? ` - ${selectedDriver.full_name}` : ""}
           </Text>
-
           <Divider />
         </ModalHeader>
         <ModalCloseButton />
@@ -135,9 +133,7 @@ export default function PreAllocateModal({
               <Tbody>
                 <DndContext
                   onDragStart={({ active }) => {
-                    if (!active) {
-                      return;
-                    }
+                    if (!active) return;
                     setActiveId(active?.id);
                   }}
                   onDragEnd={({ over }) => {
@@ -145,7 +141,7 @@ export default function PreAllocateModal({
                     if (over) {
                       const overIndex = getIndex(over.id);
                       if (activeIndex !== overIndex) {
-                        let newArray = reorderArray(
+                        const newArray = reorderArray(
                           selectedJobs,
                           activeIndex,
                           overIndex,
@@ -158,15 +154,13 @@ export default function PreAllocateModal({
                 >
                   <SortableContext items={selectedJobs}>
                     <div style={{ display: "contents" }}>
-                      {selectedJobs.map((item) => {
-                        return (
-                          <JobBulkAssignRow
-                            key={item?.original?.job?.id}
-                            columns={columns}
-                            item={item}
-                          />
-                        );
-                      })}
+                      {selectedJobs.map((item) => (
+                        <JobBulkAssignRow
+                          key={item?.original?.job?.id}
+                          columns={columns}
+                          item={item}
+                        />
+                      ))}
                     </div>
                   </SortableContext>
                 </DndContext>
@@ -184,12 +178,15 @@ export default function PreAllocateModal({
               >
                 Cancel
               </Button>
+
               <Button
                 isDisabled={isSaving}
                 variant="primary"
                 onClick={() => {
                   setIsSaving(true);
-                  handleBulkAssignJobs();
+                  handleBulkAssignJobs({
+                    variables: { input: sortedBulkAssignJobs },
+                  });
                 }}
                 className="ml-2"
               >
