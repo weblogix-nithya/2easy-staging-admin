@@ -93,28 +93,29 @@ export function outputDynamicTable(
         ...(tableColumnItem?.type !== undefined
           ? { type: tableColumnItem?.type }
           : {
-              Cell: ({ row }: any) => {
-                if (tableColumnItem && tableColumnItem.Cell) {
-                  return tableColumnItem.Cell({ row });
-                }
-                return (
-                  <>
-                    {columnNames.map((columnName) => {
-                      return (
-                        <Text
-                          key={columnName}
-                          mb="2"
-                          w={tableColumnItem?.width ?? "fit-content"}
-                          flexWrap={"nowrap"}
-                        >
-                          {getValueFromRow(row.original, columnName) || "-"}
-                        </Text>
-                      );
-                    })}
-                  </>
-                );
-              },
-            }),
+            Cell: ({ row }: any) => {
+              if (tableColumnItem && tableColumnItem.Cell) {
+                const ColumnCell = tableColumnItem.Cell;
+                return <ColumnCell row={row} />;
+              }
+              return (
+                <>
+                  {columnNames.map((columnName) => {
+                    return (
+                      <Text
+                        key={columnName}
+                        mb="2"
+                        w={tableColumnItem?.width ?? "fit-content"}
+                        flexWrap={"nowrap"}
+                      >
+                        {getValueFromRow(row.original, columnName) || "-"}
+                      </Text>
+                    );
+                  })}
+                </>
+              );
+            },
+          }),
       };
       return outputValue;
     });
@@ -158,9 +159,9 @@ export function outputDynamicTableBody(
         const outputValue = columnNames.map((columnName) => {
           return tableColumnItem?.type == "date"
             ? formatDate(
-                getValueFromRow(row.original, columnName),
-                "DD/MM/YYYY",
-              )
+              getValueFromRow(row.original, columnName),
+              "DD/MM/YYYY",
+            )
             : getValueFromRow(row.original, columnName) || "-";
         });
         return outputValue.toString();
@@ -327,11 +328,11 @@ export const csvColumns: Record<string, (row: any) => any> = {
   "job_items.dimensions": (row) =>
     row?.job?.job_items?.length
       ? row.job.job_items
-          .map(
-            (i: any) =>
-              `${i.dimension_width} x ${i.dimension_height} x ${i.dimension_depth}`,
-          )
-          .join("\n")
+        .map(
+          (i: any) =>
+            `${i.dimension_width} x ${i.dimension_height} x ${i.dimension_depth}`,
+        )
+        .join("\n")
       : "-",
 
   "job_items.quantity": (row) =>
