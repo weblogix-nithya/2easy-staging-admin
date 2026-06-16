@@ -95,7 +95,8 @@ export function outputDynamicTable(
           : {
               Cell: ({ row }: any) => {
                 if (tableColumnItem && tableColumnItem.Cell) {
-                  return tableColumnItem.Cell({ row });
+                  const ColumnCell = tableColumnItem.Cell;
+                  return <ColumnCell row={row} />;
                 }
                 return (
                   <>
