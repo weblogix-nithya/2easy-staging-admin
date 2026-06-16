@@ -827,7 +827,18 @@ AdminNotesCell.displayName = "AdminNotesCell";
 
 export const TimeslotCell = React.memo(({ row, refetchJobs }: any) => (
   <Flex gap={2} align="center">
-    <Text maxW="140px" fontSize="md" fontWeight="bold" noOfLines={1}>
+    <Text
+      minW="150px"
+      fontSize="28px"
+      fontWeight="900"
+      letterSpacing="2px"
+      textAlign="center"
+      color="white"
+      textShadow="
+        2px 2px 0 rgba(0,0,0,0.85),
+        3px 3px 6px rgba(0,0,0,0.6)
+      "
+    >
       {row?.original?.job?.timeslot || "-"}
     </Text>
     <EditableFieldPopover
