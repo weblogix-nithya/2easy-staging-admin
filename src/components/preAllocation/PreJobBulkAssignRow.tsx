@@ -7,8 +7,12 @@ export function JobBulkAssignRow(props: {
   columns: any[];
   item: any;
   isDragOverlay?: boolean;
+  sortId?: string | number; // ✅ NEW: explicit id override for cases where item has no top-level id
 }) {
-  const { columns, item, isDragOverlay = false } = props;
+  const { columns, item, isDragOverlay = false, sortId } = props;
+
+  // ✅ Use sortId if provided, else fallback to item.id
+  const resolvedId = sortId ?? item?.id;
 
   const {
     attributes,
@@ -18,15 +22,13 @@ export function JobBulkAssignRow(props: {
     transition,
     isDragging,
   } = useSortable({
-    id: item?.id,
+    id: resolvedId,
     disabled: isDragOverlay,
   });
 
   const style = {
-    // ✅ CSS.Translate (not Transform) — prevents row from shrinking/distorting while dragging
     transform: CSS.Translate.toString(transform),
     transition,
-    // ✅ Hide the original row placeholder while dragging (DragOverlay takes its place)
     opacity: isDragging ? 0 : 1,
     position: "relative" as const,
     zIndex: isDragging ? 0 : "auto",
@@ -59,7 +61,6 @@ export function JobBulkAssignRow(props: {
 
         return (
           <Td key={column.id} bg={bgColor}>
-            {/* ✅ Drag handle only on real rows, not on the overlay copy */}
             <div
               style={{ cursor: isDragOverlay ? "grabbing" : "grab" }}
               {...(!isDragOverlay ? { ...attributes, ...listeners } : {})}

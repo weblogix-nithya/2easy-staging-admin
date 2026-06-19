@@ -25,7 +25,9 @@ import {
 import {
   closestCenter,
   DndContext,
+  DragEndEvent,
   DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -82,12 +84,13 @@ export default function AssignJobsModal({
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [localJobs, setLocalJobs] = useState<any[]>([]);
 
-  // ✅ FIX 1: Use ref to track localJobs during drag — avoids re-render on every mouse move
+  // Ref to always read latest localJobs inside drag callbacks without stale closure
   const localJobsRef = useRef<any[]>([]);
   localJobsRef.current = localJobs;
 
-  // ✅ FIX 2: Sensors with activation constraints — drag starts only after 8px move
-  // This prevents accidental drags and reduces main thread load during small movements
+  // Ref to avoid stale activeId inside onDragEnd — state may already be null by the time closure runs
+  const activeIdRef = useRef<UniqueIdentifier | null>(null);
+
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: { distance: 8 },
@@ -105,11 +108,11 @@ export default function AssignJobsModal({
     {
       fetchPolicy: "network-only",
       onCompleted: (data) => {
-        const jobs =
-          data?.jobs?.data?.map((job: any) => ({
-            id: job.id,
-            original: { job },
-          })) || [];
+        // API already returns jobs sorted by d_sort_id ASC via orderBy variable
+        const jobs = (data?.jobs?.data ?? []).map((job: any) => ({
+          id: job.id,
+          original: { job },
+        }));
         setLocalJobs(jobs);
       },
       onError: (error) => {
@@ -137,6 +140,8 @@ export default function AssignJobsModal({
             to_at: formatDate(rangeDate[1], false),
           }
           : undefined,
+        // Order by d_sort_id ASC so jobs load in their saved drag order
+        orderBy: [{ column: "d_sort_id", order: "ASC" }],
         first: 20,
         page: 1,
       },
@@ -144,18 +149,50 @@ export default function AssignJobsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, driver?.id, driver?.value]);
 
-  // ✅ FIX 3: useCallback so getIndex doesn't recreate on every render
-  const getIndex = useCallback(
-    (id: UniqueIdentifier) =>
-      localJobsRef.current.findIndex((job: any) => String(job.id) === String(id)),
-    [],
-  );
+  // Find the active dragging item for DragOverlay
+  const activeItem =
+    activeId !== null
+      ? localJobs.find((job) => String(job.id) === String(activeId)) ?? null
+      : null;
 
-  const activeIndex = activeId !== null ? getIndex(activeId) : -1;
-  const activeItem = activeIndex !== -1 ? localJobs[activeIndex] : null;
+  // Stable id list for SortableContext
+  const jobIds = localJobs.map((job) => String(job.id));
 
-  // ✅ FIX 4: sortedBulkAssignJobs computed ONLY on confirm click — NOT as useMemo
-  // useMemo was recalculating on every drag move causing 200-500ms main thread blocks
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    activeIdRef.current = event.active.id;
+    setActiveId(event.active.id);
+  }, []);
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    // Read from ref — avoids stale closure where state activeId is already null
+    const currentActiveId = activeIdRef.current;
+    activeIdRef.current = null;
+    setActiveId(null);
+
+    const { over } = event;
+    if (!over || currentActiveId === null) return;
+
+    const currentJobs = localJobsRef.current;
+
+    const fromIndex = currentJobs.findIndex(
+      (job: any) => String(job.id) === String(currentActiveId),
+    );
+    const toIndex = currentJobs.findIndex(
+      (job: any) => String(job.id) === String(over.id),
+    );
+
+    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+      // Spread into new array — React needs a new reference to detect the change
+      setLocalJobs(reorderArray([...currentJobs], fromIndex, toIndex));
+    }
+  }, []);
+
+  const handleDragCancel = useCallback(() => {
+    activeIdRef.current = null;
+    setActiveId(null);
+  }, []);
+
+  // Build mutation payload at click time using current localJobs order
   const buildPayload = useCallback(() => {
     return localJobsRef.current.map((item, index) => {
       if (!driver?.id && !driver?.value) return null;
@@ -193,9 +230,6 @@ export default function AssignJobsModal({
       setIsSaving(false);
     },
   });
-
-  // ✅ FIX 5: Memoize jobIds array so SortableContext doesn't re-render during drag
-  const jobIds = localJobs.map((job) => job.id);
 
   return (
     <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose}>
@@ -238,27 +272,9 @@ export default function AssignJobsModal({
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragStart={({ active }) => {
-                  if (!active) return;
-                  setActiveId(active.id);
-                }}
-                onDragEnd={({ over }) => {
-                  setActiveId(null);
-                  if (over) {
-                    const overId = over.id;
-                    const currentJobs = localJobsRef.current;
-                    const fromIndex = currentJobs.findIndex(
-                      (job: any) => String(job.id) === String(activeId),
-                    );
-                    const toIndex = currentJobs.findIndex(
-                      (job: any) => String(job.id) === String(overId),
-                    );
-                    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-                      setLocalJobs(reorderArray(currentJobs, fromIndex, toIndex));
-                    }
-                  }
-                }}
-                onDragCancel={() => setActiveId(null)}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={handleDragCancel}
               >
                 <Table size="sm">
                   <Thead>
@@ -280,13 +296,14 @@ export default function AssignJobsModal({
                           key={item.id}
                           columns={columns}
                           item={item}
+                          sortId={String(item.id)}
                         />
                       ))}
                     </SortableContext>
                   </Tbody>
                 </Table>
 
-                {/* ✅ Portal renders DragOverlay outside Modal's overflow:hidden */}
+                {/* Render drag overlay outside modal to avoid overflow:hidden clipping */}
                 {createPortal(
                   <DragOverlay dropAnimation={null}>
                     {activeItem ? (
@@ -305,6 +322,7 @@ export default function AssignJobsModal({
                             key={`overlay-${activeItem.id}`}
                             columns={columns}
                             item={activeItem}
+                            sortId={String(activeItem.id)}
                             isDragOverlay
                           />
                         </Tbody>
@@ -333,7 +351,6 @@ export default function AssignJobsModal({
                 variant="primary"
                 onClick={() => {
                   setIsSaving(true);
-                  // ✅ Payload built only on click, not on every drag move
                   handleBulkAssignJobs({
                     variables: { input: buildPayload() },
                   });

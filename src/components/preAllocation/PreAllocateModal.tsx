@@ -21,13 +21,30 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import { DndContext, UniqueIdentifier } from "@dnd-kit/core";
-import { SortableContext } from "@dnd-kit/sortable";
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  UniqueIdentifier,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { PREALLOCATE_JOBS_MUTATION } from "graphql/job";
 import { reorderArray } from "helpers/helper";
 import moment from "moment";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
 
@@ -46,42 +63,129 @@ export default function PreAllocateModal({
   onClose,
   selectedJobs,
   refreshPage,
-  setSelectedJobs,
-  // setIsChecked,
+  setSelectedJobs: _setSelectedJobs, // kept in props for parent compatibility, not used inside modal
   selectedDriver,
 }: FilterJobsModalProps) {
   const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
-  const getIndex = (id: UniqueIdentifier) =>
-    selectedJobs?.findIndex(
-      (dynamicTableUser: any) => dynamicTableUser?.id == id,
-    );
+  // Local copy of jobs used for drag reorder inside the modal.
+  // This is intentionally separate from the parent selectedJobs state —
+  // because parent state gets reset by JobPaginationTable on every re-render.
+  const [localJobs, setLocalJobs] = useState<any[]>([]);
 
-  const activeIndex = activeId ? getIndex(activeId) : -1;
+  // Snapshot selectedJobs into localJobs ONLY when modal first opens.
+  // Using a ref flag so that drag reorders (which call setLocalJobs)
+  // do NOT trigger this effect and reset the order.
+  const hasInitialized = useRef(false);
 
-  // ✅ FIX: useMemo — drag ஒவ்வொரு step-லயும் recalculate ஆகாது
-  const sortedBulkAssignJobs = useMemo(
-    () =>
-      selectedJobs.map((item, index) => {
-        if (!selectedDriver?.id) return null;
-        return {
-          id: item?.original?.job?.id,
-          customer_id: item?.original?.job?.customer?.id,
-          company_id: item?.original?.job?.company?.id,
-          preallocation_driver_id: selectedDriver?.id,
-          name: item?.original?.job?.name,
-          d_sort_id: Number(index + 1),
-          sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
-          job_type_id: item?.original?.job?.job_type?.id,
-        };
-      }),
+  useEffect(() => {
+    if (isOpen && !hasInitialized.current) {
+      // Take a one-time snapshot of selectedJobs when modal opens
+      setLocalJobs([...selectedJobs]);
+      hasInitialized.current = true;
+    }
+    if (!isOpen) {
+      // Reset flag when modal closes so next open gets a fresh snapshot
+      hasInitialized.current = false;
+      setLocalJobs([]);
+    }
+    // Intentionally NOT including selectedJobs in deps —
+    // we only want to snapshot once on open, not on every parent re-render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedJobs, selectedDriver?.id],
+  }, [isOpen]);
+
+  // Ref so drag callbacks always read latest localJobs without stale closure
+  const localJobsRef = useRef<any[]>([]);
+  localJobsRef.current = localJobs;
+
+  // Ref to avoid stale activeId inside onDragEnd closure
+  const activeIdRef = useRef<UniqueIdentifier | null>(null);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
-  // ✅ FIX: variables  pass  — confirm click-ல்  pass 
+  // Extract a stable string id from a job item
+  const getId = useCallback(
+    (item: any): string =>
+      String(item?.original?.job?.id ?? item?.id ?? ""),
+    [],
+  );
+
+  // Find the active item from localJobs for DragOverlay rendering
+  const activeItem =
+    activeId !== null
+      ? localJobs.find((job) => getId(job) === String(activeId)) ?? null
+      : null;
+
+  // Stable list of string ids for SortableContext
+  const jobIds = localJobs.map((job) => getId(job));
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    activeIdRef.current = event.active.id;
+    setActiveId(event.active.id);
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      // Read activeId from ref — avoids stale closure bug
+      const currentActiveId = activeIdRef.current;
+      activeIdRef.current = null;
+      setActiveId(null);
+
+      const { over } = event;
+      if (!over || currentActiveId === null) return;
+
+      const currentJobs = localJobsRef.current;
+
+      const fromIndex = currentJobs.findIndex(
+        (job: any) => getId(job) === String(currentActiveId),
+      );
+      const toIndex = currentJobs.findIndex(
+        (job: any) => getId(job) === String(over.id),
+      );
+
+      if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
+        // Spread into new array — React needs new reference to detect state change
+        const reordered = reorderArray([...currentJobs], fromIndex, toIndex);
+        setLocalJobs(reordered);
+      }
+    },
+    [getId],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    activeIdRef.current = null;
+    setActiveId(null);
+  }, []);
+
+  // Build mutation payload from the current localJobs order at click time
+  const buildPayload = useCallback(() => {
+    return localJobsRef.current.map((item, index) => {
+      if (!selectedDriver?.id) return null;
+      return {
+        id: item?.original?.job?.id,
+        customer_id: item?.original?.job?.customer?.id,
+        company_id: item?.original?.job?.company?.id,
+        preallocation_driver_id: selectedDriver?.id,
+        name: item?.original?.job?.name,
+        d_sort_id: Number(index + 1),
+        sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
+        job_type_id: item?.original?.job?.job_type?.id,
+      };
+    });
+  }, [selectedDriver?.id]);
+
   const [handleBulkAssignJobs] = useMutation(PREALLOCATE_JOBS_MUTATION, {
     onCompleted: () => {
       toast({
@@ -111,6 +215,7 @@ export default function PreAllocateModal({
           <Divider />
         </ModalHeader>
         <ModalCloseButton />
+
         <ModalBody p="4">
           <VStack
             overflowX="auto"
@@ -120,54 +225,72 @@ export default function PreAllocateModal({
             p={4}
             mb={4}
           >
-            <Table size="sm">
-              <Thead>
-                <Tr>
-                  {columns.map((column) => (
-                    <Th key={`row-header-bulk-assign-${column?.id}`}>
-                      {column.Header}
-                    </Th>
-                  ))}
-                </Tr>
-              </Thead>
-              <Tbody>
-                <DndContext
-                  onDragStart={({ active }) => {
-                    if (!active) return;
-                    setActiveId(active?.id);
-                  }}
-                  onDragEnd={({ over }) => {
-                    setActiveId(null);
-                    if (over) {
-                      const overIndex = getIndex(over.id);
-                      if (activeIndex !== overIndex) {
-                        const newArray = reorderArray(
-                          selectedJobs,
-                          activeIndex,
-                          overIndex,
-                        );
-                        setSelectedJobs(newArray);
-                      }
-                    }
-                  }}
-                  onDragCancel={() => setActiveId(null)}
-                >
-                  <SortableContext items={selectedJobs}>
-                    <div style={{ display: "contents" }}>
-                      {selectedJobs.map((item) => (
-                        <JobBulkAssignRow
-                          key={item?.original?.job?.id}
-                          columns={columns}
-                          item={item}
-                        />
-                      ))}
-                    </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+            >
+              <Table size="sm">
+                <Thead>
+                  <Tr>
+                    {columns.map((column) => (
+                      <Th key={`row-header-bulk-assign-${column?.id}`}>
+                        {column.Header}
+                      </Th>
+                    ))}
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  <SortableContext
+                    items={jobIds}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {localJobs.map((item) => (
+                      <JobBulkAssignRow
+                        key={getId(item)}
+                        columns={columns}
+                        item={item}
+                        sortId={getId(item)}
+                      />
+                    ))}
                   </SortableContext>
-                </DndContext>
-              </Tbody>
-            </Table>
+                </Tbody>
+              </Table>
+
+              {/* Render drag overlay outside modal to avoid overflow:hidden clipping */}
+              {createPortal(
+                <DragOverlay dropAnimation={null}>
+                  {activeItem ? (
+                    <Table
+                      size="sm"
+                      style={{
+                        width: "100%",
+                        tableLayout: "fixed",
+                        borderCollapse: "collapse",
+                        background: "#EBF8FF",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
+                      }}
+                    >
+                      <Tbody>
+                        <JobBulkAssignRow
+                          key={`overlay-${getId(activeItem)}`}
+                          columns={columns}
+                          item={activeItem}
+                          sortId={getId(activeItem)}
+                          isDragOverlay
+                        />
+                      </Tbody>
+                    </Table>
+                  ) : null}
+                </DragOverlay>,
+                document.body,
+              )}
+            </DndContext>
           </VStack>
         </ModalBody>
+
         <ModalFooter justifyContent={"center"}>
           <Box w={"full"}>
             <Flex justifyContent={"space-between"}>
@@ -178,14 +301,13 @@ export default function PreAllocateModal({
               >
                 Cancel
               </Button>
-
               <Button
                 isDisabled={isSaving}
                 variant="primary"
                 onClick={() => {
                   setIsSaving(true);
                   handleBulkAssignJobs({
-                    variables: { input: sortedBulkAssignJobs },
+                    variables: { input: buildPayload() },
                   });
                 }}
                 className="ml-2"
