@@ -1167,7 +1167,7 @@ function CompanyEdit() {
                           type="number"
                           step="0.01"
                           name="fuel_levy_percentage"
-                          value={company.fuel_levy_percentage ?? 25.5}
+                          value={company.fuel_levy_percentage ?? 22}
                           onChange={(e) =>
                             setCompany({
                               ...company,

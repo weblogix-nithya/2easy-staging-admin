@@ -259,7 +259,7 @@ export const defaultCompany: Company = {
   waiting_enabled: false,
   weight_per_cubic: 500, // default weight per cubic meter
   standard_static: false, // default to standard
-  fuel_levy_percentage: 25.5,
+  fuel_levy_percentage: 22,
   qld_toll_levy_percentage: 8,
   vic_toll_levy_percentage: 12,
 };
