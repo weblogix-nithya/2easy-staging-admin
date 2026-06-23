@@ -598,12 +598,14 @@ export const GET_PREALLOCATED_JOBS_BY_DRIVER_QUERY = gql`
     $between_at: JobBetweenInput
     $first: Int!
     $page: Int!
+    $orderBy: [OrderByClause!]
   ) {
     jobs(
       preallocation_driver_id: $preallocation_driver_id
       between_at: $between_at
       first: $first
       page: $page
+      orderBy: $orderBy 
     ) {
       data {
         id
