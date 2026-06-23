@@ -2248,7 +2248,6 @@ function JobEdit() {
 
 const handleBTypeReferenceChange = (e) => {
   const { name, value } = e.target;
-console.log (name,value,"nv")
   if (value.length === 1 && value.toUpperCase() !== "B") {
          toast({
         title:
