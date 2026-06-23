@@ -120,7 +120,7 @@ function JobPage() {
   // const textColor = useColorModeValue("navy.700", "white");
   const [job, setJob] = useState(defaultJob);
   const [itemTypes, setItemTypes] = useState([]);
-  // console.log(job, "job");
+  console.log("in create job");
   const [customerSelected, setCustomerSelected] = useState(defaultCustomer);
   const [jobDestinations, setJobDestinations] = useState([
     { ...defaultJobDestination, ...{ id: 2, address_line_1: "" } },
