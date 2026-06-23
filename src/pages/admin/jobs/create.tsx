@@ -146,6 +146,7 @@ function JobPage() {
   const [quoteCalculationRes, setQuoteCalculationRes] = useState(
     defaultJobPriceCalculationDetail,
   );
+  const [BTypeReferenceNumber, setBTypeReferenceNumber] = useState("");
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [tempcalculation, setTempcalculation] = useState({
