@@ -130,7 +130,7 @@ export default function JobBulkAssignModal({
                     (driver: any) => driver.id == e.value,
                   );
                   setSelectedDriver(_selectedDriver);
-                  console.log(_selectedDriver, "selectedDriver")
+                  console.log(_selectedDriver, "selectedDriver");
                 }}
               ></Select>
             </FormControl>
@@ -148,41 +148,46 @@ export default function JobBulkAssignModal({
                 cbm used
               </Text>
             </Flex>
-            <Table>
-              <Thead>
-                <Tr>
-                  {columns.map((column) => (
-                    <Th key={`row-header-bulk-assign-${column.id}`}>
-                      {column.Header}
-                    </Th>
-                  ))}
-                </Tr>
-              </Thead>
-              <Tbody>
-                <DndContext
-                  onDragStart={({ active }) => {
-                    if (!active) {
-                      return;
-                    }
-                    setActiveId(active.id);
-                  }}
-                  onDragEnd={({ over }) => {
-                    setActiveId(null);
-                    if (over) {
-                      const overIndex = getIndex(over.id);
-                      if (activeIndex !== overIndex) {
-                        let newArray = reorderArray(
-                          selectedJobs,
-                          activeIndex,
-                          overIndex,
-                        );
-                        setSelectedJobs(newArray);
-                      }
-                    }
-                  }}
-                  onDragCancel={() => setActiveId(null)}
-                >
-                  <SortableContext items={selectedJobs}>
+            <DndContext
+              onDragStart={({ active }) => {
+                if (!active) {
+                  return;
+                }
+                setActiveId(active.id);
+              }}
+              onDragEnd={({ over }) => {
+                setActiveId(null);
+                if (over) {
+                  const overIndex = getIndex(over.id);
+                  if (activeIndex !== overIndex) {
+                    let newArray = reorderArray(
+                      selectedJobs,
+                      activeIndex,
+                      overIndex,
+                    );
+                    setSelectedJobs(newArray);
+                  }
+                }
+              }}
+              onDragCancel={() => setActiveId(null)}
+            >
+              <Table>
+                <Thead>
+                  <Tr>
+                    {columns.map((column) => (
+                      <Th key={`row-header-bulk-assign-${column.id}`}>
+                        {column.Header}
+                      </Th>
+                    ))}
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  <SortableContext
+                    // items={selectedJobs} // div inside body issue- application error fix
+                    items={selectedJobs.map(
+                      (item: any) => item.original.job.id,
+                    )}
+                  >
                     {selectedJobs.map((item) => {
                       return (
                         <JobBulkAssignRow
@@ -193,9 +198,9 @@ export default function JobBulkAssignModal({
                       );
                     })}
                   </SortableContext>
-                </DndContext>
-              </Tbody>
-            </Table>
+                </Tbody>
+              </Table>
+            </DndContext>
           </VStack>
         </ModalBody>
         <ModalFooter justifyContent={"center"}>

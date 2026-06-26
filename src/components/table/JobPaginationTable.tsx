@@ -221,18 +221,31 @@ PaginationTableProps<T>) => {
       // no need to force here; next render will show real state anyway
     }
   }, [selectedFlatRows]);
+  // function getOptimisticSelected(row: any) {
+  //   const v = optimisticSelRef.current.get(row.id);
+  //   return typeof v === "boolean" ? v : row.isSelected;
+  // }
+
+  // function toggleOptimisticRow(row: any) {
+  //   const next = !getOptimisticSelected(row);
+  //   optimisticSelRef.current.set(row.id, next); // flip instantly
+  //   forceUpdate(); // paint now
+  //   row.toggleRowSelected(next); // real react-table state
+  // }
+
   function getOptimisticSelected(row: any) {
-    const v = optimisticSelRef.current.get(row.id);
-    return typeof v === "boolean" ? v : row.isSelected;
-  }
+  const stableId = String(row.original?.job?.id ?? row.id);
+  const v = optimisticSelRef.current.get(stableId);
+  return typeof v === "boolean" ? v : row.isSelected;
+}
 
-  function toggleOptimisticRow(row: any) {
-    const next = !getOptimisticSelected(row);
-    optimisticSelRef.current.set(row.id, next); // flip instantly
-    forceUpdate(); // paint now
-    row.toggleRowSelected(next); // real react-table state
-  }
-
+function toggleOptimisticRow(row: any) {
+  const stableId = String(row.original?.job?.id ?? row.id);
+  const next = !getOptimisticSelected(row);
+  optimisticSelRef.current.set(stableId, next);
+  forceUpdate();
+  row.toggleRowSelected(next);
+}
   // useEffect(() => {
   //   console.log("Page rows changed:", pageRows.map((r) => r.original?.job?.name));
   // }, [pageRows]);
@@ -332,7 +345,9 @@ PaginationTableProps<T>) => {
               (!prevDriver?.full_name || driver?.id !== prevDriver?.id);
 
             return (
-              <React.Fragment key={`driver-header-${index}`}>
+              // <React.Fragment key={`driver-header-${index}`}>
+                <React.Fragment key={`driver-header-${row.original?.job?.id ?? index}`}>
+
                 {shouldShowDriverHeader && (
                   <Tr>
                     <Td fontSize="md" colSpan={columns.length} p={0}>
@@ -585,7 +600,8 @@ PaginationTableProps<T>) => {
                 )}
                 <Tr
                   {...row.getRowProps()}
-                  key={`data-row-${row.id || index}`}
+                  key={`data-row-${row.original?.job?.id ?? row.id}`}
+                  // key={`data-row-${row.id || index}`}
                   style={getStatusStyle(status)}
                   cursor={showRowSelection ? "pointer" : "default"}
                   onContextMenu={(e) => {
@@ -608,7 +624,7 @@ PaginationTableProps<T>) => {
                   //   isChecked ? () => row.toggleRowSelected() : undefined
                   // }
                 >
-                  {row?.cells?.map((cell, index) => {
+                  {row?.cells?.map((cell) => {
                     let data;
                     if (cell.column.id === "selection") {
                       return (
@@ -616,7 +632,8 @@ PaginationTableProps<T>) => {
                           {...cell.getCellProps({
                             "data-column-id": "selection",
                           })}
-                          key={`selection-${index}`}
+                          // key={`selection-${index}`}
+                          key={`selection-${row.original?.job?.id}-${cell.column.id}`}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (!showRowSelection) return;
@@ -659,7 +676,8 @@ PaginationTableProps<T>) => {
                       data = (
                         <Td
                           fontSize="md"
-                          key={`action-${index}`}
+                          // key={`action-${index}`}
+                          key={`action-${row.original?.job?.id}-${cell.column.id}`}
                           data-column-id="actions"
                           // paddingLeft={restyleTable && 1}
                           // paddingInlineStart={restyleTable && 1}
@@ -761,7 +779,8 @@ PaginationTableProps<T>) => {
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
-                          key={`instructions-${index}`}
+                          // key={`instructions-${index}`}
+                          key={`instructions-${row.original?.job?.id}-${cell.column.id}`}
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
                           paddingRight={restyleTable && 2}
@@ -806,7 +825,8 @@ PaginationTableProps<T>) => {
                           {...cell.getCellProps({
                             "data-column-id": cell.column.id,
                           })}
-                          key={`default-${index}`}
+                          // key={`default-${index}`}
+                          key={`default-${row.original?.job?.id}-${cell.column.id}`}
                           paddingLeft={restyleTable && 1}
                           paddingInlineStart={restyleTable && 1}
                           paddingRight={restyleTable && 2}

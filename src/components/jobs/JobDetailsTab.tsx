@@ -159,7 +159,6 @@ const JobDetailsTab = ({
     setIsDeleteOpen(false);
   };
 
-  
   return (
     <Box mt={10}>
       {/* Basic fields */}
@@ -414,11 +413,40 @@ const JobDetailsTab = ({
             placeholder=""
             name="job_date_at"
             value={jobDateAt ?? ""}
+            min={new Date().toISOString().split("T")[0]}
+            // onChange={(e) => {
+            //   setJobDateAt(e.target.value);
+            //   setIsSameDayJob(today === e.target.value);
+            //   setIsTomorrowJob(
+            //     new Date(e.target.value).toDateString() ===
+            //       new Date(
+            //         new Date(today).setDate(new Date(today).getDate() + 1),
+            //       ).toDateString(),
+            //   );
+            // }}
             onChange={(e) => {
-              setJobDateAt(e.target.value);
-              setIsSameDayJob(today === e.target.value);
+              const selected = e.target.value;
+              const today = new Date().toISOString().split("T")[0];
+
+              // ✅ Guard for past dates (in case browser min is bypassed)
+              if (selected.length >= 8 && selected < today) {
+                Toast({
+                  title: "Invalid Date",
+                  description: "Past dates are not allowed. Reset to today.",
+                  status: "warning",
+                  duration: 4000,
+                  isClosable: true,
+                });
+                setJobDateAt(today);
+                setIsSameDayJob(true);
+                setIsTomorrowJob(false);
+                return;
+              }
+
+              setJobDateAt(selected);
+              setIsSameDayJob(today === selected);
               setIsTomorrowJob(
-                new Date(e.target.value).toDateString() ===
+                new Date(selected).toDateString() ===
                   new Date(
                     new Date(today).setDate(new Date(today).getDate() + 1),
                   ).toDateString(),
@@ -555,13 +583,13 @@ const JobDetailsTab = ({
               }))
             }
           />
-        <CustomInputField
-                    label="B Type Reference:"
-                    placeholder=""
-                    name="b_reference_no"
-                    value={job.b_reference_no}
-                    onChange={handleBTypeReferenceChange}
-                  />
+          <CustomInputField
+            label="B Type Reference:"
+            placeholder=""
+            name="b_reference_no"
+            value={job.b_reference_no}
+            onChange={handleBTypeReferenceChange}
+          />
           <CustomInputField
             label="Booked By:"
             placeholder=""

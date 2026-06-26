@@ -47,7 +47,7 @@ import {
 } from "graphql/quoteLineItem";
 import { GET_QUOTE_SERVICES_QUERY } from "graphql/quoteService";
 import { GET_QUOTE_TYPES_QUERY } from "graphql/quoteType";
-import { formatCurrency, formatDate, formatTime } from "helpers/helper";
+import { formatCurrency, formatDate, formatTime, today } from "helpers/helper";
 import AdminLayout from "layouts/admin";
 // import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
@@ -75,6 +75,7 @@ export default function QuoteEdit() {
   const [queryPageIndex, _setQueryPageIndex] = useState(0);
   const [queryPageSize, _setQueryPageSize] = useState(50);
   const [searchQuery, _setSearchQuery] = useState("");
+  const [requiredDateAt, setRequiredDateAt] = useState(today);
 
   // Addresses
   const [_originalQuoteDestinations, setOriginalQuoteDestinations] = useState(
@@ -112,6 +113,11 @@ export default function QuoteEdit() {
         data.quote.pick_up_destination
           ? data.quote.pick_up_destination
           : { ...defaultQuoteDestination, id: null, is_new: true },
+      );
+      setRequiredDateAt(
+        data.quote.date_required
+          ? formatDate(data.quote.date_required)
+          : requiredDateAt,
       );
       setQuoteDestinations(_quoteDestinations);
       setQuoteItems(data.quote.quote_items);
@@ -203,6 +209,70 @@ export default function QuoteEdit() {
     },
   });
 
+  const handleValidation = (): boolean => {
+    if (!pickUpDestination || !pickUpDestination.address) {
+      toast({
+        title: "Please add pickup address",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    if (!quoteDestinations || quoteDestinations.length === 0) {
+      toast({
+        title: "Please add at least one delivery address",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    const hasInvalidDestination = quoteDestinations.some(
+      (dest) =>
+        !dest?.address ||
+        dest.address.trim() === "" ||
+        !dest?.lat ||
+        !dest?.lng,
+    );
+
+    if (hasInvalidDestination) {
+      toast({
+        title: "Please complete all delivery addresses",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    if (!requiredDateAt) {
+      toast({
+        title: "Please select required date",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    const selectedDate = new Date(requiredDateAt);
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate <= today) {
+      toast({
+        title:
+          'Please select a future date in "Date Required" field for booking',
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const [handleApproveQuote, { loading: isApprovingQuote }] = useMutation(
     APPROVE_QUOTE_MUTATION,
     {
@@ -236,7 +306,7 @@ export default function QuoteEdit() {
     setSubTotal(quote.sub_total);
     setGst(quote.total_tax);
     setTotal(quote.total);
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quote]);
 
   return (
@@ -828,6 +898,7 @@ export default function QuoteEdit() {
               isDisabled={isApprovingQuote}
               colorScheme="blue"
               onClick={() => {
+                if (!handleValidation()) return;
                 handleApproveQuote();
               }}
             >

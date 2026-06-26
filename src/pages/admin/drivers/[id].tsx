@@ -168,7 +168,7 @@ function DriverEdit() {
     },
   });
 
-  const [handleUpdateDriver, { }] = useMutation(UPDATE_DRIVER_MUTATION, {
+  const [handleUpdateDriver, {}] = useMutation(UPDATE_DRIVER_MUTATION, {
     variables: {
       input: {
         ...driver,
@@ -194,7 +194,7 @@ function DriverEdit() {
     },
   });
 
-  const [handleDeleteDriver, { }] = useMutation(DELETE_DRIVER_MUTATION, {
+  const [handleDeleteDriver, {}] = useMutation(DELETE_DRIVER_MUTATION, {
     variables: {
       id: id,
     },
@@ -971,26 +971,26 @@ function DriverEdit() {
                         {
                           // loop to show images
                           driver.license_media &&
-                          driver.license_media.map((image, index) => (
-                            <Flex
-                              key={index}
-                              alignItems="center"
-                              justifyContent="center"
-                              width="130px"
-                              height="130px"
-                              border="1px solid #E2E8F0"
-                              borderRadius="4px"
-                              mr="4"
-                            >
-                              <Image
-                                src={image.downloadable_url}
-                                alt={image.name}
-                                width="100%"
-                                height="100%"
-                                objectFit="cover"
-                              />
-                            </Flex>
-                          ))
+                            driver.license_media.map((image, index) => (
+                              <Flex
+                                key={index}
+                                alignItems="center"
+                                justifyContent="center"
+                                width="130px"
+                                height="130px"
+                                border="1px solid #E2E8F0"
+                                borderRadius="4px"
+                                mr="4"
+                              >
+                                <Image
+                                  src={image.downloadable_url}
+                                  alt={image.name}
+                                  width="100%"
+                                  height="100%"
+                                  objectFit="cover"
+                                />
+                              </Flex>
+                            ))
                         }
                         <FileInput
                           width="130px"
@@ -1028,7 +1028,10 @@ function DriverEdit() {
                         name="insurance_name"
                         value={driver.insurance_name}
                         onChange={(e) =>
-                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                          setDriver({
+                            ...driver,
+                            [e.target.name]: e.target.value,
+                          })
                         }
                         placeholder=""
                         mb="0"
@@ -1057,7 +1060,10 @@ function DriverEdit() {
                         name="insurance_number"
                         value={driver.insurance_number}
                         onChange={(e) =>
-                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                          setDriver({
+                            ...driver,
+                            [e.target.name]: e.target.value,
+                          })
                         }
                         placeholder=""
                         mb="0"
@@ -1086,7 +1092,10 @@ function DriverEdit() {
                         name="insurance_expire_at"
                         value={driver.insurance_expire_at}
                         onChange={(e) =>
-                          setDriver({ ...driver, [e.target.name]: e.target.value })
+                          setDriver({
+                            ...driver,
+                            [e.target.name]: e.target.value,
+                          })
                         }
                         placeholder=""
                         mb="0"
@@ -1475,7 +1484,7 @@ function DriverEdit() {
                           name="no_max_capacity"
                           value={driver.no_max_capacity}
                           onChange={(e) =>
-                           setDriver({
+                            setDriver({
                               ...driver,
                               [e.target.name]: parseFloat(e.target.value),
                             })
@@ -1556,7 +1565,7 @@ function DriverEdit() {
                         fontWeight="500"
                         color={textColor}
                       >
-                        Vehicle length
+                        Vehicle length (Internal)
                       </FormLabel>
 
                       <Flex width="100%">
@@ -1604,7 +1613,7 @@ function DriverEdit() {
                         fontWeight="500"
                         color={textColor}
                       >
-                        Vehicle height
+                        Vehicle height (Internal)
                       </FormLabel>
 
                       <Flex width="100%">
@@ -1617,6 +1626,54 @@ function DriverEdit() {
                           type="number"
                           name="no_max_height"
                           value={driver.no_max_height}
+                          onChange={(e) =>
+                            setDriver({
+                              ...driver,
+                              [e.target.name]: parseFloat(e.target.value),
+                            })
+                          }
+                          placeholder=""
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                          width="40%"
+                        />
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          mt="3"
+                          pl="10px"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          m
+                        </FormLabel>
+                      </Flex>
+                    </Flex>
+                    <Flex alignItems="center" mb="16px">
+                      <FormLabel
+                        display="flex"
+                        mb="0"
+                        width="200px"
+                        fontSize="sm"
+                        fontWeight="500"
+                        color={textColor}
+                      >
+                        Vehicle height (External)
+                      </FormLabel>
+
+                      <Flex width="100%">
+                        <Input
+                          isRequired={true}
+                          variant="main"
+                          fontSize="sm"
+                          step="any"
+                          ms={{ base: "0px", md: "0px" }}
+                          type="number"
+                          name="external_height"
+                          value={driver.external_height}
                           onChange={(e) =>
                             setDriver({
                               ...driver,
@@ -1785,26 +1842,26 @@ function DriverEdit() {
                         {
                           // loop to show images
                           driver.vehicle_media &&
-                          driver.vehicle_media.map((image, index) => (
-                            <Flex
-                              key={index}
-                              alignItems="center"
-                              justifyContent="center"
-                              width="130px"
-                              height="130px"
-                              border="1px solid #E2E8F0"
-                              borderRadius="4px"
-                              mr="4"
-                            >
-                              <Image
-                                src={image.downloadable_url}
-                                alt={image.name}
-                                width="100%"
-                                height="100%"
-                                objectFit="cover"
-                              />
-                            </Flex>
-                          ))
+                            driver.vehicle_media.map((image, index) => (
+                              <Flex
+                                key={index}
+                                alignItems="center"
+                                justifyContent="center"
+                                width="130px"
+                                height="130px"
+                                border="1px solid #E2E8F0"
+                                borderRadius="4px"
+                                mr="4"
+                              >
+                                <Image
+                                  src={image.downloadable_url}
+                                  alt={image.name}
+                                  width="100%"
+                                  height="100%"
+                                  objectFit="cover"
+                                />
+                              </Flex>
+                            ))
                         }
                         <FileInput
                           width="130px"

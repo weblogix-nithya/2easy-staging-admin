@@ -124,8 +124,6 @@ function JobEdit() {
   const [job, setJob] = useState(defaultJob);
   const [reportJob, setReportJob] = useState<ReportJob>(defaultReportJob);
   const [deleteReason, setDeleteReason] = useState("");
-  const [BTypeReferenceNumber, setBTypeReferenceNumber] = useState("");
-
   const [refinedData, setRefinedData] = useState({
     ...defaultJobQuoteData,
     // total_cbm: 0,
@@ -396,7 +394,6 @@ function JobEdit() {
           b_reference_no:data?.job.b_reference_no
         }));
 
-        setBTypeReferenceNumber(data?.job.reference_no);
         if (data?.job.company_area && companyRates.length > 0) {
           const matchingRate = companyRates.find(
             (rate) => rate.area === data.job.company_area,

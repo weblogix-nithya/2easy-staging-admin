@@ -55,6 +55,7 @@ export const GET_DRIVERS_QUERY = gql`
         no_max_volume
         no_max_length
         no_max_height
+        external_height
         registration_no
         vehicle_make
         vehicle_model
@@ -150,6 +151,7 @@ export const GET_AVAILABLE_DRIVERS_QUERY = gql`
         no_max_volume
         no_max_length
         no_max_height
+        external_height
         registration_no
         vehicle_make
         vehicle_model
@@ -236,6 +238,7 @@ export const GET_DRIVER_QUERY = gql`
       no_max_volume
       no_max_length
       no_max_height
+      external_height
       registration_no
       vehicle_make
       vehicle_model
@@ -325,6 +328,7 @@ export const CREATE_DRIVER_MUTATION = gql`
       no_max_volume
       no_max_length
       no_max_height
+      external_height
       registration_no
       vehicle_make
       vehicle_model
@@ -393,6 +397,7 @@ export const UPDATE_DRIVER_MUTATION = gql`
       no_max_volume
       no_max_length
       no_max_height
+      external_height
       registration_no
       vehicle_make
       vehicle_model
@@ -462,6 +467,7 @@ export interface UpdateDriverInput {
   no_max_volume: number;
   no_max_length: number;
   no_max_height: number;
+  external_height: number;
   registration_no: string;
   vehicle_make: string;
   vehicle_model: string;
@@ -524,6 +530,7 @@ export interface CreateDriverInput {
   no_max_volume: number;
   no_max_length: number;
   no_max_height: number;
+  external_height: number;
   registration_no: string;
   vehicle_make: string;
   vehicle_model: string;
@@ -554,7 +561,7 @@ export interface CreateDriverInput {
   insurance_number: string;
   insurance_expire_at: string;
   earning_toggle: boolean;
-};
+}
 
 export type Driver = {
   id: number | null;
@@ -587,6 +594,7 @@ export type Driver = {
   no_max_volume: number | null;
   no_max_length: number | null;
   no_max_height: number | null;
+  external_height: number | null;
   registration_no: string | null;
   vehicle_make: string | null;
   vehicle_model: string | null;
@@ -656,6 +664,7 @@ export const defaultDriver: Driver = {
   no_max_volume: 0,
   no_max_length: 0,
   no_max_height: 0,
+  external_height: 0,
   registration_no: "",
   vehicle_make: "",
   vehicle_model: "",

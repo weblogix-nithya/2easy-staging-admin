@@ -817,6 +817,69 @@ export default function QuoteEdit() {
       showGraphQLErrorToast(error);
     },
   });
+  const handleValidation = (): boolean => {
+    if (!pickUpDestination || !pickUpDestination.address) {
+      toast({
+        title: "Please add pickup address",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    if (!quoteDestinations || quoteDestinations.length === 0) {
+      toast({
+        title: "Please add at least one delivery address",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    const hasInvalidDestination = quoteDestinations.some(
+      (dest) =>
+        !dest?.address ||
+        dest.address.trim() === "" ||
+        !dest?.lat ||
+        !dest?.lng,
+    );
+
+    if (hasInvalidDestination) {
+      toast({
+        title: "Please complete all delivery addresses",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    if (!requiredDateAt) {
+      toast({
+        title: "Please select required date",
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    const selectedDate = new Date(requiredDateAt);
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate <= today) {
+      toast({
+        title:
+          'Please select a future date in "Date Required" field for booking',
+        status: "error",
+        duration: 3000,
+      });
+      return false;
+    }
+
+    return true;
+  };
   const handleUpdateThenProcessAndBook = async () => {
     try {
       const res = await handleUpdateQuote({
@@ -2208,75 +2271,7 @@ export default function QuoteEdit() {
                         // }}
                         onClick={() => {
                           // ✅ check pickup
-                          if (
-                            !pickUpDestination ||
-                            !pickUpDestination.address
-                          ) {
-                            toast({
-                              title: "Please add pickup address",
-                              status: "error",
-                              duration: 3000,
-                            });
-                            return;
-                          }
-
-                          // ✅ check at least 1 delivery
-                          if (
-                            !quoteDestinations ||
-                            quoteDestinations.length === 0
-                          ) {
-                            toast({
-                              title: "Please add at least one delivery address",
-                              status: "error",
-                              duration: 3000,
-                            });
-                            return;
-                          }
-
-                          // ✅ NEW: validate each destination address
-                          const hasInvalidDestination = quoteDestinations.some(
-                            (dest) =>
-                              !dest?.address ||
-                              dest.address.trim() === "" ||
-                              !dest?.lat ||
-                              !dest?.lng,
-                          );
-
-                          if (hasInvalidDestination) {
-                            toast({
-                              title: "Please complete all delivery addresses",
-                              status: "error",
-                              duration: 3000,
-                            });
-                            return;
-                          }
-                          if (!requiredDateAt) {
-                            toast({
-                              title: "Please select required date",
-                              status: "error",
-                              duration: 3000,
-                            });
-                            return;
-                          }
-
-                          const selectedDate = new Date(requiredDateAt);
-                          const today = new Date();
-
-                          // 🔥 normalize (remove time part)
-                          today.setHours(0, 0, 0, 0);
-                          selectedDate.setHours(0, 0, 0, 0);
-
-                          // ❌ block past + today
-                          if (selectedDate <= today) {
-                            toast({
-                              title: `Please select a future date in "Date Required" field for booking`,
-                              status: "error",
-                              duration: 3000,
-                            });
-                            return;
-                          }
-
-                          // ✅ only future allowed
+                          if (!handleValidation()) return; // ✅ only future allowed
                           handleUpdateThenProcessAndBook();
                         }}
                       >
@@ -2290,6 +2285,7 @@ export default function QuoteEdit() {
                         variant="primary"
                         isDisabled={isProcessing}
                         onClick={() => {
+                            if (!handleValidation()) return;
                           handleProcess();
                         }}
                       >
@@ -2301,6 +2297,7 @@ export default function QuoteEdit() {
                         variant="secondary"
                         isDisabled={isSending}
                         onClick={() => {
+                            if (!handleValidation()) return;
                           handleSendQuote();
                         }}
                       >
@@ -2313,6 +2310,7 @@ export default function QuoteEdit() {
                         isDisabled={isSaving}
                         onClick={() => {
                           // handleUpdateQuote();
+                            if (!handleValidation()) return;
                           handleUpdateQuote({
                             variables: buildUpdateInput(),
                           });
