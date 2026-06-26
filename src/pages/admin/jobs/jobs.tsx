@@ -718,7 +718,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
   const { refetch: getAvailableDrivers } = useQuery(
     GET_AVAILABLE_DRIVERS_QUERY,
     {
-      skip: true,
+      // skip: true,
       variables: {
         query: "",
         page: 1,
