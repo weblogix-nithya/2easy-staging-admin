@@ -2,17 +2,23 @@ import { Td, Text, Tr } from "@chakra-ui/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { formatDate } from "helpers/helper";
+import React from "react";
+import { MdDragIndicator } from "react-icons/md";
 
-export function JobBulkAssignRow(props: {
+interface JobBulkAssignRowProps {
   columns: any[];
   item: any;
   isDragOverlay?: boolean;
-  sortId?: string | number; // ✅ NEW: explicit id override for cases where item has no top-level id
-}) {
-  const { columns, item, isDragOverlay = false, sortId } = props;
+  sortId?: string | number;
+}
 
-  // ✅ Use sortId if provided, else fallback to item.id
-  const resolvedId = sortId ?? item?.id;
+export const JobBulkAssignRow = React.memo(function JobBulkAssignRow({
+  columns,
+  item,
+  isDragOverlay = false,
+  sortId,
+}: JobBulkAssignRowProps) {
+  const resolvedId = String(sortId ?? item?.original?.job?.id ?? item?.id ?? "");
 
   const {
     attributes,
@@ -26,60 +32,101 @@ export function JobBulkAssignRow(props: {
     disabled: isDragOverlay,
   });
 
-  const style = {
+  const rowStyle: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0 : 1,
-    position: "relative" as const,
-    zIndex: isDragging ? 0 : "auto",
+    opacity: isDragging ? 0.15 : 1,
+    position: "relative",
+    zIndex: isDragging ? 1 : "auto",
+    background: isDragging ? "#f0f8ff" : undefined,
   };
 
-  const overlayStyle = {
-    background: "#EBF8FF",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
-    opacity: 0.97,
-    cursor: "grabbing",
-  };
+  // ✅ FIX: DragOverlay — native <tr><td>, NOT Chakra <Tr><Td>
+  // Chakra Tr calls useTableStyles() which requires <Table> context.
+  // DragOverlay renders in document.body portal — no Table context → crash.
+  if (isDragOverlay) {
+    return (
+      <tr
+        style={{
+          background: "#EBF8FF",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+          opacity: 0.95,
+          cursor: "grabbing",
+        }}
+      >
+        {/* ✅ Lightweight overlay — only show job name, not all 25 heavy cells */}
+        <td
+          colSpan={columns.length}
+          style={{
+            padding: "8px 12px",
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "#1d2d53",
+          }}
+        >
+          🚚 {item?.original?.job?.name ?? "Job"}
+        </td>
+      </tr>
+    );
+  }
 
   return (
-    <Tr
-      key={item?.original?.id}
-      ref={setNodeRef}
-      style={isDragOverlay ? overlayStyle : style}
-    >
-      {columns.map((column) => {
+    <Tr ref={setNodeRef} style={rowStyle}>
+      {columns.map((column, colIndex) => {
         const CellComponent = column.Cell;
         const isWeight = column.id === "total_weight";
         const isVolume = column.id === "total_volume";
-        const bgColor = isDragOverlay
-          ? undefined
-          : isWeight
-            ? item.original?.job?.weight_color ?? "transparent"
-            : isVolume
-              ? item.original?.job?.volume_color ?? "transparent"
-              : undefined;
+        const bgColor = isWeight
+          ? (item.original?.job?.weight_color ?? undefined)
+          : isVolume
+            ? (item.original?.job?.volume_color ?? undefined)
+            : undefined;
+
+        const content = CellComponent ? (
+          <CellComponent row={item} />
+        ) : column?.type === "date" ? (
+          <Text fontSize="xs">
+            {item.original?.[column.accessor]
+              ? formatDate(item.original[column.accessor], "DD/MM/YYYY")
+              : "-"}
+          </Text>
+        ) : (
+          <Text fontSize="xs">{item.original?.[column.accessor] ?? "-"}</Text>
+        );
+
+        // ✅ FIX: drag handle on FIRST column only — not every cell
+        // BEFORE: {...attributes} {...listeners} on ALL 25 cells = 25x event overhead
+        // AFTER:  drag grip icon on first cell only = clean, fast drag
+        if (colIndex === 0) {
+          return (
+            <Td key={column.id} bg={bgColor} style={{ padding: "4px 8px", width: "40px" }}>
+              <div
+                {...attributes}
+                {...listeners}
+                style={{
+                  cursor: isDragging ? "grabbing" : "grab",
+                  touchAction: "none",
+                  userSelect: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                <MdDragIndicator style={{ color: "#999", fontSize: "18px", flexShrink: 0 }} />
+                {content}
+              </div>
+            </Td>
+          );
+        }
 
         return (
-          <Td key={column.id} bg={bgColor}>
-            <div
-              style={{ cursor: isDragOverlay ? "grabbing" : "grab" }}
-              {...(!isDragOverlay ? { ...attributes, ...listeners } : {})}
-            >
-              {CellComponent ? (
-                <CellComponent row={item} />
-              ) : column?.type === "date" ? (
-                <Text>
-                  {item.original[column.accessor]
-                    ? formatDate(item.original[column.accessor], "DD/MM/YYYY")
-                    : "-"}
-                </Text>
-              ) : (
-                <Text>{item.original[column.accessor]}</Text>
-              )}
-            </div>
+          <Td key={column.id} bg={bgColor} style={{ padding: "4px 8px" }}>
+            {content}
           </Td>
         );
       })}
     </Tr>
   );
-}
+});
+
+JobBulkAssignRow.displayName = "JobBulkAssignRow";

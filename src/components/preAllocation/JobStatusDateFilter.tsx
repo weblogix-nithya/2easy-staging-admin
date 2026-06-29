@@ -11,12 +11,13 @@ import {
   Flex,
   Table,
   Tbody,
+  Td,
   Text, Th,
   Thead, Tr, VStack
 } from "@chakra-ui/react";
 import DateRangePicker from "@wojtekmaj/react-daterange-picker";
 import { Select } from "chakra-react-select";
-import { JobBulkAssignRow } from "components/preAllocation/PreJobBulkAssignRow";
+import { formatDate } from "helpers/helper";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface Driver {
@@ -254,13 +255,37 @@ const JobStatusDateFilter = ({
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {selectedJobs.map((item) => (
-                      <JobBulkAssignRow
-                        key={item.original.job.id}
-                        columns={columns.slice(1)}
-                        item={item}
-                      />
-                    ))}
+                    {/* ✅ FIX: plain Tr/Td — JobBulkAssignRow has useSortable() hook
+                        which requires DndContext. Without it rows crash/fade.
+                        This is display-only so no drag needed. */}
+                    {selectedJobs.map((item) => {
+                      const job = item?.original?.job;
+                      return (
+                        <Tr key={job?.id}>
+                          {columns.slice(1).map((column) => {
+                            const CellComponent = column.Cell;
+                            const bg = column.id === "total_weight"
+                              ? (job?.weight_color ?? undefined)
+                              : column.id === "total_volume"
+                                ? (job?.volume_color ?? undefined)
+                                : undefined;
+                            return (
+                              <Td key={column.id} bg={bg} py={1} px={2} fontSize="xs">
+                                {CellComponent ? (
+                                  <CellComponent row={item} />
+                                ) : column?.type === "date" ? (
+                                  item.original?.[column.accessor]
+                                    ? formatDate(item.original[column.accessor], "DD/MM/YYYY")
+                                    : "-"
+                                ) : (
+                                  item.original?.[column.accessor] ?? "-"
+                                )}
+                              </Td>
+                            );
+                          })}
+                        </Tr>
+                      );
+                    })}
                   </Tbody>
                 </Table>
               </VStack>

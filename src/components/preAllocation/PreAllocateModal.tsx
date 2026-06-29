@@ -28,8 +28,7 @@ import {
   DragOverlay,
   DragStartEvent,
   KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
+  PointerSensor,
   UniqueIdentifier,
   useSensor,
   useSensors,
@@ -54,7 +53,7 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   columns: any[];
   refreshPage: any;
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
-  setIsChecked: React.Dispatch<React.SetStateAction<any>>;
+  setIsChecked: () => void; // ✅ clearAllRows — just call to clear checkboxes
 }
 
 export default function PreAllocateModal({
@@ -103,12 +102,12 @@ export default function PreAllocateModal({
   // Ref to avoid stale activeId inside onDragEnd closure
   const activeIdRef = useRef<UniqueIdentifier | null>(null);
 
+  // ✅ FIX: PointerSensor instead of MouseSensor + TouchSensor
+  // PointerSensor handles mouse + touch in one sensor — more reliable for table rows
+  // distance:5 = less travel needed before drag activates (was 8 = too much)
   const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 8 },
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,

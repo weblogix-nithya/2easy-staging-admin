@@ -436,6 +436,15 @@ export const DELETE_DRIVER_MUTATION = gql`
   }
 `;
 
+export const GET_ALL_DRIVERS_QUERY = gql`
+  query {
+    allAvailableDrivers(available: true) {
+      id
+      full_name
+    }
+  }
+`;
+
 export interface UpdateDriverInput {
   id: number;
   user_id: number;

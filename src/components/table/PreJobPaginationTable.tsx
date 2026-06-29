@@ -1,4 +1,13 @@
 // @ts-nocheck
+// PreJobPaginationTable.tsx — PERFORMANCE FIXED
+// Key fixes:
+//   1. DataRow extracted to React.memo — only clicked row re-renders (not all 100)
+//   2. OptimisticCheckbox extracted to React.memo — instant visual feedback
+//   3. DriverHeaderRow extracted to React.memo — never re-renders on checkbox click
+//   4. Per-row version counter (rowVersions) replaces global forceUpdate
+//   5. BUG FIX: row.id key (not index) — correct row highlight on click
+//   6. BUG FIX: selectionOrderRef — correct order in bulk screen
+
 import {
   Badge,
   Box,
@@ -30,7 +39,14 @@ import { Select } from "chakra-react-select";
 import { SortAlt } from "components/icons/Icons";
 import { formatCurrency, formatDate, formatToTimeDate } from "helpers/helper";
 import { useRouter } from "next/router";
-import React, { useEffect, useRef } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { HiChevronLeft, HiChevronRight } from "react-icons/hi";
 import {
   Column,
@@ -44,7 +60,7 @@ import {
 
 import { getTimeslotBgColor } from "./JobPaginationTable";
 
-// Non-toggle column ids
+// ─── Constants ────────────────────────────────────────────────────────────────
 const EXCLUDED_IDS = new Set([
   "actions",
   "admin_notes",
@@ -52,36 +68,309 @@ const EXCLUDED_IDS = new Set([
   "job_destinations.address",
 ]);
 
-// Click landed on a control? then don't toggle the row.
 const isInteractive = (el: HTMLElement | null): boolean =>
   !!el?.closest(
     'a,button,[role="button"],input,textarea,select,[contenteditable="true"],[data-no-row-toggle]',
   );
 
-export const isAdmin = (state: RootState) => state.user.isAdmin;
-export const isCustomer = (state: RootState) => state.user.isCustomer;
-
 const getStatusStyle = (status: string) => {
   const st = status?.toLowerCase();
-
-  if (st === "in transit") {
-    return { background: "#FFD580", color: "#8B4000" }; // brighter orange
-  }
-
-  if (st === "assigned") {
-    return { background: "#FFFACD", color: "#665c00" }; // light lemon yellow
-  }
-
-  if (["completed", "delivered"].includes(st)) {
-    return { background: "#d4edda", color: "#155724" }; // green
-  }
-
-  if (["rejected", "cancelled"].includes(st)) {
-    return { background: "#f8d7da", color: "#721c24" }; // red
-  }
-
+  if (st === "in transit") return { background: "#FFD580", color: "#8B4000" };
+  if (st === "assigned") return { background: "#FFFACD", color: "#665c00" };
+  if (["completed", "delivered"].includes(st)) return { background: "#d4edda", color: "#155724" };
+  if (["rejected", "cancelled"].includes(st)) return { background: "#f8d7da", color: "#721c24" };
   return {};
 };
+
+// ─── DriverHeaderRow ──────────────────────────────────────────────────────────
+// memo: never re-renders when checkboxes change
+const DriverHeaderRow = memo(({
+  driver,
+  columnsLength,
+  onAssignClick,
+}: {
+  driver: any;
+  columnsLength: number;
+  onAssignClick?: (driver: any) => void;
+}) => (
+  <Tr>
+    <Td colSpan={columnsLength} p={0}>
+      <Box
+        bg={driver.bgcolor === "blue" ? "rgb(29, 45, 83)" : "rgb(250, 220, 82)"}
+        color={driver.bgcolor === "yellow" ? "#000" : "#fff"}
+        px={6} py={3}
+        borderTop="4px solid" borderLeft="4px solid"
+        borderColor="#2F80ED"
+        borderRadius="md" w="100%"
+      >
+        <VStack align="start" spacing={3} w="full">
+          <Flex direction="column" align="start" wrap="wrap" gap={3} w="full">
+            <Flex wrap="wrap" align="start" gap={3}>
+              <Badge colorScheme="Darkblue" variant="subtle" fontSize="md" style={{ marginRight: "10px" }}>
+                #{driver.id} : {driver.full_name}
+              </Badge>
+              <Badge colorScheme="purple" variant="subtle" fontSize="md">
+                First Collection: {formatToTimeDate(driver.first_job_start_at_today)}
+              </Badge>
+              <Badge colorScheme="purple" variant="subtle" fontSize="md">
+                Last Delivery: {formatToTimeDate(driver.last_job_drop_at_today)}
+              </Badge>
+              {driver.bgcolor === "yellow" && (
+                <Button
+                  type="button" px={5} py={1} colorScheme="blue" fontSize="sm"
+                  onClick={(e) => { e.stopPropagation(); onAssignClick?.(driver); }}
+                >
+                  Assign Jobs
+                </Button>
+              )}
+              {driver.bgcolor === "blue" && (
+                <>
+                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                    Today Price: {driver.total_jobs_today_price ?? 0}
+                  </Badge>
+                  <Badge colorScheme="red" variant="subtle" fontSize="sm">
+                    Weekly Price: {driver.total_jobs_weekly_price ?? 0}
+                  </Badge>
+                </>
+              )}
+            </Flex>
+          </Flex>
+          <Flex wrap="wrap" align="start" gap={3} w="full">
+            <Badge colorScheme="red" variant="subtle" fontSize="sm">Current Suburb: {driver.current_suburb || "-"}</Badge>
+            <Badge colorScheme="red" variant="subtle" fontSize="sm">Mobile Number: {driver.phone_no || "-"}</Badge>
+            <Badge colorScheme="red" variant="subtle" fontSize="sm">Rego: {driver.registration_no ?? "-"}</Badge>
+            <Badge colorScheme="red" variant="subtle" fontSize="sm">TAILGATE: {driver.is_tailgated ? "Yes" : "No"}</Badge>
+            <Badge colorScheme="blue" variant="subtle" fontSize="sm">
+              CBM: {driver.cbm_summary_today ?? 0} / {driver.no_max_volume ?? 0}
+            </Badge>
+            <Badge colorScheme="blue" variant="subtle" fontSize="sm">
+              Weight: {driver.weight_summary_today ?? 0} / {driver.no_max_capacity ?? 0}
+            </Badge>
+            <Badge colorScheme="blue" variant="subtle" fontSize="sm">Pallets: {driver.no_max_pallets ?? 0}</Badge>
+          </Flex>
+        </VStack>
+      </Box>
+    </Td>
+  </Tr>
+));
+DriverHeaderRow.displayName = "DriverHeaderRow";
+
+// ─── OptimisticCheckbox ───────────────────────────────────────────────────────
+// memo: re-renders ONLY when isSelected changes for this specific row
+const OptimisticCheckbox = memo(({ isSelected }: { isSelected: boolean }) => (
+  <Box pointerEvents="none">
+    <Box
+      boxSize="16px"
+      border="1px solid"
+      borderColor="gray.300"
+      borderRadius="2px"
+      bg={isSelected ? "blue.500" : "white"}
+      position="relative"
+    >
+      {isSelected && (
+        <Box
+          position="absolute" inset="2px" bg="white"
+          clipPath="polygon(14% 44%, 0 59%, 44% 100%, 100% 36%, 86% 22%, 44% 64%)"
+        />
+      )}
+    </Box>
+  </Box>
+));
+OptimisticCheckbox.displayName = "OptimisticCheckbox";
+
+// ─── DataRow ──────────────────────────────────────────────────────────────────
+// memo: ONLY re-renders when isSelected changes for THIS specific row
+// Other rows stay frozen — this is the main performance fix
+const DataRow = memo(({
+  row,
+  columns,
+  isSelected,
+  showRowSelection,
+  restyleTable,
+  path,
+  onContextMenu,
+  onToggle,
+  onDelete,
+}: {
+  row: any;
+  columns: any[];
+  isSelected: boolean;
+  showRowSelection: boolean;
+  restyleTable: boolean;
+  path?: string;
+  onContextMenu?: (e: React.MouseEvent, job: any) => void;
+  onToggle: (rowId: string) => void;
+  onDelete?: (id: any) => void;
+}) => {
+  const router = useRouter();
+  const status = row.original?.job?.job_status?.name;
+
+  const handleRowClick = useCallback((e: React.MouseEvent) => {
+    if (!showRowSelection) return;
+    const target = e.target as HTMLElement;
+    if (isInteractive(target)) return;
+    const td = target.closest("td");
+    const colId = td?.getAttribute("data-column-id") || "";
+    if (EXCLUDED_IDS.has(colId)) return;
+    onToggle(row.id);
+  }, [showRowSelection, onToggle, row.id]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    if (onContextMenu) onContextMenu(e, row.original.job);
+  }, [onContextMenu, row.original.job]);
+
+  const handleCheckboxClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (showRowSelection) onToggle(row.id);
+  }, [showRowSelection, onToggle, row.id]);
+
+  return (
+    <Tr
+      {...row.getRowProps()}
+      style={getStatusStyle(status)}
+      cursor={showRowSelection ? "pointer" : "default"}
+      onContextMenu={handleContextMenu}
+      onClick={handleRowClick}
+    >
+      {row?.cells?.map((cell: any, cellIndex: number) => {
+        // ── Selection checkbox ──
+        if (cell.column.id === "selection") {
+          return (
+            <Td
+              {...cell.getCellProps({ "data-column-id": "selection" })}
+              key={`sel-${row.id}-${cellIndex}`}
+              onClick={handleCheckboxClick}
+              cursor="pointer"
+              fontSize="xx-small"
+            >
+              <OptimisticCheckbox isSelected={isSelected} />
+            </Td>
+          );
+        }
+
+        // ── Actions column ──
+        if (cell.column.Header === "Actions") {
+          return (
+            <Td key={`act-${row.id}-${cellIndex}`} data-column-id="actions">
+              <Flex gap={2} wrap="wrap" align="center">
+                {cell.column.isDownload && (
+                  <Link href={cell.value} target="_blank" fontWeight="700"
+                    data-no-row-toggle onClick={(e) => e.stopPropagation()}>
+                    <Button bg="white" fontSize="sm" className="!text-[var(--chakra-colors-black-400)]">
+                      <FontAwesomeIcon icon={faDownload} size="lg" className="!text-[var(--chakra-colors-black-400)]" />
+                    </Button>
+                  </Link>
+                )}
+                {(cell.column.isEdit == undefined || cell.column.isEdit) && (
+                  <Link href={`${path || router.pathname}/${cell.row.original.job.id}`}
+                    fontWeight="700" data-no-row-toggle onClick={(e) => e.stopPropagation()}>
+                    <Button bg="white" fontSize="sm" className="!text-[var(--chakra-colors-black-400)]">
+                      <FontAwesomeIcon icon={faPen} size="lg" className="!text-[var(--chakra-colors-black-400)]" />
+                    </Button>
+                  </Link>
+                )}
+                {cell.column.isView && (
+                  <Link href={`${path || router.pathname}/${cell.row.original.job.id}`}
+                    fontWeight="700" data-no-row-toggle onClick={(e) => e.stopPropagation()}>
+                    <Button bg="white" fontSize="sm" className="!text-[var(--chakra-colors-black-400)]">
+                      <FontAwesomeIcon icon={faEye} size="lg" className="!text-[var(--chakra-colors-black-400)]" />
+                    </Button>
+                  </Link>
+                )}
+                {cell.column.isTracking && (
+                  <Link href={`${path || router.pathname}/tracking/${cell.row.original.job.id}`}
+                    fontWeight="700" data-no-row-toggle onClick={(e) => e.stopPropagation()}>
+                    <Button bg="white" fontSize="sm" className="!text-[#3B68DB]">Track</Button>
+                  </Link>
+                )}
+                {cell.column.isDelete && (
+                  <Button bg="white" fontSize="sm" className="!text-[var(--chakra-colors-black-400)]"
+                    onClick={() => onDelete?.(cell.row.original.job.id)}>
+                    <FontAwesomeIcon
+                      icon={cell.column.deleteIcon != undefined ? cell.column.deleteIcon : faTrashAlt}
+                      size="lg" className="!text-[var(--chakra-colors-black-400)]"
+                    />
+                  </Button>
+                )}
+              </Flex>
+            </Td>
+          );
+        }
+
+        // ── Instructions column ──
+        if (cell.column.Header === "Instructions") {
+          return (
+            <Td
+              {...cell.getCellProps({ "data-column-id": cell.column.id })}
+              key={`ins-${row.id}-${cellIndex}`}
+              paddingLeft={restyleTable && 1} paddingInlineStart={restyleTable && 1}
+              paddingRight={restyleTable && 2} paddingInlineEnd={restyleTable && 2}
+            >
+              <Tooltip
+                aria-label="A tooltip"
+                label={
+                  <div className="text-xs">
+                    <p className="mb-2"><strong>Pick up Person: </strong>{row.original?.pick_up_name || "N/A"}</p>
+                    <p><strong>Instructions: </strong>{row.original?.pick_up_notes || "N/A"}</p>
+                  </div>
+                }
+              >
+                <FontAwesomeIcon
+                  icon={faMessageLines}
+                  size="lg"
+                  className="!text-[var(--chakra-colors-black-400)] hover:!text-[var(--chakra-colors-primary-400)]"
+                  data-no-row-toggle
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </Tooltip>
+            </Td>
+          );
+        }
+
+        // ── Default column ──
+        return (
+          <Td
+            {...cell.getCellProps({ "data-column-id": cell.column.id })}
+            key={`def-${row.id}-${cellIndex}`}
+            paddingLeft={restyleTable && 1} paddingInlineStart={restyleTable && 1}
+            paddingRight={restyleTable && 2} paddingInlineEnd={restyleTable && 2}
+            pr="20px"
+            bg={
+              cell.column.id === "timeslot" &&
+                !["6", "7", "8", "9", "10"].includes(row?.original?.job?.job_status?.id)
+                ? (getTimeslotBgColor(row?.original?.job?.timeslot) ?? "transparent")
+                : cell.column.id === "total_weight"
+                  ? (row.original?.job?.weight_color ?? "transparent")
+                  : cell.column.id === "total_volume"
+                    ? (row.original?.job?.volume_color ?? "transparent")
+                    : undefined
+            }
+          >
+            {cell.column.type === "date" ? (
+              <Text>{cell.value ? formatDate(cell.value, "DD/MM/YYYY") : "-"}</Text>
+            ) : cell.column.type === "money" ? (
+              <Text>{cell.value ? formatCurrency(cell.value) : "$0"}</Text>
+            ) : cell.column.type === "boolean" ? (
+              <Text>
+                {cell.value == true
+                  ? cell.column.trueLabel || "Yes"
+                  : cell.column.falseLabel || "No"}
+              </Text>
+            ) : (
+              cell.render("Cell")
+            )}
+            {cell.column.showCompany == true && (
+              <Text className="text-gray-400">{row.original.company?.name}</Text>
+            )}
+          </Td>
+        );
+      })}
+    </Tr>
+  );
+});
+DataRow.displayName = "DataRow";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 type PaginationTableProps<T extends object> = {
   columns: Column<T>[];
   data: T[];
@@ -93,36 +382,29 @@ type PaginationTableProps<T extends object> = {
   onDelete?: (data: any) => void;
   showPageSizeSelect?: boolean;
   showManualPages?: boolean;
-  isChecked?: boolean;
+  isChecked?: boolean | number;
   onSortingChange?: any;
   onAssignClick?: (driver: any) => void;
   restyleTable?: boolean;
   refetchJobs?: () => void;
   onContextMenu?: (e: React.MouseEvent, job: any) => void;
 } & (
-    | {
-      isServerSide?: false;
-      setQueryPageIndex?: never;
-      setQueryPageSize?: never;
-    }
+    | { isServerSide?: false; setQueryPageIndex?: never; setQueryPageSize?: never }
     | {
       isServerSide: true;
       setQueryPageIndex: React.Dispatch<React.SetStateAction<number>>;
       setQueryPageSize: React.Dispatch<React.SetStateAction<number>>;
     }
-  ) &
-  (
-    | {
-      showRowSelection?: false;
-      setSelectedRow?: never;
-      isFilterRowSelected?: never;
-    }
+  ) & (
+    | { showRowSelection?: false; setSelectedRow?: never; isFilterRowSelected?: never }
     | {
       showRowSelection: true;
-      setSelectedRow: React.Dispatch<React.SetStateAction<array>>;
+      setSelectedRow: React.Dispatch<React.SetStateAction<any[]>>;
       isFilterRowSelected: boolean;
     }
   );
+
+// ─── Main Table Component ─────────────────────────────────────────────────────
 const PaginationTable = <T extends object>({
   columns,
   data,
@@ -133,10 +415,8 @@ const PaginationTable = <T extends object>({
   _showDelete = false,
   setQueryPageIndex,
   setQueryPageSize,
-  // onDelete,
   path,
   showPageSizeSelect = false,
-  // showManualPages = false,
   showRowSelection = false,
   isFilterRowSelected = false,
   setSelectedRow,
@@ -145,11 +425,8 @@ const PaginationTable = <T extends object>({
   onAssignClick,
   restyleTable = false,
   onContextMenu,
-}: // restyleTable = false,
-  // autoResetSelectedRows= false,
-  PaginationTableProps<T>) => {
-  const router = useRouter();
-  // const [pageRows, setPageRows] = useState([]);
+  onDelete,
+}: PaginationTableProps<T>) => {
 
   const pageSizeOptions = [
     { value: 10, label: "10 / page" },
@@ -161,22 +438,12 @@ const PaginationTable = <T extends object>({
   ];
 
   const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    prepareRow,
-    page,
-    canPreviousPage,
-    canNextPage,
-    nextPage,
-    previousPage,
-    setPageSize,
+    getTableProps, getTableBodyProps, headerGroups,
+    prepareRow, page,
+    canPreviousPage, canNextPage, nextPage, previousPage, setPageSize,
     state: { pageIndex, pageSize, sortBy },
     selectedFlatRows,
-    // gotoPage,
-    // pageCount,
     toggleAllRowsSelected,
-    // autoResetSelectedRows
   } = useTable<T>(
     {
       ...options,
@@ -194,141 +461,133 @@ const PaginationTable = <T extends object>({
     useRowSelect,
   );
 
-  const optimisticSelRef = React.useRef<Map<string, boolean>>(new Map());
-  const [, force] = React.useState(0);
-  const forceUpdate = () => force((x) => x + 1);
+  // ─── Selection state ───────────────────────────────────────────────────────
+  // ✅ FIX: optimisticSelRef in a ref (not state) — no re-renders when updated
+  const optimisticSelRef = useRef<Map<string, boolean>>(new Map());
 
-  useEffect(() => {
-    if (optimisticSelRef.current.size) {
-      optimisticSelRef.current.clear();
-      // no need to force here; next render will show real state anyway
+  // ✅ FIX: Per-row version counter — only the toggled row gets a new key
+  // → React.memo on DataRow skips all other rows
+  const [rowVersions, setRowVersions] = useState<Record<string, number>>({});
+
+  // ✅ BUG FIX: track selection order for correct bulk modal order
+  const selectionOrderRef = useRef<string[]>([]);
+
+  const getOptimisticSelected = useCallback((rowId: string): boolean => {
+    const v = optimisticSelRef.current.get(rowId);
+    return typeof v === "boolean" ? v : false;
+  }, []);
+
+  // ✅ FIX: toggleRow only bumps ONE row's version → only that DataRow re-renders
+  const toggleRow = useCallback((rowId: string) => {
+    const next = !optimisticSelRef.current.get(rowId);
+    optimisticSelRef.current.set(rowId, next);
+
+    // Track click order
+    if (next) {
+      if (!selectionOrderRef.current.includes(rowId)) {
+        selectionOrderRef.current.push(rowId);
+      }
+    } else {
+      selectionOrderRef.current = selectionOrderRef.current.filter(
+        (id) => id !== rowId,
+      );
     }
+
+    // Bump only this row's version
+    setRowVersions((prev) => ({ ...prev, [rowId]: (prev[rowId] ?? 0) + 1 }));
+
+    // Sync react-table internal state
+    const tableRow = page.find((r: any) => r.id === rowId);
+    if (tableRow) tableRow.toggleRowSelected(next);
+  }, [page]);
+
+  // Sync optimistic map when react-table resets rows
+  useEffect(() => {
+    const selectedIds = new Set(selectedFlatRows.map((r: any) => r.id));
+    optimisticSelRef.current.forEach((val, key) => {
+      if (val && !selectedIds.has(key)) {
+        optimisticSelRef.current.delete(key);
+      }
+    });
   }, [selectedFlatRows]);
 
+  // Pass sorted rows to parent
   useEffect(() => {
-    if (!setSelectedRow || setSelectedRow.length === 0) {
-      optimisticSelRef.current.clear();
-      toggleAllRowsSelected(false);
-      forceUpdate();
-    }
-  }, [setSelectedRow, toggleAllRowsSelected]);
-
-  function getOptimisticSelected(row: any) {
-    const v = optimisticSelRef.current.get(row.id);
-    return typeof v === "boolean" ? v : row.isSelected;
-  }
-
-  function toggleOptimisticRow(row: any) {
-    const next = !getOptimisticSelected(row);
-    optimisticSelRef.current.set(row.id, next); // flip instantly
-    forceUpdate(); // paint now
-    triggerForceUpdate();
-    row.toggleRowSelected(next); // real react-table state
-  }
-
-  // useEffect(() => {
-  // console.log("Page rows changed:", pageRows.map((r) => r.original?.job?.name));
-  // }, [pageRows]);
+    if (!showRowSelection) return;
+    const orderMap = new Map(
+      selectionOrderRef.current.map((id, i) => [id, i]),
+    );
+    const sorted = [...selectedFlatRows].sort((a: any, b: any) => {
+      const ai = orderMap.has(a.id) ? orderMap.get(a.id) : Infinity;
+      const bi = orderMap.has(b.id) ? orderMap.get(b.id) : Infinity;
+      return ai - bi;
+    });
+    setSelectedRow?.(sorted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFlatRows]);
 
   useEffect(() => {
     if (isServerSide && setQueryPageIndex && setQueryPageSize) {
       setQueryPageIndex(pageIndex);
       setQueryPageSize(pageSize);
     }
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isServerSide, pageIndex, pageSize, setQueryPageIndex, setQueryPageSize]);
-
-  useEffect(() => {
-    if (showRowSelection) {
-      setSelectedRow(selectedFlatRows);
-    }
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, showRowSelection, setSelectedRow, selectedFlatRows]);
-
-  // const pageRows = useMemo(() => {
-  // return isFilterRowSelected ? page.filter((row) => row.isSelected) : page;
-  // //eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [page, isFilterRowSelected]);
-  // const pageRows = isFilterRowSelected
-  // ? page.filter((row) => row.isSelected)
-  // : page;
-  // === MOVE SELECTED ROWS TO TOP ===
-  // Force update counter
-  const [forceCounter, setForceCounter] = React.useState(0);
-  // Rename function to avoid duplicate
-  const triggerForceUpdate = () => setForceCounter((x) => x + 1);
-  // Memoized rows
-  const pageRows = React.useMemo(() => {
-    let rows = [...page];
-    // 1. Sort selected rows first
-    // rows.sort((a, b) => {
-    //   const aSel = getOptimisticSelected(a) ? 1 : 0;
-    //   const bSel = getOptimisticSelected(b) ? 1 : 0;
-    //   return bSel - aSel;
-    // });
-    // 2. Only selected rows filter
-    if (isFilterRowSelected) {
-      rows = rows.filter((r) => getOptimisticSelected(r));
-    }
-    return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, isFilterRowSelected, forceCounter]);
+  }, [isServerSide, pageIndex, pageSize]);
+
   useEffect(() => {
     if (onSortingChange) onSortingChange(sortBy);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortBy]);
 
+  // ✅ isChecked → clear all (useRef trick: no warning, no loop)
   const toggleAllRowsSelectedRef = useRef(toggleAllRowsSelected);
   useEffect(() => {
     toggleAllRowsSelectedRef.current = toggleAllRowsSelected;
-  }); // ← no dependency = every render sync 
+  });
 
   useEffect(() => {
     toggleAllRowsSelectedRef.current(false);
     optimisticSelRef.current.clear();
-    forceUpdate();
+    selectionOrderRef.current = [];
+    setRowVersions({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
 
-  // console.log("Rendering PaginationTable", pageRows.map((r) => r.original?.job?.name));
+  // ─── Visible rows ──────────────────────────────────────────────────────────
+  const pageRows = useMemo(() => {
+    const rows = [...page];
+    if (isFilterRowSelected) {
+      return rows.filter((r: any) => optimisticSelRef.current.get(r.id) === true);
+    }
+    return rows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, isFilterRowSelected]);
+
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <VStack w="full" align="start" spacing={4}>
       <Table colorScheme="white" {...getTableProps()}>
         <Thead>
-          {headerGroups.map((headerGroup, index) => (
-            <Tr
-              {...headerGroup.getHeaderGroupProps()}
-              key={`header-row-${index}`}
-            >
-              {headerGroup.headers.map((column) => (
+          {headerGroups.map((headerGroup: any, index: number) => (
+            <Tr {...headerGroup.getHeaderGroupProps()} key={`header-row-${index}`}>
+              {headerGroup.headers.map((column: any) => (
                 <Th
                   {...column.getHeaderProps(
-                    column.enableSorting
-                      ? column.getSortByToggleProps()
-                      : undefined,
+                    column.enableSorting ? column.getSortByToggleProps() : undefined,
                   )}
-                  // {...column.getHeaderProps()}
                   key={`row-header-${column.id}`}
                   paddingLeft={restyleTable && 1}
                   paddingInlineStart={restyleTable && 1}
                   paddingRight={restyleTable && 2}
                   paddingInlineEnd={restyleTable && 2}
                 >
-                  {restyleTable}
                   {column.render("Header")}
                   {column.enableSorting && (
                     <span>
-                      {column.isSorted ? (
-                        column.isSortedDesc ? (
-                          "↓"
-                        ) : (
-                          "↑"
-                        )
-                      ) : (
-                        <SortAlt
-                          size={16}
-                          style={{ transform: "rotate(180deg)" }}
-                        />
-                      )}
+                      {column.isSorted
+                        ? column.isSortedDesc ? "↓" : "↑"
+                        : <SortAlt size={16} style={{ transform: "rotate(180deg)" }} />
+                      }
                     </span>
                   )}
                 </Th>
@@ -337,518 +596,49 @@ const PaginationTable = <T extends object>({
           ))}
         </Thead>
         <Tbody {...getTableBodyProps()}>
-          {pageRows.map((row, index) => {
-            // console.log(row.original?.job?.name, "row before prepare");
+          {pageRows.map((row: any, index: number) => {
             prepareRow(row);
 
-            const status = row.original?.job?.job_status?.name;
-
-            const driver = row.original.driver;
+            const driver = row.original?.driver;
             const prevDriver = pageRows[index - 1]?.original?.driver;
 
-            // ✅ NEW: Check driver header based on BOTH id AND bgcolor
+            // ✅ BUG FIX: correct shouldShowDriverHeader check
             const shouldShowDriverHeader =
               !!driver?.full_name &&
               (!prevDriver?.full_name ||
                 driver?.id !== prevDriver?.id ||
-                driver?.bgcolor !== prevDriver?.bgcolor); // ✅ Added bgcolor check
+                driver?.bgcolor !== prevDriver?.bgcolor);
 
             return (
-              <React.Fragment key={`driver-header-${index}`}>
+              // ✅ BUG FIX: key uses row.id not index
+              // When driver header rows insert, index shifts → wrong row gets highlighted
+              // row.id is always the job id → always correct
+              <React.Fragment key={`fragment-${row.id}`}>
                 {shouldShowDriverHeader && (
-                  <Tr key={index}>
-                    <Td colSpan={columns.length} p={0}>
-                      <Box
-                        bg={
-                          driver.bgcolor === "blue"
-                            ? "rgb(29, 45, 83)"
-                            : "rgb(250, 220, 82)"
-                        } // ✅ Use bgcolor from backend
-                        color={driver.bgcolor === "yellow" ? "#000" : "#fff"} // ✅ Black text for yellow, white for blue
-                        px={6}
-                        py={3}
-                        borderTop="4px solid"
-                        borderLeft="4px solid"
-                        borderColor={
-                          driver.bgcolor === "yellow"
-                            ? "#2F80ED" // Orange border for yellow (pre-allocated) #F59E0B
-                            : "#2F80ED" // Blue border for blue (assigned)
-                        }
-                        borderRadius="md"
-                        w="100%"
-                      >
-                        <VStack align="start" spacing={3} w="full">
-                          {/* --- DRIVER HEADER --- */}
-                          <Flex
-                            direction="column"
-                            align="start"
-                            wrap="wrap"
-                            gap={3}
-                            w="full"
-                          >
-                            <Flex wrap="wrap" align="start" gap={3}>
-                              <Badge
-                                colorScheme="Darkblue"
-                                variant="subtle"
-                                fontSize="md"
-                                style={{ marginRight: "10px" }}
-                              >
-                                #{driver.id} : {driver.full_name}
-                              </Badge>
-                              <Badge
-                                colorScheme="purple"
-                                variant="subtle"
-                                fontSize="md"
-                              >
-                                First Collection:{" "}
-                                {formatToTimeDate(
-                                  driver.first_job_start_at_today,
-                                )}
-                              </Badge>
-
-                              <Badge
-                                colorScheme="purple"
-                                variant="subtle"
-                                fontSize="md"
-                              >
-                                Last Delivery:{" "}
-                                {formatToTimeDate(
-                                  driver.last_job_drop_at_today,
-                                )}
-                              </Badge>
-
-                              {driver.bgcolor === "yellow" && (
-                                <Button
-                                  type="button"
-                                  px={5}
-                                  py={1}
-                                  colorScheme="blue"
-                                  fontSize="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onAssignClick && onAssignClick(driver);
-                                  }}
-                                >
-                                  Assign Jobs
-                                </Button>
-                              )}
-                              {driver.bgcolor === "blue" && (
-                                <>
-                                  <Badge
-                                    colorScheme="red"
-                                    variant="subtle"
-                                    fontSize="sm"
-                                  >
-                                    Today Price:{" "}
-                                    {driver.total_jobs_today_price ?? 0}
-                                  </Badge>
-
-                                  <Badge
-                                    colorScheme="red"
-                                    variant="subtle"
-                                    fontSize="sm"
-                                  >
-                                    Weekly Price:{" "}
-                                    {driver.total_jobs_weekly_price ?? 0}
-                                  </Badge>
-                                </>
-                              )}
-                            </Flex>
-                          </Flex>
-
-                          {/* --- DRIVER DETAILS --- */}
-                          <Flex wrap="wrap" align="start" gap={3} w="full">
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              Current Suburb: {driver.current_suburb || "-"}
-                            </Badge>
-
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              Mobile Number: {driver.phone_no || "-"}
-                            </Badge>
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              Rego: {driver.registration_no ?? "-"}
-                            </Badge>
-                            <Badge
-                              colorScheme="red"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              TAILGATE: {driver.is_tailgated ? "Yes" : "No"}
-                            </Badge>
-                            <Badge
-                              colorScheme="blue"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              CBM: {driver.cbm_summary_today ?? 0} /{" "}
-                              {driver.no_max_volume ?? 0}
-                            </Badge>
-
-                            <Badge
-                              colorScheme="blue"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              Weight: {driver.weight_summary_today ?? 0} /{" "}
-                              {driver.no_max_capacity ?? 0}
-                            </Badge>
-
-                            <Badge
-                              colorScheme="blue"
-                              variant="subtle"
-                              fontSize="sm"
-                            >
-                              Pallets: {driver.no_max_pallets ?? 0}
-                            </Badge>
-                          </Flex>
-                        </VStack>
-                      </Box>
-                    </Td>
-                  </Tr>
+                  <DriverHeaderRow
+                    driver={driver}
+                    columnsLength={columns.length}
+                    onAssignClick={onAssignClick}
+                  />
                 )}
-                <Tr
-                  {...row.getRowProps()}
-                  key={`data-row-${index}`} // ✅ Fix: Use 'index' instead of undefined 'idx'
-                  style={getStatusStyle(status)}
-                  cursor={showRowSelection ? "pointer" : "default"}
-                  onContextMenu={(e) => {
-                    if (onContextMenu) {
-                      // ✅ Check if handler exists
-                      onContextMenu(e, row.original.job);
-                    }
-                  }}
-                  onClick={(e) => {
-                    if (!showRowSelection) return;
-                    const target = e.target as HTMLElement;
-                    if (isInteractive(target)) return;
-                    const td = target.closest("td");
-                    const colId = td?.getAttribute("data-column-id") || "";
-                    if (EXCLUDED_IDS.has(colId)) return;
-                    toggleOptimisticRow(row); // instant
-                  }}
-                // className="css-en-xlrwr4"
-                // onClick={
-                // isChecked ? () => row.toggleRowSelected() : undefined
-                // }
-                >
-                  {row?.cells?.map((cell, cellIndex) => {
-                    // ✅ Renamed inner index to 'cellIndex' for clarity
-                    let data;
-                    if (cell.column.id === "selection") {
-                      return (
-                        <Td
-                          {...cell.getCellProps({
-                            "data-column-id": "selection",
-                          })}
-                          key={`selection-${cellIndex}`} // ✅ Use cellIndex for unique key
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!showRowSelection) return;
-                            toggleOptimisticRow(row);
-                          }}
-                          cursor="pointer"
-                          fontSize="xx-small"
-                        >
-                          <Box pointerEvents="none">
-                            {/* Render a visual checkbox using optimistic selected state */}
-                            <HStack>
-                              <Box
-                                boxSize="16px"
-                                border="1px solid"
-                                borderColor="gray.300"
-                                borderRadius="2px"
-                                bg={
-                                  getOptimisticSelected(row)
-                                    ? "blue.500"
-                                    : "white"
-                                }
-                                position="relative"
-                              >
-                                {getOptimisticSelected(row) && (
-                                  <Box
-                                    position="absolute"
-                                    inset="2px"
-                                    bg="white"
-                                    clipPath="polygon(14% 44%, 0 59%, 44% 100%, 100% 36%, 86% 22%, 44% 64%)"
-                                  />
-                                )}
-                              </Box>
-                              {/* Optional: label */}
-                            </HStack>
-                          </Box>
-                        </Td>
-                      );
-                    }
-
-                    if (cell.column.Header === "Actions") {
-                      data = (
-                        <Td
-                          key={`action-${cellIndex}`} // ✅ Use cellIndex
-                          data-column-id="actions"
-                        // paddingLeft={restyleTable && 1}
-                        // paddingInlineStart={restyleTable && 1}
-                        // paddingRight={restyleTable && 2}
-                        // paddingInlineEnd={restyleTable && 2}
-                        >
-                          <Flex gap={2} wrap="wrap" align="center">
-                            {
-                              //@ts-expect-error
-                              cell.column.isDownload && (
-                                <Link
-                                  href={cell.value}
-                                  target="_blank"
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faDownload}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              (cell.column.isEdit == undefined ||
-                                //@ts-expect-error
-                                cell.column.isEdit) && (
-                                <Link
-                                  href={`${path || router.pathname}/${cell.row.original.job.id
-                                    }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faPen}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              cell.column.isView && (
-                                <Link
-                                  href={`${path || router.pathname}/${cell.row.original.job.id
-                                    }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
-                                  >
-                                    <FontAwesomeIcon
-                                      icon={faEye}
-                                      className="!text-[var(--chakra-colors-black-400)]"
-                                      size="lg"
-                                    />
-                                  </Button>
-                                </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              cell.column.isTracking && (
-                                <Link
-                                  href={`${path || router.pathname}/tracking/${cell.row.original.job.id
-                                    }`}
-                                  fontWeight="700"
-                                  data-no-row-toggle
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Button
-                                    // bg={boxBg}
-                                    bg="white"
-                                    fontSize="sm"
-                                    // fontWeight="500"
-                                    className="!text-[#3B68DB]"
-                                  // color={textColorSecondary}
-                                  // borderRadius="7px"
-                                  >
-                                    Track
-                                  </Button>
-                                </Link>
-                              )
-                            }
-                            {
-                              //@ts-expect-error
-                              cell.column.isDelete && (
-                                <Button
-                                  // bg={boxBg}
-                                  bg="white"
-                                  fontSize="sm"
-                                  // fontWeight="500"
-                                  className="!text-[var(--chakra-colors-black-400)]"
-                                  onClick={() => {
-                                    onDelete(cell.row.original.job.id);
-                                  }}
-                                // color={textColorSecondary}
-                                // borderRadius="7px"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={
-                                      cell.column.deleteIcon != undefined
-                                        ? cell.column.deleteIcon
-                                        : faTrashAlt
-                                    }
-                                    className="!text-[var(--chakra-colors-black-400)]"
-                                    size="lg"
-                                  />
-                                </Button>
-                              )
-                            }
-                          </Flex>
-                        </Td>
-                      );
-                    } else if (cell.column.Header === "Instructions") {
-                      data = (
-                        <Td
-                          {...cell.getCellProps({
-                            "data-column-id": cell.column.id,
-                          })}
-                          key={`instructions-${cellIndex}`} // ✅ Use cellIndex
-                          paddingLeft={restyleTable && 1}
-                          paddingInlineStart={restyleTable && 1}
-                          paddingRight={restyleTable && 2}
-                          paddingInlineEnd={restyleTable && 2}
-                        >
-                          <Tooltip
-                            label={
-                              <React.Fragment>
-                                <div className="text-xs">
-                                  <p className="mb-2">
-                                    <strong>Pick up Person: </strong>
-                                    {
-                                      // @ts-expect-error
-                                      row.original?.pick_up_name || "N/A"
-                                    }
-                                  </p>
-                                  <p>
-                                    <strong>Instructions: </strong>
-                                    {
-                                      // @ts-expect-error
-                                      row.original?.pick_up_notes || "N/A"
-                                    }
-                                  </p>
-                                </div>
-                              </React.Fragment>
-                            }
-                            aria-label="A tooltip"
-                          >
-                            <FontAwesomeIcon
-                              icon={faMessageLines}
-                              className="!text-[var(--chakra-colors-black-400)] hover:!text-[var(--chakra-colors-primary-400)]"
-                              size="lg"
-                              data-no-row-toggle
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </Tooltip>
-                        </Td>
-                      );
-                    } else {
-                      data = (
-                        <Td
-                          {...cell.getCellProps({
-                            "data-column-id": cell.column.id,
-                          })}
-                          key={`default-${cellIndex}`}
-                          paddingLeft={restyleTable && 1}
-                          paddingInlineStart={restyleTable && 1}
-                          paddingRight={restyleTable && 2}
-                          paddingInlineEnd={restyleTable && 2}
-                          pr="20px"
-                          bg={
-                            cell.column.id === "timeslot" &&
-                              !["6", "7", "8", "9", "10"].includes(
-                                row?.original?.job?.job_status?.id,
-                              )
-                              ? (getTimeslotBgColor(
-                                row?.original?.job?.timeslot,
-                              ) ?? "transparent")
-                              : cell.column.id === "total_weight"
-                                ? (row.original?.job?.weight_color ??
-                                  "transparent")
-                                : cell.column.id === "total_volume"
-                                  ? (row.original?.job?.volume_color ??
-                                    "transparent")
-                                  : undefined
-                          }
-                        >
-                          {
-                            // @ts-expect-error
-                            cell.column.type === "date" ? (
-                              <Text>
-                                {cell.value
-                                  ? formatDate(cell.value, "DD/MM/YYYY")
-                                  : "-"}
-                              </Text>
-                            ) : cell.column.type === "money" ? (
-                              <Text>
-                                {cell.value ? formatCurrency(cell.value) : "$0"}
-                              </Text>
-                            ) : cell.column.type === "boolean" ? (
-                              <Text>
-                                {cell.value == true
-                                  ? cell.column.trueLabel || "Yes"
-                                  : cell.column.falseLabel || "No"}
-                              </Text>
-                            ) : (
-                              cell.render("Cell")
-                            )
-                          }
-                          {cell.column.showCompany == true && (
-                            <Text className="text-gray-400">
-                              {row.original.company?.name}
-                            </Text>
-                          )}
-                        </Td>
-                      );
-                    }
-                    return data;
-                  })}
-                </Tr>
+                {/*
+                  ✅ KEY FIX: key includes rowVersions[row.id]
+                  When checkbox clicked: only that row's version bumps
+                  → only that DataRow re-renders
+                  → all other 99 rows are skipped by React.memo
+                */}
+                <DataRow
+                  key={`row-${row.id}-${rowVersions[row.id] ?? 0}`}
+                  row={row}
+                  columns={columns}
+                  isSelected={getOptimisticSelected(row.id)}
+                  showRowSelection={showRowSelection}
+                  restyleTable={restyleTable}
+                  path={path}
+                  onContextMenu={onContextMenu}
+                  onToggle={toggleRow}
+                  onDelete={onDelete}
+                />
               </React.Fragment>
             );
           })}
@@ -862,19 +652,17 @@ const PaginationTable = <T extends object>({
             isSearchable={false}
             size="sm"
             maxW="70px"
-            value={pageSizeOptions.find((option) => option.value == pageSize)}
+            value={pageSizeOptions.find((o) => o.value == pageSize)}
             onChange={(e) => setPageSize(Number(e.value))}
             options={pageSizeOptions}
             classNamePrefix="chakra-react-select"
             menuPosition="fixed"
           />
         )}
-
         {!isFilterRowSelected && (
           <>
             <Text>
-              Showing {pageIndex * pageSize + 1} to {(pageIndex + 1) * pageSize}{" "}
-              of {total} entries
+              Showing {pageIndex * pageSize + 1} to {(pageIndex + 1) * pageSize} of {total} entries
             </Text>
             <ButtonGroup isAttached variant="outline">
               <IconButton

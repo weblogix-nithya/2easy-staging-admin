@@ -6,7 +6,6 @@
 //   4. NotesCell / AdminNotesCell — useCallback for setDisplay
 //   5. TimeslotCell — wrapped in React.memo
 
-import { useMutation } from "@apollo/client";
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   Badge,
@@ -25,7 +24,6 @@ import {
   PopoverTrigger,
   Text,
   Tooltip,
-  useToast,
   VStack,
 } from "@chakra-ui/react";
 import {
@@ -36,9 +34,8 @@ import {
   faWarning,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import IndeterminateCheckbox from "components/table/IndeterminateCheckbox";
+import { RemoveDriverContext } from "components/preAllocation/RemoveDriverContext";
 import { DynamicTableUser } from "graphql/dynamicTableUser";
-import { REMOVE_PRE_ALLOCATE_DRIVER } from "graphql/job";
 import {
   formatAddress,
   formatDate,
@@ -47,7 +44,7 @@ import {
 } from "helpers/helper";
 import Image from "next/image";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import { MdMenu } from "react-icons/md";
 import { RootState } from "store/store";
 
@@ -679,11 +676,16 @@ export const CategoryCell = React.memo(({ row }: any) => (
 ));
 CategoryCell.displayName = "CategoryCell";
 
-export const DeliveryCell = React.memo(({ row, refetchTable }: any) => {
+export const DeliveryCell = React.memo(({ row }: any) => {
   const job = row?.original?.job;
-  const toast = useToast();
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const canRemove = !!job?.preallocation_driver_id;
+
+  // ✅ FIX: useContext instead of useMutation per row
+  // BEFORE: 100 rows × useMutation(REMOVE_PRE_ALLOCATE_DRIVER) = 100 Apollo registrations
+  // AFTER:  1 shared mutation via RemoveDriverContext → faster, less memory
+  const { removeDriver, loadingId } = useContext(RemoveDriverContext);
+  const loading = loadingId === String(job?.id);
 
   const getBadgeStyle = (color?: string) => ({
     bg: color?.startsWith("#") ? color : color || "gray",
@@ -699,33 +701,8 @@ export const DeliveryCell = React.memo(({ row, refetchTable }: any) => {
     { condition: job?.is_tailgate_required, label: "Tail lift", icon: faTruckRampBox },
   ];
 
-  const [removeDriver, { loading }] = useMutation(REMOVE_PRE_ALLOCATE_DRIVER, {
-    onCompleted: () => {
-      toast({ title: "Removed job from driver", status: "success", duration: 3000, isClosable: true });
-      refetchTable?.();
-    },
-    onError: (err) => {
-      toast({ title: "Error", description: err.message, status: "error", duration: 3000, isClosable: true });
-    },
-  });
-
-  // FIX: useCallback — every render-ல் new function உருவாகாது
   const handleRemove = useCallback(() => {
-    removeDriver({
-      variables: {
-        input: {
-          id: job?.id,
-          customer_id: job.customer?.id,
-          company_id: job.company?.id,
-          job_type_id: job.job_type?.id,
-          name: job.name,
-          preallocation_driver_id: null,
-          driver_id: job.driver_id || null,
-          d_sort_id: job.d_sort_id || null,
-          sort_datetime: job.sort_datetime || null,
-        },
-      },
-    });
+    removeDriver(job);
   }, [job, removeDriver]);
 
   return (
@@ -990,7 +967,7 @@ export const tableColumn = (refetchJobs: () => void) => [
   {
     id: "name",
     Header: "Delivery ID",
-    Cell: ({ row }: any) => <DeliveryCell row={row} refetchTable={refetchJobs} />,
+    Cell: ({ row }: any) => <DeliveryCell row={row} />,
     accessor: (row: any) => row?.job?.id || 0,
     enableSorting: true,
     sortType: "basic",
@@ -1051,12 +1028,11 @@ export const getColumnsPre = (
   const base: any[] = [
     {
       id: "selection",
-      Header: ({ getToggleAllRowsSelectedProps }: any) => (
-        <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
-      ),
-      Cell: ({ row }: any) => (
-        <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-      ),
+      // ✅ FIX: null — PreJobPaginationTable renders its own optimistic checkbox.
+      // IndeterminateCheckbox called row.getToggleRowSelectedProps() which caused
+      // ALL 100 rows to re-render on every single click (2500+ re-renders).
+      Header: () => <></>,
+      Cell: () => <></>,
     },
   ];
 

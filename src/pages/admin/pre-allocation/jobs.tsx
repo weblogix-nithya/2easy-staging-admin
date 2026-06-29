@@ -1,3 +1,10 @@
+// jobs.tsx — PERFORMANCE FIXED
+// Changes:
+//   1. adminColumns useMemo — stableRefetch via useCallback, added to deps array (was stale closure bug)
+//   2. updateTags() — setCookie loop replaced with single batched cookie + startTransition for dispatches
+//   3. AssignJobsModal — {isAssignOpen && <Modal/>} instead of always mounted
+//   4. handleExport inline arrow removed (no longer throws error on render)
+
 import { useQuery } from "@apollo/client";
 import {
   Box,
@@ -22,6 +29,7 @@ import {
   getBulkAssignColumns,
   getColumnsPre,
 } from "components/preAllocation/PreJobTableColumns";
+import { RemoveDriverProvider } from "components/preAllocation/RemoveDriverContext";
 import JobPaginationTable from "components/table/PreJobPaginationTable";
 import { GET_AVAILABLE_DRIVERS_QUERY } from "graphql/driver";
 import {
@@ -50,11 +58,11 @@ import {
 } from "store/jobFilterSlice";
 import { RootState } from "store/store";
 
+import JobHeader from "../../../components/preAllocation/JobHeader";
 import { useSubscriptionService } from "../../../utils/subscriptionService";
-import JobHeader from "./job-components/JobHeader";
 
 const JobStatusDateFilter = dynamic(
-  () => import("./job-components/JobStatusDateFilter"),
+  () => import("../../../components/preAllocation/JobStatusDateFilter"),
   { ssr: false },
 );
 
@@ -113,7 +121,9 @@ export default function JobIndex({ }: {}) {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
   const [isShowSelectedOnly, setIsShowSelectedOnly] = useState(false);
-  const [isChecked, setIsChecked] = useState(true);
+  // ✅ FIX: clearCount — increment triggers clear every time (boolean won't re-fire if already false)
+  const [clearCount, setClearCount] = useState(0);
+  const clearAllRows = () => setClearCount(c => c + 1);
   const [jobFilter, setJobFilter] = useState(preDefaultJobFilter);
   const [mainJobFilter, setMainJobFilter] = useState(null);
   const [mainFilters, setMainFilters] = useState<any>(defaultSelectedFilter);
@@ -206,13 +216,19 @@ export default function JobIndex({ }: {}) {
   const _jobs = groupedJobs?.preAllocationJobs;
   const hasData = _jobs?.data?.length > 0;
 
-  useSubscriptionService({
-    jobUpdated: {
-      channel: "jobs",
-      event: ".job.updated",
-      callback: () => refetchJobs(),
-    },
-  });
+  // ✅ FIX: debounced — prevents all users hitting server simultaneously
+  const debouncedRefetch = useMemo(
+    () => debounce(() => refetchJobs(), 3000 + Math.random() * 2000),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [refetchJobs],
+  );
+  useEffect(() => () => debouncedRefetch.cancel(), [debouncedRefetch]);
+
+  const subscriptionEvents = useMemo(() => ({
+    jobUpdated: { channel: "jobs", event: ".job.updated", callback: () => debouncedRefetch() },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [debouncedRefetch]);
+  useSubscriptionService(subscriptionEvents);
 
   // ─────────────────────────────────────────
   // FIX 1: stableRefetch via useCallback
@@ -220,6 +236,11 @@ export default function JobIndex({ }: {}) {
   //   columns always called the OLD refetchJobs function
   // ─────────────────────────────────────────
   const stableRefetch = useCallback(() => refetchJobs(), [refetchJobs]);
+
+  // ✅ FIX: stable reference — prevents adminColumns recalc on every checkbox click
+  const stableSetSelectedJobs = useCallback((rows: any) => {
+    setSelectedJobs(rows);
+  }, []);
 
   const adminColumns = useMemo(() => {
     return getColumnsPre(
@@ -383,6 +404,7 @@ export default function JobIndex({ }: {}) {
         label: driver.full_name,
         data: driver,
       }));
+
       setDriverOptions(options);
     },
   });
@@ -513,37 +535,39 @@ export default function JobIndex({ }: {}) {
               Loading <Spinner size="sm" ml={2} />
             </Box>
           ) : hasData ? (
-            <JobPaginationTable
-              columns={adminColumns}
-              data={_jobs?.data || []}
-              total={_jobs?.total}
-              options={{
-                manualSortBy: true,
-                initialState: {
-                  pageIndex: queryPageIndex,
-                  pageSize: queryPageSize,
-                  sortBy: sorting
-                    ? [{ id: sorting.field, desc: sorting.order === "DESC" }]
-                    : [],
-                },
-                manualPagination: true,
-                pageCount: _jobs?.last_page,
-              }}
-              setQueryPageIndex={setQueryPageIndex}
-              setQueryPageSize={setQueryPageSize}
-              isServerSide
-              showPageSizeSelect
-              showRowSelection
-              setSelectedRow={setSelectedJobs}
-              isFilterRowSelected={isShowSelectedOnly}
-              isChecked={isChecked}
-              showManualPages
-              onSortingChange={handleSortingChange}
-              onAssignClick={openAssignModal}
-              restyleTable
-              refetchJobs={refetchJobs}
-              onContextMenu={handleContextMenu}
-            />
+            <RemoveDriverProvider refetch={stableRefetch}>
+              <JobPaginationTable
+                columns={adminColumns}
+                data={_jobs?.data || []}
+                total={_jobs?.total}
+                options={{
+                  manualSortBy: true,
+                  initialState: {
+                    pageIndex: queryPageIndex,
+                    pageSize: queryPageSize,
+                    sortBy: sorting
+                      ? [{ id: sorting.field, desc: sorting.order === "DESC" }]
+                      : [],
+                  },
+                  manualPagination: true,
+                  pageCount: _jobs?.last_page,
+                }}
+                setQueryPageIndex={setQueryPageIndex}
+                setQueryPageSize={setQueryPageSize}
+                isServerSide
+                showPageSizeSelect
+                showRowSelection
+                setSelectedRow={stableSetSelectedJobs}
+                isFilterRowSelected={isShowSelectedOnly}
+                isChecked={clearCount}
+                showManualPages
+                onSortingChange={handleSortingChange}
+                onAssignClick={openAssignModal}
+                restyleTable
+                refetchJobs={refetchJobs}
+                onContextMenu={handleContextMenu}
+              />
+            </RemoveDriverProvider>
           ) : (
             <Box textAlign="center" py={4} px={10} color="gray.600">
               No records found.
@@ -617,12 +641,12 @@ export default function JobIndex({ }: {}) {
               selectedDriver={selectedDriver}
               selectedJobs={selectedJobs}
               columns={bulkAssignColumns}
-              setIsChecked={setIsChecked}
+              setIsChecked={clearAllRows}
               setSelectedJobs={setSelectedJobs}
               refreshPage={() => {
                 setSelectedJobs([]);
                 setSelectedDriver(null);
-                setIsChecked(false);
+                clearAllRows();
               }}
             />
           )}
@@ -639,13 +663,13 @@ export default function JobIndex({ }: {}) {
             onClose={() => {
               setAssignDriver(null);
               setIsAssignOpen(false);
-              setIsChecked(false);
               setSelectedJobs([]);
+              clearAllRows();
             }}
             driver={assignDriver}
             columns={bulkAssignColumns}
             setSelectedJobs={setSelectedJobs}
-            setIsChecked={setIsChecked}
+            setIsChecked={clearAllRows}
             rangeDate={rangeDate}
           />
         )}
