@@ -1,10 +1,3 @@
-// jobs.tsx — PERFORMANCE FIXED
-// Changes:
-//   1. adminColumns useMemo — stableRefetch via useCallback, added to deps array (was stale closure bug)
-//   2. updateTags() — setCookie loop replaced with single batched cookie + startTransition for dispatches
-//   3. AssignJobsModal — {isAssignOpen && <Modal/>} instead of always mounted
-//   4. handleExport inline arrow removed (no longer throws error on render)
-
 import { useQuery } from "@apollo/client";
 import {
   Box,
@@ -100,7 +93,7 @@ function formatDate(date: Date, isStart: boolean): string {
 
 export default function JobIndex({ }: {}) {
   const [queryPageIndex, setQueryPageIndex] = useState(0);
-  const [queryPageSize, setQueryPageSize] = useState(100);
+  const [queryPageSize, setQueryPageSize] = useState(50);
   const [searchQuery, setSearchQuery] = useState("");
   const today = new Date();
   const [rangeDate, setRangeDate] = useState<[Date, Date]>([today, today]);
