@@ -518,20 +518,30 @@ function JobPage() {
 const handleBTypeReferenceChange = (e) => {
   const { name, value } = e.target;
 
-  if (value.length === 1 && value.toUpperCase() !== "B") {
-      toast({
-        title:
-          "B Type Reference Number should start with 'B'. Otherwise, use the Reference field.",
-        status: "warning",
-        duration: 2000,
-        isClosable: true,
-      });
-    return; // Don't save invalid first character
+  if (value === "") {
+    setJob((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+    return;
+  }
+
+  const formattedValue = value.charAt(0).toUpperCase() + value.slice(1);
+
+  if (formattedValue[0] !== "B") {
+    toast({
+      title:
+        "B Type Reference Number should start with 'B'. Otherwise, use the Reference field above.",
+      status: "warning",
+      duration: 2000,
+      isClosable: true,
+    });
+    return;
   }
 
   setJob((prev) => ({
     ...prev,
-    [name]: value,
+    [name]: formattedValue,
   }));
 };
 
