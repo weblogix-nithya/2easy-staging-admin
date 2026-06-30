@@ -390,8 +390,8 @@ function JobEdit() {
           is_paperwork_required: data?.job.is_paperwork_required,
           job_status_id: data?.job.job_status_id,
           base_notes: data?.job.base_notes,
-          reference_no:data?.job.reference_no,
-          b_reference_no:data?.job.b_reference_no
+          reference_no: data?.job.reference_no,
+          b_reference_no: data?.job.b_reference_no,
         }));
 
         if (data?.job.company_area && companyRates.length > 0) {
@@ -2245,24 +2245,35 @@ function JobEdit() {
     }
   };
 
-const handleBTypeReferenceChange = (e) => {
-  const { name, value } = e.target;
-  if (value.length === 1 && value.toUpperCase() !== "B") {
-         toast({
+  const handleBTypeReferenceChange = (e) => {
+    const { name, value } = e.target;
+
+    if (value === "") {
+      setJob((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+      return;
+    }
+
+    const formattedValue = value.charAt(0).toUpperCase() + value.slice(1);
+
+    if (formattedValue[0] !== "B") {
+      toast({
         title:
-          "B Type Reference Number should start with 'B'. Otherwise, use the Reference field.",
+          "B Type Reference Number should start with 'B'. Otherwise, use the Reference field above.",
         status: "warning",
         duration: 2000,
         isClosable: true,
       });
-    return; // Don't save invalid first character
-  }
+      return;
+    }
 
-  setJob((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
-};
+    setJob((prev) => ({
+      ...prev,
+      [name]: formattedValue,
+    }));
+  };
   return (
     <AdminLayout>
       <Box
