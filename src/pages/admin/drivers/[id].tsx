@@ -835,10 +835,19 @@ function DriverEdit() {
                           type="number"
                           name="no_availability"
                           value={driver.no_availability}
+                          // onChange={(e) =>
+                          //   setDriver({
+                          //     ...driver,
+                          //     [e.target.name]: e.target.value,
+                          //   })
+                          // }
                           onChange={(e) =>
                             setDriver({
                               ...driver,
-                              [e.target.name]: e.target.value,
+                              no_availability:
+                                e.target.value === ""
+                                  ? null
+                                  : Number(e.target.value),
                             })
                           }
                           placeholder=""
