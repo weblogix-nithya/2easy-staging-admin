@@ -1,10 +1,3 @@
-// jobs.tsx — PERFORMANCE FIXED
-// Changes:
-//   1. adminColumns useMemo — stableRefetch via useCallback, added to deps array (was stale closure bug)
-//   2. updateTags() — setCookie loop replaced with single batched cookie + startTransition for dispatches
-//   3. AssignJobsModal — {isAssignOpen && <Modal/>} instead of always mounted
-//   4. handleExport inline arrow removed (no longer throws error on render)
-
 import { useQuery } from "@apollo/client";
 import {
   Box,
@@ -110,7 +103,7 @@ export default function JobIndex({ }: {}) {
     (state: RootState) => state.user,
   );
   const { filters, displayName, jobMainFilters, is_filter_ticked } = useSelector(
-    (state: RootState) => state.jobFilter,
+    (state: RootState) => state.preJobFilter,
   );
 
   const dispatch = useDispatch();
@@ -269,23 +262,25 @@ export default function JobIndex({ }: {}) {
   );
 
   useEffect(() => {
-    if (is_filter_ticked == "1") {
-      let _jobFilter = jobFilter;
-      const updatedValues: any = {};
-      for (const key in defaultSelectedFilter) {
-        if (
-          filters[key as keyof SelectedFilter] !== undefined &&
-          filters[key as keyof SelectedFilter] !== "undefined" &&
-          filters[key as keyof SelectedFilter] !== ""
-        ) {
-          updatedValues[key] = filters[key as keyof SelectedFilter];
-        }
+    // FIX: only run when filter is turned ON ("1")
+    // When turned OFF, onToggleFilterCheckbox handles state clear directly
+    // Calling updateTags here on OFF would cause: dispatch → re-render → this effect → loop
+    if (is_filter_ticked !== "1") return;
+    if (!jobMainFilters) return; // not hydrated yet, skip
+
+    const updatedValues: any = {};
+    for (const key in defaultSelectedFilter) {
+      if (
+        filters[key as keyof SelectedFilter] !== undefined &&
+        filters[key as keyof SelectedFilter] !== "undefined" &&
+        filters[key as keyof SelectedFilter] !== ""
+      ) {
+        updatedValues[key] = filters[key as keyof SelectedFilter];
       }
-      setJobFilter(jobMainFilters);
-      _jobFilter = jobMainFilters;
-      if (displayName) setMainFilterDisplayNames(displayName);
-      updateTags(updatedValues, _jobFilter);
     }
+    setJobFilter(jobMainFilters);
+    if (displayName) setMainFilterDisplayNames(displayName);
+    updateTags(updatedValues, jobMainFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [is_filter_ticked]);
 
@@ -459,9 +454,18 @@ export default function JobIndex({ }: {}) {
             debouncedSearch={debouncedSearch}
             onToggleFilterCheckbox={(checked) => {
               if (!checked) {
+                // FIX: direct state clear — avoids handleResetAll() loop
+                // handleResetAll → updateTags → dispatch → is_filter_ticked useEffect → updateTags again
                 destroyCookie(null, "jobMainFilters", { path: "*" });
                 destroyCookie(null, "displayName", { path: "*" });
-                handleResetAll();
+                Object.keys(preDefaultJobFilter).forEach((key) => {
+                  destroyCookie(null, `jobFilters_${key}`, { path: "*" });
+                });
+                setMainJobFilter(null);
+                setJobFilter(preDefaultJobFilter);
+                setMainFilters({ ...defaultSelectedFilter });
+                setSelectedFilters({ ...defaultSelectedFilter });
+                setMainFilterDisplayNames(filterDisplayNames);
               }
               setCookie(null, "is_filter_ticked", checked ? "1" : "0", {
                 maxAge: 30 * 24 * 60 * 60,

@@ -1,8 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import driversSlice from "./driversSlice";
-import jobFilterSlice from "./jobFilterSlice";
-import preJobFilterSlice from "./jobFilterSlice";
+import { jobFilterReducer, preJobFilterReducer } from "./jobFilterSlice";
 import rightSideBarSlice from "./rightSideBarSlice";
 import routesSlice from "./routesSlice";
 import userSlice from "./userSlice";
@@ -13,8 +12,8 @@ export const store = configureStore({
     drivers: driversSlice,
     user: userSlice,
     routes: routesSlice,
-    jobFilter: jobFilterSlice,
-    preJobFilter: preJobFilterSlice,
+    jobFilter: jobFilterReducer,
+    preJobFilter: preJobFilterReducer,
   },
 });
 

@@ -224,9 +224,11 @@ const DataRow = memo(({
     if (showRowSelection) onToggle(row.id);
   }, [showRowSelection, onToggle, row.id]);
 
+  // FIX: extract key from getRowProps() — React key must be passed directly, not spread
+  const { key: _rowKey, ...rowProps } = row.getRowProps();
   return (
     <Tr
-      {...row.getRowProps()}
+      {...rowProps}
       style={getStatusStyle(status)}
       cursor={showRowSelection ? "pointer" : "default"}
       onContextMenu={handleContextMenu}
@@ -235,9 +237,10 @@ const DataRow = memo(({
       {row?.cells?.map((cell: any, cellIndex: number) => {
         // ── Selection checkbox ──
         if (cell.column.id === "selection") {
+          const { key: _selKey, ...selCellProps } = cell.getCellProps({ "data-column-id": "selection" });
           return (
             <Td
-              {...cell.getCellProps({ "data-column-id": "selection" })}
+              {...selCellProps}
               key={`sel-${row.id}-${cellIndex}`}
               onClick={handleCheckboxClick}
               cursor="pointer"
@@ -299,9 +302,10 @@ const DataRow = memo(({
 
         // ── Instructions column ──
         if (cell.column.Header === "Instructions") {
+          const { key: _insKey, ...insCellProps } = cell.getCellProps({ "data-column-id": cell.column.id });
           return (
             <Td
-              {...cell.getCellProps({ "data-column-id": cell.column.id })}
+              {...insCellProps}
               key={`ins-${row.id}-${cellIndex}`}
               paddingLeft={restyleTable && 1} paddingInlineStart={restyleTable && 1}
               paddingRight={restyleTable && 2} paddingInlineEnd={restyleTable && 2}
@@ -328,9 +332,10 @@ const DataRow = memo(({
         }
 
         // ── Default column ──
+        const { key: _defKey, ...defCellProps } = cell.getCellProps({ "data-column-id": cell.column.id });
         return (
           <Td
-            {...cell.getCellProps({ "data-column-id": cell.column.id })}
+            {...defCellProps}
             key={`def-${row.id}-${cellIndex}`}
             paddingLeft={restyleTable && 1} paddingInlineStart={restyleTable && 1}
             paddingRight={restyleTable && 2} paddingInlineEnd={restyleTable && 2}
@@ -472,12 +477,21 @@ const PaginationTable = <T extends object>({
   // ✅ BUG FIX: track selection order for correct bulk modal order
   const selectionOrderRef = useRef<string[]>([]);
 
+  // ─── O(1) row lookup map — avoids page.find() loop on every click ───────────
+  const pageRowMap = useMemo(() => {
+    const map = new Map<string, any>();
+    page.forEach((r: any) => map.set(r.id, r));
+    return map;
+  }, [page]);
+
   const getOptimisticSelected = useCallback((rowId: string): boolean => {
     const v = optimisticSelRef.current.get(rowId);
     return typeof v === "boolean" ? v : false;
   }, []);
 
-  // ✅ FIX: toggleRow only bumps ONE row's version → only that DataRow re-renders
+  // FIX: toggleRow uses pageRowMap (O(1)) instead of page.find() (O(n))
+  // FIX: rowVersions removed — was causing DataRow remount on every click
+  //      which triggered wrong row highlight when driver header rows present
   const toggleRow = useCallback((rowId: string) => {
     const next = !optimisticSelRef.current.get(rowId);
     optimisticSelRef.current.set(rowId, next);
@@ -493,13 +507,13 @@ const PaginationTable = <T extends object>({
       );
     }
 
-    // Bump only this row's version
-    setRowVersions((prev) => ({ ...prev, [rowId]: (prev[rowId] ?? 0) + 1 }));
-
-    // Sync react-table internal state
-    const tableRow = page.find((r: any) => r.id === rowId);
+    // Sync react-table internal state — O(1) lookup
+    const tableRow = pageRowMap.get(rowId);
     if (tableRow) tableRow.toggleRowSelected(next);
-  }, [page]);
+
+    // Force re-render of only this row via a dedicated single-row state
+    setRowVersions((prev) => ({ ...prev, [rowId]: (prev[rowId] ?? 0) + 1 }));
+  }, [pageRowMap]);
 
   // Sync optimistic map when react-table resets rows
   useEffect(() => {
@@ -568,39 +582,45 @@ const PaginationTable = <T extends object>({
     <VStack w="full" align="start" spacing={4}>
       <Table colorScheme="white" {...getTableProps()}>
         <Thead>
-          {headerGroups.map((headerGroup: any, index: number) => (
-            <Tr {...headerGroup.getHeaderGroupProps()} key={`header-row-${index}`}>
-              {headerGroup.headers.map((column: any) => (
-                <Th
-                  {...column.getHeaderProps(
+          {headerGroups.map((headerGroup: any, index: number) => {
+            const { key: _hgKey, ...hgProps } = headerGroup.getHeaderGroupProps();
+            return (
+              <Tr {...hgProps} key={`header-row-${index}`}>
+                {headerGroup.headers.map((column: any) => {
+                  const { key: _thKey, ...thProps } = column.getHeaderProps(
                     column.enableSorting ? column.getSortByToggleProps() : undefined,
-                  )}
-                  key={`row-header-${column.id}`}
-                  paddingLeft={restyleTable && 1}
-                  paddingInlineStart={restyleTable && 1}
-                  paddingRight={restyleTable && 2}
-                  paddingInlineEnd={restyleTable && 2}
-                >
-                  {column.render("Header")}
-                  {column.enableSorting && (
-                    <span>
-                      {column.isSorted
-                        ? column.isSortedDesc ? "↓" : "↑"
-                        : <SortAlt size={16} style={{ transform: "rotate(180deg)" }} />
-                      }
-                    </span>
-                  )}
-                </Th>
-              ))}
-            </Tr>
-          ))}
+                  );
+                  return (
+                    <Th
+                      {...thProps}
+                      key={`row-header-${column.id}`}
+                      paddingLeft={restyleTable && 1}
+                      paddingInlineStart={restyleTable && 1}
+                      paddingRight={restyleTable && 2}
+                      paddingInlineEnd={restyleTable && 2}
+                    >
+                      {column.render("Header")}
+                      {column.enableSorting && (
+                        <span>
+                          {column.isSorted
+                            ? column.isSortedDesc ? "↓" : "↑"
+                            : <SortAlt w="16px" h="16px" style={{ transform: "rotate(180deg)" }} />
+                          }
+                        </span>
+                      )}
+                    </Th>
+                  );
+                })}
+              </Tr>
+            );
+          })}
         </Thead>
         <Tbody {...getTableBodyProps()}>
           {pageRows.map((row: any, index: number) => {
             prepareRow(row);
 
-            const driver = row.original?.driver;
-            const prevDriver = pageRows[index - 1]?.original?.driver;
+            const driver = (row.original as any)?.driver;
+            const prevDriver = (pageRows[index - 1]?.original as any)?.driver;
 
             // ✅ BUG FIX: correct shouldShowDriverHeader check
             const shouldShowDriverHeader =
@@ -621,14 +641,12 @@ const PaginationTable = <T extends object>({
                     onAssignClick={onAssignClick}
                   />
                 )}
-                {/*
-                  ✅ KEY FIX: key includes rowVersions[row.id]
-                  When checkbox clicked: only that row's version bumps
-                  → only that DataRow re-renders
-                  → all other 99 rows are skipped by React.memo
-                */}
+                {/* FIX: key uses row.id only — no rowVersions
+                  rowVersions in key was causing full remount on click
+                  → React.memo handles selective re-render via isSelected prop change
+                  → DataRow re-renders only when isSelected changes, not remounts */}
                 <DataRow
-                  key={`row-${row.id}-${rowVersions[row.id] ?? 0}`}
+                  key={`row-${row.id}`}
                   row={row}
                   columns={columns}
                   isSelected={getOptimisticSelected(row.id)}
