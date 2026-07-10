@@ -2278,7 +2278,7 @@ const handleBTypeReferenceChange = (e) => {
                     </Box>
                   </Flex>
                   <CustomInputField
-                    label="Last Free Day:"
+                    label="Last Free Day / CutOff Date:"
                     type={"date"}
                     placeholder=""
                     name="last_free_at"
