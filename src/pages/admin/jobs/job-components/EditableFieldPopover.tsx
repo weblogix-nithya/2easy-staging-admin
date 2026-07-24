@@ -155,11 +155,6 @@ export default function EditableFieldPopover({
               // onChange={(val) => setDraftValue(val)}
               onChange={(val) => {
                 setDraftValue(val);
-
-                // 🔥 auto save immediately
-                setTimeout(() => {
-                  handleSaveWithValue(val);
-                }, 0);
               }}
             />
           ) : multiline ? (
