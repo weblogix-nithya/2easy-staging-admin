@@ -12,11 +12,19 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import {
-  defaultSelectedFilter,
-  filterDisplayNames,
+  defaultPreSelectedFilter,
+  filterPreDisplayNames,
   preDefaultJobFilter,
-  SelectedFilter,
+  PreSelectedFilter,
 } from "components/preAllocation/Filters";
+import {
+  cleanupLegacyFilterCookies,
+  clearPersistedFilterState,
+  writeDisplayName,
+  writeIsTicked,
+  writeMainFilter,
+  writeSelectedValues,
+} from "components/preAllocation/jobFilterCookies";
 import ActionBar from "components/preAllocation/PreActionBar";
 import {
   getBulkAssignColumns,
@@ -33,9 +41,7 @@ import { PRE_ALLOCATION_JOBS_QUERY } from "graphql/job";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import dynamic from "next/dynamic";
-import { destroyCookie, setCookie } from "nookies";
 import React, {
-  startTransition,
   Suspense,
   useCallback,
   useEffect,
@@ -48,7 +54,7 @@ import {
   setIsPreFilterTicked,
   setPreJobFilters,
   setPreJobMainFilters,
-} from "store/jobFilterSlice";
+} from "store/preJobFilterSlice";
 import { RootState } from "store/store";
 
 import JobHeader from "../../../components/preAllocation/JobHeader";
@@ -59,8 +65,6 @@ const JobStatusDateFilter = dynamic(
   { ssr: false },
 );
 
-// FIX: AssignJobsModal is now conditionally mounted (not always mounted)
-// This saves Apollo hooks + modal DOM from loading at page start
 const AssignJobsModal = dynamic(
   () => import("components/preAllocation/AssignJobsModal"),
   { ssr: false },
@@ -114,15 +118,14 @@ export default function JobIndex({ }: {}) {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOptions, setDriverOptions] = useState([]);
   const [isShowSelectedOnly, setIsShowSelectedOnly] = useState(false);
-  // ✅ FIX: clearCount — increment triggers clear every time (boolean won't re-fire if already false)
   const [clearCount, setClearCount] = useState(0);
   const clearAllRows = () => setClearCount(c => c + 1);
   const [jobFilter, setJobFilter] = useState(preDefaultJobFilter);
   const [mainJobFilter, setMainJobFilter] = useState(null);
-  const [mainFilters, setMainFilters] = useState<any>(defaultSelectedFilter);
-  const [selectedFilters, setSelectedFilters] = useState<SelectedFilter>(defaultSelectedFilter);
+  const [mainFilters, setMainFilters] = useState<any>(defaultPreSelectedFilter);
+  const [selectedFilters, setSelectedFilters] = useState<PreSelectedFilter>(defaultPreSelectedFilter);
   const [mainFilterDisplayNames, setMainFilterDisplayNames] =
-    useState<typeof filterDisplayNames>(filterDisplayNames);
+    useState<typeof filterPreDisplayNames>(filterPreDisplayNames);
   const [dynamicTableUsers, setDynamicTableUsers] = useState<DynamicTableUser[]>([]);
 
   const handleToggleWithMedia = useCallback(
@@ -191,9 +194,11 @@ export default function JobIndex({ }: {}) {
       sort_by: sorting?.field || null,
       sort_order: sorting?.order || null,
     };
-    return is_filter_ticked === "1"
-      ? { ...baseVars, ...(mainJobFilter ?? {}) }
-      : baseVars;
+    const merged =
+      is_filter_ticked === "1"
+        ? { ...baseVars, ...(mainJobFilter ?? {}) }
+        : baseVars;
+    return merged;
   }, [queryPageIndex, queryPageSize, searchQuery, rangeDate, sorting, is_filter_ticked, mainJobFilter]);
 
   const {
@@ -256,6 +261,14 @@ export default function JobIndex({ }: {}) {
     };
   }, [adminColumns]);
 
+  // One-time best-effort cleanup of pre-"_v2" filter cookies left over from
+  // before the `path: "*"` bug was fixed. See jobFilterCookies.ts for why
+  // this matters — those old cookies could otherwise sit alongside the new
+  // ones indefinitely and cause unpredictable read results.
+  useEffect(() => {
+    cleanupLegacyFilterCookies();
+  }, []);
+
   const bulkAssignColumns = useMemo(
     () => getBulkAssignColumns(isAdmin, isCustomer, dynamicTableUsers),
     [isAdmin, isCustomer, dynamicTableUsers],
@@ -266,81 +279,78 @@ export default function JobIndex({ }: {}) {
     // When turned OFF, onToggleFilterCheckbox handles state clear directly
     // Calling updateTags here on OFF would cause: dispatch → re-render → this effect → loop
     if (is_filter_ticked !== "1") return;
-    if (!jobMainFilters) return; // not hydrated yet, skip
+    // ✅ FIX: `jobMainFilters` falls back to `preDefaultJobFilter` (an
+    // object of empty arrays) when the cookie is missing/empty — that
+    // fallback is truthy, so `!jobMainFilters` alone can't tell "cookie
+    // never saved anything" apart from "cookie genuinely has real filter
+    // values". Without this check, is_filter_ticked could restore to "1"
+    // (its own cookie is separate and fine) while jobMainFilters quietly
+    // carried no actual filter — checkbox shows ON, but no tag renders and
+    // no filter reaches the query.
+    const hasPersistedFilterValue =
+      jobMainFilters &&
+      Object.values(jobMainFilters).some((v) =>
+        Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null && v !== "",
+      );
+    if (!hasPersistedFilterValue) return;
 
     const updatedValues: any = {};
-    for (const key in defaultSelectedFilter) {
+    for (const key in defaultPreSelectedFilter) {
       if (
-        filters[key as keyof SelectedFilter] !== undefined &&
-        filters[key as keyof SelectedFilter] !== "undefined" &&
-        filters[key as keyof SelectedFilter] !== ""
+        filters[key as keyof PreSelectedFilter] !== undefined &&
+        filters[key as keyof PreSelectedFilter] !== "undefined" &&
+        filters[key as keyof PreSelectedFilter] !== ""
       ) {
-        updatedValues[key] = filters[key as keyof SelectedFilter];
+        updatedValues[key] = filters[key as keyof PreSelectedFilter];
       }
     }
     setJobFilter(jobMainFilters);
     if (displayName) setMainFilterDisplayNames(displayName);
     updateTags(updatedValues, jobMainFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [is_filter_ticked]);
+  }, []);
+
 
   const handleResetAll = () => {
-    updateTags({ ...defaultSelectedFilter }, preDefaultJobFilter);
+    updateTags({ ...defaultPreSelectedFilter }, preDefaultJobFilter);
   };
 
-  // ─────────────────────────────────────────
-  // FIX 2: updateTags — cookie batching + startTransition
-  // BEFORE: 13 setCookie calls in a loop → 13 re-renders per filter change
-  // AFTER:  1 cookie for all filter values + startTransition for dispatches
-  // ─────────────────────────────────────────
   const updateTags = (
-    updatedValues: SelectedFilter,
+    updatedValues: PreSelectedFilter,
     jobFilter: any,
     displayNames?: any,
   ) => {
     const updatedJobFilter = { ...jobFilter };
 
-    for (const key in defaultSelectedFilter) {
+    for (const key in defaultPreSelectedFilter) {
       if (
-        updatedValues[key as keyof SelectedFilter] === undefined ||
-        updatedValues[key as keyof SelectedFilter] === null ||
-        (updatedValues[key as keyof SelectedFilter] as any)?.length === 0
+        updatedValues[key as keyof PreSelectedFilter] === undefined ||
+        updatedValues[key as keyof PreSelectedFilter] === null ||
+        (updatedValues[key as keyof PreSelectedFilter] as any)?.length === 0
       ) {
-        delete updatedJobFilter[key as keyof SelectedFilter];
+        delete updatedJobFilter[key as keyof PreSelectedFilter];
       }
     }
+    writeSelectedValues(updatedValues);
+    writeMainFilter(updatedJobFilter);
 
-    // FIX: Single cookie instead of 13 individual cookies
-    setCookie(null, "allJobFilters", JSON.stringify(updatedValues), {
-      maxAge: 30 * 24 * 60 * 60,
-      path: "*",
-    });
+    dispatch(setPreJobMainFilters(updatedJobFilter));
+    setMainJobFilter(updatedJobFilter);
 
-    setCookie(null, "jobMainFilters", JSON.stringify(updatedJobFilter), {
-      maxAge: 24 * 60 * 60,
-      path: "*",
+    Object.keys(defaultPreSelectedFilter).forEach((key) => {
+      dispatch(
+        setPreJobFilters({
+          key,
+          value: updatedValues[key as keyof PreSelectedFilter],
+        }),
+      );
     });
-
-    // FIX: startTransition — non-urgent state updates batched together
-    // These don't need to block the UI
-    startTransition(() => {
-      Object.keys(defaultSelectedFilter).forEach((key) => {
-        dispatch(
-          setPreJobFilters({
-            key,
-            value: updatedValues[key as keyof SelectedFilter],
-          }),
-        );
-      });
-      dispatch(setPreJobMainFilters(updatedJobFilter));
-      setJobFilter(updatedJobFilter);
-      setMainJobFilter(updatedJobFilter);
-      setSelectedFilters(updatedValues);
-      setMainFilters(updatedValues);
-      if (displayNames) {
-        setMainFilterDisplayNames(displayNames);
-      }
-    });
+    setJobFilter(updatedJobFilter);
+    setSelectedFilters(updatedValues);
+    setMainFilters(updatedValues);
+    if (displayNames) {
+      setMainFilterDisplayNames(displayNames);
+    }
   };
 
   const {
@@ -456,21 +466,17 @@ export default function JobIndex({ }: {}) {
               if (!checked) {
                 // FIX: direct state clear — avoids handleResetAll() loop
                 // handleResetAll → updateTags → dispatch → is_filter_ticked useEffect → updateTags again
-                destroyCookie(null, "jobMainFilters", { path: "*" });
-                destroyCookie(null, "displayName", { path: "*" });
-                Object.keys(preDefaultJobFilter).forEach((key) => {
-                  destroyCookie(null, `jobFilters_${key}`, { path: "*" });
-                });
+                // Persistence lives in components/preAllocation/jobFilterCookies.tsx —
+                // Pre-Allocation-only, localStorage-based, fully separate
+                // from whatever Bulk Allocation uses.
+                clearPersistedFilterState();
                 setMainJobFilter(null);
                 setJobFilter(preDefaultJobFilter);
-                setMainFilters({ ...defaultSelectedFilter });
-                setSelectedFilters({ ...defaultSelectedFilter });
-                setMainFilterDisplayNames(filterDisplayNames);
+                setMainFilters({ ...defaultPreSelectedFilter });
+                setSelectedFilters({ ...defaultPreSelectedFilter });
+                setMainFilterDisplayNames(filterPreDisplayNames);
               }
-              setCookie(null, "is_filter_ticked", checked ? "1" : "0", {
-                maxAge: 30 * 24 * 60 * 60,
-                path: "*",
-              });
+              writeIsTicked(checked);
               dispatch(setIsPreFilterTicked(checked ? "1" : "0"));
             }}
             handleExport={() => {
@@ -491,16 +497,16 @@ export default function JobIndex({ }: {}) {
                     color={"black"}
                   >
                     <TagLabel>
-                      {mainFilterDisplayNames[filterKey as keyof SelectedFilter]
+                      {mainFilterDisplayNames[filterKey as keyof PreSelectedFilter]
                         .label +
                         ":" +
-                        mainFilterDisplayNames[filterKey as keyof SelectedFilter]
+                        mainFilterDisplayNames[filterKey as keyof PreSelectedFilter]
                           .value}
                     </TagLabel>
                     <TagCloseButton
                       onClick={() => {
                         const newSelectedFilters = { ...mainFilters };
-                        delete newSelectedFilters[filterKey as keyof SelectedFilter];
+                        delete newSelectedFilters[filterKey as keyof PreSelectedFilter];
                         updateTags(newSelectedFilters, jobFilter);
                       }}
                     />
@@ -608,10 +614,15 @@ export default function JobIndex({ }: {}) {
               onClose={onCloseFilter}
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 updateTags(selectedFilters, jobFilter, filterDisplayName);
-                setCookie(null, "displayName", JSON.stringify(filterDisplayName), {
-                  maxAge: 30 * 24 * 60 * 60,
-                  path: "*",
-                });
+                writeDisplayName(filterDisplayName);
+                // FIX: applying filters from the modal must also turn the
+                // filter checkbox ON — otherwise is_filter_ticked stays "0"
+                // and the mount-time restore effect above (gated on
+                // is_filter_ticked === "1") has nothing to trigger it on
+                // the next page load, so the filter wouldn't survive a
+                // refresh even though it was just correctly applied.
+                writeIsTicked(true);
+                dispatch(setIsPreFilterTicked("1"));
               }}
               selectedFilters={selectedFilters}
               setSelectedFilters={setSelectedFilters}

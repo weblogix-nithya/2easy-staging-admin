@@ -1,6 +1,6 @@
 import { MultiValue } from "chakra-react-select";
 
-export type SelectedFilter = {
+export type PreSelectedFilter = {
   states?: MultiValue<{ value: string; label: string }>;
   quadrant?: MultiValue<{ value: string; label: string; state: string }>;
   suburbs?: any;
@@ -16,9 +16,9 @@ export type SelectedFilter = {
   volume_to?: number;
 };
 
-export const filterDisplayNames = {
+export const filterPreDisplayNames = {
   states: { label: "States", value: "" },
-  quadrant: { label: "Quadrant", value: "" },
+  // quadrant: { label: "Quadrant", value: "" },
   suburbs: { label: "Suburbs", value: "" },
   address_business_name: { label: "Business Name", value: "" },
   has_company_ids: { label: "Company", value: "" },
@@ -32,9 +32,9 @@ export const filterDisplayNames = {
   volume_to: { label: "Volume To", value: "" },
 };
 
-export const defaultSelectedFilter: SelectedFilter = {
+export const defaultPreSelectedFilter: PreSelectedFilter = {
   states: undefined,
-  quadrant: undefined,
+  // quadrant: undefined,
   suburbs: undefined,
   address_business_name: undefined,
   has_company_ids: undefined,
@@ -48,9 +48,9 @@ export const defaultSelectedFilter: SelectedFilter = {
   volume_to: undefined,
 };
 
-export type JobFilter = {
+export type PreJobFilter = {
   states?: string[];
-  quadrant?: string[];
+  // quadrant?: string[];
   suburbs?: string[];
   address_business_name?: string[];
   has_company_ids?: string[];
@@ -64,9 +64,9 @@ export type JobFilter = {
   volume_to?: number;
 };
 
-export const preDefaultJobFilter: JobFilter = {
+export const preDefaultJobFilter: PreJobFilter = {
   states: [],
-  quadrant: [],
+  // quadrant: [],
   suburbs: [],
   address_business_name: [],
   has_company_ids: [],
