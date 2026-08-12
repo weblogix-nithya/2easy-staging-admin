@@ -67,7 +67,7 @@ interface Marker {
   icon?: string;
   data?: any;
 }
- 
+
 function RightSideBar({
   setMarkers,
 }: {
@@ -172,7 +172,7 @@ function RightSideBar({
   // GET_DRIVER_AVAILABILITYS_QUERY
   useQuery(GET_DRIVER_AVAILABILITYS_QUERY, {
     variables: {
-      first: 100,
+      first: 5000,
       page: 1,
       today: moment().utc().format("YYYY-MM-DD HH:mm:ss"),
       orderByColumn: "id",
@@ -184,7 +184,7 @@ function RightSideBar({
     },
   });
 
-  const [handleUpdateRoutePointSortId, {}] = useMutation(
+  const [handleUpdateRoutePointSortId, { }] = useMutation(
     UPDATE_ROUTE_POINT_SORT_ID_MUTATION,
     {
       onCompleted: (_data: any) => {
@@ -201,7 +201,7 @@ function RightSideBar({
     },
   );
 
-  const [updateRoute, {}] = useMutation(UPDATE_ROUTE_MUTATION, {
+  const [updateRoute, { }] = useMutation(UPDATE_ROUTE_MUTATION, {
     onCompleted: (_data: any) => {
       toast({
         title: "Route updated",
@@ -333,7 +333,7 @@ function RightSideBar({
                         setDriver(driver);
                         setRoute({ ...route, driver_id: e.value });
                       }}
-                      // components={driverDropdownOptions}
+                    // components={driverDropdownOptions}
                     ></Select>
                   </Box>
                 </Flex>
@@ -353,7 +353,7 @@ function RightSideBar({
                             style={{
                               color:
                                 route.current_volume >
-                                driver.no_max_capacity * 0.9
+                                  driver.no_max_capacity * 0.9
                                   ? "red"
                                   : "black",
                             }}
@@ -371,7 +371,7 @@ function RightSideBar({
                             style={{
                               color:
                                 route.current_weight >
-                                driver.no_max_capacity * 0.9
+                                  driver.no_max_capacity * 0.9
                                   ? "red"
                                   : "black",
                             }}
@@ -513,7 +513,7 @@ function RightSideBar({
                                         {/* TODO: Disable repositioning order if Job is complete */}
                                         {/* Drag handle, hide if complete */}
                                         {routePoint.route_point_status_id !=
-                                        3 ? (
+                                          3 ? (
                                           <div {...provided.dragHandleProps}>
                                             <FontAwesomeIcon
                                               icon={faGripLines}
