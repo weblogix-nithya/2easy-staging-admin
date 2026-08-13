@@ -12,51 +12,32 @@ import {
   ModalHeader,
   ModalOverlay,
   Spinner,
-  Table,
-  Tbody,
   Text,
-  Th,
-  Thead,
-  Tr,
   UseDisclosureProps,
   useToast,
   VStack,
 } from "@chakra-ui/react";
-import {
-  closestCenter,
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  KeyboardSensor,
-  PointerSensor,
-  UniqueIdentifier,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
+import { Reorder } from "framer-motion";
 import {
   BULK_UPDATE_JOB_MUTATION,
   GET_PREALLOCATED_JOBS_BY_DRIVER_QUERY,
 } from "graphql/job";
-import { reorderArray } from "helpers/helper";
 import moment from "moment";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
+
+// ✅ Shared between the header and every row — see PreAllocateModal.tsx
+// for why this is CSS Grid instead of a real <table>.
+const GRID_TEMPLATE_COLUMNS =
+  "40px 130px 90px 140px minmax(220px, 1.6fr) minmax(220px, 1.6fr) 110px";
 
 function formatDate(date: Date, isStart: boolean): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  const time = isStart ? "00:00:00" : "23:59:59";
-  return `${year}-${month}-${day} ${time}`;
+  return `${year}-${month}-${day} ${isStart ? "00:00:00" : "23:59:59"}`;
 }
 
 interface FilterJobsModalProps extends UseDisclosureProps {
@@ -65,11 +46,15 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   onClose: () => void;
   columns: any[];
   setSelectedJobs: React.Dispatch<React.SetStateAction<any>>;
-  setIsChecked: () => void; // ✅ clearAllRows — just call to clear checkboxes
+  setIsChecked: () => void;
   rangeDate?: [Date, Date];
 }
 
-export default function AssignJobsModal({
+// ✅ REWRITE (framer-motion instead of dnd-kit) — see PreAllocateModal.tsx
+// for the full rationale. Same pattern applied here: no SortableContext,
+// no DragOverlay/portal, no manual activeId tracking. onReorder hands back
+// the already-reordered array directly.
+function AssignJobsModalBase({
   columns,
   isOpen,
   onClose,
@@ -80,39 +65,23 @@ export default function AssignJobsModal({
 }: FilterJobsModalProps) {
   const toast = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [localJobs, setLocalJobs] = useState<any[]>([]);
-
-  // Ref to always read latest localJobs inside drag callbacks without stale closure
   const localJobsRef = useRef<any[]>([]);
+
   localJobsRef.current = localJobs;
 
-  // Ref to avoid stale activeId inside onDragEnd — state may already be null by the time closure runs
-  const activeIdRef = useRef<UniqueIdentifier | null>(null);
-
-  // ✅ FIX: PointerSensor instead of MouseSensor + TouchSensor
-  // PointerSensor handles mouse + touch in one sensor — more reliable for table rows
-  // distance:5 = less travel needed before drag activates (was 8 = too much)
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
-  const [fetchDriverJobs, { loading: jobsLoading }] = useLazyQuery(
+  const [fetchDriverJobs, { loading }] = useLazyQuery(
     GET_PREALLOCATED_JOBS_BY_DRIVER_QUERY,
     {
       fetchPolicy: "network-only",
       onCompleted: (data) => {
-        // API already returns jobs sorted by d_sort_id ASC via orderBy variable
-        const jobs = (data?.jobs?.data ?? []).map((job: any) => ({
-          id: job.id,
-          original: { job },
-        }));
-        setLocalJobs(jobs);
+        const jobs = data?.jobs?.data ?? [];
+        setLocalJobs(
+          jobs.map((job: any) => ({
+            id: String(job.id),
+            original: { job },
+          })),
+        );
       },
       onError: (error) => {
         showGraphQLErrorToast(error);
@@ -120,12 +89,12 @@ export default function AssignJobsModal({
     },
   );
 
+  // Fetch only when the modal opens or driver/date changes.
   useEffect(() => {
-    if (!isOpen) {
-      setLocalJobs([]);
+    if (!isOpen || !driver) {
+      if (!isOpen) setLocalJobs([]);
       return;
     }
-    if (!driver) return;
 
     const driverId = parseInt(String(driver?.value ?? driver?.id), 10);
     if (!driverId) return;
@@ -139,75 +108,33 @@ export default function AssignJobsModal({
             to_at: formatDate(rangeDate[1], false),
           }
           : undefined,
-        // Order by d_sort_id ASC so jobs load in their saved drag order
         orderBy: [{ column: "d_sort_id", order: "ASC" }],
         first: 20,
         page: 1,
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, driver?.id, driver?.value]);
+  }, [isOpen, driver?.id, driver?.value, rangeDate?.[0], rangeDate?.[1], fetchDriverJobs]);
 
-  // Find the active dragging item for DragOverlay
-  const activeItem =
-    activeId !== null
-      ? localJobs.find((job) => String(job.id) === String(activeId)) ?? null
-      : null;
-
-  // Stable id list for SortableContext
-  const jobIds = localJobs.map((job) => String(job.id));
-
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    activeIdRef.current = event.active.id;
-    setActiveId(event.active.id);
-  }, []);
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    // Read from ref — avoids stale closure where state activeId is already null
-    const currentActiveId = activeIdRef.current;
-    activeIdRef.current = null;
-    setActiveId(null);
-
-    const { over } = event;
-    if (!over || currentActiveId === null) return;
-
-    const currentJobs = localJobsRef.current;
-
-    const fromIndex = currentJobs.findIndex(
-      (job: any) => String(job.id) === String(currentActiveId),
-    );
-    const toIndex = currentJobs.findIndex(
-      (job: any) => String(job.id) === String(over.id),
-    );
-
-    if (fromIndex !== -1 && toIndex !== -1 && fromIndex !== toIndex) {
-      // Spread into new array — React needs a new reference to detect the change
-      setLocalJobs(reorderArray([...currentJobs], fromIndex, toIndex));
-    }
-  }, []);
-
-  const handleDragCancel = useCallback(() => {
-    activeIdRef.current = null;
-    setActiveId(null);
-  }, []);
-
-  // Build mutation payload at click time using current localJobs order
   const buildPayload = useCallback(() => {
+    const driverId = parseInt(String(driver?.value ?? driver?.id), 10);
+    if (!driverId) return [];
+
+    const sortDatetime = moment().format("YYYY-MM-DD HH:mm:ss");
+
     return localJobsRef.current.map((item, index) => {
-      if (!driver?.id && !driver?.value) return null;
+      const job = item?.original?.job;
       return {
-        id: item.original.job.id,
-        customer_id: item.original.job.customer.id,
-        company_id: item.original.job.company.id,
-        driver_id: parseInt(String(driver?.value ?? driver?.id), 10),
+        id: job?.id,
+        customer_id: job?.customer?.id,
+        company_id: job?.company?.id,
+        driver_id: driverId,
         preallocation_driver_id: null,
-        name: item.original.job.name,
-        d_sort_id: Number(index + 1),
-        sort_datetime: moment().format("YYYY-MM-DD HH:mm:ss"),
-        job_type_id: item.original.job.job_type_id,
+        name: job?.name,
+        d_sort_id: index + 1,
+        sort_datetime: sortDatetime,
+        job_type_id: job?.job_type_id ?? job?.job_type?.id,
       };
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driver?.id, driver?.value]);
 
   const [handleBulkAssignJobs] = useMutation(BULK_UPDATE_JOB_MUTATION, {
@@ -230,139 +157,127 @@ export default function AssignJobsModal({
     },
   });
 
+  const handleSave = useCallback(() => {
+    if (isSaving) return;
+    if (!localJobsRef.current.length) return;
+    setIsSaving(true);
+    handleBulkAssignJobs({ variables: { input: buildPayload() } });
+  }, [isSaving, handleBulkAssignJobs, buildPayload]);
+
   return (
-    <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose}>
+    <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose} size="6xl">
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
-      <ModalContent maxWidth={"85%"}>
+
+      <ModalContent maxWidth="85%">
         <ModalHeader>
           <Text m="4">
-            Pre-Allocated Jobs assigned to
-            {driver?.full_name
-              ? ` - ${driver.full_name}`
-              : driver?.label
-                ? ` - ${driver.label}`
-                : ""}
+            Pre-Allocated Jobs{driver?.label ? ` - ${driver.label}` : ""}
           </Text>
           <Divider />
         </ModalHeader>
+
         <ModalCloseButton />
 
         <ModalBody p="4">
-          {jobsLoading ? (
+          {loading ? (
             <Box textAlign="center" py={10}>
-              <Spinner size="lg" color="blue.500" />
-              <Text mt={3} color="gray.500">
-                Loading jobs...
-              </Text>
+              <Spinner size="lg" />
             </Box>
           ) : localJobs.length === 0 ? (
             <Box textAlign="center" py={10} color="gray.500">
-              No pre-allocated jobs found for this driver.
+              No jobs assigned to this driver.
             </Box>
           ) : (
-            <VStack
-              overflowX="auto"
-              spacing={4}
-              w="full"
-              align="start"
-              p={4}
-              mb={4}
-            >
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragCancel={handleDragCancel}
+            <VStack overflowX="auto" spacing={0} w="full" align="start" p={4} mb={4}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: GRID_TEMPLATE_COLUMNS,
+                  width: "100%",
+                  minWidth: "900px",
+                  borderBottom: "2px solid #E2E8F0",
+                }}
               >
-                <Table size="sm">
-                  <Thead>
-                    <Tr>
-                      {columns.map((column) => (
-                        <Th key={`row-header-bulk-assign-${column.id}`}>
-                          {column.Header}
-                        </Th>
-                      ))}
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    <SortableContext
-                      items={jobIds}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {localJobs.map((item) => (
-                        <JobBulkAssignRow
-                          key={item.id}
-                          columns={columns}
-                          item={item}
-                          sortId={String(item.id)}
-                        />
-                      ))}
-                    </SortableContext>
-                  </Tbody>
-                </Table>
+                {columns.map((column, index) => (
+                  <div
+                    key={`bulk-header-${column?.id}`}
+                    style={{
+                      padding: "8px",
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                      color: "#718096",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      position: index === 0 ? "sticky" : undefined,
+                      left: index === 0 ? 0 : undefined,
+                      zIndex: index === 0 ? 4 : undefined,
+                      background: index === 0 ? "white" : undefined,
+                      boxShadow:
+                        index === 0
+                          ? "2px 0 4px -2px rgba(0,0,0,0.15)"
+                          : undefined,
+                    }}
+                  >
+                    {column?.Header}
+                  </div>
+                ))}
+              </div>
 
-                {/* Render drag overlay outside modal to avoid overflow:hidden clipping */}
-                {createPortal(
-                  <DragOverlay dropAnimation={null}>
-                    {activeItem ? (
-                      <Table
-                        size="sm"
-                        style={{
-                          width: "100%",
-                          tableLayout: "fixed",
-                          borderCollapse: "collapse",
-                          background: "#EBF8FF",
-                          boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
-                        }}
-                      >
-                        <Tbody>
-                          <JobBulkAssignRow
-                            key={`overlay-${activeItem.id}`}
-                            columns={columns}
-                            item={activeItem}
-                            sortId={String(activeItem.id)}
-                            isDragOverlay
-                          />
-                        </Tbody>
-                      </Table>
-                    ) : null}
-                  </DragOverlay>,
-                  document.body,
-                )}
-              </DndContext>
+              <div style={{ width: "100%", minWidth: "900px" }}>
+                <Reorder.Group
+                  as="div"
+                  axis="y"
+                  values={localJobs}
+                  onReorder={setLocalJobs}
+                >
+                  {localJobs.map((item) => (
+                    <JobBulkAssignRow
+                      key={item?.original?.job?.id ?? item?.id}
+                      columns={columns}
+                      item={item}
+                      gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
+                    />
+                  ))}
+                </Reorder.Group>
+              </div>
             </VStack>
           )}
         </ModalBody>
 
-        <ModalFooter justifyContent={"center"}>
-          <Box w={"full"}>
-            <Flex justifyContent={"space-between"}>
-              <Button
-                variant="outline"
-                onClick={() => onClose()}
-                className="mr-2"
-              >
-                Cancel
-              </Button>
-              <Button
-                isDisabled={isSaving || jobsLoading || localJobs.length === 0}
-                variant="primary"
-                onClick={() => {
-                  setIsSaving(true);
-                  handleBulkAssignJobs({
-                    variables: { input: buildPayload() },
-                  });
-                }}
-                className="ml-2"
-              >
-                {isSaving ? <Spinner size="sm" mr={2} /> : null}
-                Confirm to assign Jobs ({localJobs.length})
-              </Button>
-            </Flex>
-          </Box>
+        <ModalFooter>
+          <Flex w="full" justifyContent="space-between">
+            <Button variant="outline" onClick={onClose} isDisabled={isSaving}>
+              Cancel
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={handleSave}
+              isDisabled={isSaving || localJobs.length === 0}
+            >
+              {isSaving && <Spinner size="sm" mr={2} />}
+              Save Order ({localJobs.length})
+            </Button>
+          </Flex>
         </ModalFooter>
       </ModalContent>
     </Modal>
   );
 }
+
+// ✅ PERF FIX: isolates this modal from unrelated parent re-renders (most
+// notably the page's websocket/Pusher subscription).
+function areEqual(prev: FilterJobsModalProps, next: FilterJobsModalProps) {
+  return (
+    prev.isOpen === next.isOpen &&
+    prev.driver?.id === next.driver?.id &&
+    prev.driver?.value === next.driver?.value &&
+    prev.rangeDate?.[0] === next.rangeDate?.[0] &&
+    prev.rangeDate?.[1] === next.rangeDate?.[1] &&
+    prev.columns === next.columns
+  );
+}
+
+const AssignJobsModal = React.memo(AssignJobsModalBase, areEqual);
+
+export default AssignJobsModal;

@@ -33,6 +33,24 @@ import { RootState } from "store/store";
 
 import SortableJobTableSetting from '../jobs/SortableJobTableSetting';
 
+// ✅ NEW: hard cap on how many columns a user can have active at once,
+// per Sam's approval. Prevents the table from getting overloaded again.
+const MAX_ACTIVE_COLUMNS = 12;
+
+// ✅ NEW: the default column set approved by Sam. Matched against
+// `item.name` — if your DynamicTableUser records store the column label
+// under a different field (e.g. `dynamic_table.column_description`),
+// update DEFAULT_COLUMN_NAMES or the matching logic in handleResetToDefault
+// accordingly.
+const DEFAULT_COLUMN_NAMES = [
+  "Delivery ID",
+  "Quad",
+  "Ready By / Drop by",
+  "Pickup Address and Name",
+  "Delivery Address and Name",
+  "Dimensions",
+];
+
 
 export default function JobTableSettingsModal(props: UseDisclosureProps) {
   const { isOpen, onClose } = props;
@@ -95,6 +113,23 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [isOpen]);
 
+  const activeCount = dynamicTableUsers.filter(
+    (item) => item.is_active,
+  ).length;
+
+  // ✅ NEW: resets to Sam's approved default set — matches by column name
+  // (case/whitespace-insensitive) against DEFAULT_COLUMN_NAMES above.
+  const handleResetToDefault = () => {
+    const normalize = (s: string) => s?.trim().toLowerCase();
+    const defaultSet = new Set(DEFAULT_COLUMN_NAMES.map(normalize));
+    setDynamicTableUsers(
+      dynamicTableUsers.map((item) => ({
+        ...item,
+        is_active: defaultSet.has(normalize(item.name)),
+      })),
+    );
+  };
+
   const sortedDynamicTableUsers = dynamicTableUsers.map((item, index) => {
     return {
       id: item.id,
@@ -135,7 +170,12 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
       <ModalContent>
-        <ModalHeader>Table Settings</ModalHeader>
+        <ModalHeader>
+          Table Settings
+          <Text fontSize="sm" fontWeight="normal" color="gray.500">
+            {activeCount} / {MAX_ACTIVE_COLUMNS} columns active
+          </Text>
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack w="full" align="start" spacing={3}>
@@ -218,6 +258,17 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
                           mb="auto"
                           isChecked={item.is_active}
                           onChange={(e) => {
+                            // ✅ NEW: block enabling past the 12-column cap
+                            if (e.target.checked && activeCount >= MAX_ACTIVE_COLUMNS) {
+                              toast({
+                                title: `You can only have up to ${MAX_ACTIVE_COLUMNS} columns active at once`,
+                                description: "Turn off another column first to enable this one.",
+                                status: "warning",
+                                duration: 3000,
+                                isClosable: true,
+                              });
+                              return;
+                            }
                             setDynamicTableUsers(
                               [...dynamicTableUsers].map((dynamicTableUser) => {
                                 if (dynamicTableUser.id === item.id) {
@@ -242,13 +293,21 @@ export default function JobTableSettingsModal(props: UseDisclosureProps) {
         <ModalFooter justifyContent={"center"}>
           <Box w={"full"}>
             <Flex justifyContent={"space-between"}>
-              <Button
-                variant="outline"
-                onClick={() => onClose()}
-                className="mr-2"
-              >
-                Cancel
-              </Button>
+              <Flex gap={2}>
+                <Button
+                  variant="outline"
+                  onClick={() => onClose()}
+                  className="mr-2"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleResetToDefault}
+                >
+                  Reset to Default
+                </Button>
+              </Flex>
               <Button
                 variant="primary"
                 onClick={() => handleBulkUpdateDynamicTableUsers()}

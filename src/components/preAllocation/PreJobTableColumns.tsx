@@ -1,17 +1,10 @@
-// PreJobTableColumns.tsx — PERFORMANCE FIXED
-// Changes:
-//   1. React.memo() added to ALL Cell components → prevents 1500 re-renders per interaction
-//   2. DeliveryCell — useCallback for handleRemove
-//   3. ItemsDimensionCell — useCallback for setShowAll
-//   4. NotesCell / AdminNotesCell — useCallback for setDisplay
-//   5. TimeslotCell — wrapped in React.memo
-
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   Badge,
-  Button,
+  Box,
+  // Button,
   Flex,
-  Grid,
+  // Grid,
   Icon,
   IconButton,
   Link,
@@ -44,7 +37,7 @@ import {
 } from "helpers/helper";
 import Image from "next/image";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useContext } from "react";
 import { MdMenu } from "react-icons/md";
 import { RootState } from "store/store";
 
@@ -434,45 +427,44 @@ export const ItemsTypeCellExport = ({ row }: any) => {
 };
 
 export const ItemsDimensionCell = React.memo(({ row }: any) => {
-  const items = row?.original?.job?.job_items || [];
-  const [showAll, setShowAll] = useState(false);
-  const visibleItems = showAll ? items : items.slice(0, 2);
+  const items = row?.original?.job?.job_items ?? [];
+  if (items.length === 0) return <Text fontSize="xs">-</Text>;
 
-  // FIX: useCallback
-  const toggleShow = useCallback(() => setShowAll((s) => !s), []);
+  const first = items[0];
+  const firstLabel = `${first.dimension_width}x${first.dimension_height}x${first.dimension_depth}`;
+  const remaining = items.length - 1;
 
   return (
-    <VStack align="stretch" spacing={1} w="100%">
-      {visibleItems.map((item: any) => (
-        <Grid
-          key={`items-dimension-${item?.id}`}
-          templateColumns="120px 50px 40px 80px 80px"
-          columnGap={4}
-          fontSize="md"
-        >
-          <Text>
-            {(item.dimension_height * 100).toFixed(0)}x
-            {(item.dimension_width * 100).toFixed(0)}x
-            {(item.dimension_depth * 100).toFixed(0)}
-          </Text>
-          <Text>{item?.item_type?.name}</Text>
-          <Text textAlign="right">{item.quantity}</Text>
-          <Text textAlign="right">{item.weight}kg</Text>
-          <Text textAlign="right">{item.volume?.toFixed(2)}cbm</Text>
-        </Grid>
-      ))}
-      {items.length > 2 && (
-        <Button
-          size="xs"
-          variant="link"
-          colorScheme="blue"
-          onClick={toggleShow}
-          alignSelf="flex-start"
-        >
-          {showAll ? "Less" : `+${items.length - 2} More`}
-        </Button>
+    <Box
+      style={{
+        height: "20px",        // ✅ fixed height — every row's Dimensions cell is identical
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+      }}
+    >
+      <Text fontSize="xs">{firstLabel}</Text>
+      {remaining > 0 && (
+        <Popover trigger="hover" placement="top">
+          <PopoverTrigger>
+            <Text fontSize="xs" color="blue.500" cursor="pointer">
+              +{remaining} More
+            </Text>
+          </PopoverTrigger>
+          <PopoverContent w="auto" p={2}>
+            <PopoverBody>
+              {items.slice(1).map((item: any, i: number) => (
+                <Text key={i} fontSize="xs">
+                  {item.dimension_width}x{item.dimension_height}x{item.dimension_depth}
+                </Text>
+              ))}
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>
       )}
-    </VStack>
+    </Box>
   );
 });
 ItemsDimensionCell.displayName = "ItemsDimensionCell";
@@ -766,7 +758,7 @@ export const DeliveryCellBulkAssign = React.memo(({ row }: any) => {
   const job = row?.original?.job;
   return (
     <Flex align="center" justify="space-between" maxW="150px">
-      <Text mr="2" noOfLines={1}>
+      <Text mr="2" fontSize="md" noOfLines={1}>
         {job?.name || "-"}
       </Text>
     </Flex>
@@ -1050,45 +1042,20 @@ export const getColumnsPre = (
   return columns;
 };
 
-// ─────────────────────────────────────────────
-// bulkassigntableColumn & getBulkAssignColumns (unchanged)
-// ─────────────────────────────────────────────
 
 export const bulkassigntableColumn = [
   { id: "name", Header: "Delivery ID", Cell: DeliveryCellBulkAssign },
-  { id: "job_type.name", Header: "Type", Cell: JobTypeCell },
-  { id: "pick_up_destination.address_formatted", Header: "Pickup From", Cell: PickupAddressCell },
-  { id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name", Header: "Pickup Address and Name ", Cell: PickupAddressWithTimewithoutMediaCell, CellExport: PickupAddressWithTimeCellExport },
-  { id: "pick_up_destination.address_business_name", Header: "Pickup Company", Cell: PickupBusinessNameCell },
-  { id: "job_destinations.address", Header: "Delivery To", width: "100px", Cell: JobDestinationsCell, CellExport: JobDestinationsCellExport },
-  { id: "job_destinations.address_business_name", Header: "Del. Company ", Cell: JobDestinationBusinessNameCell, CellExport: JobDestinationBusinessNameCellExport },
-  { id: "total_quantity", Header: "Pcs/Qty", Cell: TotalQuantityCell },
-  { id: "total_weight", Header: "Weight", Cell: TotalWeightCell },
-  { id: "total_volume", Header: "CBM", Cell: TotalVolumeCell },
-  { id: "price_summary.charges", Header: "Charges", Cell: Charges },
-  { id: "price_summary.sub_total", Header: "Total", Cell: SubTotal },
-  { id: "price_summary.tax", Header: "Tax", Cell: Tax },
-  { id: "price_summary.total", Header: "Total Price", Cell: TotalPrice },
-  { id: "job_destinations.address,job_destinations.address_business_name", Header: "Delivery Address and Name", Cell: JobDestinationWithBusinessNamewithoutMediaCell, CellExport: JobDestinationWithBusinessNameCellExport },
-  { id: "reference_no", Header: "Customer Ref.", Cell: CustomerReferenceCell },
-  { id: "job_category.name", Header: "category", Cell: CategoryCell },
-  { id: "pickup_quad", Header: "From Quad", Cell: FromQuadCell },
-  { id: "delivery_quad", Header: "To Quad", Cell: ToQuadCell },
   { id: "suburb_area,area_color", Header: "Quad", Cell: SuburbAreaCell },
-  { id: "company.name", Header: "Company", Cell: BookedByCell },
-  { id: "ready_at", Header: "Date", Cell: ReadyAtCell },
   { id: "job_category.name,ready_at,drop_at", Header: "Ready By / Drop by", Cell: ReadyDropByCell, CellExport: ReadyDropByCellExport },
-  { id: "timeslot", Header: "Timeslot", Cell: ({ row }: any) => <TimeslotCell row={row} /> },
-  { id: "last_free_at", Header: "Last Free Day", Cell: LastFreeAtCell },
+  { id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name", Header: "Pickup Address and Name ", Cell: PickupAddressWithTimewithoutMediaCell, CellExport: PickupAddressWithTimeCellExport },
+  { id: "job_destinations.address,job_destinations.address_business_name", Header: "Delivery Address and Name", Cell: JobDestinationWithBusinessNamewithoutMediaCell, CellExport: JobDestinationWithBusinessNameCellExport },
   { id: "job_items.dimensions", Header: "Dimensions", Cell: ItemsDimensionCell, CellExport: ItemsDimensionCellExport },
-  { id: "customer_notes", Header: "Client notes", Cell: NotesCell },
-  { id: "admin_notes", Header: "Admin Notes", accessor: "admin_notes" as const, Cell: AdminNotesCell },
 ];
 
 export const getBulkAssignColumns = (
-  isAdmin: boolean,
-  isCustomer: boolean,
-  dynamicTableUsers?: DynamicTableUser[],
+  _isAdmin: boolean,
+  _isCustomer: boolean,
+  _dynamicTableUsers?: DynamicTableUser[],
 ) => {
   const orderCol = {
     id: "order",
@@ -1100,10 +1067,14 @@ export const getBulkAssignColumns = (
     ),
   };
 
-  if (dynamicTableUsers === undefined || dynamicTableUsers.length === 0) {
-    return [orderCol, ...bulkassigntableColumn];
-  }
-
-  const dynamicColumns = outputDynamicTable(dynamicTableUsers, bulkassigntableColumn);
-  return [orderCol, ...dynamicColumns];
+  // ✅ FIX: this modal is for reordering only, not full detail viewing —
+  // per Sam's approval it's fixed at these 6 essential columns for
+  // everyone, not user-customizable. Previously this ran the list through
+  // outputDynamicTable(dynamicTableUsers, ...), which re-applied each
+  // user's PREVIOUSLY SAVED column preferences (from before the reduction,
+  // when there were ~28 columns) — so the header row kept showing the old
+  // full list regardless of how far bulkassigntableColumn itself was
+  // trimmed. Always returning the fixed set here guarantees the header
+  // matches bulkassigntableColumn exactly, for every user.
+  return [orderCol, ...bulkassigntableColumn];
 };
