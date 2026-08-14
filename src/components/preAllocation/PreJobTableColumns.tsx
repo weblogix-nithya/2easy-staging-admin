@@ -2,9 +2,9 @@ import { CloseIcon } from "@chakra-ui/icons";
 import {
   Badge,
   Box,
-  // Button,
+  Button,
   Flex,
-  // Grid,
+  Grid,
   Icon,
   IconButton,
   Link,
@@ -37,7 +37,7 @@ import {
 } from "helpers/helper";
 import Image from "next/image";
 import EditableFieldPopover from "pages/admin/jobs/job-components/EditableFieldPopover";
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import { MdMenu } from "react-icons/md";
 import { RootState } from "store/store";
 
@@ -427,6 +427,50 @@ export const ItemsTypeCellExport = ({ row }: any) => {
 };
 
 export const ItemsDimensionCell = React.memo(({ row }: any) => {
+  const items = row?.original?.job?.job_items || [];
+  const [showAll, setShowAll] = useState(false);
+  const visibleItems = showAll ? items : items.slice(0, 2);
+
+  // FIX: useCallback
+  const toggleShow = useCallback(() => setShowAll((s) => !s), []);
+
+  return (
+    <VStack align="stretch" spacing={1} w="100%">
+      {visibleItems.map((item: any) => (
+        <Grid
+          key={`items-dimension-${item?.id}`}
+          templateColumns="120px 50px 40px 80px 80px"
+          columnGap={4}
+          fontSize="md"
+        >
+          <Text>
+            {(item.dimension_height * 100).toFixed(0)}x
+            {(item.dimension_width * 100).toFixed(0)}x
+            {(item.dimension_depth * 100).toFixed(0)}
+          </Text>
+          <Text>{item?.item_type?.name}</Text>
+          <Text textAlign="right">{item.quantity}</Text>
+          <Text textAlign="right">{item.weight}kg</Text>
+          <Text textAlign="right">{item.volume?.toFixed(2)}cbm</Text>
+        </Grid>
+      ))}
+      {items.length > 2 && (
+        <Button
+          size="xs"
+          variant="link"
+          colorScheme="blue"
+          onClick={toggleShow}
+          alignSelf="flex-start"
+        >
+          {showAll ? "Less" : `+${items.length - 2} More`}
+        </Button>
+      )}
+    </VStack>
+  );
+});
+ItemsDimensionCell.displayName = "ItemsDimensionCell";
+
+export const BulkItemsDimensionCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items ?? [];
   if (items.length === 0) return <Text fontSize="xs">-</Text>;
 
@@ -467,7 +511,7 @@ export const ItemsDimensionCell = React.memo(({ row }: any) => {
     </Box>
   );
 });
-ItemsDimensionCell.displayName = "ItemsDimensionCell";
+BulkItemsDimensionCell.displayName = "BulkItemsDimensionCell";
 
 export const ItemsDimensionCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -1049,7 +1093,7 @@ export const bulkassigntableColumn = [
   { id: "job_category.name,ready_at,drop_at", Header: "Ready By / Drop by", Cell: ReadyDropByCell, CellExport: ReadyDropByCellExport },
   { id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name", Header: "Pickup Address and Name ", Cell: PickupAddressWithTimewithoutMediaCell, CellExport: PickupAddressWithTimeCellExport },
   { id: "job_destinations.address,job_destinations.address_business_name", Header: "Delivery Address and Name", Cell: JobDestinationWithBusinessNamewithoutMediaCell, CellExport: JobDestinationWithBusinessNameCellExport },
-  { id: "job_items.dimensions", Header: "Dimensions", Cell: ItemsDimensionCell, CellExport: ItemsDimensionCellExport },
+  { id: "job_items.dimensions", Header: "Dimensions", Cell: BulkItemsDimensionCell, CellExport: ItemsDimensionCellExport },
 ];
 
 export const getBulkAssignColumns = (
