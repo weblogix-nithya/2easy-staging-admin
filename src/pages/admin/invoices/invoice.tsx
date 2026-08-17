@@ -227,6 +227,10 @@ export default function InvoiceIndex() {
         accessor: "name" as const,
       },
       {
+        Header: "Invoice ID",
+        accessor: "invoice_no" as const,
+      },
+      {
         Header: "job",
         accessor: "job.name" as const,
       },
@@ -292,15 +296,15 @@ export default function InvoiceIndex() {
       between_at:
         rangeDate && rangeDate[0]
           ? {
-              from_at:
-                rangeDate && rangeDate[0]
-                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-              to_at:
-                rangeDate && rangeDate[1]
-                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-            }
+            from_at:
+              rangeDate && rangeDate[0]
+                ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+            to_at:
+              rangeDate && rangeDate[1]
+                ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+          }
           : undefined,
     },
     skip: !isAdmin,
@@ -324,15 +328,15 @@ export default function InvoiceIndex() {
         between_at:
           rangeDate && rangeDate[0]
             ? {
-                from_at:
-                  rangeDate && rangeDate[0]
-                    ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                    : undefined,
-                to_at:
-                  rangeDate && rangeDate[1]
-                    ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                    : undefined,
-              }
+              from_at:
+                rangeDate && rangeDate[0]
+                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                  : undefined,
+              to_at:
+                rangeDate && rangeDate[1]
+                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                  : undefined,
+            }
             : undefined,
       },
       skip: !isAdmin,
@@ -363,15 +367,15 @@ export default function InvoiceIndex() {
       between_at:
         rangeDate && rangeDate[0]
           ? {
-              from_at:
-                rangeDate && rangeDate[0]
-                  ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-              to_at:
-                rangeDate && rangeDate[1]
-                  ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
-                  : undefined,
-            }
+            from_at:
+              rangeDate && rangeDate[0]
+                ? moment(rangeDate[0]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+            to_at:
+              rangeDate && rangeDate[1]
+                ? moment(rangeDate[1]).format("YYYY-MM-DD HH:mm:ss")
+                : undefined,
+          }
           : undefined,
     },
     skip: isAdmin || (!isCompanyAdmin && !isCustomer),
@@ -579,13 +583,13 @@ export default function InvoiceIndex() {
               {/* @ts-ignore */}
               Invoice Total:{" "}
               {invoiceTotals?.invoices?.data &&
-              invoiceTotals?.invoices?.data.length > 0
+                invoiceTotals?.invoices?.data.length > 0
                 ? formatCurrency(
-                    invoiceTotals?.invoices?.data.reduce(
-                      (a: any, b: any) => a + b.total,
-                      0,
-                    ),
-                  )
+                  invoiceTotals?.invoices?.data.reduce(
+                    (a: any, b: any) => a + b.total,
+                    0,
+                  ),
+                )
                 : "-"}
             </Box>
 

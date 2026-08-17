@@ -131,6 +131,7 @@ export const GET_INVOICE_TOTALS_QUERY = gql`
       data {
         id
         name
+        invoice_no
         job {
           job_category_id
           job_category {
