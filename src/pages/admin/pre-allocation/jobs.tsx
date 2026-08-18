@@ -176,6 +176,9 @@ export default function JobIndex({ }: {}) {
       } else if (sort.id === "suburb_area,area_color") {
         field = "suburb_area";
       }
+      else if (sort.id === "pick_up_destination.address_formatted,pick_up_destination.address_business_name") {
+        field = "pickup_address";
+      }
       setSorting({ field, order: sort.desc ? "DESC" : "ASC" });
     }
   }, []);

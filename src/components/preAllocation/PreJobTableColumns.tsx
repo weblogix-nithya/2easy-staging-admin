@@ -1018,6 +1018,8 @@ export const tableColumn = (refetchJobs: () => void) => [
     Header: "Pickup Address and Name ",
     Cell: PickupAddressWithTimewithoutMediaCell,
     CellExport: PickupAddressWithTimeCellExport,
+    accessor: (row: any) => row?.job?.pick_up_destination?.address_formatted || "",
+    enableSorting: true,
   },
   { id: "pick_up_destination.address_business_name", Header: "Pickup Company", Cell: PickupBusinessNameCell },
   { id: "job_destinations.address", Header: "Delivery To", width: "100px", Cell: JobDestinationsCell, CellExport: JobDestinationsCellExport },
