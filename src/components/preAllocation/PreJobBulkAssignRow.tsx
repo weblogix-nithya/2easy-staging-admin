@@ -59,7 +59,7 @@ export const JobBulkAssignRow = memo(function JobBulkAssignRow({
       value={item}
       dragListener={false}
       dragControls={dragControls}
-      transition={{ duration: 0 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
       dragTransition={{ power: 0, timeConstant: 0 }}
       style={{
         display: "grid",
