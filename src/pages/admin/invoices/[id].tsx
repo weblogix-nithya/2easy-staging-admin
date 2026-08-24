@@ -213,34 +213,34 @@ function InvoiceEdit() {
     },
   });
 
-//   const {
-//     loading: invoiceLoading,
-//     data,
-//     refetch: getInvoice,
-//   } = useQuery(GET_INVOICE_QUERY, {
-//     variables: { id },
-//     skip: !id,
-//   });
+  //   const {
+  //     loading: invoiceLoading,
+  //     data,
+  //     refetch: getInvoice,
+  //   } = useQuery(GET_INVOICE_QUERY, {
+  //     variables: { id },
+  //     skip: !id,
+  //   });
 
-//   useEffect(() => {
-// console.log(data,'router useffect 1')
+  //   useEffect(() => {
+  // console.log(data,'router useffect 1')
 
-//     if (!data?.invoice) return;
-// console.log(data,'router useffect 1.1')
+  //     if (!data?.invoice) return;
+  // console.log(data,'router useffect 1.1')
 
-//     setInvoice((prev) => ({
-//       ...prev,
-//       ...data.invoice,
-//       issued_at: new Date(data.invoice.issued_at),
-//       due_at: new Date(data.invoice.due_at),
-//       invoice_status_id: String(data.invoice.invoice_status_id),
-//       manual_inv_url: data.invoice.manual_inv_url,
-//     }));
-// console.log(data,'router useffect 1.2')
+  //     setInvoice((prev) => ({
+  //       ...prev,
+  //       ...data.invoice,
+  //       issued_at: new Date(data.invoice.issued_at),
+  //       due_at: new Date(data.invoice.due_at),
+  //       invoice_status_id: String(data.invoice.invoice_status_id),
+  //       manual_inv_url: data.invoice.manual_inv_url,
+  //     }));
+  // console.log(data,'router useffect 1.2')
 
-//     setSelectedPaymentTerm(data.invoice.company?.payment_term);
-//     setInvoiceStatusId(data.invoice.invoice_status_id);
-//   }, [data]);
+  //     setSelectedPaymentTerm(data.invoice.company?.payment_term);
+  //     setInvoiceStatusId(data.invoice.invoice_status_id);
+  //   }, [data]);
   const {
     loading: invoiceLoading,
     // data: invoiceData,
@@ -313,7 +313,7 @@ function InvoiceEdit() {
   };
   const [createLineItem] = useMutation(CREATE_INVOICE_LINE_ITEM_MUTATION);
 
-  const [handleUpdateApproveInvoice, {}] = useMutation(
+  const [handleUpdateApproveInvoice, { }] = useMutation(
     UPDATE_INVOICE_MUTATION,
     {
       variables: {
@@ -434,7 +434,7 @@ function InvoiceEdit() {
       },
     });
 
-  const [_handleDeleteInvoice, {}] = useMutation(DELETE_INVOICE_MUTATION, {
+  const [_handleDeleteInvoice, { }] = useMutation(DELETE_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -452,7 +452,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     variables: {
       id: id,
     },
@@ -469,7 +469,7 @@ function InvoiceEdit() {
     },
   });
 
-  const [handleGenerateInvoicePdf, {}] = useMutation(
+  const [handleGenerateInvoicePdf, { }] = useMutation(
     GENERATE_INVOICE_PDF_MUTATION,
     {
       variables: {
@@ -502,7 +502,7 @@ function InvoiceEdit() {
     },
   );
 
-  const [handleDeleteInvoiceLineItem, {}] = useMutation(
+  const [handleDeleteInvoiceLineItem, { }] = useMutation(
     DELETE_INVOICE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -583,18 +583,20 @@ function InvoiceEdit() {
                 className="mt-8"
               >
                 {invoice?.is_rcti && (
-                  <h1 className="mb-0">
-                    Invoice #
-                    {invoice?.job_id === null || invoice?.job?.id === null
-                      ? invoice.invoice_no
-                      : invoice.job?.name || invoice.vehicle_hire?.name}
-                  </h1>
-                )}
+                  <Box>
+                    <h1 className="mb-0">
+                      Invoice #{invoice.invoice_no}
+                    </h1>
 
-                {!invoice.is_rcti && (
-                  <h1 className="mb-0">RCTI {invoice.name}</h1>
+                    <h4 className="mb-0" style={{ fontSize: "12px", color: "#718096" }} >
+                      Delivery{" "}#
+                      {invoice?.job_id !== null || invoice?.job?.id !== null
+                        ? invoice.job?.name || invoice.vehicle_hire?.name
+                        : ""}
+                    </h4>
+                  </Box>
                 )}
-                   {invoice?.job_id !== null && (
+                {invoice?.job_id !== null && (
                   <Box pl={6}>
                     <Box pl={6}>
                       Collection : {pickUpDestination.address_city}
@@ -1289,7 +1291,7 @@ function InvoiceEdit() {
                   </Button>
                 )}
 
-             {hasPdf && (
+              {hasPdf && (
                 <Tooltip
                   label={
                     invoice?.job?.invoice_url ? "Job Invoice" : "Manual Invoice"
@@ -1359,7 +1361,7 @@ function InvoiceEdit() {
         </Flex>
         <Divider className="my-10" />
       </Box>
-    </AdminLayout>
+    </AdminLayout >
   );
 }
 
