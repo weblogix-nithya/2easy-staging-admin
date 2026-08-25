@@ -584,15 +584,14 @@ function InvoiceEdit() {
               >
                 {invoice?.is_rcti && (
                   <Box>
-                    <h4 className="mb-0" style={{ fontSize: "12px", color: "#718096" }} >
-                      Job{" "}#
-                      {invoice?.job_id !== null || invoice?.job?.id !== null
-                        ? invoice.job?.name || invoice.vehicle_hire?.name
-                        : ""}
-                    </h4>
                     <h1 className="mb-0">
                       Invoice #{invoice.invoice_no}
                     </h1>
+                    <h4 className="mb-0" style={{ fontSize: "14px" }} >
+                      {invoice?.job_id !== null || invoice?.job?.id !== null
+                        ? "Job #" + (invoice.job?.name || invoice.vehicle_hire?.name)
+                        : ""}
+                    </h4>
                   </Box>
                 )}
                 {invoice?.job_id !== null && (
