@@ -470,48 +470,6 @@ export const ItemsDimensionCell = React.memo(({ row }: any) => {
 });
 ItemsDimensionCell.displayName = "ItemsDimensionCell";
 
-export const BulkItemsDimensionCell = React.memo(({ row }: any) => {
-  const items = row?.original?.job?.job_items ?? [];
-  if (items.length === 0) return <Text fontSize="xs">-</Text>;
-
-  const first = items[0];
-  const firstLabel = `${first.dimension_width}x${first.dimension_height}x${first.dimension_depth}`;
-  const remaining = items.length - 1;
-
-  return (
-    <Box
-      style={{
-        height: "20px",        // ✅ fixed height — every row's Dimensions cell is identical
-        overflow: "hidden",
-        whiteSpace: "nowrap",
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-      }}
-    >
-      <Text fontSize="xs">{firstLabel}</Text>
-      {remaining > 0 && (
-        <Popover trigger="hover" placement="top">
-          <PopoverTrigger>
-            <Text fontSize="xs" color="blue.500" cursor="pointer">
-              +{remaining} More
-            </Text>
-          </PopoverTrigger>
-          <PopoverContent w="auto" p={2}>
-            <PopoverBody>
-              {items.slice(1).map((item: any, i: number) => (
-                <Text key={i} fontSize="xs">
-                  {item.dimension_width}x{item.dimension_height}x{item.dimension_depth}
-                </Text>
-              ))}
-            </PopoverBody>
-          </PopoverContent>
-        </Popover>
-      )}
-    </Box>
-  );
-});
-BulkItemsDimensionCell.displayName = "BulkItemsDimensionCell";
 
 export const ItemsDimensionCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -798,18 +756,6 @@ export const DeliveryCell = React.memo(({ row }: any) => {
 });
 DeliveryCell.displayName = "DeliveryCell";
 
-export const DeliveryCellBulkAssign = React.memo(({ row }: any) => {
-  const job = row?.original?.job;
-  return (
-    <Flex align="center" justify="space-between" maxW="150px">
-      <Text mr="2" fontSize="md" noOfLines={1}>
-        {job?.name || "-"}
-      </Text>
-    </Flex>
-  );
-});
-DeliveryCellBulkAssign.displayName = "DeliveryCellBulkAssign";
-
 export const AdminNotesCell = React.memo(({ row }: any) => {
   const current = row?.original?.job?.admin_notes ?? "";
   const [display, setDisplay] = React.useState(current);
@@ -1089,13 +1035,130 @@ export const getColumnsPre = (
 };
 
 
+const BULK_TEXT_STYLE = {
+  fontSize: "0.8rem",
+  lineHeight: "1.15",
+  whiteSpace: "nowrap" as const,
+  overflow: "hidden" as const,
+  textOverflow: "ellipsis" as const,
+  width: "100%",
+};
+
+export const BulkDeliveryCell = React.memo(({ row }: any) => (
+  <Text style={BULK_TEXT_STYLE} fontWeight="600" title={row?.original?.job?.name || "-"}>
+    {row?.original?.job?.name || "-"}
+  </Text>
+));
+BulkDeliveryCell.displayName = "BulkDeliveryCell";
+
+export const BulkSuburbAreaCell = React.memo(({ row }: any) => {
+  const area = row?.original?.job?.suburb_area || "-";
+  const bgColor = row?.original?.job?.area_color || "#751010";
+  return (
+    <Badge
+      bg={bgColor}
+      color="white"
+      px={2}
+      py={0}
+      borderRadius="md"
+      textTransform="capitalize"
+      fontSize="0.72rem"
+      maxW="100%"
+      overflow="hidden"
+      textOverflow="ellipsis"
+      whiteSpace="nowrap"
+      title={area}
+    >
+      {area}
+    </Badge>
+  );
+});
+BulkSuburbAreaCell.displayName = "BulkSuburbAreaCell";
+
+export const BulkReadyDropByCell = React.memo(({ row }: any) => {
+  const job = row?.original?.job;
+  const text = `${job?.job_category?.name ?? "-"} · R:${formatTime(job?.ready_at)} D:${formatTime(job?.drop_at)}`;
+  return (
+    <Text style={BULK_TEXT_STYLE} title={text}>
+      {text}
+    </Text>
+  );
+});
+BulkReadyDropByCell.displayName = "BulkReadyDropByCell";
+
+export const BulkPickupAddressCell = React.memo(({ row }: any) => {
+  const pickupDest = row?.original?.job?.job_destinations?.find(
+    (dest: any) => dest.is_pickup === true,
+  );
+  const name = pickupDest?.address_business_name || "";
+  const addr = pickupDest
+    ? `${pickupDest.address_line_1 ?? ""}, ${pickupDest.address_city ?? ""}, ${pickupDest.address_postal_code ?? ""}`
+    : "-";
+  const text = name ? `${name} — ${addr}` : addr;
+  return (
+    <Text style={BULK_TEXT_STYLE} title={text}>
+      {text}
+    </Text>
+  );
+});
+BulkPickupAddressCell.displayName = "BulkPickupAddressCell";
+
+export const BulkDeliveryAddressCell = React.memo(({ row }: any) => {
+  const dest = (row?.original?.job?.job_destinations || []).find(
+    (d: any) => d?.is_pickup === false,
+  );
+  const name = dest?.address_business_name || "";
+  const addr = dest
+    ? `${dest.address_line_1 ?? ""}, ${dest.address_city ?? ""}, ${dest.address_postal_code ?? ""}`
+    : "-";
+  const text = name ? `${name} — ${addr}` : addr;
+  return (
+    <Text style={BULK_TEXT_STYLE} title={text}>
+      {text}
+    </Text>
+  );
+});
+BulkDeliveryAddressCell.displayName = "BulkDeliveryAddressCell";
+
+export const BulkDimensionCell = React.memo(({ row }: any) => {
+  const items = row?.original?.job?.job_items ?? [];
+  if (items.length === 0) return <Text style={BULK_TEXT_STYLE}>-</Text>;
+  const first = items[0];
+  const firstLabel = `${first.dimension_width}x${first.dimension_height}x${first.dimension_depth}`;
+  const remaining = items.length - 1;
+  return (
+    <Box style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%", overflow: "hidden" }}>
+      <Text fontSize="0.8rem" whiteSpace="nowrap">{firstLabel}</Text>
+      {remaining > 0 && (
+        <Popover trigger="hover" placement="top">
+          <PopoverTrigger>
+            <Text fontSize="0.8rem" color="blue.500" cursor="pointer" whiteSpace="nowrap">
+              +{remaining}
+            </Text>
+          </PopoverTrigger>
+          <PopoverContent w="auto" p={2}>
+            <PopoverBody>
+              {items.slice(1).map((item: any, i: number) => (
+                <Text key={i} fontSize="xs">
+                  {item.dimension_width}x{item.dimension_height}x{item.dimension_depth}
+                </Text>
+              ))}
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>
+      )}
+    </Box>
+  );
+});
+BulkDimensionCell.displayName = "BulkDimensionCell";
+
 export const bulkassigntableColumn = [
-  { id: "name", Header: "Delivery ID", Cell: DeliveryCellBulkAssign },
-  { id: "suburb_area,area_color", Header: "Quad", Cell: SuburbAreaCell },
-  { id: "job_category.name,ready_at,drop_at", Header: "Ready By / Drop by", Cell: ReadyDropByCell, CellExport: ReadyDropByCellExport },
-  { id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name", Header: "Pickup Address and Name ", Cell: PickupAddressWithTimewithoutMediaCell, CellExport: PickupAddressWithTimeCellExport },
-  { id: "job_destinations.address,job_destinations.address_business_name", Header: "Delivery Address and Name", Cell: JobDestinationWithBusinessNamewithoutMediaCell, CellExport: JobDestinationWithBusinessNameCellExport },
-  { id: "job_items.dimensions", Header: "Dimensions", Cell: BulkItemsDimensionCell, CellExport: ItemsDimensionCellExport },
+  { id: "name", Header: "Delivery ID", Cell: BulkDeliveryCell },
+  { id: "suburb_area,area_color", Header: "Quad", Cell: BulkSuburbAreaCell },
+  { id: "job_category.name,ready_at,drop_at", Header: "Ready By / Drop by", Cell: BulkReadyDropByCell, CellExport: ReadyDropByCellExport },
+  { id: "pick_up_destination.address_formatted,pick_up_destination.address_business_name", Header: "Pickup Address and Name", Cell: BulkPickupAddressCell, CellExport: PickupAddressWithTimeCellExport },
+  { id: "job_destinations.address,job_destinations.address_business_name", Header: "Delivery Address and Name", Cell: BulkDeliveryAddressCell, CellExport: JobDestinationWithBusinessNameCellExport },
+  { id: "job_items.dimensions", Header: "Dimensions", Cell: BulkDimensionCell, CellExport: ItemsDimensionCellExport },
 ];
 
 export const getBulkAssignColumns = (

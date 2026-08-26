@@ -297,4 +297,4 @@ const JobStatusDateFilter = ({
   );
 };
 
-export default JobStatusDateFilter;
+export default React.memo(JobStatusDateFilter);

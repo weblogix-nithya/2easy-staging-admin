@@ -55,9 +55,14 @@ const JobContextMenu: React.FC<JobContextMenuProps> = ({ job, position, onClose,
     const [readyAt, setReadyAt] = useState("06:00");
     const [dropAt, setDropAt] = useState("17:00");
 
-    const { data: metaData } = useQuery(GET_JOB_META_LIST_QUERY);
+    const { data: metaData } = useQuery(GET_JOB_META_LIST_QUERY, {
+        fetchPolicy: "cache-first",
+        nextFetchPolicy: "cache-first",
+    });
     const { data: statusData } = useQuery(GET_JOB_STATUSES_QUERY, {
         variables: { query: "", page: 1, first: 100, orderByColumn: "id", orderByOrder: "ASC" },
+        fetchPolicy: "cache-first",
+        nextFetchPolicy: "cache-first",
     });
 
     const [assignMetaToJob] = useMutation(ASSIGN_META_TO_JOB_MUTATION);

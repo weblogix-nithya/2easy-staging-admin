@@ -31,7 +31,7 @@ import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
 // ✅ Shared between the header and every row — see PreAllocateModal.tsx
 // for why this is CSS Grid instead of a real <table>.
 const GRID_TEMPLATE_COLUMNS =
-  "40px 130px 90px 140px minmax(220px, 1.6fr) minmax(220px, 1.6fr) 110px";
+  "40px 110px 80px 165px minmax(320px, 2.5fr) minmax(320px, 2.5fr) 90px";
 
 function formatDate(date: Date, isStart: boolean): string {
   const year = date.getFullYear();
@@ -168,7 +168,7 @@ function AssignJobsModalBase({
     <Modal id="bulk-assign-modal" isCentered isOpen={isOpen} onClose={onClose} size="6xl">
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(1px)" />
 
-      <ModalContent maxWidth="85%">
+      <ModalContent maxWidth="95%">
         <ModalHeader>
           <Text m="4">
             Pre-Allocated Jobs{driver?.label ? ` - ${driver.label}` : ""}
@@ -188,14 +188,18 @@ function AssignJobsModalBase({
               No jobs assigned to this driver.
             </Box>
           ) : (
-            <VStack overflowX="auto" spacing={0} w="full" align="start" p={4} mb={4}>
+            <VStack overflowX="auto" overflowY="hidden" spacing={0} w="full" align="start" p={4} mb={4}>
               <div
                 style={{
                   display: "grid",
                   gridTemplateColumns: GRID_TEMPLATE_COLUMNS,
                   width: "100%",
-                  minWidth: "900px",
+                  minWidth: "1125px",
                   borderBottom: "2px solid #E2E8F0",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 5,
+                  background: "white",
                 }}
               >
                 {columns.map((column, index) => (
@@ -223,23 +227,30 @@ function AssignJobsModalBase({
                 ))}
               </div>
 
-              <div style={{ width: "100%", minWidth: "900px" }}>
-                <Reorder.Group
-                  as="div"
-                  axis="y"
-                  values={localJobs}
-                  onReorder={setLocalJobs}
-                >
-                  {localJobs.map((item) => (
-                    <JobBulkAssignRow
-                      key={item?.original?.job?.id ?? item?.id}
-                      columns={columns}
-                      item={item}
-                      gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
-                    />
-                  ))}
-                </Reorder.Group>
-              </div>
+              <Reorder.Group
+                as="div"
+                axis="y"
+                layoutScroll
+                values={localJobs}
+                onReorder={setLocalJobs}
+                style={{
+                  width: "100%",
+                  minWidth: "1125px",
+                  maxHeight: "55vh",
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  position: "relative",
+                }}
+              >
+                {localJobs.map((item) => (
+                  <JobBulkAssignRow
+                    key={item?.original?.job?.id ?? item?.id}
+                    columns={columns}
+                    item={item}
+                    gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
+                  />
+                ))}
+              </Reorder.Group>
             </VStack>
           )}
         </ModalBody>

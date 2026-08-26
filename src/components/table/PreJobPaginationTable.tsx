@@ -4,7 +4,9 @@
 //   1. DataRow extracted to React.memo — only clicked row re-renders (not all 100)
 //   2. OptimisticCheckbox extracted to React.memo — instant visual feedback
 //   3. DriverHeaderRow extracted to React.memo — never re-renders on checkbox click
-//   4. Per-row version counter (rowVersions) replaces global forceUpdate
+//   4. Per-row version counter (rowVersion) forces re-render on toggle,
+//      but is NOT part of the row key — DataRow is memoized on isSelected
+//      instead, so only the clicked row actually repaints
 //   5. BUG FIX: row.id key (not index) — correct row highlight on click
 //   6. BUG FIX: selectionOrderRef — correct order in bulk screen
 
@@ -372,6 +374,19 @@ const DataRow = memo(({
       })}
     </Tr>
   );
+}, (prev, next) => {
+  return (
+    prev.row.id === next.row.id &&
+    prev.row.original === next.row.original &&
+    prev.isSelected === next.isSelected &&
+    prev.showRowSelection === next.showRowSelection &&
+    prev.restyleTable === next.restyleTable &&
+    prev.path === next.path &&
+    prev.columns === next.columns &&
+    prev.onToggle === next.onToggle &&
+    prev.onContextMenu === next.onContextMenu &&
+    prev.onDelete === next.onDelete
+  );
 });
 DataRow.displayName = "DataRow";
 
@@ -470,9 +485,11 @@ const PaginationTable = <T extends object>({
   // ✅ FIX: optimisticSelRef in a ref (not state) — no re-renders when updated
   const optimisticSelRef = useRef<Map<string, boolean>>(new Map());
 
-  // ✅ FIX: Per-row version counter — only the toggled row gets a new key
-  // → React.memo on DataRow skips all other rows
-  const [rowVersions, setRowVersions] = useState<Record<string, number>>({});
+  // Forces this component to re-render after a click so the new
+  // optimisticSelRef value actually reaches DataRow's isSelected prop.
+  // NOT used in the row `key` (that was the earlier remount-flicker bug) —
+  // only to trigger the re-render itself.
+  const [, setRowVersion] = useState(0);
 
   // ✅ BUG FIX: track selection order for correct bulk modal order
   const selectionOrderRef = useRef<string[]>([]);
@@ -484,14 +501,15 @@ const PaginationTable = <T extends object>({
     return map;
   }, [page]);
 
+  const pageRowMapRef = useRef(pageRowMap);
+  pageRowMapRef.current = pageRowMap;
+
   const getOptimisticSelected = useCallback((rowId: string): boolean => {
     const v = optimisticSelRef.current.get(rowId);
     return typeof v === "boolean" ? v : false;
   }, []);
 
   // FIX: toggleRow uses pageRowMap (O(1)) instead of page.find() (O(n))
-  // FIX: rowVersions removed — was causing DataRow remount on every click
-  //      which triggered wrong row highlight when driver header rows present
   const toggleRow = useCallback((rowId: string) => {
     const next = !optimisticSelRef.current.get(rowId);
     optimisticSelRef.current.set(rowId, next);
@@ -508,12 +526,11 @@ const PaginationTable = <T extends object>({
     }
 
     // Sync react-table internal state — O(1) lookup
-    const tableRow = pageRowMap.get(rowId);
+    const tableRow = pageRowMapRef.current.get(rowId);
     if (tableRow) tableRow.toggleRowSelected(next);
 
-    // Force re-render of only this row via a dedicated single-row state
-    setRowVersions((prev) => ({ ...prev, [rowId]: (prev[rowId] ?? 0) + 1 }));
-  }, [pageRowMap]);
+    setRowVersion((v) => v + 1);
+  }, []);
 
   // Sync optimistic map when react-table resets rows
   useEffect(() => {
@@ -563,7 +580,7 @@ const PaginationTable = <T extends object>({
     toggleAllRowsSelectedRef.current(false);
     optimisticSelRef.current.clear();
     selectionOrderRef.current = [];
-    setRowVersions({});
+    setRowVersion((v) => v + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecked]);
 
@@ -641,8 +658,7 @@ const PaginationTable = <T extends object>({
                     onAssignClick={onAssignClick}
                   />
                 )}
-                {/* FIX: key uses row.id only — no rowVersions
-                  rowVersions in key was causing full remount on click
+                {/* FIX: key uses row.id only
                   → React.memo handles selective re-render via isSelected prop change
                   → DataRow re-renders only when isSelected changes, not remounts */}
                 <DataRow

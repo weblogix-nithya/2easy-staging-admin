@@ -1,7 +1,7 @@
 import { Reorder, useDragControls } from "framer-motion";
 import { formatDate } from "helpers/helper";
 import React, { memo } from "react";
-import { MdDragIndicator } from "react-icons/md";
+// import { MdDragIndicator } from "react-icons/md";
 
 interface JobBulkAssignRowProps {
   columns: any[];
@@ -9,7 +9,7 @@ interface JobBulkAssignRowProps {
   gridTemplateColumns: string;
 }
 
-const ROW_HEIGHT = "74px";
+const ROW_HEIGHT = "50px";
 
 const CELL_BASE_STYLE: React.CSSProperties = {
   padding: "4px 8px",
@@ -18,19 +18,21 @@ const CELL_BASE_STYLE: React.CSSProperties = {
   textAlign: "left",
   height: ROW_HEIGHT,
   maxHeight: ROW_HEIGHT,
+  minHeight: ROW_HEIGHT,
   overflow: "hidden",
   display: "flex",
   alignItems: "center",
   minWidth: 0,
   width: "100%",
+  boxSizing: "border-box",
 };
 
 const CELL_CONTENT_WRAPPER_STYLE: React.CSSProperties = {
   minWidth: 0,
   width: "100%",
   overflow: "hidden",
-  whiteSpace: "normal",
-  wordBreak: "break-word",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
 };
 
 function renderCell(column: any, item: any): React.ReactNode {
@@ -59,6 +61,7 @@ export const JobBulkAssignRow = memo(function JobBulkAssignRow({
       value={item}
       dragListener={false}
       dragControls={dragControls}
+      layout="position"
       transition={{ duration: 0.15, ease: "easeOut" }}
       dragTransition={{ power: 0, timeConstant: 0 }}
       style={{
@@ -66,6 +69,11 @@ export const JobBulkAssignRow = memo(function JobBulkAssignRow({
         gridTemplateColumns,
         background: "white",
         position: "relative",
+        height: ROW_HEIGHT,
+        minHeight: ROW_HEIGHT,
+        maxHeight: ROW_HEIGHT,
+        boxSizing: "border-box",
+        willChange: "transform",
       }}
       whileDrag={{
         boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
@@ -96,9 +104,9 @@ export const JobBulkAssignRow = memo(function JobBulkAssignRow({
             width: "100%",
           }}
         >
-          <MdDragIndicator
+          {/* <MdDragIndicator
             style={{ color: "#999", fontSize: "18px", flexShrink: 0 }}
-          />
+          /> */}
           {renderCell(firstColumn, item)}
         </div>
       </div>

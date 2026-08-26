@@ -29,14 +29,18 @@ const ActionBar = ({
 }: ActionBarProps) => {
   const [isSwitched, setIsSwitched] = useState<boolean>(false);
 
-  const totals = selectedJobs.reduce(
-    (acc, job) => {
-      acc.totalWeights += job?.original?.job?.total_weight ?? 0;
-      acc.totalCBM += job?.original?.job?.total_volume ?? 0;
-      return acc;
-    },
-    { totalWeights: 0, totalCBM: 0 },
-  );
+  // const totals = useMemo(
+  //   () =>
+  //     selectedJobs.reduce(
+  //       (acc, job) => {
+  //         acc.totalWeights += job?.original?.job?.total_weight ?? 0;
+  //         acc.totalCBM += job?.original?.job?.total_volume ?? 0;
+  //         return acc;
+  //       },
+  //       { totalWeights: 0, totalCBM: 0 },
+  //     ),
+  //   [selectedJobs],
+  // );
   const toast = useToast();
 
   return (
@@ -131,12 +135,10 @@ const ActionBar = ({
         </Button>{" "*/}
       </Box>
       {/* Totals */}
-      <Box>
-        <Text fontWeight="bold">
+      {/* <Box> <Text fontWeight="bold">
           Total Selected: {totals.totalWeights} kg,{" "}
           {totals.totalCBM.toFixed(2)} cbm
-        </Text>
-      </Box>
+        </Text> </Box> */}
 
       {/* ✅ Save Changes Button */}
       {/* {hasChanges && (
@@ -155,4 +157,4 @@ const ActionBar = ({
   );
 };
 
-export default ActionBar;
+export default React.memo(ActionBar);

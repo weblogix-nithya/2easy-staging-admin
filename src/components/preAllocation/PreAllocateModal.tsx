@@ -33,7 +33,7 @@ import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
 // Pickup Address, Delivery Address, Dimensions.
 // Address columns get noticeably more room since they hold the most text.
 const GRID_TEMPLATE_COLUMNS =
-  "40px 130px 90px 140px minmax(220px, 1.6fr) minmax(220px, 1.6fr) 110px";
+  "40px 120px 90px 170px 380px 380px 110px";
 
 interface FilterJobsModalProps extends UseDisclosureProps {
   selectedDriver: any;
@@ -184,53 +184,65 @@ function PreAllocateModalBase({
               No jobs selected.
             </Box>
           ) : (
-            <VStack overflowX="auto" spacing={0} w="full" align="start" p={4} mb={4}>
-              {/* ✅ ROOT CAUSE FIX: CSS Grid instead of <table> — see
-                  PreJobBulkAssignRow.tsx for the full explanation. The
-                  same gridTemplateColumns string is used here for the
-                  header and passed down to every row, so columns still
-                  line up exactly like a table would, without the
-                  position/z-index quirks tables have. */}
-              <div
+            <VStack spacing={0} w="full" align="start" p={4} mb={4}>
+              <Box
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: GRID_TEMPLATE_COLUMNS,
                   width: "100%",
-                  minWidth: "900px",
-                  borderBottom: "2px solid #E2E8F0",
+                  maxHeight: "60vh",
+                  overflowX: "auto",
+                  overflowY: "auto",
+                  position: "relative",
                 }}
               >
-                {columns.map((column, index) => (
-                  <div
-                    key={`bulk-header-${column?.id}`}
-                    style={{
-                      padding: "8px",
-                      fontSize: "0.7rem",
-                      fontWeight: 600,
-                      color: "#718096",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      position: index === 0 ? "sticky" : undefined,
-                      left: index === 0 ? 0 : undefined,
-                      zIndex: index === 0 ? 4 : undefined,
-                      background: index === 0 ? "white" : undefined,
-                      boxShadow:
-                        index === 0
-                          ? "2px 0 4px -2px rgba(0,0,0,0.15)"
-                          : undefined,
-                    }}
-                  >
-                    {column?.Header}
-                  </div>
-                ))}
-              </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: GRID_TEMPLATE_COLUMNS,
+                    width: "max-content",
+                    minWidth: "100%",
+                    borderBottom: "2px solid #E2E8F0",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 5,
+                    background: "white",
+                  }}
+                >
+                  {columns.map((column, index) => (
+                    <div
+                      key={`bulk-header-${column?.id}`}
+                      style={{
+                        padding: "8px",
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        color: "#718096",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        position: index === 0 ? "sticky" : undefined,
+                        left: index === 0 ? 0 : undefined,
+                        zIndex: index === 0 ? 6 : undefined,
+                        background: index === 0 ? "white" : undefined,
+                        boxShadow:
+                          index === 0
+                            ? "2px 0 4px -2px rgba(0,0,0,0.15)"
+                            : undefined,
+                      }}
+                    >
+                      {column?.Header}
+                    </div>
+                  ))}
+                </div>
 
-              <div style={{ width: "100%", minWidth: "900px" }}>
                 <Reorder.Group
                   as="div"
                   axis="y"
+                  layoutScroll
                   values={localJobs}
                   onReorder={setLocalJobs}
+                  style={{
+                    width: "max-content",
+                    minWidth: "100%",
+                    position: "relative",
+                  }}
                 >
                   {localJobs.map((item) => (
                     <JobBulkAssignRow
@@ -241,7 +253,7 @@ function PreAllocateModalBase({
                     />
                   ))}
                 </Reorder.Group>
-              </div>
+              </Box>
             </VStack>
           )}
         </ModalBody>
