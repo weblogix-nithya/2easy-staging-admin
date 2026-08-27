@@ -211,6 +211,7 @@ export default function JobIndex({ }: {}) {
   } = useQuery(PRE_ALLOCATION_JOBS_QUERY, {
     variables: groupedVars,
     skip: !userId || (!isAdmin && !companyId && !customerId),
+    notifyOnNetworkStatusChange: true,
     // Renders cached data for this page/filter combo instantly (e.g. paging
     // back, re-opening after a modal) while still refetching over the
     // network in the background — subscriptions + explicit refetchJobs()
@@ -218,45 +219,31 @@ export default function JobIndex({ }: {}) {
     fetchPolicy: "cache-and-network",
   });
 
+  // Only blank the table for the genuine first load (networkStatus 1) or an
+  // explicit user-driven refetch (4) / variable change (2 = setVariables)
+  // when there's no data yet. Background subscription refetches keep the
+  // current rows on screen and swap in fresh data silently — so the page
+  // no longer visibly "refreshes" every time a .job.updated arrives.
   const _jobs = groupedJobs?.preAllocationJobs;
   const hasData = _jobs?.data?.length > 0;
+  const isFirstLoad = loading && !hasData;
 
   // ✅ FIX: debounced — prevents all users hitting server simultaneously.
-  // maxWait guarantees that during a continuous stream of .job.updated
-  // events (e.g. many ops users editing at once in the morning), this
-  // still fires at most once per maxWait window instead of once per event.
   // Random jitter staggers the refetch across different users' browsers so
   // they don't all hit the server on the same tick.
-  const pendingRefetchRef = useRef(false);
   const debouncedRefetch = useMemo(
     () =>
       debounce(
         () => {
-          if (typeof document !== "undefined" && document.hidden) {
-            pendingRefetchRef.current = true;
-            return;
-          }
-          pendingRefetchRef.current = false;
+          if (typeof document !== "undefined" && document.hidden) return;
           refetchJobs();
         },
-        5000 + Math.random() * 3000,
-        { maxWait: 15000 },
+        8000 + Math.random() * 4000,
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [refetchJobs],
   );
   useEffect(() => () => debouncedRefetch.cancel(), [debouncedRefetch]);
-
-  useEffect(() => {
-    const onVisible = () => {
-      if (!document.hidden && pendingRefetchRef.current) {
-        pendingRefetchRef.current = false;
-        refetchJobs();
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [refetchJobs]);
 
   const subscriptionEvents = useMemo(() => ({
     jobUpdated: { channel: "jobs", event: ".job.updated", callback: () => debouncedRefetch() },
@@ -576,7 +563,7 @@ export default function JobIndex({ }: {}) {
             isMediaBusy={isMediaBusy}
           />
 
-          {loading ? (
+          {isFirstLoad ? (
             <Box textAlign="center" py={4} px={10}>
               Loading <Spinner size="sm" ml={2} />
             </Box>
