@@ -129,6 +129,12 @@ export default function Default(props: {
               {...rest}
               isDisabled={isDisabled}
               type={type ? type : "text"}
+              onWheel={(e) => {
+                if (type === "number") {
+                  e.currentTarget.blur();
+                }
+              }}
+
               id={(id ? id : name) + randomIdSection}
               variant="main"
               placeholder={placeholder}
@@ -144,9 +150,9 @@ export default function Default(props: {
               onClick={
                 type === "date" || type === "time"
                   ? (e) => {
-                      e.preventDefault();
-                      e.currentTarget.showPicker?.();
-                    }
+                    e.preventDefault();
+                    e.currentTarget.showPicker?.();
+                  }
                   : onClick
               }
               ms={{ base: "0px", md: "0px" }}
