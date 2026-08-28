@@ -134,7 +134,14 @@ export default function Default(props: {
                   e.currentTarget.blur();
                 }
               }}
-
+              onKeyDown={(e) => {
+                if (
+                  type === "number" &&
+                  (e.key === "ArrowUp" || e.key === "ArrowDown")
+                ) {
+                  e.preventDefault();
+                }
+              }}
               id={(id ? id : name) + randomIdSection}
               variant="main"
               placeholder={placeholder}
