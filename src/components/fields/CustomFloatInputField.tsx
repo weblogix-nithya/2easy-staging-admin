@@ -138,31 +138,40 @@ export default function Default(props: {
               defaultValue={defaultValue}
               onChange={onChange}
               min={min}
+              onWheel={(e) => {
+                if (type === "number") {
+                  e.currentTarget.blur();
+                }
+              }}
               onKeyDown={
                 type === "number"
                   ? (e) => {
-                      const allowedKeys = [
-                        "Backspace",
-                        "Tab",
-                        "ArrowLeft",
-                        "ArrowRight",
-                        "Delete",
-                      ];
-                      if (
-                        !/[0-9.]/.test(e.key) &&
-                        !allowedKeys.includes(e.key)
-                      ) {
-                        e.preventDefault();
-                      }
+                    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                      e.preventDefault();
+                      return;
                     }
+                    const allowedKeys = [
+                      "Backspace",
+                      "Tab",
+                      "ArrowLeft",
+                      "ArrowRight",
+                      "Delete",
+                    ];
+                    if (
+                      !/[0-9.]/.test(e.key) &&
+                      !allowedKeys.includes(e.key)
+                    ) {
+                      e.preventDefault();
+                    }
+                  }
                   : undefined
               }
               onClick={
                 type === "date"
                   ? (e) => {
-                      e.preventDefault();
-                      e.currentTarget.showPicker?.();
-                    }
+                    e.preventDefault();
+                    e.currentTarget.showPicker?.();
+                  }
                   : onClick
               }
               ms={{ base: "0px", md: "0px" }}

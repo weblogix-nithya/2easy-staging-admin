@@ -69,10 +69,12 @@ export function calculateFinalWeightCBM(
         }
     }
     console.log("Final CBM:", finalWeightCBM);
+     
+     
     // console.log("Total Weight:", totalWeight);
 
     return {
-        totalCBM: rawCBM ? rawCBM : 0,
+        totalCBM: finalWeightCBM ? finalWeightCBM : rawCBM,
         totalWeight: totalWeight ? totalWeight : 0
     };
 }
