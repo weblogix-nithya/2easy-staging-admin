@@ -25,6 +25,7 @@ import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
   CREATE_CUSTOMER_ADDRESS_MUTATION,
   defaultCustomerAddress,
+  DELETE_CUSTOMER_ADDRESS_MUTATION,
   GET_CUSTOMER_ADDRESSES_QUERY,
 } from "graphql/customerAddress";
 import debounce from "lodash.debounce";
@@ -111,6 +112,7 @@ export default function CustomerAddressesTab(props: any) {
       {
         Header: "Actions",
         accessor: "id" as const,
+        isDelete: true,
       },
     ],
     [],
@@ -282,6 +284,25 @@ export default function CustomerAddressesTab(props: any) {
       setSuggestions([]);
     }
   }, [isOpen]);
+
+    const [handleDeleteCustomerAddress, {}] = useMutation(
+      DELETE_CUSTOMER_ADDRESS_MUTATION,
+      {
+        onCompleted: (_data) => {
+          toast({
+            title: "CustomerAddress deleted",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          // router.push("/admin/customer-addresses");
+          getCustomerAddresses()
+        },
+        onError: (error) => {
+          showGraphQLErrorToast(error);
+        },
+      },
+    );
 
   return (
     <>
@@ -718,6 +739,9 @@ export default function CustomerAddressesTab(props: any) {
                 setQueryPageIndex={setQueryPageIndex}
                 setQueryPageSize={setQueryPageSize}
                 isServerSide
+                 onDelete={(id: any) => {
+  handleDeleteCustomerAddress({ variables: { id: Number(id) } });
+                                }}
                 path="/admin/customer-addresses"
               />
             )}

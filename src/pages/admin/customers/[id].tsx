@@ -56,7 +56,7 @@ function CustomerEdit() {
   const {
     loading: customerLoading,
     // data: customerData,
-    // refetch: getCustomer,
+    refetch: getCustomer,
   } = useQuery(GET_CUSTOMER_QUERY, {
     variables: {
       id: id,
@@ -286,7 +286,7 @@ function CustomerEdit() {
                     Hourly Hires
                   </Button>
                 </Flex>
-              </GridItem>
+              </GridItem> 
 
               {/* Right side */}
               <GridItem
@@ -692,6 +692,7 @@ function CustomerEdit() {
                 {tabId == 1 && (
                   <CustomerAddressesTab
                     customer={customer}
+                    getCustomer={getCustomer}
                   ></CustomerAddressesTab>
                 )}
 

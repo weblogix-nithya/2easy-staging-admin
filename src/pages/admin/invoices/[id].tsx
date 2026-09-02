@@ -1029,6 +1029,16 @@ function InvoiceEdit() {
                                     line_amount: (unit * qty).toFixed(2),
                                   });
                                 }}
+                                onWheel={(e) => {
+                                  e.currentTarget.blur();
+                                }}
+                                onKeyDown={(e) => {
+                                  if (
+                                    (e.key === "ArrowUp" || e.key === "ArrowDown")
+                                  ) {
+                                    e.preventDefault();
+                                  }
+                                }}
                                 type="number"
                                 name="unit_amount"
                                 className="max-w-md"
