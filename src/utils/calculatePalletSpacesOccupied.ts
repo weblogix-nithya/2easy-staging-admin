@@ -74,7 +74,8 @@ export function calculateFinalWeightCBM(
     // console.log("Total Weight:", totalWeight);
 
     return {
-        totalCBM: finalWeightCBM ? finalWeightCBM : rawCBM,
+        totalCBM: rawCBM ? rawCBM : 0,
+        // totalCBM: finalWeightCBM ? finalWeightCBM : rawCBM,
         totalWeight: totalWeight ? totalWeight : 0
     };
 }
