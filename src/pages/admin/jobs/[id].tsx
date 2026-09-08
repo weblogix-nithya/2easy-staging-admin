@@ -1979,7 +1979,7 @@ function JobEdit() {
       ready_by: readyAt,
       drop_by: dropAt,
       freight_type: refinedData.freight_type,
-
+      company_id: Number(job?.company_id),
       company_rates:
         ((job.job_category_id == 1 || job.job_category_id == 2) &&
           selectedstate?.value === "QLD") ||

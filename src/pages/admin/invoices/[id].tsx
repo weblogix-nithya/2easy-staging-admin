@@ -29,6 +29,7 @@ import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import CustomInputField from "components/fields/CustomInputField";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
+import { GET_COMPANY_QUERY } from "graphql/company";
 import {
   defaultInvoice,
   DELETE_INVOICE_MUTATION,
@@ -53,6 +54,7 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
+import { calculateFinalWeightCBMForInvoice } from "utils/calculatePalletSpacesOccupied";
 
 function toInputDate(date: Date | string | null) {
   if (!date) return "";
@@ -82,7 +84,11 @@ function addDays(date: Date, days: number) {
 function InvoiceEdit() {
   const generatingRef = useRef(false);
   const lastUrlRef = useRef<string | null>(null);
-
+  const [companyWeight, setCompanyWeight] = useState(null);
+  const [calculateRes, setCalculateRes] = useState({
+    total_weight: 0,
+    cbm_auto: 0,
+  })
   const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   let menuBg = useColorModeValue("white", "navy.800");
@@ -174,7 +180,7 @@ function InvoiceEdit() {
     },
     skip: !invoice?.job_id,
     onCompleted: (data) => {
-      // console.log(data,'d')
+      console.log(data, 'd')
       // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
 
@@ -193,6 +199,84 @@ function InvoiceEdit() {
       // console.log(error);
     },
   });
+
+    const {
+    loading: invoiceLoading,
+    // data: invoiceData,
+    refetch: getInvoice,
+  } = useQuery(GET_INVOICE_QUERY, {
+    variables: {
+      id: id,
+    },
+    skip: !id,
+    onCompleted: (data) => {
+      if (data?.invoice == null) {
+        router.push("/admin/invoices");
+      }
+      setInvoice((prev) => ({
+        ...prev,
+        ...data.invoice,
+        issued_at: new Date(data.invoice.issued_at),
+        due_at: new Date(data.invoice.due_at),
+        invoice_status_id: String(data.invoice.invoice_status_id),
+        invoice_no: data.invoice.invoice_no,
+        manual_inv_url: data.invoice.manual_inv_url,
+        job: data.invoice.job,
+      }));
+      console.log(" job:", data.invoice.job,)
+      setSelectedPaymentTerm(data.invoice.company.payment_term);
+      setInvoiceStatusId(data?.invoice.invoice_status_id);
+    },
+    onError(error) {
+      console.log("onError");
+      console.log(error);
+    },
+  });
+
+
+  const { loading: _companyLoading, data: _companyData } = useQuery(
+    GET_COMPANY_QUERY,
+    {
+      variables: {
+        id: Number(jobData?.company_id) || Number (invoice?.job?.company_id),
+      },
+      // skip: !jobData?.company_id,
+      onCompleted: (data) => {
+        console.log(data,'data from company query')
+        if (data?.company == null) {
+          // router.push("/admin/companies");
+        }
+        if (data?.company?.weight_per_cubic != null) {
+          setCompanyWeight(data.company.weight_per_cubic);
+        }
+      },
+      onError(_error) { },
+    },
+  );
+
+  useEffect(() => {
+    if (!invoice?.job || !invoiceLineItems?.length) return;
+      console.log( invoice?.job?.job_category_id,
+        invoiceLineItems,
+        companyWeight, "props for fn val")
+
+    const calculateTotals = () => {
+      const { totalCBM, totalWeight } = calculateFinalWeightCBMForInvoice(
+        invoice?.job?.job_category_id,
+        invoiceLineItems,
+        companyWeight,
+      );
+
+      setCalculateRes(() => ({
+        total_weight: totalWeight,
+        cbm_auto: totalCBM,
+      }));
+      console.log(totalWeight, totalCBM, "return val")
+    };
+
+    calculateTotals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyWeight, invoice?.job?.job_category_id, invoiceLineItems]);
 
   useQuery(GET_INVOICE_STATUSES_QUERY, {
     variables: {
@@ -241,37 +325,6 @@ function InvoiceEdit() {
   //     setSelectedPaymentTerm(data.invoice.company?.payment_term);
   //     setInvoiceStatusId(data.invoice.invoice_status_id);
   //   }, [data]);
-  const {
-    loading: invoiceLoading,
-    // data: invoiceData,
-    refetch: getInvoice,
-  } = useQuery(GET_INVOICE_QUERY, {
-    variables: {
-      id: id,
-    },
-    skip: !id,
-    onCompleted: (data) => {
-      if (data?.invoice == null) {
-        router.push("/admin/invoices");
-      }
-      setInvoice((prev) => ({
-        ...prev,
-        ...data.invoice,
-        issued_at: new Date(data.invoice.issued_at),
-        due_at: new Date(data.invoice.due_at),
-        invoice_status_id: String(data.invoice.invoice_status_id),
-        invoice_no: data.invoice.invoice_no,
-        manual_inv_url: data.invoice.manual_inv_url,
-        job: data.invoice.job,
-      }));
-      setSelectedPaymentTerm(data.invoice.company.payment_term);
-      setInvoiceStatusId(data?.invoice.invoice_status_id);
-    },
-    onError(error) {
-      console.log("onError");
-      console.log(error);
-    },
-  });
 
   const handleUpdateLineItem = (lineItem: any) => {
     return new Promise((resolve, reject) => {
@@ -592,6 +645,18 @@ function InvoiceEdit() {
                         ? "Job #" + (invoice.job?.name || invoice.vehicle_hire?.name)
                         : ""}
                     </h4>
+                    <h3 className="mb-0" style={{ fontSize: "14px" }}>
+                      Auto CBM: {calculateRes?.cbm_auto}
+                    </h3>
+                    <p
+                      className="mb-0 mt-1"
+                      style={{ fontSize: "12px", color: "#6c757d" }}
+                    >
+                      Note: For LCL jobs, Auto CBM uses the highest value from the company, weight, or total-based calculation.
+                    </p>
+                    <p className="mb-0 mt-1" style={{ fontSize: "12px", color: "#6c757d" }}>
+                      It is calculated only when the job and line items are available.
+                    </p>
                   </Box>
                 )}
                 {invoice?.job_id !== null && (

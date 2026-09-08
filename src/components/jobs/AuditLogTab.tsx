@@ -135,7 +135,7 @@ export default function InvoiceTab(props: {
     {
       variables: {
         job_id: Number(jobObjectId),
-        first: Number(50),
+        first: Number(5000),
       },
       skip: !router.isReady || !jobObjectId || activeTab !== "audit", // ✅ ONLY runs for Invoice tab
       fetchPolicy: "network-only",

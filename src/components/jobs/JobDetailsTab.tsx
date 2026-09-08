@@ -267,15 +267,15 @@ const JobDetailsTab = ({
                   { value: "QLD", label: "Queensland" },
                 ].find((_e) => _e.value == job.transport_location)}
                 placeholder=""
-                // onChange={(e) => {
-                //   const newState = {
-                //     ...refinedData,
-                //     state_code: e.value,
-                //     state: e.label,
-                //   };
-                //   setJob({ ...job, transport_location: e.value });
-                //   setRefinedData(newState);
-                // }}
+              // onChange={(e) => {
+              //   const newState = {
+              //     ...refinedData,
+              //     state_code: e.value,
+              //     state: e.label,
+              //   };
+              //   setJob({ ...job, transport_location: e.value });
+              //   setRefinedData(newState);
+              // }}
               />
               <Text
                 style={{
@@ -303,21 +303,21 @@ const JobDetailsTab = ({
               placeholder=""
               isDisabled={true}
 
-              // onChange={(e) => {
-              //   setJob({
-              //     ...job,
-              //     company_id: e.value || null,
-              //     customer_id: null,
-              //   });
-              //   getCustomersByCompanyId({
-              //     query: "",
-              //     page: 1,
-              //     first: 100,
-              //     orderByColumn: "id",
-              //     orderByOrder: "ASC",
-              //     company_id: e.value,
-              //   });
-              // }}
+            // onChange={(e) => {
+            //   setJob({
+            //     ...job,
+            //     company_id: e.value || null,
+            //     customer_id: null,
+            //   });
+            //   getCustomersByCompanyId({
+            //     query: "",
+            //     page: 1,
+            //     first: 100,
+            //     orderByColumn: "id",
+            //     orderByOrder: "ASC",
+            //     company_id: e.value,
+            //   });
+            // }}
             />
           )}
           <CustomInputField
@@ -447,9 +447,9 @@ const JobDetailsTab = ({
               setIsSameDayJob(today === selected);
               setIsTomorrowJob(
                 new Date(selected).toDateString() ===
-                  new Date(
-                    new Date(today).setDate(new Date(today).getDate() + 1),
-                  ).toDateString(),
+                new Date(
+                  new Date(today).setDate(new Date(today).getDate() + 1),
+                ).toDateString(),
               );
             }}
           />
@@ -548,8 +548,8 @@ const JobDetailsTab = ({
             value={
               job.job_type_id
                 ? jobTypeOptions.find(
-                    (jobType) => jobType.value == job.job_type_id,
-                  )
+                  (jobType) => jobType.value == job.job_type_id,
+                )
                 : ""
             }
             placeholder="Select type"
@@ -976,7 +976,10 @@ const JobDetailsTab = ({
         {!jobLoading && Array.isArray(job?.media_admin) && (
           <PaginationTable
             columns={attachmentColumns}
-            data={job.media_admin}
+            // data={job.media_admin}
+            data={job.media_admin.filter(
+              (media: any) => media.collection_name !== "invoice"
+            )}
             showDelete={isAdmin}
             onDelete={(mediaId) => {
               handleDeleteMedia({
@@ -1014,12 +1017,12 @@ const JobDetailsTab = ({
               placeholder=""
               name="base_notes"
               value={job.base_notes}
-              // onChange={(e) =>
-              //   setJob({
-              //     ...job,
-              //     [e.target.name]: e.target.value,
-              //   })
-              // }
+            // onChange={(e) =>
+            //   setJob({
+            //     ...job,
+            //     [e.target.name]: e.target.value,
+            //   })
+            // }
             />
 
             {/* <Text fontSize="sm" color={textColorSecodary} mt={3}>

@@ -69,8 +69,8 @@ export function calculateFinalWeightCBM(
         }
     }
     console.log("Final CBM:", finalWeightCBM);
-     
-     
+
+
     // console.log("Total Weight:", totalWeight);
 
     return {
@@ -80,6 +80,55 @@ export function calculateFinalWeightCBM(
     };
 }
 
+export function calculateFinalWeightCBMForInvoice(
+    job_category_id: any,
+    jobItems: any[],
+    companyWeight: number
+): { totalCBM: number; totalWeight: number } {
+    console.log(job_category_id, jobItems, companyWeight, "jc, ji, cw")
+    const rawCBM = jobItems.reduce(
+        (total, item) => total + (item.volume || 0),
+        0
+    );
+    if (rawCBM <= 0) return { totalCBM: 0, totalWeight: 0 };
+    /* const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.quantity || 0) * (item.weight || 0),
+        0
+    ); */
+    const totalWeight = jobItems.reduce(
+        (total, item) => total + (item.weight || 0),
+        0
+    );
+    let finalWeightCBM = rawCBM;
+    if (job_category_id == 1 || job_category_id == "1") {
+        const palletData = jobItems.map((item) => ({
+            quantity: item.quantity,
+            dimension_width: item.dimension_width,
+            dimension_depth: item.dimension_height,
+            dimension_height: item.dimension_depth,
+        }));
+
+        const PALLET_CBM = 1.728;
+        const palletSpacesUsed = calculatePalletSpacesOccupiedFromData(palletData);
+        const palletCBM = palletSpacesUsed * PALLET_CBM;
+        const finalCBM = Math.max(rawCBM, palletCBM);
+
+        finalWeightCBM = finalCBM;
+        // console.log("Company weight:", companyWeight);
+        if (totalWeight > 0 && companyWeight) {
+            const weightCBM = totalWeight / companyWeight;
+            // console.log("Calculating weight-based CBM", weightCBM);
+            finalWeightCBM = Math.max(finalCBM, weightCBM);
+        }
+    }
+    console.log("Final CBM:", finalWeightCBM);
+
+    return {
+        // totalCBM: rawCBM ? rawCBM : 0,
+        totalCBM: finalWeightCBM ? finalWeightCBM : rawCBM,
+        totalWeight: totalWeight ? totalWeight : 0
+    };
+}
 
 /**
  * Calculate pallet spaces occupied from job item dimensions & quantities.
