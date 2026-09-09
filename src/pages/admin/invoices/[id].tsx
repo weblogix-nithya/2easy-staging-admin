@@ -29,7 +29,6 @@ import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import CustomInputField from "components/fields/CustomInputField";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { GET_COMPANY_QUERY } from "graphql/company";
 import {
   defaultInvoice,
   DELETE_INVOICE_MUTATION,
@@ -85,7 +84,8 @@ function InvoiceEdit() {
   const generatingRef = useRef(false);
   const lastUrlRef = useRef<string | null>(null);
   const [companyWeight, setCompanyWeight] = useState(null);
-  const [calculateRes, setCalculateRes] = useState({
+  const [_impcompanyId, setimpCompanyId] = useState(null);
+  const [_calculateRes, setCalculateRes] = useState({
     total_weight: 0,
     cbm_auto: 0,
   })
@@ -183,6 +183,7 @@ function InvoiceEdit() {
       console.log(data, 'd')
       // jobDestinations without is_pickup
       let _jobDestinations = data.job.job_destinations;
+      setimpCompanyId(data.job?.company_id)
 
       setJobDestinations(_jobDestinations);
       // console.log(jobDestinations,'jd')
@@ -200,7 +201,7 @@ function InvoiceEdit() {
     },
   });
 
-    const {
+  const {
     loading: invoiceLoading,
     // data: invoiceData,
     refetch: getInvoice,
@@ -224,6 +225,7 @@ function InvoiceEdit() {
         job: data.invoice.job,
       }));
       console.log(" job:", data.invoice.job,)
+      setCompanyWeight(data?.invoice?.company?.weight_per_cubic)
       setSelectedPaymentTerm(data.invoice.company.payment_term);
       setInvoiceStatusId(data?.invoice.invoice_status_id);
     },
@@ -232,51 +234,6 @@ function InvoiceEdit() {
       console.log(error);
     },
   });
-
-
-  const { loading: _companyLoading, data: _companyData } = useQuery(
-    GET_COMPANY_QUERY,
-    {
-      variables: {
-        id: Number(jobData?.company_id) || Number (invoice?.job?.company_id),
-      },
-      // skip: !jobData?.company_id,
-      onCompleted: (data) => {
-        console.log(data,'data from company query')
-        if (data?.company == null) {
-          // router.push("/admin/companies");
-        }
-        if (data?.company?.weight_per_cubic != null) {
-          setCompanyWeight(data.company.weight_per_cubic);
-        }
-      },
-      onError(_error) { },
-    },
-  );
-
-  useEffect(() => {
-    if (!invoice?.job || !invoiceLineItems?.length) return;
-      console.log( invoice?.job?.job_category_id,
-        invoiceLineItems,
-        companyWeight, "props for fn val")
-
-    const calculateTotals = () => {
-      const { totalCBM, totalWeight } = calculateFinalWeightCBMForInvoice(
-        invoice?.job?.job_category_id,
-        invoiceLineItems,
-        companyWeight,
-      );
-
-      setCalculateRes(() => ({
-        total_weight: totalWeight,
-        cbm_auto: totalCBM,
-      }));
-      console.log(totalWeight, totalCBM, "return val")
-    };
-
-    calculateTotals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyWeight, invoice?.job?.job_category_id, invoiceLineItems]);
 
   useQuery(GET_INVOICE_STATUSES_QUERY, {
     variables: {
@@ -325,6 +282,32 @@ function InvoiceEdit() {
   //     setSelectedPaymentTerm(data.invoice.company?.payment_term);
   //     setInvoiceStatusId(data.invoice.invoice_status_id);
   //   }, [data]);
+
+
+
+  useEffect(() => {
+    if (!invoice?.job || !invoiceLineItems?.length) return;
+    console.log(invoice?.job?.job_category_id,
+      invoiceLineItems,
+      companyWeight, "props for fn val")
+
+    const calculateTotals = () => {
+      const { totalCBM, totalWeight } = calculateFinalWeightCBMForInvoice(
+        invoice?.job?.job_category_id,
+        invoiceLineItems,
+        companyWeight,
+      );
+
+      setCalculateRes(() => ({
+        total_weight: totalWeight,
+        cbm_auto: totalCBM,
+      }));
+      console.log(totalWeight, totalCBM, "return val")
+    };
+
+    calculateTotals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyWeight, invoice?.job?.job_category_id, invoiceLineItems]);
 
   const handleUpdateLineItem = (lineItem: any) => {
     return new Promise((resolve, reject) => {
@@ -645,18 +628,6 @@ function InvoiceEdit() {
                         ? "Job #" + (invoice.job?.name || invoice.vehicle_hire?.name)
                         : ""}
                     </h4>
-                    <h3 className="mb-0" style={{ fontSize: "14px" }}>
-                      Auto CBM: {calculateRes?.cbm_auto}
-                    </h3>
-                    <p
-                      className="mb-0 mt-1"
-                      style={{ fontSize: "12px", color: "#6c757d" }}
-                    >
-                      Note: For LCL jobs, Auto CBM uses the highest value from the company, weight, or total-based calculation.
-                    </p>
-                    <p className="mb-0 mt-1" style={{ fontSize: "12px", color: "#6c757d" }}>
-                      It is calculated only when the job and line items are available.
-                    </p>
                   </Box>
                 )}
                 {invoice?.job_id !== null && (
@@ -1289,6 +1260,20 @@ function InvoiceEdit() {
                     .toFixed(2)}
                 </p>
               </Flex>
+              {/* <Flex justifyContent="space-between" className="py-2">
+                {isAdmin && (
+                  <><h3 className="mb-0" style={{ fontSize: "14px" }}>
+                    Auto CBM: {calculateRes?.cbm_auto}
+                  </h3>
+                    <p
+                      style={{ fontSize: "12px", color: "#6c757d" }}
+                    >
+                      Note: For LCL jobs, Auto CBM uses the highest value from the company, weight, or total-based calculation.
+                    </p>
+                    <p style={{ fontSize: "12px", color: "#6c757d" }}>
+                      It is calculated only when the job and line items are available.
+                    </p></>)}
+              </Flex> */}
             </Flex>
           </Box>
 

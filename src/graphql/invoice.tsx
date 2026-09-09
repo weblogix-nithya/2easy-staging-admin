@@ -167,6 +167,8 @@ export const GET_INVOICE_QUERY = gql`
       job {
         name
         invoice_url
+        job_category_id
+        company_id
       }
       vehicle_hire_id
       manual_inv_url
@@ -186,6 +188,7 @@ export const GET_INVOICE_QUERY = gql`
         name
         lcl_rate
         payment_term
+        weight_per_cubic
       }
       invoice_status_id
       invoice_status {

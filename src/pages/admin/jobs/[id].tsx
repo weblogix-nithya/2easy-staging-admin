@@ -827,6 +827,7 @@ function JobEdit() {
         },
       });
       await getJob();
+      sendFreightData();
       setIsSaving(false);
 
       toast({
@@ -2110,7 +2111,7 @@ function JobEdit() {
       setIsSaving(false);
       return;
     }
-    handleUpdateJob();
+    handleUpdateJob(); 
   };
 
   const handleTabChange = useCallback(
@@ -2387,7 +2388,7 @@ function JobEdit() {
                     _refinedData={refinedData}
                     handleBTypeReferenceChange={handleBTypeReferenceChange}
                     setRefinedData={setRefinedData}
-                    today={today}
+                    _today={today}
                     setIsSameDayJob={setIsSameDayJob}
                     setIsTomorrowJob={setIsTomorrowJob}
                     savedAddressesSelect={savedAddressesSelect}

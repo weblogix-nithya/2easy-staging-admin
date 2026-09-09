@@ -95,7 +95,7 @@ export default function EditableFieldPopover({
     });
   };
 
-  const handleSaveWithValue = (overrideValue: string) => {
+  const _handleSaveWithValue = (overrideValue: string) => {
     setIsSaving(true);
 
     updateJob({
