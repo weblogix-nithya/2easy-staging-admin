@@ -827,7 +827,7 @@ function JobEdit() {
         },
       });
       await getJob();
-      sendFreightData();
+      // sendFreightData();
       setIsSaving(false);
 
       toast({
