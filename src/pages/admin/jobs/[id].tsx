@@ -827,6 +827,7 @@ function JobEdit() {
         },
       });
       await getJob();
+      sendFreightData();
       setIsSaving(false);
 
       toast({
@@ -2110,7 +2111,7 @@ function JobEdit() {
       setIsSaving(false);
       return;
     }
-    handleUpdateJob();
+    handleUpdateJob(); 
   };
 
   const handleTabChange = useCallback(
