@@ -29,7 +29,6 @@ import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import CustomInputField from "components/fields/CustomInputField";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
-import { GET_COMPANY_QUERY } from "graphql/company";
 import {
   defaultInvoice,
   DELETE_INVOICE_MUTATION,
@@ -85,8 +84,8 @@ function InvoiceEdit() {
   const generatingRef = useRef(false);
   const lastUrlRef = useRef<string | null>(null);
   const [companyWeight, setCompanyWeight] = useState(null);
-  const [impcompanyId, setimpCompanyId] = useState(null);
-  const [calculateRes, setCalculateRes] = useState({
+  const [_impcompanyId, setimpCompanyId] = useState(null);
+  const [_calculateRes, setCalculateRes] = useState({
     total_weight: 0,
     cbm_auto: 0,
   })

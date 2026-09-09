@@ -74,7 +74,7 @@ const JobDetailsTab = ({
   jobTypeOptions,
   _refinedData,
   setRefinedData,
-  today,
+  _today,
   setIsSameDayJob,
   setIsTomorrowJob,
   savedAddressesSelect,
