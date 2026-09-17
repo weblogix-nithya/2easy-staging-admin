@@ -35,7 +35,7 @@ import SortableJobTableSetting from '../jobs/SortableJobTableSetting';
 
 // ✅ NEW: hard cap on how many columns a user can have active at once,
 // per Sam's approval. Prevents the table from getting overloaded again.
-const MAX_ACTIVE_COLUMNS = 12;
+const MAX_ACTIVE_COLUMNS = 16;
 
 // ✅ NEW: the default column set approved by Sam. Matched against
 // `item.name` — if your DynamicTableUser records store the column label
