@@ -1,7 +1,7 @@
 import { CloseIcon } from "@chakra-ui/icons";
 import {
   Badge,
-  Box,
+  // Box,
   Button,
   Flex,
   Grid,
@@ -50,10 +50,6 @@ type JobLabel = {
 
 export const isAdmin = (state: RootState) => state.user.isAdmin;
 export const isCustomer = (state: RootState) => state.user.isCustomer;
-
-// ─────────────────────────────────────────────
-// CELL COMPONENTS — all wrapped with React.memo
-// ─────────────────────────────────────────────
 
 export const PickupAddressBusinessNameCell = React.memo(({ row }: any) => (
   <>
@@ -388,7 +384,6 @@ export const NotesCell = React.memo(({ row }: any) => {
     setDisplay(current);
   }, [current]);
 
-  // FIX: useCallback — every render-ல் new function உருவாகாது
   const handleSaved = useCallback((val: string) => setDisplay(val), []);
 
   return (
@@ -431,7 +426,6 @@ export const ItemsDimensionCell = React.memo(({ row }: any) => {
   const [showAll, setShowAll] = useState(false);
   const visibleItems = showAll ? items : items.slice(0, 2);
 
-  // FIX: useCallback
   const toggleShow = useCallback(() => setShowAll((s) => !s), []);
 
   return (
@@ -469,7 +463,6 @@ export const ItemsDimensionCell = React.memo(({ row }: any) => {
   );
 });
 ItemsDimensionCell.displayName = "ItemsDimensionCell";
-
 
 export const ItemsDimensionCellExport = ({ row }: any) => {
   const items = row?.original?.job?.job_items;
@@ -675,9 +668,6 @@ export const DeliveryCell = React.memo(({ row }: any) => {
   const labels: JobLabel[] = Array.isArray(job?.meta) ? job.meta : [];
   const canRemove = !!job?.preallocation_driver_id;
 
-  // ✅ FIX: useContext instead of useMutation per row
-  // BEFORE: 100 rows × useMutation(REMOVE_PRE_ALLOCATE_DRIVER) = 100 Apollo registrations
-  // AFTER:  1 shared mutation via RemoveDriverContext → faster, less memory
   const { removeDriver, loadingId } = useContext(RemoveDriverContext);
   const loading = loadingId === String(job?.id);
 
@@ -764,7 +754,6 @@ export const AdminNotesCell = React.memo(({ row }: any) => {
     setDisplay(current);
   }, [current]);
 
-  // FIX: useCallback
   const handleSaved = useCallback((val: string) => setDisplay(val), []);
 
   return (
@@ -913,10 +902,6 @@ export const ToQuadCell = React.memo(({ row }: any) => (
 ));
 ToQuadCell.displayName = "ToQuadCell";
 
-// ─────────────────────────────────────────────
-// MEDIA CELL MAP & HELPERS (unchanged)
-// ─────────────────────────────────────────────
-
 const MEDIA_CELL: Record<string, { with: any; without: any }> = {
   "pick_up_destination.address_formatted,pick_up_destination.address_business_name": {
     with: PickupAddressWithTimeCell,
@@ -940,10 +925,6 @@ function uniqueById(cols: any[]): any[] {
   const seen = new Set<string>();
   return cols.filter((c) => (seen.has(c?.id) ? false : (seen.add(c?.id), true)));
 }
-
-// ─────────────────────────────────────────────
-// tableColumn definition (unchanged structure)
-// ─────────────────────────────────────────────
 
 export const tableColumn = (refetchJobs: () => void) => [
   {
@@ -999,10 +980,6 @@ export const tableColumn = (refetchJobs: () => void) => [
   { id: "admin_notes", Header: "Admin Notes", accessor: "admin_notes" as const, Cell: AdminNotesCell },
 ];
 
-// ─────────────────────────────────────────────
-// getColumnsPre — FIX: refetchJobs dep added in useMemo (caller side in jobs.tsx)
-// ─────────────────────────────────────────────
-
 export const getColumnsPre = (
   isAdmin: boolean,
   withMedia: boolean,
@@ -1012,9 +989,6 @@ export const getColumnsPre = (
   const base: any[] = [
     {
       id: "selection",
-      // ✅ FIX: null — PreJobPaginationTable renders its own optimistic checkbox.
-      // IndeterminateCheckbox called row.getToggleRowSelectedProps() which caused
-      // ALL 100 rows to re-render on every single click (2500+ re-renders).
       Header: () => <></>,
       Cell: () => <></>,
     },
@@ -1033,7 +1007,6 @@ export const getColumnsPre = (
   columns = uniqueById(columns);
   return columns;
 };
-
 
 const BULK_TEXT_STYLE = {
   fontSize: "0.8rem",
@@ -1122,32 +1095,43 @@ BulkDeliveryAddressCell.displayName = "BulkDeliveryAddressCell";
 
 export const BulkDimensionCell = React.memo(({ row }: any) => {
   const items = row?.original?.job?.job_items ?? [];
+  const [showAll, setShowAll] = useState(false);
+  const toggleShow = useCallback(() => setShowAll((s) => !s), []);
   if (items.length === 0) return <Text style={BULK_TEXT_STYLE}>-</Text>;
-  const first = items[0];
-  const firstLabel = `${first.dimension_width}x${first.dimension_height}x${first.dimension_depth}`;
-  const remaining = items.length - 1;
+  const visibleItems = showAll ? items : items.slice(0, 2);
   return (
-    <Box style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%", overflow: "hidden" }}>
-      <Text fontSize="0.8rem" whiteSpace="nowrap">{firstLabel}</Text>
-      {remaining > 0 && (
-        <Popover trigger="hover" placement="top">
-          <PopoverTrigger>
-            <Text fontSize="0.8rem" color="blue.500" cursor="pointer" whiteSpace="nowrap">
-              +{remaining}
-            </Text>
-          </PopoverTrigger>
-          <PopoverContent w="auto" p={2}>
-            <PopoverBody>
-              {items.slice(1).map((item: any, i: number) => (
-                <Text key={i} fontSize="xs">
-                  {item.dimension_width}x{item.dimension_height}x{item.dimension_depth}
-                </Text>
-              ))}
-            </PopoverBody>
-          </PopoverContent>
-        </Popover>
+    <VStack align="stretch" spacing={1} w="100%">
+      {visibleItems.map((item: any) => (
+        <Grid
+          key={`bulk-items-dimension-${item?.id}`}
+          templateColumns="90px 60px 30px 70px 70px"
+          columnGap={3}
+          fontSize="0.8rem"
+          whiteSpace="nowrap"
+        >
+          <Text>
+            {(item.dimension_height * 100).toFixed(0)}x
+            {(item.dimension_width * 100).toFixed(0)}x
+            {(item.dimension_depth * 100).toFixed(0)}
+          </Text>
+          <Text>{item?.item_type?.name}</Text>
+          <Text textAlign="right">{item.quantity}</Text>
+          <Text textAlign="right">{item.weight}kg</Text>
+          <Text textAlign="right">{item.volume?.toFixed(2)}cbm</Text>
+        </Grid>
+      ))}
+      {items.length > 2 && (
+        <Button
+          size="xs"
+          variant="link"
+          colorScheme="blue"
+          onClick={toggleShow}
+          alignSelf="flex-start"
+        >
+          {showAll ? "Less" : `+${items.length - 2} More`}
+        </Button>
       )}
-    </Box>
+    </VStack>
   );
 });
 BulkDimensionCell.displayName = "BulkDimensionCell";
@@ -1176,14 +1160,5 @@ export const getBulkAssignColumns = (
     ),
   };
 
-  // ✅ FIX: this modal is for reordering only, not full detail viewing —
-  // per Sam's approval it's fixed at these 6 essential columns for
-  // everyone, not user-customizable. Previously this ran the list through
-  // outputDynamicTable(dynamicTableUsers, ...), which re-applied each
-  // user's PREVIOUSLY SAVED column preferences (from before the reduction,
-  // when there were ~28 columns) — so the header row kept showing the old
-  // full list regardless of how far bulkassigntableColumn itself was
-  // trimmed. Always returning the fixed set here guarantees the header
-  // matches bulkassigntableColumn exactly, for every user.
   return [orderCol, ...bulkassigntableColumn];
 };

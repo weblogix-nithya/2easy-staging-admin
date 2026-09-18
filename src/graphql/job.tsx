@@ -442,6 +442,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
     $preallocation_driver_id: ID
     $query: String
     $has_company_ids: [ID]
+    $has_job_category_ids: [ID]
     $sort_by: String
     $sort_order: String
   ) {
@@ -460,6 +461,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
       preallocation_driver_id: $preallocation_driver_id
       query: $query
       has_company_ids: $has_company_ids
+      has_job_category_ids: $has_job_category_ids
       sort_by: $sort_by
       sort_order: $sort_order
     ) {
