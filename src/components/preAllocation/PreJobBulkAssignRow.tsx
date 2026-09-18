@@ -1,7 +1,6 @@
 import { Reorder, useDragControls } from "framer-motion";
 import { formatDate } from "helpers/helper";
 import React, { memo } from "react";
-// import { MdDragIndicator } from "react-icons/md";
 
 interface JobBulkAssignRowProps {
   columns: any[];
@@ -16,10 +15,7 @@ const CELL_BASE_STYLE: React.CSSProperties = {
   fontSize: "0.75rem",
   borderBottom: "1px solid #EDF2F7",
   textAlign: "left",
-  height: ROW_HEIGHT,
-  maxHeight: ROW_HEIGHT,
   minHeight: ROW_HEIGHT,
-  overflow: "hidden",
   display: "flex",
   alignItems: "center",
   minWidth: 0,
@@ -33,6 +29,11 @@ const CELL_CONTENT_WRAPPER_STYLE: React.CSSProperties = {
   overflow: "hidden",
   whiteSpace: "nowrap",
   textOverflow: "ellipsis",
+};
+
+const CELL_CONTENT_WRAPPER_STYLE_NOWRAP: React.CSSProperties = {
+  minWidth: 0,
+  width: "100%",
 };
 
 function renderCell(column: any, item: any): React.ReactNode {
@@ -69,9 +70,7 @@ export const JobBulkAssignRow = memo(function JobBulkAssignRow({
         gridTemplateColumns,
         background: "white",
         position: "relative",
-        height: ROW_HEIGHT,
         minHeight: ROW_HEIGHT,
-        maxHeight: ROW_HEIGHT,
         boxSizing: "border-box",
         willChange: "transform",
       }}
@@ -104,20 +103,28 @@ export const JobBulkAssignRow = memo(function JobBulkAssignRow({
             width: "100%",
           }}
         >
-          {/* <MdDragIndicator
-            style={{ color: "#999", fontSize: "18px", flexShrink: 0 }}
-          /> */}
+          {
+          }
           {renderCell(firstColumn, item)}
         </div>
       </div>
 
-      {restColumns.map((column) => (
-        <div key={column?.id} style={CELL_BASE_STYLE}>
-          <div style={CELL_CONTENT_WRAPPER_STYLE}>
-            {renderCell(column, item)}
+      {restColumns.map((column) => {
+        const isExpandable = column?.id === "job_items.dimensions";
+        return (
+          <div key={column?.id} style={CELL_BASE_STYLE}>
+            <div
+              style={
+                isExpandable
+                  ? CELL_CONTENT_WRAPPER_STYLE_NOWRAP
+                  : CELL_CONTENT_WRAPPER_STYLE
+              }
+            >
+              {renderCell(column, item)}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </Reorder.Item>
   );
 });

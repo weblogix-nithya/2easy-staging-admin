@@ -28,10 +28,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
 
-// ✅ Shared between the header and every row — see PreAllocateModal.tsx
-// for why this is CSS Grid instead of a real <table>.
 const GRID_TEMPLATE_COLUMNS =
-  "40px 110px 80px 165px minmax(320px, 2.5fr) minmax(320px, 2.5fr) 90px";
+  "40px 110px 80px 165px minmax(280px, 2fr) minmax(280px, 2fr) 360px";
 
 function formatDate(date: Date, isStart: boolean): string {
   const year = date.getFullYear();
@@ -50,10 +48,6 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   rangeDate?: [Date, Date];
 }
 
-// ✅ REWRITE (framer-motion instead of dnd-kit) — see PreAllocateModal.tsx
-// for the full rationale. Same pattern applied here: no SortableContext,
-// no DragOverlay/portal, no manual activeId tracking. onReorder hands back
-// the already-reordered array directly.
 function AssignJobsModalBase({
   columns,
   isOpen,
@@ -89,7 +83,6 @@ function AssignJobsModalBase({
     },
   );
 
-  // Fetch only when the modal opens or driver/date changes.
   useEffect(() => {
     if (!isOpen || !driver) {
       if (!isOpen) setLocalJobs([]);
@@ -194,7 +187,7 @@ function AssignJobsModalBase({
                   display: "grid",
                   gridTemplateColumns: GRID_TEMPLATE_COLUMNS,
                   width: "100%",
-                  minWidth: "1125px",
+                  minWidth: "1395px",
                   borderBottom: "2px solid #E2E8F0",
                   position: "sticky",
                   top: 0,
@@ -235,7 +228,7 @@ function AssignJobsModalBase({
                 onReorder={setLocalJobs}
                 style={{
                   width: "100%",
-                  minWidth: "1125px",
+                  minWidth: "1395px",
                   maxHeight: "55vh",
                   overflowY: "auto",
                   overflowX: "hidden",
@@ -276,8 +269,6 @@ function AssignJobsModalBase({
   );
 }
 
-// ✅ PERF FIX: isolates this modal from unrelated parent re-renders (most
-// notably the page's websocket/Pusher subscription).
 function areEqual(prev: FilterJobsModalProps, next: FilterJobsModalProps) {
   return (
     prev.isOpen === next.isOpen &&

@@ -25,15 +25,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { JobBulkAssignRow } from "./PreJobBulkAssignRow";
 
-// ✅ Shared between the header and every row — 40px fixed for the drag
-// handle, remaining 6 data columns (Delivery ID, Quad, Ready By/Drop By,
-// Pickup Address, Delivery Address, Dimensions) share the rest evenly.
-// Adjust individual widths here if a specific column needs more room.
-// Column order: [handle] Delivery ID, Quad, Ready By/Drop By,
-// Pickup Address, Delivery Address, Dimensions.
-// Address columns get noticeably more room since they hold the most text.
 const GRID_TEMPLATE_COLUMNS =
-  "40px 120px 90px 170px 380px 380px 110px";
+  "40px 120px 90px 170px 380px 380px 360px";
 
 interface FilterJobsModalProps extends UseDisclosureProps {
   selectedDriver: any;
@@ -44,20 +37,6 @@ interface FilterJobsModalProps extends UseDisclosureProps {
   setIsChecked: () => void;
 }
 
-// ✅ REWRITE (framer-motion instead of dnd-kit):
-// After many rounds of targeted dnd-kit fixes (memoization, native DOM
-// elements, reduced re-measuring, column reduction) the drag experience
-// was still inconsistent — occasional visual glitches, and drops taking
-// several seconds to visually settle even though the reorder was
-// technically correct underneath. dnd-kit is built for general-purpose
-// drag-and-drop (multiple containers, complex collision detection); this
-// modal only ever needs single-list vertical reordering, which is exactly
-// what framer-motion's Reorder API is built for — it uses layout
-// animations (FLIP technique) instead of dnd-kit's sensor/measuring
-// pipeline, and the code involved is dramatically simpler as a result:
-// no SortableContext, no DragOverlay/portal, no manual activeId tracking,
-// no custom collision detection. onReorder hands back the already-
-// reordered array directly.
 function PreAllocateModalBase({
   columns,
   isOpen,
@@ -74,9 +53,6 @@ function PreAllocateModalBase({
 
   localJobsRef.current = localJobs;
 
-  // Snapshot selected jobs only once when the modal opens — reordering
-  // won't be overwritten by unrelated parent selectedJobs updates while
-  // the modal is open.
   useEffect(() => {
     if (!isOpen) {
       initializedRef.current = false;
@@ -279,11 +255,6 @@ function PreAllocateModalBase({
   );
 }
 
-// ✅ PERF FIX: isolates this modal from unrelated parent re-renders — most
-// notably the page's websocket/Pusher subscription, which was found to
-// re-render the whole page (and therefore this modal, even while closed
-// or mid-drag) on every incoming message. Only re-renders when something
-// this modal actually cares about changes.
 function areEqual(prev: FilterJobsModalProps, next: FilterJobsModalProps) {
   return (
     prev.isOpen === next.isOpen &&
