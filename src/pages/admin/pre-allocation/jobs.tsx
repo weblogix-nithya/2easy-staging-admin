@@ -38,6 +38,7 @@ import {
   GET_DYNAMIC_TABLE_USERS_QUERY,
 } from "graphql/dynamicTableUser";
 import { PRE_ALLOCATION_JOBS_QUERY } from "graphql/job";
+import { GET_JOB_CATEGORIES_QUERY } from "graphql/jobCategories";
 import AdminLayout from "layouts/admin";
 import debounce from "lodash.debounce";
 import dynamic from "next/dynamic";
@@ -212,25 +213,64 @@ export default function JobIndex({ }: {}) {
     variables: groupedVars,
     skip: !userId || (!isAdmin && !companyId && !customerId),
     notifyOnNetworkStatusChange: true,
-    // Renders cached data for this page/filter combo instantly (e.g. paging
-    // back, re-opening after a modal) while still refetching over the
-    // network in the background — subscriptions + explicit refetchJobs()
-    // calls already guarantee freshness after mutations.
     fetchPolicy: "cache-and-network",
   });
 
-  // Only blank the table for the genuine first load (networkStatus 1) or an
-  // explicit user-driven refetch (4) / variable change (2 = setVariables)
-  // when there's no data yet. Background subscription refetches keep the
-  // current rows on screen and swap in fresh data silently — so the page
-  // no longer visibly "refreshes" every time a .job.updated arrives.
+  const { data: jobCategoriesData } = useQuery(GET_JOB_CATEGORIES_QUERY, {
+    variables: {
+      query: "",
+      page: 1,
+      first: 200,
+      orderByColumn: "name",
+      orderByOrder: "ASC",
+    },
+  });
+
+  const jobCategories = useMemo(
+    () =>
+      (jobCategoriesData?.jobCategorys?.data ?? []).map((c: any) => ({
+        value: Number(c.id),
+        label: c.name,
+      })),
+    [jobCategoriesData],
+  );
+
   const _jobs = groupedJobs?.preAllocationJobs;
   const hasData = _jobs?.data?.length > 0;
   const isFirstLoad = loading && !hasData;
 
-  // ✅ FIX: debounced — prevents all users hitting server simultaneously.
-  // Random jitter staggers the refetch across different users' browsers so
-  // they don't all hit the server on the same tick.
+  const rawRows = _jobs?.data || [];
+  const stableRowsRef = useRef<any[]>(rawRows);
+  const stableSigRef = useRef<string>("");
+
+  const stableRows = useMemo(() => {
+    const sig = rawRows
+      .map((r: any) => {
+        const j = r?.job ?? {};
+        return [
+          j.id,
+          j.updated_at ?? "",
+          j.job_status_id ?? j.job_status?.id ?? "",
+          j.driver_id ?? r?.driver?.id ?? "",
+          j.preallocation_driver_id ?? "",
+          j.d_sort_id ?? "",
+          j.sort_datetime ?? "",
+        ].join(":");
+      })
+      .join("|");
+
+    if (
+      stableRowsRef.current.length === rawRows.length &&
+      stableSigRef.current === sig
+    ) {
+      return stableRowsRef.current;
+    }
+    stableRowsRef.current = rawRows;
+    stableSigRef.current = sig;
+    return rawRows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawRows]);
+
   const debouncedRefetch = useMemo(
     () =>
       debounce(
@@ -251,14 +291,8 @@ export default function JobIndex({ }: {}) {
   }), [debouncedRefetch]);
   useSubscriptionService(subscriptionEvents);
 
-  // ─────────────────────────────────────────
-  // FIX 1: stableRefetch via useCallback
-  // BEFORE: refetchJobs was missing from useMemo deps → stale closure
-  //   columns always called the OLD refetchJobs function
-  // ─────────────────────────────────────────
   const stableRefetch = useCallback(() => refetchJobs(), [refetchJobs]);
 
-  // ✅ FIX: stable reference — prevents adminColumns recalc on every checkbox click
   const stableSetSelectedJobs = useCallback((rows: any) => {
     setSelectedJobs(rows);
   }, []);
@@ -267,11 +301,11 @@ export default function JobIndex({ }: {}) {
     return getColumnsPre(
       isAdmin,
       withMedia,
-      stableRefetch, // ← stable reference
+      stableRefetch,
       dynamicTableData?.dynamicTableUsers?.data || [],
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dynamicTableData, isAdmin, withMedia, stableRefetch]); // ← stableRefetch added
+  }, [dynamicTableData, isAdmin, withMedia, stableRefetch]);
 
   useEffect(() => {
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -284,10 +318,6 @@ export default function JobIndex({ }: {}) {
     };
   }, [adminColumns]);
 
-  // One-time best-effort cleanup of pre-"_v2" filter cookies left over from
-  // before the `path: "*"` bug was fixed. See jobFilterCookies.ts for why
-  // this matters — those old cookies could otherwise sit alongside the new
-  // ones indefinitely and cause unpredictable read results.
   useEffect(() => {
     cleanupLegacyFilterCookies();
   }, []);
@@ -298,18 +328,7 @@ export default function JobIndex({ }: {}) {
   );
 
   useEffect(() => {
-    // FIX: only run when filter is turned ON ("1")
-    // When turned OFF, onToggleFilterCheckbox handles state clear directly
-    // Calling updateTags here on OFF would cause: dispatch → re-render → this effect → loop
     if (is_filter_ticked !== "1") return;
-    // ✅ FIX: `jobMainFilters` falls back to `preDefaultJobFilter` (an
-    // object of empty arrays) when the cookie is missing/empty — that
-    // fallback is truthy, so `!jobMainFilters` alone can't tell "cookie
-    // never saved anything" apart from "cookie genuinely has real filter
-    // values". Without this check, is_filter_ticked could restore to "1"
-    // (its own cookie is separate and fine) while jobMainFilters quietly
-    // carried no actual filter — checkbox shows ON, but no tag renders and
-    // no filter reaches the query.
     const hasPersistedFilterValue =
       jobMainFilters &&
       Object.values(jobMainFilters).some((v) =>
@@ -332,7 +351,6 @@ export default function JobIndex({ }: {}) {
     updateTags(updatedValues, jobMainFilters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   const handleResetAll = () => {
     updateTags({ ...defaultPreSelectedFilter }, preDefaultJobFilter);
@@ -487,11 +505,6 @@ export default function JobIndex({ }: {}) {
             debouncedSearch={debouncedSearch}
             onToggleFilterCheckbox={(checked) => {
               if (!checked) {
-                // FIX: direct state clear — avoids handleResetAll() loop
-                // handleResetAll → updateTags → dispatch → is_filter_ticked useEffect → updateTags again
-                // Persistence lives in components/preAllocation/jobFilterCookies.tsx —
-                // Pre-Allocation-only, localStorage-based, fully separate
-                // from whatever Bulk Allocation uses.
                 clearPersistedFilterState();
                 setMainJobFilter(null);
                 setJobFilter(preDefaultJobFilter);
@@ -503,7 +516,6 @@ export default function JobIndex({ }: {}) {
               dispatch(setIsPreFilterTicked(checked ? "1" : "0"));
             }}
             handleExport={() => {
-              // TODO: implement export
             }}
           />
 
@@ -571,7 +583,7 @@ export default function JobIndex({ }: {}) {
             <RemoveDriverProvider refetch={stableRefetch}>
               <JobPaginationTable
                 columns={adminColumns}
-                data={_jobs?.data || []}
+                data={stableRows}
                 total={_jobs?.total}
                 options={{
                   manualSortBy: true,
@@ -635,15 +647,10 @@ export default function JobIndex({ }: {}) {
             <FilterJobsModal
               isOpen={isOpenFilter}
               onClose={onCloseFilter}
+              jobCategories={jobCategories}
               onFilterApply={(selectedFilters, filterDisplayName) => {
                 updateTags(selectedFilters, jobFilter, filterDisplayName);
                 writeDisplayName(filterDisplayName);
-                // FIX: applying filters from the modal must also turn the
-                // filter checkbox ON — otherwise is_filter_ticked stays "0"
-                // and the mount-time restore effect above (gated on
-                // is_filter_ticked === "1") has nothing to trigger it on
-                // the next page load, so the filter wouldn't survive a
-                // refresh even though it was just correctly applied.
                 writeIsTicked(true);
                 dispatch(setIsPreFilterTicked("1"));
               }}
@@ -690,11 +697,8 @@ export default function JobIndex({ }: {}) {
           )}
         </Suspense>
 
-        {/* ─────────────────────────────────────────
-            FIX 3: AssignJobsModal — mount only when isAssignOpen is true
-            BEFORE: Always mounted from page load → Apollo hooks + DOM in memory always
-            AFTER:  Mounts only on first driver assign click → faster initial load
-            ───────────────────────────────────────── */}
+        {
+        }
         {isAssignOpen && (
           <AssignJobsModal
             isOpen={isAssignOpen}
