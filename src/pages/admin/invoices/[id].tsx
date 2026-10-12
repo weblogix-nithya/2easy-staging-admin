@@ -2,6 +2,7 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { InfoOutlineIcon } from "@chakra-ui/icons";
 import {
+  Badge,
   Box,
   Button,
   Divider,
@@ -22,7 +23,7 @@ import {
   Tooltip,
   Tr,
   useColorModeValue,
-  useToast,
+  useToast
 } from "@chakra-ui/react";
 import { Select } from "chakra-react-select";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
@@ -34,6 +35,7 @@ import {
   DELETE_INVOICE_MUTATION,
   GENERATE_INVOICE_PDF_MUTATION,
   GET_INVOICE_QUERY,
+  isAllowedJobMetaName,
   SEND_INVOICE_MUTATION,
   UPDATE_INVOICE_MUTATION,
 } from "graphql/invoice";
@@ -228,12 +230,17 @@ function InvoiceEdit() {
       setCompanyWeight(data?.invoice?.company?.weight_per_cubic)
       setSelectedPaymentTerm(data.invoice.company.payment_term);
       setInvoiceStatusId(data?.invoice.invoice_status_id);
+
     },
     onError(error) {
       console.log("onError");
       console.log(error);
     },
   });
+
+  const matchedJobMeta = (
+    (invoice as any)?.job?.meta || []
+  ).filter((meta: any) => isAllowedJobMetaName(meta?.name));
 
   useQuery(GET_INVOICE_STATUSES_QUERY, {
     variables: {
@@ -644,6 +651,26 @@ function InvoiceEdit() {
                         .map((destination) => destination.address_city)
                         .join(", ")}
                     </Box>
+                    {matchedJobMeta.length > 0 && (
+                      <Box pl={6} display="flex" flexWrap="wrap" gap="6px" mt="4px">
+                        {matchedJobMeta.map((meta: any) => (
+                          <Badge
+                            key={meta.id}
+                            bg={meta.color}
+                            color="white"
+                            px="10px"
+                            py="2px"
+                            borderRadius="sm"
+                            fontSize="13px"
+                            fontWeight="700"
+                            textTransform="uppercase"
+                            whiteSpace="nowrap"
+                          >
+                            {meta.name}
+                          </Badge>
+                        ))}
+                      </Box>
+                    )}
                   </Box>
                 )}
                 <Flex>
