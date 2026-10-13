@@ -405,7 +405,7 @@ export const ALLOWED_JOB_META_NAMES = [
   "oversize",
   "swap",
   "semi truck",
-  "directed drive",
+  "direct drive",
   "no charge",
   "discount",
   "no waiting time",
