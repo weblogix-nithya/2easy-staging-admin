@@ -101,7 +101,7 @@ export default function CustomerAddressesTab(props: any) {
         accessor: "address_line_2" as const,
       },
       {
-        Header: "Company",
+        Header: "Company / Address Business Name",
         accessor: "address_business_name" as const,
       },
       {
