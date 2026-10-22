@@ -20,6 +20,7 @@ export const GET_COMPANYS_QUERY = gql`
         payment_term
         toll_enabled
         waiting_enabled
+        price_estimate_enabled
       }
       paginatorInfo {
         count
@@ -68,6 +69,7 @@ export const GET_COMPANY_QUERY = gql`
       fuel_levy_percentage
       qld_toll_levy_percentage
       vic_toll_levy_percentage
+      price_estimate_enabled
     }
   }
 `;
@@ -92,6 +94,7 @@ export const CREATE_COMPANY_MUTATION = gql`
       fuel_levy_percentage
       qld_toll_levy_percentage
       vic_toll_levy_percentage
+      price_estimate_enabled
     }
   }
 `;
@@ -118,6 +121,7 @@ export const UPDATE_COMPANY_MUTATION = gql`
       fuel_levy_percentage
       qld_toll_levy_percentage
       vic_toll_levy_percentage
+      price_estimate_enabled
     }
   }
 `;
@@ -160,6 +164,7 @@ export interface UpdateCompanyInput {
   fuel_levy_percentage: number;
   qld_toll_levy_percentage: number;
   vic_toll_levy_percentage: number;
+  price_estimate_enabled: Boolean;
 }
 
 export interface CreateCompanyInput {
@@ -192,6 +197,7 @@ export interface CreateCompanyInput {
   fuel_levy_percentage: number;
   qld_toll_levy_percentage: number;
   vic_toll_levy_percentage: number;
+  price_estimate_enabled: Boolean;
 }
 
 type Company = {
@@ -227,6 +233,7 @@ type Company = {
   fuel_levy_percentage: number | null;
   qld_toll_levy_percentage: number | null;
   vic_toll_levy_percentage: number | null;
+  price_estimate_enabled: boolean | null;
 };
 
 export const defaultCompany: Company = {
@@ -262,6 +269,7 @@ export const defaultCompany: Company = {
   fuel_levy_percentage: 22,
   qld_toll_levy_percentage: 8,
   vic_toll_levy_percentage: 12,
+  price_estimate_enabled: false,
 };
 
 export const paymentTerms = [

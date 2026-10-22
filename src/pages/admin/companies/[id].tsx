@@ -2032,6 +2032,36 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
+                          Price Estimate Enabled
+                        </FormLabel>
+
+                        <RadioGroup
+                          value={company.price_estimate_enabled ? "1" : "0"}
+                          onChange={(e) => {
+                            setCompany({
+                              ...company,
+                              price_estimate_enabled: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row" pt={3}>
+                            <Radio value="0">No</Radio>
+                            <Radio value="1" pl={6}>
+                              Yes
+                            </Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
+
+                      <Flex className="w-full" alignItems="center">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
                           Send POD
                         </FormLabel>
 
