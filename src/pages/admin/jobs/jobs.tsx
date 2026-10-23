@@ -203,10 +203,10 @@ function formatDate(date: Date, isStart: boolean): string {
 }
 
 // export default function JobIndex() {
-export default function JobIndex({}: // initialLoadOnly = false,
-{
-  // initialLoadOnly?: boolean;
-}) {
+export default function JobIndex({ }: // initialLoadOnly = false,
+  {
+    // initialLoadOnly?: boolean;
+  }) {
   // const [hasInitialLoadDone, setHasInitialLoadDone] = useState(!initialLoadOnly);
   const [initialJobsData, setInitialJobsData] = useState<any[]>([]);
   const [initialJobsDataTotal, setInitialJobsDataTotal] = useState(0);
@@ -331,9 +331,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
           : undefined,
       between_at: rangeDate?.[0]
         ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
+          from_at: formatDate(rangeDate[0], true),
+          to_at: formatDate(rangeDate[1], false),
+        }
         : undefined,
     }), // eslint-disable-line react-hooks/exhaustive-deps
     [
@@ -498,9 +498,9 @@ export default function JobIndex({}: // initialLoadOnly = false,
       ],
       between_at: rangeDate?.[0]
         ? {
-            from_at: formatDate(rangeDate[0], true),
-            to_at: formatDate(rangeDate[1], false),
-          }
+          from_at: formatDate(rangeDate[0], true),
+          to_at: formatDate(rangeDate[1], false),
+        }
         : undefined,
       ...mainJobFilter,
     },
@@ -722,7 +722,7 @@ export default function JobIndex({}: // initialLoadOnly = false,
       variables: {
         query: "",
         page: 1,
-        first: 500,
+        first: 2000,
         orderByColumn: "id",
         orderByOrder: "ASC",
         available: true,
@@ -982,8 +982,8 @@ export default function JobIndex({}: // initialLoadOnly = false,
             isMediaBusy={isMediaBusy}
           />
           {(isAdmin && !isCompanyAdmin && loading) ||
-          (isCompanyAdmin && companyJobsLoading) ||
-          (!isAdmin && companyJobsLoading) ? (
+            (isCompanyAdmin && companyJobsLoading) ||
+            (!isAdmin && companyJobsLoading) ? (
             <Box textAlign="center" py={4} px={10}>
               Loading <Spinner size="sm" ml={2} />
             </Box>
