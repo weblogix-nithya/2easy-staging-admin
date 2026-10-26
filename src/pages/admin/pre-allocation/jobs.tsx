@@ -239,6 +239,7 @@ export default function JobIndex({ }: {}) {
   const hasData = _jobs?.data?.length > 0;
   const isFirstLoad = loading && !hasData;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rawRows = _jobs?.data || [];
   const stableRowsRef = useRef<any[]>(rawRows);
   const stableSigRef = useRef<string>("");

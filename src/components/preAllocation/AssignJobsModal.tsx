@@ -106,7 +106,7 @@ function AssignJobsModalBase({
         page: 1,
       },
     });
-  }, [isOpen, driver?.id, driver?.value, rangeDate?.[0], rangeDate?.[1], fetchDriverJobs]);
+  }, [isOpen, driver?.id, driver?.value, fetchDriverJobs, driver, rangeDate]);
 
   const buildPayload = useCallback(() => {
     const driverId = parseInt(String(driver?.value ?? driver?.id), 10);
