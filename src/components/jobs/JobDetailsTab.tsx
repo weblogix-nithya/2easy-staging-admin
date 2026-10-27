@@ -704,6 +704,12 @@ const JobDetailsTab = ({
           </Flex>
           <Flex alignItems="center" mb={"16px"}>
             <Text width="200px" fontSize="sm">
+              Timeslot:
+            </Text>
+            <Text fontSize="sm">{job.timeslot || "-"}</Text>
+          </Flex>
+          <Flex alignItems="center" mb={"16px"}>
+            <Text width="200px" fontSize="sm">
               Reference:
             </Text>
             <Text fontSize="sm">{job.reference_no}</Text>
