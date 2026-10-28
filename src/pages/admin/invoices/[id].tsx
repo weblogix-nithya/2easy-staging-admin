@@ -1044,10 +1044,20 @@ function InvoiceEdit() {
                         (invoiceLineItem: any, index: number) => (
                           <Tr key={index}>
                             <Td pl="0">
-                              {isLockedInvoiceLine(invoiceLineItem.name) ? (
+                              {invoiceLineItem.id != null &&
+                                isLockedInvoiceLine(
+                                  originalLineItems.find(
+                                    (original) => original.id === invoiceLineItem.id,
+                                  )?.name,
+                                ) ? (
                                 <Input
                                   variant="main"
                                   value={invoiceLineItem.name}
+                                  onChange={(e) => {
+                                    updateLineItems(index, {
+                                      name: e.target.value,
+                                    });
+                                  }}
                                   type="text"
                                   name="name"
                                   className="max-w-md"
@@ -1056,7 +1066,6 @@ function InvoiceEdit() {
                                   mb="0"
                                   fontWeight="500"
                                   size="lg"
-                                  isReadOnly
                                   isDisabled={isCustomer}
                                   hidden={isCustomer}
                                 />
