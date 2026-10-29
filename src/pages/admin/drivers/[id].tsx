@@ -22,6 +22,7 @@ import {
 import { faCar, faNotdef, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
+import PrivateAccessModal from "components/access/PrivateAccessModal";
 import AddressesModal from "components/addresses/AddressesModal";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import FileInput from "components/fileInput/FileInput";
@@ -60,6 +61,7 @@ function DriverEdit() {
   const [searchQuery, _setSearchQuery] = useState("");
   // const [driverTypes, setDriverTypes] = useState([]);
   const [tabId, setTabId] = useState(0);
+  const [isRctiPasswordOpen, setIsRctiPasswordOpen] = useState(false);
   const router = useRouter();
   const { id } = router.query;
 
@@ -400,7 +402,7 @@ function DriverEdit() {
                   </Button>
                   <Button
                     disabled={tabId == 2}
-                    onClick={() => setTabId(2)}
+                    onClick={() => setIsRctiPasswordOpen(true)}
                     alignItems="start"
                     h={45}
                     fontSize="14px"
@@ -414,6 +416,15 @@ function DriverEdit() {
                     <FontAwesomeIcon icon={faNotdef} className="mr-1" />
                     RCTIs
                   </Button>
+                  <PrivateAccessModal
+                    isOpen={isRctiPasswordOpen}
+                    onClose={() => setIsRctiPasswordOpen(false)}
+                    requiredPassword={
+                      process.env.NEXT_PUBLIC_SPECIAL_PAGE_PASSWORD
+                    }
+                    onSuccess={() => setTabId(2)}
+                    onCancel={() => setIsRctiPasswordOpen(false)}
+                  />
                 </Flex>
               </GridItem>
 

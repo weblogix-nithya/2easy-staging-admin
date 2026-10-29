@@ -22,6 +22,8 @@ type PrivateAccessModalProps = {
   onClose: () => void;
   requiredPassword?: string;
   redirectPath?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
 export default function PrivateAccessModal({
@@ -29,6 +31,8 @@ export default function PrivateAccessModal({
   onClose,
   requiredPassword,
   redirectPath = "/admin/dashboard",
+  onSuccess,
+  onCancel,
 }: PrivateAccessModalProps) {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<boolean>(false);
@@ -43,13 +47,18 @@ export default function PrivateAccessModal({
     if (password === "" || password !== activePassword) {
       setError(true);
     } else {
+      onSuccess?.();
       resetForm();
     }
   };
 
   const handleClose = () => {
     resetForm();
-    router.push(redirectPath);
+    if (onCancel) {
+      onCancel();
+    } else {
+      router.push(redirectPath);
+    }
   };
 
   const resetForm = () => {
