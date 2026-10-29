@@ -22,8 +22,8 @@ import {
 import { faCar, faNotdef, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Select } from "chakra-react-select";
-import AddressesModal from "components/addresses/AddressesModal";
 import PrivateAccessModal from "components/access/PrivateAccessModal";
+import AddressesModal from "components/addresses/AddressesModal";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import FileInput from "components/fileInput/FileInput";
 import FileInputLink from "components/fileInput/FileInputLink";
