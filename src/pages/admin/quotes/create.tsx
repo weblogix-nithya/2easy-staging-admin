@@ -574,12 +574,25 @@ export default function QuoteCreate() {
                   )}
                   placeholder=""
                   onChange={(e) => {
+                    const isRoadFreight = /road\s*freight/i.test(
+                      String(e?.label || ""),
+                    );
                     setQuote({
                       ...quote,
                       quote_category_id: e.value || null,
+                      quote_service_id: isRoadFreight
+                        ? null
+                        : quote.quote_service_id,
                     });
                   }}
                 />
+                {!/road\s*freight/i.test(
+                  String(
+                    categories.find(
+                      (entity) => entity.value == quote.quote_category_id,
+                    )?.label || "",
+                  ),
+                ) && (
                 <CustomInputField
                   isSelect={true}
                   optionsArray={serviceTypes}
@@ -597,6 +610,7 @@ export default function QuoteCreate() {
                     });
                   }}
                 />
+                )}
                 <CustomInputField
                   isSelect={true}
                   optionsArray={quoteTypes}
