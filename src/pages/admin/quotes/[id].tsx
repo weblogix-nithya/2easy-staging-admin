@@ -1310,6 +1310,11 @@ export default function QuoteEdit() {
                       setQuote({
                         ...quote,
                         quote_category_id: e.value || null,
+                        quote_service_id: /road\s*freight/i.test(
+                          String(e?.label || ""),
+                        )
+                          ? null
+                          : quote.quote_service_id,
                       });
                     }}
                     isDisabled={!isEnableEdit}
@@ -1430,26 +1435,39 @@ export default function QuoteEdit() {
                       setQuote({
                         ...quote,
                         quote_category_id: e.value || null,
+                        quote_service_id: /road\s*freight/i.test(
+                          String(e?.label || ""),
+                        )
+                          ? null
+                          : quote.quote_service_id,
                       });
                     }}
                     isDisabled={!isEnableEdit}
                   />
-                  <CustomInputField
-                    isSelect={true}
-                    optionsArray={serviceTypes}
-                    label="Service Type"
-                    value={serviceTypes.find(
-                      (entity) => entity.value == quote.quote_service_id,
-                    )}
-                    placeholder=""
-                    onChange={(e) => {
-                      setQuote({
-                        ...quote,
-                        quote_service_id: e.value || null,
-                      });
-                    }}
-                    isDisabled={!isEnableEdit}
-                  />
+                  {!/road\s*freight/i.test(
+                    String(
+                      categories.find(
+                        (entity) => entity.value == quote.quote_category_id,
+                      )?.label || "",
+                    ),
+                  ) && (
+                    <CustomInputField
+                      isSelect={true}
+                      optionsArray={serviceTypes}
+                      label="Service Type"
+                      value={serviceTypes.find(
+                        (entity) => entity.value == quote.quote_service_id,
+                      )}
+                      placeholder=""
+                      onChange={(e) => {
+                        setQuote({
+                          ...quote,
+                          quote_service_id: e.value || null,
+                        });
+                      }}
+                      isDisabled={!isEnableEdit}
+                    />
+                  )}
                   <CustomInputField
                     isSelect={true}
                     optionsArray={quoteTypes}
