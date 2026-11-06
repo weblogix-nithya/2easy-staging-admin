@@ -377,13 +377,52 @@ export default function JobIndex({ }: // initialLoadOnly = false,
   const loading = loadingGroupedJobs;
   const refetchJobs = refetchGroupedJobs;
 
-  useSubscriptionService({
-    jobUpdated: {
-      channel: "jobs",
-      event: ".job.updated",
-      callback: () => refetchJobs(),
-    },
-  });
+  const refetchRef = useRef(refetchJobs);
+  refetchRef.current = refetchJobs;
+  const staleWhileHiddenRef = useRef(false);
+
+  const debouncedLiveRefetch = useMemo(
+    () =>
+      debounce(
+        () => {
+          if (typeof document !== "undefined" && document.hidden) {
+            staleWhileHiddenRef.current = true;
+            return;
+          }
+          refetchRef.current();
+        },
+        1000 + Math.random() * 1000,
+        { maxWait: 5000 },
+      ),
+    [],
+  );
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden && staleWhileHiddenRef.current) {
+        staleWhileHiddenRef.current = false;
+        refetchRef.current();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      debouncedLiveRefetch.cancel();
+    };
+  }, [debouncedLiveRefetch]);
+
+  const liveEvents = useMemo(
+    () => ({
+      jobUpdated: {
+        channel: "jobs",
+        event: ".job.updated",
+        callback: () => debouncedLiveRefetch(),
+      },
+    }),
+    [debouncedLiveRefetch],
+  );
+
+  useSubscriptionService(liveEvents);
   const [contextMenu, setContextMenu] = React.useState<{
     visible: boolean;
     x: number;
