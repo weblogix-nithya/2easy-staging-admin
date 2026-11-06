@@ -280,6 +280,7 @@ export default function JobIndex({ }: {}) {
           refetchJobs();
         },
         8000 + Math.random() * 4000,
+        { maxWait: 20000 },
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [refetchJobs],

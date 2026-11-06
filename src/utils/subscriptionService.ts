@@ -8,41 +8,58 @@ type EventConfig = Record<
         channel: string;
         event: string;
         callback?: (payload: any) => void;
+        debounceMs?: number;
     }
 >;
 
 export function useSubscriptionService(events: EventConfig) {
     const { echo, connected } = useEcho();
-    const subscriptionsRef = useRef<Map<string, boolean>>(new Map());
+    const eventsRef = useRef<EventConfig>(events);
+    eventsRef.current = events;
+
+    const signature = Object.entries(events)
+        .map(([key, { channel, event, debounceMs }]) => `${key}|${channel}|${event}|${debounceMs ?? 0}`)
+        .join(",");
 
     useEffect(() => {
         if (!connected || !echo) return;
 
-        const unsubscribeFns: (() => void)[] = [];
+        const cleanups: (() => void)[] = [];
+        const seen = new Set<string>();
 
-        Object.entries(events).forEach(([_key, { channel, event, callback }]) => {
+        Object.entries(eventsRef.current).forEach(([key, { channel, event, debounceMs }]) => {
             const subKey = `${channel}:${event}`;
-
-            if (subscriptionsRef.current.get(subKey)) return;
-            subscriptionsRef.current.set(subKey, true);
+            if (seen.has(subKey)) return;
+            seen.add(subKey);
 
             const ch = echo.channel(channel);
+            const eventName = event.startsWith(".") ? event : `.${event}`;
+
+            let timer: ReturnType<typeof setTimeout> | null = null;
+            let lastPayload: any;
 
             const wrappedCallback = (payload: any) => {
-                if (callback) callback(payload);
+                if (!debounceMs) {
+                    eventsRef.current[key]?.callback?.(payload);
+                    return;
+                }
+                lastPayload = payload;
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => {
+                    timer = null;
+                    eventsRef.current[key]?.callback?.(lastPayload);
+                }, debounceMs);
             };
 
-            // ✅ automatically prepend dot if missing
-            const eventName = event.startsWith('.') ? event : `.${event}`;
             ch.listen(eventName, wrappedCallback);
 
-            unsubscribeFns.push(() => ch.stopListening(eventName, wrappedCallback));
+            cleanups.push(() => {
+                if (timer) clearTimeout(timer);
+                ch.stopListening(eventName, wrappedCallback);
+            });
         });
 
-        return () => {
-            unsubscribeFns.forEach(fn => fn());
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-            subscriptionsRef.current.clear();
-        };
-    }, [connected, echo, events]);
+        return () => cleanups.forEach((fn) => fn());
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [connected, echo, signature]);
 }
