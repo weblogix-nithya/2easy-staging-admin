@@ -15,7 +15,7 @@ import {
   Radio,
   RadioGroup,
   SimpleGrid,
-  Skeleton,  
+  Skeleton,
   Stack,
   Table,
   TableContainer,
@@ -91,6 +91,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
+const isRoadFreight = (label: any) =>
+  /road\s*freight/i.test(String(label || ""));
+
 export default function QuoteEdit() {
   const toast = useToast();
   const router = useRouter();
@@ -126,6 +129,12 @@ export default function QuoteEdit() {
   // const [searchQuery, setSearchQuery] = useState("");
   const [rateCardUrl, setRateCardUrl] = useState("");
   const [isQuotePdfgenerate, setIsQuotePdfgenerate] = useState(false);
+  const [bookedJobId, setBookedJobId] = useState(null);
+  const jobId = bookedJobId || quote?.job_id || quote?.job?.id;
+  const openJob = (jobIdToOpen: any) => {
+    if (!jobIdToOpen) return;
+    window.open(`/admin/jobs/${jobIdToOpen}`, "_blank", "noopener,noreferrer");
+  };
 
   // const onChangeSearchQuery = useMemo(() => {
   //   return debounce((e) => {
@@ -255,7 +264,9 @@ export default function QuoteEdit() {
     skip: !isAdmin,
     onCompleted: (data) => {
       setCustomerOptions([]);
-      setCustomerOptions(data.customers?.data);
+      setCustomerOptions(
+        formatToSelect(data.customers?.data || [], "id", "full_name"),
+      );
     },
   });
 
@@ -498,7 +509,7 @@ export default function QuoteEdit() {
     //check if any quote destination is_saved_address and populate setSavedAddresses
   };
   //handleDelete
-  const [handleDeleteQuoteDestination, {}] = useMutation(
+  const [handleDeleteQuoteDestination, { }] = useMutation(
     DELETE_QUOTE_DESTINATION_MUTATION,
     {
       onCompleted: (data) => {
@@ -527,7 +538,7 @@ export default function QuoteEdit() {
     CREATE_QUOTE_DESTINATION_MUTATION,
   );
   //handleUpdateQuoteDestinations
-  const [handleUpdateQuoteDestination, {}] = useMutation(
+  const [handleUpdateQuoteDestination, { }] = useMutation(
     UPDATE_QUOTE_DESTINATION_MUTATION,
     {
       onCompleted: () => {
@@ -570,6 +581,7 @@ export default function QuoteEdit() {
       quote_url: undefined,
       company_id: quote.company_id,
       customer_id: quote.customer_id,
+      quote_service_id: quote.quote_service_id,
       // date_required: quote.date_required,
       date_required: formatDateTimeToDB(requiredDateAt, dropAt),
       ready_at: formatDateTimeToDB(requiredDateAt, readyAt),
@@ -800,7 +812,7 @@ export default function QuoteEdit() {
     },
   );
 
-  const [handleDeleteQuote, {}] = useMutation(DELETE_QUOTE_MUTATION, {
+  const [handleDeleteQuote, { }] = useMutation(DELETE_QUOTE_MUTATION, {
     variables: {
       id: id,
     },
@@ -901,11 +913,47 @@ export default function QuoteEdit() {
         id: id,
       },
       onCompleted: (data) => {
+        const bookedId =
+          data?.processBookQuote?.job?.id || data?.processBookQuote?.job_id;
+        setBookedJobId(bookedId || null);
         toast({
-          title: "Quote Item Processed and Booked",
           status: "success",
-          duration: 3000,
+          duration: 8000,
           isClosable: true,
+          render: ({ onClose }) => (
+            <Flex
+              bg="green.500"
+              color="white"
+              p={3}
+              borderRadius="md"
+              alignItems="center"
+              gap={4}
+            >
+              <Text fontWeight="600">Quote Item Processed and Booked</Text>
+              {bookedId && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  color="white"
+                  _hover={{ bg: "whiteAlpha.300" }}
+                  onClick={() => {
+                    openJob(bookedId);
+                    onClose();
+                  }}
+                >
+                  View Job
+                </Button>
+              )}
+              <Button
+                size="xs"
+                variant="ghost"
+                color="white"
+                onClick={onClose}
+              >
+                ✕
+              </Button>
+            </Flex>
+          ),
         });
         console.log("Quote Item Processed and Booked", data);
         getQuote();
@@ -965,7 +1013,7 @@ export default function QuoteEdit() {
   );
   const [handleSendConsignmentDocket] = useMutation(SEND_CONSIGNMENT_DOCKET);
   //deleteMedia
-  const [handleDeleteMedia, {}] = useMutation(DELETE_MEDIA_MUTATION, {
+  const [handleDeleteMedia, { }] = useMutation(DELETE_MEDIA_MUTATION, {
     onCompleted: () => {
       toast({
         title: "Attachment deleted",
@@ -1025,7 +1073,7 @@ export default function QuoteEdit() {
     _items[index] = value;
     setQuoteItems(_items);
   };
-  const [handleCreateQuoteItem, {}] = useMutation(CREATE_QUOTE_ITEM_MUTATION, {
+  const [handleCreateQuoteItem, { }] = useMutation(CREATE_QUOTE_ITEM_MUTATION, {
     onCompleted: () => {
       console.log("Quote item created");
     },
@@ -1033,7 +1081,7 @@ export default function QuoteEdit() {
       showGraphQLErrorToast(error);
     },
   });
-  const [handleUpdateQuoteItem, {}] = useMutation(UPDATE_QUOTE_ITEM_MUTATION, {
+  const [handleUpdateQuoteItem, { }] = useMutation(UPDATE_QUOTE_ITEM_MUTATION, {
     onCompleted: () => {
       console.log("Quote item updated");
     },
@@ -1041,7 +1089,7 @@ export default function QuoteEdit() {
       showGraphQLErrorToast(error);
     },
   });
-  const [handleDeleteQuoteItem, {}] = useMutation(DELETE_QUOTE_ITEM_MUTATION, {
+  const [handleDeleteQuoteItem, { }] = useMutation(DELETE_QUOTE_ITEM_MUTATION, {
     onCompleted: (data) => {
       console.log("Quote Item Deleted", data);
     },
@@ -1050,7 +1098,7 @@ export default function QuoteEdit() {
     },
   });
 
-  const [handleDeleteQuoteLineItem, {}] = useMutation(
+  const [handleDeleteQuoteLineItem, { }] = useMutation(
     DELETE_QUOTE_LINE_ITEM_MUTATION,
     {
       variables: {
@@ -1090,6 +1138,27 @@ export default function QuoteEdit() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quoteLineItems]);
+
+  useEffect(() => {
+    const selectedCategory = categories.find(
+      (entity) => entity.value == quote.quote_category_id,
+    );
+    if (!isRoadFreight(selectedCategory?.label)) return;
+
+    const roadFreightService = serviceTypes.find((service) =>
+      isRoadFreight(service.label),
+    );
+    if (
+      roadFreightService &&
+      quote.quote_service_id != roadFreightService.value
+    ) {
+      setQuote((prev) => ({
+        ...prev,
+        quote_service_id: roadFreightService.value,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories, serviceTypes, quote.quote_category_id]);
 
   useEffect(() => {
     dateChanged();
@@ -1139,11 +1208,11 @@ export default function QuoteEdit() {
                       {quote.is_approved
                         ? "Approved"
                         : quote.quote_status?.name +
-                          (quote.job
-                            ? " and Booked"
-                            : quote.is_quote_send
-                              ? " - Quote Sent"
-                              : "")}
+                        (quote.job
+                          ? " and Booked"
+                          : quote.is_quote_send
+                            ? " - Quote Sent"
+                            : "")}
                     </Tag>
                   </Flex>
                   <Flex alignItems="center">
@@ -1215,6 +1284,15 @@ export default function QuoteEdit() {
                           Generate PDF
                         </Button>
                       )}
+                    {jobId && (
+                      <Button
+                        mx="5px"
+                        variant="secondary"
+                        onClick={() => openJob(jobId)}
+                      >
+                        View Job
+                      </Button>
+                    )}
                     <Button
                       mx="5px"
                       hidden={quote.is_approved || !quote.is_quote_send}
@@ -1277,7 +1355,7 @@ export default function QuoteEdit() {
                       placeholder=""
                       name="customer_name"
                       value={
-                        customerOptions.find(
+                        (customerOptions || []).find(
                           (entity) => entity.value == quote.customer_id,
                         ) || { value: null, label: "" }
                       }
@@ -1298,27 +1376,6 @@ export default function QuoteEdit() {
                       isDisabled={true}
                     />
                   )}
-                  <CustomInputField
-                    isSelect={true}
-                    optionsArray={categories}
-                    label="Category"
-                    value={categories.find(
-                      (entity) => entity.value == quote.quote_category_id,
-                    )}
-                    placeholder=""
-                    onChange={(e) => {
-                      setQuote({
-                        ...quote,
-                        quote_category_id: e.value || null,
-                        quote_service_id: /road\s*freight/i.test(
-                          String(e?.label || ""),
-                        )
-                          ? null
-                          : quote.quote_service_id,
-                      });
-                    }}
-                    isDisabled={!isEnableEdit}
-                  />
                   {isAdmin && (
                     <Flex alignItems="center" mb="16px">
                       <FormLabel
@@ -1432,42 +1489,38 @@ export default function QuoteEdit() {
                     )}
                     placeholder=""
                     onChange={(e) => {
+                      const roadFreightService = isRoadFreight(e?.label)
+                        ? serviceTypes.find((service) =>
+                          isRoadFreight(service.label),
+                        )
+                        : null;
+
                       setQuote({
                         ...quote,
                         quote_category_id: e.value || null,
-                        quote_service_id: /road\s*freight/i.test(
-                          String(e?.label || ""),
-                        )
-                          ? null
-                          : quote.quote_service_id,
+                        ...(roadFreightService
+                          ? { quote_service_id: roadFreightService.value }
+                          : {}),
                       });
                     }}
                     isDisabled={!isEnableEdit}
                   />
-                  {!/road\s*freight/i.test(
-                    String(
-                      categories.find(
-                        (entity) => entity.value == quote.quote_category_id,
-                      )?.label || "",
-                    ),
-                  ) && (
-                    <CustomInputField
-                      isSelect={true}
-                      optionsArray={serviceTypes}
-                      label="Service Type"
-                      value={serviceTypes.find(
-                        (entity) => entity.value == quote.quote_service_id,
-                      )}
-                      placeholder=""
-                      onChange={(e) => {
-                        setQuote({
-                          ...quote,
-                          quote_service_id: e.value || null,
-                        });
-                      }}
-                      isDisabled={!isEnableEdit}
-                    />
-                  )}
+                  <CustomInputField
+                    isSelect={true}
+                    optionsArray={serviceTypes}
+                    label="Service Type"
+                    value={serviceTypes.find(
+                      (entity) => entity.value == quote.quote_service_id,
+                    )}
+                    placeholder=""
+                    onChange={(e) => {
+                      setQuote({
+                        ...quote,
+                        quote_service_id: e.value || null,
+                      });
+                    }}
+                    isDisabled={!isEnableEdit}
+                  />
                   <CustomInputField
                     isSelect={true}
                     optionsArray={quoteTypes}
@@ -2303,7 +2356,7 @@ export default function QuoteEdit() {
                         variant="primary"
                         isDisabled={isProcessing}
                         onClick={() => {
-                            if (!handleValidation()) return;
+                          if (!handleValidation()) return;
                           handleProcess();
                         }}
                       >
@@ -2315,7 +2368,7 @@ export default function QuoteEdit() {
                         variant="secondary"
                         isDisabled={isSending}
                         onClick={() => {
-                            if (!handleValidation()) return;
+                          if (!handleValidation()) return;
                           handleSendQuote();
                         }}
                       >
@@ -2328,7 +2381,7 @@ export default function QuoteEdit() {
                         isDisabled={isSaving}
                         onClick={() => {
                           // handleUpdateQuote();
-                            if (!handleValidation()) return;
+                          if (!handleValidation()) return;
                           handleUpdateQuote({
                             variables: buildUpdateInput(),
                           });
