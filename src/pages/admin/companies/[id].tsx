@@ -1160,7 +1160,71 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          Fuel Levy %
+                          QLD Fuel & Toll Levy (%)
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="brisbane_fuel_toll_levy_percentage"
+                          value={company.brisbane_fuel_toll_levy_percentage ?? 0}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              brisbane_fuel_toll_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          VIC Fuel & Toll Levy  (%)
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="melbourne_fuel_toll_levy_percentage"
+                          value={company.melbourne_fuel_toll_levy_percentage ?? 0}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              melbourne_fuel_toll_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Fuel Levy  (%)
                         </FormLabel>
 
                         <Input
@@ -1192,7 +1256,7 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          QLD Toll Levy %
+                          QLD Toll Levy  (%)
                         </FormLabel>
 
                         <Input
@@ -1224,7 +1288,7 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          VIC Toll Levy %
+                          VIC Toll Levy (%)
                         </FormLabel>
 
                         <Input

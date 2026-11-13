@@ -70,6 +70,8 @@ export const GET_COMPANY_QUERY = gql`
       qld_toll_levy_percentage
       vic_toll_levy_percentage
       price_estimate_enabled
+      brisbane_fuel_toll_levy_percentage
+      melbourne_fuel_toll_levy_percentage
     }
   }
 `;
@@ -95,6 +97,8 @@ export const CREATE_COMPANY_MUTATION = gql`
       qld_toll_levy_percentage
       vic_toll_levy_percentage
       price_estimate_enabled
+      brisbane_fuel_toll_levy_percentage
+      melbourne_fuel_toll_levy_percentage
     }
   }
 `;
@@ -122,6 +126,8 @@ export const UPDATE_COMPANY_MUTATION = gql`
       qld_toll_levy_percentage
       vic_toll_levy_percentage
       price_estimate_enabled
+      brisbane_fuel_toll_levy_percentage
+      melbourne_fuel_toll_levy_percentage
     }
   }
 `;
@@ -164,6 +170,8 @@ export interface UpdateCompanyInput {
   fuel_levy_percentage: number;
   qld_toll_levy_percentage: number;
   vic_toll_levy_percentage: number;
+  brisbane_fuel_toll_levy_percentage: number;
+  melbourne_fuel_toll_levy_percentage: number;
   price_estimate_enabled: Boolean;
 }
 
@@ -197,6 +205,8 @@ export interface CreateCompanyInput {
   fuel_levy_percentage: number;
   qld_toll_levy_percentage: number;
   vic_toll_levy_percentage: number;
+  brisbane_fuel_toll_levy_percentage: number;
+  melbourne_fuel_toll_levy_percentage: number;
   price_estimate_enabled: Boolean;
 }
 
@@ -233,6 +243,8 @@ type Company = {
   fuel_levy_percentage: number | null;
   qld_toll_levy_percentage: number | null;
   vic_toll_levy_percentage: number | null;
+  brisbane_fuel_toll_levy_percentage: number | null;
+  melbourne_fuel_toll_levy_percentage: number | null;
   price_estimate_enabled: boolean | null;
 };
 
@@ -266,10 +278,12 @@ export const defaultCompany: Company = {
   waiting_enabled: false,
   weight_per_cubic: 500, // default weight per cubic meter
   standard_static: false, // default to standard
-  fuel_levy_percentage: 22,
-  qld_toll_levy_percentage: 8,
-  vic_toll_levy_percentage: 12,
+  fuel_levy_percentage: 0,
+  qld_toll_levy_percentage: 0,
+  vic_toll_levy_percentage: 0,
   price_estimate_enabled: false,
+  brisbane_fuel_toll_levy_percentage: 0,
+  melbourne_fuel_toll_levy_percentage: 0,
 };
 
 export const paymentTerms = [
