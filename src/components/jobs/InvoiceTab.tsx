@@ -19,30 +19,71 @@ import {
   useColorModeValue,
   useToast,
 } from "@chakra-ui/react";
+import PaginationTable from "components/table/PaginationTable";
 import { formatCurrency } from "helpers/helper";
-// import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 
-export default function InvoiceTab(props: { jobObject: any }) {
-  const { jobObject } = props;
+const STATE_TIMEZONES: Record<string, string> = {
+  VIC: "Australia/Melbourne",
+  NSW: "Australia/Sydney",
+  ACT: "Australia/Sydney",
+  QLD: "Australia/Brisbane",
+  SA: "Australia/Adelaide",
+  WA: "Australia/Perth",
+  NT: "Australia/Darwin",
+  TAS: "Australia/Hobart",
+};
+
+const formatLocalDateTime = (value: any, state?: string) => {
+  if (!value) return value;
+  const tz = STATE_TIMEZONES[(state || "").toUpperCase().trim()];
+  if (!tz) return value;
+  const date = new Date(String(value).replace(" ", "T") + "Z");
+  if (isNaN(date.getTime())) return value;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value;
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+};
+
+export default function InvoiceTab(props: { jobObject: any, jobLoading: boolean, attachmentColumns: any }) {
+  const { jobObject, jobLoading, attachmentColumns } = props;
   const toast = useToast();
 
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
-  // const isCompany = useSelector((state: RootState) => state.user.isCompany);
   const isCustomer = useSelector((state: RootState) => state.user.isCustomer);
   const textColor = useColorModeValue("navy.700", "white");
-  // let menuBg = useColorModeValue("white", "navy.800");
   const textColorSecodary = useColorModeValue("#888888", "#888888");
   const [job, setJob] = React.useState<any>(jobObject);
-  // const router = useRouter();
   const job_collection = jobObject.job_destinations?.find(
     (dest: any) => dest.is_pickup,
   )?.address_city;
   const job_delivery = jobObject.job_destinations?.find(
     (dest: any) => !dest.is_pickup,
   )?.address_city;
+
+  const job_state = jobObject.job_destinations?.find(
+    (dest: any) => dest.is_pickup,
+  )?.address_state;
+
+  const attachmentData = Array.isArray(job?.media_admin)
+    ? job.media_admin
+      .filter((media: any) => media.collection_name === "invoice")
+      .map((media: any) => ({
+        ...media,
+        created_at: formatLocalDateTime(media.created_at, job_state),
+      }))
+    : [];
 
   useEffect(() => {
     let _customer = null;
@@ -80,7 +121,6 @@ export default function InvoiceTab(props: { jobObject: any }) {
 
   return (
     <Box mt={5}>
-      {/* Invoice */}
       <Box mb={10} mt={10} width="">
         <Flex mb={1} align="flex-start">
           <Box>
@@ -123,7 +163,7 @@ export default function InvoiceTab(props: { jobObject: any }) {
       </Box>
       <Divider />
 
-      <Box mb={10} mt={10} width="">
+      <Box mb={5} mt={5} width="">
         <Flex mb={1}>
           <Text fontWeight="800!" ms="2px" mr={10} mt={0} textColor={textColor}>
             Invoice
@@ -143,7 +183,6 @@ export default function InvoiceTab(props: { jobObject: any }) {
             </Thead>
             <Tbody>
               {!job?.customer_invoice?.invoice_line_items ? (
-                // Show spinner while data is not loaded
                 <Tr>
                   <Td colSpan={5}>
                     <Center py={4}>
@@ -169,15 +208,12 @@ export default function InvoiceTab(props: { jobObject: any }) {
           </Table>
         </Flex>
 
-        <Flex className="w-full mt-4 gap-6" justifyContent="space-between">
-          {/* Left Column: Total Weight and CBM */}
-          <Box className="w-1/2 max-w-[400px]">
+        <Flex className="w-full mt-4 gap-6" justifyContent="space-between" alignItems="flex-start">
+          <Box className="w-1/2">
             <Flex flexDirection="column">
-              <Flex justifyContent="space-between" className="py-4 ">
-                <p className="text-sm ">
-                  <span className="text-sm !font-bold px-1">
-                    Total Weight:{" "}
-                  </span>
+              <Flex gap={8} className="py-4 px-1">
+                <p className="text-sm">
+                  <span className="text-sm !font-bold pr-1">Total Weight: </span>
                   {job?.job_items
                     ?.reduce(
                       (total: number, item: { weight: number }) =>
@@ -186,11 +222,8 @@ export default function InvoiceTab(props: { jobObject: any }) {
                     )
                     .toFixed(2)}
                 </p>
-              </Flex>
-
-              <Flex justifyContent="space-between" className="py-2">
-                <p className="text-sm text-left">
-                  <span className="text-sm !font-bold px-1">CBM: </span>
+                <p className="text-sm">
+                  <span className="text-sm !font-bold pr-1">CBM: </span>
                   {job?.job_items
                     ?.reduce(
                       (total: number, item: { volume: number }) =>
@@ -200,6 +233,22 @@ export default function InvoiceTab(props: { jobObject: any }) {
                     .toFixed(2)}
                 </p>
               </Flex>
+
+              {!jobLoading && Array.isArray(job?.media_admin) && (
+                <Box
+                  mt={2}
+                  w="100%"
+                  sx={{
+                    "td": { py: "2px", fontSize: "13px" },
+                    "th": { py: "2px" },
+                  }}
+                >
+                  <PaginationTable
+                    columns={attachmentColumns}
+                    data={attachmentData}
+                  />
+                </Box>
+              )}
             </Flex>
           </Box>
           <Box className="w-1/2 mt-4">
@@ -216,9 +265,9 @@ export default function InvoiceTab(props: { jobObject: any }) {
                     <p className="text-sm text-right">
                       {job?.customer_invoice?.sub_total
                         ? formatCurrency(
-                            job.customer_invoice?.sub_total,
-                            job.customer_invoice?.currency,
-                          )
+                          job.customer_invoice?.sub_total,
+                          job.customer_invoice?.currency,
+                        )
                         : "$0"}
                     </p>
                   </Skeleton>
@@ -234,9 +283,9 @@ export default function InvoiceTab(props: { jobObject: any }) {
                     <p className="text-sm text-right">
                       {job.customer_invoice?.total_tax
                         ? formatCurrency(
-                            job.customer_invoice?.total_tax,
-                            job.customer_invoice?.currency,
-                          )
+                          job.customer_invoice?.total_tax,
+                          job.customer_invoice?.currency,
+                        )
                         : "$0"}
                     </p>
                   </Skeleton>
@@ -252,9 +301,9 @@ export default function InvoiceTab(props: { jobObject: any }) {
                     <p className="text-sm text-right">
                       {job.customer_invoice?.total
                         ? formatCurrency(
-                            job.customer_invoice?.total,
-                            job.customer_invoice?.currency,
-                          )
+                          job.customer_invoice?.total,
+                          job.customer_invoice?.currency,
+                        )
                         : "$0"}
                     </p>
                   </Skeleton>
@@ -270,9 +319,9 @@ export default function InvoiceTab(props: { jobObject: any }) {
                     <p className="text-base !font-bold text-right">
                       {job.customer_invoice?.total
                         ? formatCurrency(
-                            job.customer_invoice?.total,
-                            job.customer_invoice?.currency,
-                          )
+                          job.customer_invoice?.total,
+                          job.customer_invoice?.currency,
+                        )
                         : "$0"}
                     </p>
                   </Skeleton>

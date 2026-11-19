@@ -24,6 +24,7 @@ import {
 } from "@chakra-ui/react";
 import { Select } from "chakra-react-select";
 import CustomInputField from "components/fields/CustomInputField";
+import LineItemNameSelect from "components/invoices/LineItemNameSelect";
 // import { Select } from "chakra-react-select";
 // import AreYouSureAlert from "components/alert/AreYouSureAlert";
 // import { SearchBar } from "components/navbar/searchBar/SearchBar";
@@ -209,7 +210,7 @@ function InvoiceCreate() {
     handleCreateInvoice();
   };
 
-  const [handleCreateInvoice, {}] = useMutation(CREATE_INVOICE_MUTATION, {
+  const [handleCreateInvoice, { }] = useMutation(CREATE_INVOICE_MUTATION, {
     variables: {
       input: {
         invoice_status_id: invoice.invoice_status_id,
@@ -229,6 +230,7 @@ function InvoiceCreate() {
         await handleCreateLineItem({
           input: {
             name: invoiceLineItem.name,
+            invoice_line_template_id: invoiceLineItem.invoice_line_template_id,
             invoice_id: data.createInvoice.id,
             is_surcharge: true,
             // is_rate: false,
@@ -264,7 +266,7 @@ function InvoiceCreate() {
     },
   });
 
-  const [handleSendInvoice, {}] = useMutation(SEND_INVOICE_MUTATION, {
+  const [handleSendInvoice, { }] = useMutation(SEND_INVOICE_MUTATION, {
     onCompleted: (_data) => {
       toast({
         title: "Invoice sent to the customer",
@@ -352,7 +354,7 @@ function InvoiceCreate() {
                 ms="10px"
                 className="!h-[39px]"
                 onClick={() => handleInvoiceCreation()}
-                // hidden={isCustomer}
+              // hidden={isCustomer}
               >
                 Create Invoice
               </Button>
@@ -387,8 +389,8 @@ function InvoiceCreate() {
                 mb="0"
                 fontWeight="500"
                 size="lg"
-                // isDisabled={isCustomer}
-                // hidden={isCustomer}
+              // isDisabled={isCustomer}
+              // hidden={isCustomer}
               />
             </Flex>
             <Flex alignItems="center" mb="16px">
@@ -609,26 +611,17 @@ function InvoiceCreate() {
                       (invoiceLineItem: any, index: number) => (
                         <Tr key={index}>
                           <Td pl="0">
-                            <Input
-                              variant="main"
+                            <LineItemNameSelect
                               value={invoiceLineItem.name}
-                              onChange={(e) => {
+                              onSelect={(template) => {
                                 let items = [...invoiceLineItems];
-                                let item = { ...invoiceLineItems[index] };
-                                item[e.target.name] = e.target.value;
-                                items[index] = item;
+                                items[index] = {
+                                  ...items[index],
+                                  name: template.name,
+                                  invoice_line_template_id: template.id,
+                                };
                                 setInvoiceLineItems(items);
                               }}
-                              type="text"
-                              name="name"
-                              className="max-w-md"
-                              fontSize="sm"
-                              ms={{ base: "0px", md: "0px" }}
-                              mb="0"
-                              fontWeight="500"
-                              size="lg"
-                              // isDisabled={isCustomer}
-                              // hidden={isCustomer}
                             />
                             {/* <Skeleton w="75%">{invoiceLineItem.name}</Skeleton> */}
                           </Td>
@@ -657,8 +650,8 @@ function InvoiceCreate() {
                               mb="0"
                               fontWeight="500"
                               size="lg"
-                              // isDisabled={isCustomer}
-                              // hidden={isCustomer}
+                            // isDisabled={isCustomer}
+                            // hidden={isCustomer}
                             />
                             {/* <Skeleton w="75%">
                               {formatCurrency(
@@ -690,8 +683,8 @@ function InvoiceCreate() {
                               mb="0"
                               fontWeight="500"
                               size="lg"
-                              // isDisabled={isCustomer}
-                              // hidden={isCustomer}
+                            // isDisabled={isCustomer}
+                            // hidden={isCustomer}
                             />
                             {/* <Skeleton w="75%">
                               {invoiceLineItem.quantity}
@@ -718,8 +711,8 @@ function InvoiceCreate() {
                               mb="0"
                               fontWeight="500"
                               size="lg"
-                              // isDisabled={isCustomer}
-                              // hidden={isCustomer}
+                            // isDisabled={isCustomer}
+                            // hidden={isCustomer}
                             />
                             {/* <Skeleton w="75%">
                               {formatCurrency(
@@ -768,12 +761,12 @@ function InvoiceCreate() {
             ])
           }
 
-          // isLoading={invoiceLoading}
-          // hidden={isCustomer}
-          // isDisabled={
-          //   isHandleUpdateInvoiceLineItemsLoading ||
-          //   isHandleUpdateInvoiceLoading
-          // }
+        // isLoading={invoiceLoading}
+        // hidden={isCustomer}
+        // isDisabled={
+        //   isHandleUpdateInvoiceLineItemsLoading ||
+        //   isHandleUpdateInvoiceLoading
+        // }
         >
           Add Item
         </Button>

@@ -1081,7 +1081,7 @@ const handleBTypeReferenceChange = (e) => {
       variables: {
         query: "",
         page: 1,
-        first: 200,
+        first: 500,
         orderByColumn: "id",
         orderByOrder: "ASC",
         customer_id: job.customer_id,

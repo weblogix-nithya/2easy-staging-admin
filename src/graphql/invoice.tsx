@@ -169,6 +169,12 @@ export const GET_INVOICE_QUERY = gql`
         invoice_url
         job_category_id
         company_id
+        meta {
+            id
+            type
+            name
+            color
+          }
       }
       vehicle_hire_id
       manual_inv_url
@@ -390,3 +396,23 @@ export interface InvoiceBetweenInput {
   from_at: string;
   to_at: string;
 }
+
+export const ALLOWED_JOB_META_NAMES = [
+  "3rd part",
+  "consolidated",
+  "futile",
+  "3rd leg",
+  "oversize",
+  "swap",
+  "semi truck",
+  "direct drive",
+  "no charge",
+  "discount",
+  "no waiting time",
+];
+
+export const isAllowedJobMetaName = (name?: string) => {
+  const normalized = (name || "").toLowerCase().replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+  return ALLOWED_JOB_META_NAMES.some((a) => a === normalized || a === normalized + "d" || a + "d" === normalized);
+};

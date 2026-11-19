@@ -2,6 +2,7 @@
 import { useMutation, useQuery } from "@apollo/client";
 import { InfoOutlineIcon } from "@chakra-ui/icons";
 import {
+  Badge,
   Box,
   Button,
   Divider,
@@ -22,11 +23,14 @@ import {
   Tooltip,
   Tr,
   useColorModeValue,
-  useToast,
+  useToast
 } from "@chakra-ui/react";
 import { Select } from "chakra-react-select";
 import AreYouSureAlert from "components/alert/AreYouSureAlert";
 import CustomInputField from "components/fields/CustomInputField";
+import LineItemNameSelect, {
+  isLockedInvoiceLine,
+} from "components/invoices/LineItemNameSelect";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import {
@@ -34,6 +38,7 @@ import {
   DELETE_INVOICE_MUTATION,
   GENERATE_INVOICE_PDF_MUTATION,
   GET_INVOICE_QUERY,
+  isAllowedJobMetaName,
   SEND_INVOICE_MUTATION,
   UPDATE_INVOICE_MUTATION,
 } from "graphql/invoice";
@@ -228,12 +233,17 @@ function InvoiceEdit() {
       setCompanyWeight(data?.invoice?.company?.weight_per_cubic)
       setSelectedPaymentTerm(data.invoice.company.payment_term);
       setInvoiceStatusId(data?.invoice.invoice_status_id);
+
     },
     onError(error) {
       console.log("onError");
       console.log(error);
     },
   });
+
+  const matchedJobMeta = (
+    (invoice as any)?.job?.meta || []
+  ).filter((meta: any) => isAllowedJobMetaName(meta?.name));
 
   useQuery(GET_INVOICE_STATUSES_QUERY, {
     variables: {
@@ -420,7 +430,8 @@ function InvoiceEdit() {
             await handleCreateLineItem({
               input: {
                 name: item.name,
-                invoice_id: item.invoice_id,
+                invoice_line_template_id: item.invoice_line_template_id,
+                invoice_id: item.invoice_id ?? id,
                 is_surcharge: true,
                 is_rate: false,
                 tax_type: "OUTPUT",
@@ -438,6 +449,7 @@ function InvoiceEdit() {
               input: {
                 id: item.id,
                 name: item.name,
+                invoice_line_template_id: item.invoice_line_template_id,
                 invoice_id: item.invoice_id,
                 unit_amount: formatFloat(item.unit_amount),
                 quantity: formatFloat(item.quantity),
@@ -566,12 +578,12 @@ function InvoiceEdit() {
     let invoiceTotal = invoiceLineItems.reduce((acc, invoiceLineItem) => {
       return acc + parseFloat(invoiceLineItem.line_amount);
     }, 0);
-    setInvoice({
-      ...invoice,
+    setInvoice((prev) => ({
+      ...prev,
       total_tax: invoiceTotal * 0.1,
       sub_total: invoiceTotal,
       total: invoiceTotal * 1.1,
-    });
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoiceLineItems]);
 
@@ -644,6 +656,26 @@ function InvoiceEdit() {
                         .map((destination) => destination.address_city)
                         .join(", ")}
                     </Box>
+                    {matchedJobMeta.length > 0 && (
+                      <Box pl={6} display="flex" flexWrap="wrap" gap="6px" mt="4px">
+                        {matchedJobMeta.map((meta: any) => (
+                          <Badge
+                            key={meta.id}
+                            bg={meta.color}
+                            color="white"
+                            px="10px"
+                            py="2px"
+                            borderRadius="sm"
+                            fontSize="13px"
+                            fontWeight="700"
+                            textTransform="uppercase"
+                            whiteSpace="nowrap"
+                          >
+                            {meta.name}
+                          </Badge>
+                        ))}
+                      </Box>
+                    )}
                   </Box>
                 )}
                 <Flex>
@@ -1012,25 +1044,45 @@ function InvoiceEdit() {
                         (invoiceLineItem: any, index: number) => (
                           <Tr key={index}>
                             <Td pl="0">
-                              <Input
-                                variant="main"
-                                value={invoiceLineItem.name}
-                                onChange={(e) => {
-                                  updateLineItems(index, {
-                                    name: e.target.value,
-                                  });
-                                }}
-                                type="text"
-                                name="name"
-                                className="max-w-md"
-                                fontSize="sm"
-                                ms={{ base: "0px", md: "0px" }}
-                                mb="0"
-                                fontWeight="500"
-                                size="lg"
-                                isDisabled={isCustomer}
-                                hidden={isCustomer}
-                              />
+                              {invoiceLineItem.id != null &&
+                                isLockedInvoiceLine(
+                                  originalLineItems.find(
+                                    (original) => original.id === invoiceLineItem.id,
+                                  )?.name,
+                                ) ? (
+                                <Input
+                                  variant="main"
+                                  value={invoiceLineItem.name}
+                                  onChange={(e) => {
+                                    updateLineItems(index, {
+                                      name: e.target.value,
+                                    });
+                                  }}
+                                  type="text"
+                                  name="name"
+                                  className="max-w-md"
+                                  fontSize="sm"
+                                  ms={{ base: "0px", md: "0px" }}
+                                  mb="0"
+                                  fontWeight="500"
+                                  size="lg"
+                                  isDisabled={isCustomer}
+                                  hidden={isCustomer}
+                                />
+                              ) : (
+                                <Box hidden={isCustomer}>
+                                  <LineItemNameSelect
+                                    value={invoiceLineItem.name}
+                                    isDisabled={isCustomer}
+                                    onSelect={(template) => {
+                                      updateLineItems(index, {
+                                        name: template.name,
+                                        invoice_line_template_id: template.id,
+                                      });
+                                    }}
+                                  />
+                                </Box>
+                              )}
                               <Skeleton
                                 hidden={!isCustomer}
                                 isLoaded={!invoiceLoading}
@@ -1210,7 +1262,7 @@ function InvoiceEdit() {
               {
                 id: null,
                 name: "",
-                invoice_id: invoice.id,
+                invoice_id: invoice.id ?? id,
                 unit_amount: invoice.company?.lcl_rate
                   ? invoice.company.lcl_rate
                   : 0,

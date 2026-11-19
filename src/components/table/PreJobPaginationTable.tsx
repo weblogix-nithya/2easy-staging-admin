@@ -185,6 +185,7 @@ OptimisticCheckbox.displayName = "OptimisticCheckbox";
 // Other rows stay frozen — this is the main performance fix
 const DataRow = memo(({
   row,
+  // eslint-disable-next-line unused-imports/no-unused-vars
   columns,
   isSelected,
   showRowSelection,

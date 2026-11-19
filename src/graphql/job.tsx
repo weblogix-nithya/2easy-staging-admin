@@ -509,6 +509,7 @@ export const PRE_ALLOCATION_JOBS_QUERY = gql`
           is_dangerous_goods
           is_tailgate_required
           is_paperwork_required
+          is_stackable_required
           job_type {
             id
             name

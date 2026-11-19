@@ -98,6 +98,7 @@ export interface UpdateInvoiceLineItemInput {
   tax_amount: Number;
   line_amount: Number;
   xero_line_item_id: Number;
+  invoice_line_template_id?: Number | String | null;
 }
 
 export interface CreateInvoiceLineItemInput {
@@ -111,6 +112,7 @@ export interface CreateInvoiceLineItemInput {
   tax_amount: Number;
   line_amount: Number;
   xero_line_item_id: Number;
+  invoice_line_template_id?: Number | String | null;
 }
 
 type InvoiceLineItem = {

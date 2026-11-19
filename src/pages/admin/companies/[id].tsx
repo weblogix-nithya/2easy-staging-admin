@@ -1160,7 +1160,71 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          Fuel Levy %
+                          QLD Fuel & Toll Levy (%)
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="brisbane_fuel_toll_levy_percentage"
+                          value={company.brisbane_fuel_toll_levy_percentage ?? 0}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              brisbane_fuel_toll_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          VIC Fuel & Toll Levy  (%)
+                        </FormLabel>
+
+                        <Input
+                          type="number"
+                          step="0.01"
+                          name="melbourne_fuel_toll_levy_percentage"
+                          value={company.melbourne_fuel_toll_levy_percentage ?? 0}
+                          onChange={(e) =>
+                            setCompany({
+                              ...company,
+                              melbourne_fuel_toll_levy_percentage: parseFloat(e.target.value),
+                            })
+                          }
+                          className="max-w-md"
+                          variant="main"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          size="lg"
+                        />
+                      </Flex>
+
+                      <Flex alignItems="center" mb="16px">
+                        <FormLabel
+                          display="flex"
+                          width="200px"
+                          fontSize="sm"
+                          mb="0"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Fuel Levy  (%)
                         </FormLabel>
 
                         <Input
@@ -1192,7 +1256,7 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          QLD Toll Levy %
+                          QLD Toll Levy  (%)
                         </FormLabel>
 
                         <Input
@@ -1224,7 +1288,7 @@ function CompanyEdit() {
                           fontWeight="500"
                           color={textColor}
                         >
-                          VIC Toll Levy %
+                          VIC Toll Levy (%)
                         </FormLabel>
 
                         <Input
@@ -2023,6 +2087,36 @@ function CompanyEdit() {
                           </Stack>
                         </RadioGroup>
                       </Flex>
+                      <Flex className="w-full" alignItems="center">
+                        <FormLabel
+                          display="flex"
+                          mb="0"
+                          width="200px"
+                          fontSize="sm"
+                          fontWeight="500"
+                          color={textColor}
+                        >
+                          Price Estimate Enabled
+                        </FormLabel>
+
+                        <RadioGroup
+                          value={company.price_estimate_enabled ? "1" : "0"}
+                          onChange={(e) => {
+                            setCompany({
+                              ...company,
+                              price_estimate_enabled: e === "1" ? true : false,
+                            });
+                          }}
+                        >
+                          <Stack direction="row" pt={3}>
+                            <Radio value="0">No</Radio>
+                            <Radio value="1" pl={6}>
+                              Yes
+                            </Radio>
+                          </Stack>
+                        </RadioGroup>
+                      </Flex>
+
                       <Flex className="w-full" alignItems="center">
                         <FormLabel
                           display="flex"

@@ -21,7 +21,11 @@ export const DeliveryCell = ({ row }: any) => {
   );
 };
 
-export const BookedByCell = ({ row }: any) => {
+export const TimeslotCell = ({ row }: any) => {
+  return <Text minW="80px">{row?.original?.timeslot || "-"}</Text>;
+};
+
+export const BookedByCell =({ row }: any) => {
   const name = row?.original?.company?.name || "-";
   return (
     <Text maxW="150px" minW="100px">
@@ -347,6 +351,11 @@ export const getCompanyColumns = (
       id: "ready_at",
       Header: "Date",
       Cell: ReadyAtCell,
+    },
+    {
+      id: "timeslot",
+      Header: "Timeslot",
+      Cell: TimeslotCell,
     },
     // "Pick-up From" and "Delivery Address" change based on the withMedia state
     {

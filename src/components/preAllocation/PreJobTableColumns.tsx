@@ -22,6 +22,7 @@ import {
 import {
   faHandHolding,
   faInfinity,
+  faLayerGroup,
   faPager,
   faTruckRampBox,
   faWarning,
@@ -683,6 +684,7 @@ export const DeliveryCell = React.memo(({ row }: any) => {
     { condition: job?.is_hand_unloading, label: "Handling", icon: faHandHolding },
     { condition: job?.is_dangerous_goods, label: "Dangerous goods", icon: faWarning },
     { condition: job?.is_tailgate_required, label: "Tail lift", icon: faTruckRampBox },
+    { condition: job?.is_stackable_required, label: "Stackable", icon: faLayerGroup },
   ];
 
   const handleRemove = useCallback(() => {

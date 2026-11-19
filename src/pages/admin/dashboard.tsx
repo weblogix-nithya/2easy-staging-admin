@@ -106,31 +106,31 @@ export default function Dashboard() {
     },
   );
 
-  const {  data: incompleteUrgentJobs } = useQuery(GET_JOBS_QUERY, {
-      variables: {
-        page: 1,
-        first: 30,
-        orderBy: [{ column: "id", order: "DESC" }],
-        job_status_ids: [2, 3, 4, 5],
-        job_type_id: 3,
-        today: date,
-      },
-      skip: !isAdmin,
-    });
+  const { data: incompleteUrgentJobs } = useQuery(GET_JOBS_QUERY, {
+    variables: {
+      page: 1,
+      first: 30,
+      orderBy: [{ column: "id", order: "DESC" }],
+      job_status_ids: [2, 3, 4, 5],
+      job_type_id: 3,
+      today: date,
+    },
+    skip: !isAdmin,
+  });
 
-  const {  data: incompleteExpressJobs } = useQuery(GET_JOBS_QUERY, {
-      variables: {
-        page: 1,
-        first: 30,
-        orderBy: [{ column: "id", order: "DESC" }],
-        job_status_ids: [2, 3, 4, 5],
-        job_type_id: 2,
-        today: date,
-      },
-      skip: !isAdmin,
-    });
+  const { data: incompleteExpressJobs } = useQuery(GET_JOBS_QUERY, {
+    variables: {
+      page: 1,
+      first: 30,
+      orderBy: [{ column: "id", order: "DESC" }],
+      job_status_ids: [2, 3, 4, 5],
+      job_type_id: 2,
+      today: date,
+    },
+    skip: !isAdmin,
+  });
 
-  const {data: incompleteStandardJobs } = useQuery(GET_JOBS_QUERY, {
+  const { data: incompleteStandardJobs } = useQuery(GET_JOBS_QUERY, {
     variables: {
       page: 1,
       first: 30,
@@ -142,7 +142,7 @@ export default function Dashboard() {
     skip: !isAdmin,
   });
 
-  const {data: customerIssueReportJobs} = useQuery(GET_JOBS_QUERY, {
+  const { data: customerIssueReportJobs } = useQuery(GET_JOBS_QUERY, {
     variables: {
       page: 1,
       first: 30,
@@ -213,6 +213,7 @@ export default function Dashboard() {
         orderByColumn: "id",
         orderByOrder: "DESC",
         has_expired: true,
+        driverStatusId: 2,
       },
       skip: !isAdmin,
     });
@@ -335,7 +336,7 @@ export default function Dashboard() {
                       title="Issue Reports"
                       quantity={
                         customerIssueReportJobs?.jobs?.paginatorInfo.total +
-                          driverIssueReportJobs?.jobs?.paginatorInfo?.total ||
+                        driverIssueReportJobs?.jobs?.paginatorInfo?.total ||
                         "0"
                       }
                       icon="exclamation-circle"
@@ -453,6 +454,7 @@ export default function Dashboard() {
                       <DashboardInfoCardRow
                         title="View Applications"
                         data={expiredLicenseDrivers?.drivers?.data}
+                        path="/admin/drivers"
                       />
                     </DashboardInfoCard>
                   </Box>

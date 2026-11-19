@@ -239,6 +239,7 @@ export default function JobIndex({ }: {}) {
   const hasData = _jobs?.data?.length > 0;
   const isFirstLoad = loading && !hasData;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rawRows = _jobs?.data || [];
   const stableRowsRef = useRef<any[]>(rawRows);
   const stableSigRef = useRef<string>("");
@@ -279,6 +280,7 @@ export default function JobIndex({ }: {}) {
           refetchJobs();
         },
         8000 + Math.random() * 4000,
+        { maxWait: 20000 },
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [refetchJobs],
