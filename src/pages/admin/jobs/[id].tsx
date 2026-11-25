@@ -30,6 +30,9 @@ import InvoiceTab from "components/jobs/InvoiceTab";
 import JobDetailsTab from "components/jobs/JobDetailsTab";
 import MessageLogTab from "components/jobs/MessageLogTab";
 import ReportsTab from "components/jobs/ReportsTab";
+import WeekendBookingModal, {
+  useWeekendUrgentRule,
+} from "components/jobs/WeekendBookingModal";
 import { TabsComponent } from "components/tabs/TabsComponet";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
 import { GET_COMPANY_QUERY, GET_COMPANYS_QUERY } from "graphql/company";
@@ -196,6 +199,32 @@ function JobEdit() {
   );
   const [_isSameDayJob, setIsSameDayJob] = useState(false);
   const [_isTomorrowJob, setIsTomorrowJob] = useState(false);
+
+  // Weekend (Sat/Sun) rule, only when the date is changed from the saved one:
+  // admins can move a job to a weekend (Express/Urgent only, no Standard);
+  // customers can't.
+  const [loadedJobDate, setLoadedJobDate] = useState<string | null>(null);
+  const {
+    isWeekendBooking,
+    weekendJobTypeOptions,
+    checkWeekendBooking,
+    modalProps: weekendModalProps,
+  } = useWeekendUrgentRule({
+    dateYMD: jobDateAt,
+    isAdmin,
+    jobTypeOptions,
+    jobTypeId: job.job_type_id,
+    enabled: !!loadedJobDate && jobDateAt !== loadedJobDate,
+    onSelectUrgent: (option) => {
+      setJob((prev) => ({ ...prev, job_type_id: option.value }));
+      setRefinedData((prev) => ({
+        ...prev,
+        service_choice: option.label ?? null,
+      }));
+    },
+    // Cancel on the admin popup / customer: back to the saved (or last weekday) date.
+    onRevertDate: (ymd) => setJobDateAt(ymd),
+  });
   // const [filteredJobTypeOptions, setFilteredJobTypeOptions] = useState([]);
   const [locationOptions, _setLocationOptions] = useState([
     { value: "VIC", label: "Victoria" },
@@ -472,9 +501,11 @@ function JobEdit() {
         });
 
         // ✅ Set date/time fields
-        setJobDateAt(
-          data.job.ready_at ? formatDate(data.job.ready_at) : jobDateAt,
-        );
+        const loadedDate = data.job.ready_at
+          ? formatDate(data.job.ready_at)
+          : jobDateAt;
+        setJobDateAt(loadedDate);
+        setLoadedJobDate(loadedDate);
         setReadyAt(
           data.job.ready_at ? formatTimeUTCtoInput(data.job.ready_at) : readyAt,
         );
@@ -2089,6 +2120,7 @@ function JobEdit() {
   // Update handleSaveJobPriceCalculation to use the validation
   const handleSaveJobPriceCalculation = () => {
     if (!validateTimeslotDepot()) return;
+    if (!checkWeekendBooking(job.job_type_id)) return;
     const hasChanged =
       prevJobState.freight_type !== refinedData.freight_type ||
       prevJobState.transport_type !== job.transport_type ||
@@ -2130,6 +2162,10 @@ function JobEdit() {
   // Update handleUpdateJob to use the validation
   const handleUpdateJobWithValidation = () => {
     if (!validateTimeslotDepot()) {
+      setIsSaving(false);
+      return;
+    }
+    if (!checkWeekendBooking(job.job_type_id)) {
       setIsSaving(false);
       return;
     }
@@ -2406,7 +2442,9 @@ function JobEdit() {
                     setReadyAt={setReadyAt}
                     dropAt={dropAt}
                     setDropAt={setDropAt}
-                    jobTypeOptions={jobTypeOptions}
+                    jobTypeOptions={
+                      isWeekendBooking ? weekendJobTypeOptions : jobTypeOptions
+                    }
                     _refinedData={refinedData}
                     handleBTypeReferenceChange={handleBTypeReferenceChange}
                     setRefinedData={setRefinedData}
@@ -2509,6 +2547,7 @@ function JobEdit() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      <WeekendBookingModal {...weekendModalProps} />
     </AdminLayout>
   );
 }

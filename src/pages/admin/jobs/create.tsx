@@ -38,6 +38,9 @@ import Time12HourPicker from "components/fields/Time12HourPicker";
 import FileInput from "components/fileInput/FileInput";
 import JobAddressesSection from "components/jobs/JobAddressesSection";
 import JobInputTable from "components/jobs/JobInputTable";
+import WeekendBookingModal, {
+  useWeekendUrgentRule,
+} from "components/jobs/WeekendBookingModal";
 import PaginationTable from "components/table/PaginationTable";
 import TagsInput from "components/tagsInput";
 import { showGraphQLErrorToast } from "components/toast/ToastError";
@@ -76,6 +79,7 @@ import {
   formatDateTimeToDB,
   // getTimezone,
   isAfterCutoff,
+  isWeekendToday,
   today,
 } from "helpers/helper";
 import AdminLayout from "layouts/admin";
@@ -94,6 +98,7 @@ import {
 import { useSelector } from "react-redux";
 import { RootState } from "store/store";
 import { calculateFinalWeightCBM } from "utils/calculatePalletSpacesOccupied";
+import { isNextBusinessDayJob } from "utils/jobFormHelpers";
 // import { buildQuotePayload } from "utils/buildQuotePayload";
 
 function JobPage() {
@@ -175,6 +180,48 @@ function JobPage() {
   const [companyWeight, setCompanyWeight] = useState(null);
   const [companyStandardStatic, setCompanyStandardStatic] = useState(null);
   const [companyToll, setCompanyToll] = useState(null);
+
+  // Weekend (Sat/Sun) job date: Standard is not allowed (Express/Urgent only).
+  // Admins get a confirm popup; customers are told to contact 2EASY.
+  const {
+    isWeekendBooking,
+    checkWeekendBooking,
+    modalProps: weekendModalProps,
+  } = useWeekendUrgentRule({
+    dateYMD: jobDateAt,
+    isAdmin,
+    jobTypeOptions,
+    jobTypeId: job.job_type_id,
+    onSelectUrgent: (option) => {
+      setJob((prev) => ({ ...prev, job_type_id: option.value }));
+      setRefinedData((prev) => ({
+        ...prev,
+        service_choice: option.label ?? null,
+      }));
+    },
+    // Cancel on the admin popup: back to the last weekday date.
+    onRevertDate: (ymd) => {
+      const todayYMD = new Date().toISOString().split("T")[0];
+      setJobDateAt(ymd);
+      setIsSameDayJob(ymd === todayYMD);
+      setIsTomorrowJob(isNextBusinessDayJob(ymd, todayYMD));
+    },
+  });
+  // Job types shown in the Type dropdown (Standard removed on weekend dates).
+  const availableJobTypeOptions = useMemo(() => {
+    const base =
+      (companyStandardStatic ? jobTypeOptions : filteredJobTypeOptions) || [];
+    if (!isWeekendBooking) return base;
+    return base.filter(
+      (opt) => (opt?.label || "").toLowerCase().trim() !== "standard",
+    );
+  }, [
+    companyStandardStatic,
+    jobTypeOptions,
+    filteredJobTypeOptions,
+    isWeekendBooking,
+  ]);
+
   const re = useMemo(
     () =>
       /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
@@ -387,7 +434,11 @@ function JobPage() {
                 (opt) => opt.label !== "Standard",
               );
               resetJobTypeAndShowToast();
-            } else if (isTomorrowJob && isAfterCutoff(cutoffTime, timezone)) {
+            } else if (
+              isTomorrowJob &&
+              // Monday job: no Standard on Sat/Sun, or Friday after the cutoff.
+              (isWeekendToday(timezone) || isAfterCutoff(cutoffTime, timezone))
+            ) {
               updatedOptions = updatedOptions.filter(
                 (opt) => opt.label !== "Standard",
               );
@@ -397,8 +448,9 @@ function JobPage() {
 
           if (
             job.job_category_id === 2 &&
-            isSameDayJob &&
-            isAfterCutoff("11:00", timezone)
+            ((isSameDayJob && isAfterCutoff("11:00", timezone)) ||
+              // Booked on Sat/Sun for Monday: no Standard.
+              (isTomorrowJob && isWeekendToday(timezone)))
           ) {
             updatedOptions = updatedOptions.filter(
               (opt) => opt.label !== "Standard",
@@ -1328,7 +1380,9 @@ const handleBTypeReferenceChange = (e) => {
             const cutoffTime = job.company_id == 361 ? "17:00" : "16:00";
             console.log(job.company_id, "comp", cutoffTime, "co2");
 
-            const isAfterCut = isAfterCutoff(cutoffTime, timezone);
+            // Monday job: no Standard on Sat/Sun, or Friday after the cutoff.
+            const isAfterCut =
+              isWeekendToday(timezone) || isAfterCutoff(cutoffTime, timezone);
             if (isAfterCut) {
               updatedOptions = updatedOptions.filter(
                 (opt) => opt.label !== "Standard",
@@ -1342,8 +1396,11 @@ const handleBTypeReferenceChange = (e) => {
         }
 
         // Airfreight
-        if (job.job_category_id === 2 && isSameDayJob) {
-          const isAfterCut = isAfterCutoff("11:00", timezone);
+        if (job.job_category_id === 2 && (isSameDayJob || isTomorrowJob)) {
+          const isAfterCut = isSameDayJob
+            ? isAfterCutoff("11:00", timezone)
+            : // Booked on Sat/Sun for Monday: no Standard.
+              isWeekendToday(timezone);
           if (isAfterCut) {
             updatedOptions = updatedOptions.filter(
               (opt) => opt.label !== "Standard",
@@ -1432,8 +1489,9 @@ const handleBTypeReferenceChange = (e) => {
   const handleJobCreation = () => {
     if (!validateAddresses()) return;
     if (!validateTimeslotDepot()) return;
+    if (!checkWeekendBooking(job.job_type_id)) return;
 
-    const selectedJobTypeName = filteredJobTypeOptions.find(
+    const selectedJobTypeName = availableJobTypeOptions.find(
       (opt) => opt.value === job.job_type_id,
     )?.label;
 
@@ -2185,14 +2243,9 @@ const handleBTypeReferenceChange = (e) => {
                       }
                       setJobDateAt(selected);
                       setIsSameDayJob(today === selected);
-                      setIsTomorrowJob(
-                        new Date(selected).toDateString() ===
-                          new Date(
-                            new Date(today).setDate(
-                              new Date(today).getDate() + 1,
-                            ),
-                          ).toDateString(),
-                      );
+                      // Next business day (Friday → Monday), so the 4 PM
+                      // cutoff also applies to Monday jobs booked on Friday.
+                      setIsTomorrowJob(isNextBusinessDayJob(selected, today));
                     }}
                   />
 
@@ -2537,18 +2590,12 @@ const handleBTypeReferenceChange = (e) => {
                 <Divider className="my-12" />
                 <ColorSelect
                   label="Type:"
-                  optionsArray={
-                    companyStandardStatic
-                      ? jobTypeOptions
-                      : filteredJobTypeOptions
-                  }
+                  optionsArray={availableJobTypeOptions}
                   selectedJobId={job.job_type_id}
                   value={
-                    (companyStandardStatic
-                      ? jobTypeOptions
-                      : filteredJobTypeOptions
-                    )?.find((jobType) => jobType.value === job.job_type_id) ||
-                    null
+                    availableJobTypeOptions.find(
+                      (jobType) => jobType.value === job.job_type_id,
+                    ) || null
                   }
                   placeholder="Select type"
                   onChange={(e) => {
@@ -3306,6 +3353,7 @@ const handleBTypeReferenceChange = (e) => {
                   </ModalFooter>
                 </ModalContent>
               </Modal>
+              <WeekendBookingModal {...weekendModalProps} />
             </Grid>
           }
         </Grid>

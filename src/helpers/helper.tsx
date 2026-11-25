@@ -611,6 +611,12 @@ export function isAfterCutoff(cutoffTime: string, timeZone: string): boolean {
   return currentTime.isAfter(cutoff);
 }
 
+// Today is Saturday or Sunday in the given timezone (browser time if none).
+export function isWeekendToday(timeZone?: string): boolean {
+  const day = (timeZone ? moment().tz(timeZone) : moment()).day();
+  return day === 0 || day === 6;
+}
+
 export function isSameDay(jobDate: string, timeZone: string): boolean {
   const currentTime = moment().tz(timeZone);
   const jobDateTime = moment(jobDate).tz(timeZone);
